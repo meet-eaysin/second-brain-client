@@ -1,6 +1,10 @@
 import apiClient from "@/services/apiClient.ts";
-import type {LoginCredentials, User} from "@/modules/auth";
-import type {AuthResponse, GoogleAuthResponse, RegisterCredentials} from "@/modules/auth/types/auth.types.ts";
+import type {
+    AuthResponse,
+    GoogleAuthResponse,
+    LoginCredentials,
+    RegisterCredentials, User
+} from "@/modules/auth/types/auth.types.ts";
 
 export const authApi = {
     login: async (credentials: LoginCredentials): Promise<AuthResponse> => {

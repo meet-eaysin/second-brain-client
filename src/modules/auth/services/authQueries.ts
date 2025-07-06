@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authApi } from './authApi.ts'
 import { useAuthStore } from '../store/authStore.ts'
 import { removeToken, setToken } from '../utils/tokenUtils.ts'
+// import type {ApiResponse} from "@/types/api.types.ts";
 
 export const AUTH_KEYS = {
     user: ['auth', 'user'] as const,
@@ -11,21 +12,21 @@ export const AUTH_KEYS = {
 }
 
 export const useCurrentUser = () => {
-    const { setUser, setLoading, setError } = useAuthStore()
+    // const { setUser, setLoading, setError } = useAuthStore()
 
     return useQuery({
         queryKey: AUTH_KEYS.user,
         queryFn: authApi.getCurrentUser,
         enabled: !!localStorage.getItem('token'),
-        onSuccess: (data) => {
-            setUser(data.user)
-            setLoading(false)
-        },
-        onError: (error: any) => {
-            setError(error.message)
-            setUser(null)
-            removeToken()
-        },
+        // onSuccess: (data: ApiResponse) => {
+        //     setUser(data.data)
+        //     setLoading(false)
+        // },
+        // onError: (error: Error) => {
+        //     setError(error.message)
+        //     setUser(null)
+        //     removeToken()
+        // },
         retry: false,
     })
 }
@@ -46,7 +47,7 @@ export const useLogin = () => {
             queryClient.setQueryData(AUTH_KEYS.user, { user: data.user })
             setLoading(false)
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             setError(error.message)
             setLoading(false)
         },
@@ -69,7 +70,7 @@ export const useRegister = () => {
             queryClient.setQueryData(AUTH_KEYS.user, { user: data.user })
             setLoading(false)
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             setError(error.message)
             setLoading(false)
         },
@@ -92,7 +93,7 @@ export const useGoogleLogin = () => {
             queryClient.setQueryData(AUTH_KEYS.user, { user: data.user })
             setLoading(false)
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             setError(error.message)
             setLoading(false)
         },

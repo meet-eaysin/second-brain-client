@@ -1,9 +1,9 @@
-import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { apiClient } from './apiClient'
+import type {AxiosResponse, InternalAxiosRequestConfig} from "axios";
 
 export const setupInterceptors = () => {
     apiClient.interceptors.request.use(
-        (config: AxiosRequestConfig) => {
+        (config: InternalAxiosRequestConfig) => {
             console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`, config.data)
             return config
         },

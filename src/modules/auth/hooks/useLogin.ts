@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useLogin as useLoginMutation } from '../services/authQueries.ts'
-import type {LoginCredentials} from "@/modules/auth";
+import type {LoginCredentials} from "@/modules/auth/types/auth.types.ts";
 
 const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
