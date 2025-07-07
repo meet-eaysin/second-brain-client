@@ -1,8 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ErrorBoundary } from '../providers/ErrorBoundary'
 import { authRoutes } from '@/modules/auth'
-import { RootLayout } from '@/layout/RootLayout'
-import { AuthGuard } from '@/modules/auth/components/AuthGuard'
+import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout.tsx'
+import Dashboard from "@/modules/dashboard";
+// import { AuthGuard } from '@/modules/auth/components/AuthGuard'
 
 const router = createBrowserRouter([
     {
@@ -15,9 +16,9 @@ const router = createBrowserRouter([
         path: '/',
         element: (
             <ErrorBoundary>
-                <AuthGuard>
-                    <RootLayout />
-                </AuthGuard>
+                {/*<AuthGuard>*/}
+                    <AuthenticatedLayout />
+                {/*</AuthGuard>*/}
             </ErrorBoundary>
         ),
         children: [
@@ -27,7 +28,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'dashboard',
-                element: <div className="text-xl font-semibold text-gray-900">Dashboard Content</div>,
+                element: <Dashboard/>,
             },
             {
                 path: 'users',
