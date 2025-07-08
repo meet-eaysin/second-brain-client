@@ -3,44 +3,48 @@ import { ErrorBoundary } from '../providers/ErrorBoundary'
 import { authRoutes } from '@/modules/auth'
 import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout.tsx'
 import Dashboard from "@/modules/dashboard";
-// import { AuthGuard } from '@/modules/auth/components/AuthGuard'
+import {ProtectedRoute} from "@/modules/auth/components/protected-route.tsx";
+import {getAuthParentLink, getHomeLink} from "@/app/router/router-link.ts";
+import DataTablePage from "@/modules/data-table";
+import {HomePage} from "@/modules/home";
 
 const router = createBrowserRouter([
     {
-        path: '/auth',
+        path: getHomeLink(),
+        element: (
+            <ErrorBoundary>
+                <HomePage />
+            </ErrorBoundary>
+        ),
+    },
+    // Auth routes (public)
+    {
+        path: getAuthParentLink(),
         children: [
             ...authRoutes
         ]
     },
     {
-        path: '/',
+        path: "/app",
         element: (
             <ErrorBoundary>
-                {/*<AuthGuard>*/}
+                <ProtectedRoute>
                     <AuthenticatedLayout />
-                {/*</AuthGuard>*/}
+                </ProtectedRoute>
             </ErrorBoundary>
         ),
         children: [
             {
-                path: '',
+                index: true,
                 element: <div className="text-center text-gray-600">Welcome to Dashboard</div>,
             },
             {
-                path: 'dashboard',
+                path: "dashboard",
                 element: <Dashboard/>,
             },
             {
-                path: 'users',
-                element: <div className="text-xl font-semibold text-gray-900">Users Management</div>,
-            },
-            {
-                path: 'settings',
-                element: <div className="text-xl font-semibold text-gray-900">Settings</div>,
-            },
-            {
-                path: 'reports',
-                element: <div className="text-xl font-semibent text-gray-900">Reports</div>,
+                path: "data-tables",
+                element: <DataTablePage/>,
             },
         ],
     },

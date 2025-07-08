@@ -1,50 +1,36 @@
-import type {User} from "@/modules/auth/types/auth.types.ts";
-import {create} from "zustand";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { User } from "@/modules/auth/types/auth.types.ts";
 
-interface AuthStore {
-    user: User | null
-    isLoading: boolean
-    isAuthenticated: boolean
-    hasToken: boolean
-    error: string | null
-    setUser: (user: User | null) => void
-    setLoading: (loading: boolean) => void
-    setError: (error: string | null) => void
-    logout: () => void
-    reset: () => void
+interface AuthState {
+    user: User | null;
+    setUser: (user: User) => void;
+    clearUser: () => void;
+    isAuthenticated: boolean;
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
-    user: null,
-    isLoading: false,
-    isAuthenticated: false,
-    hasToken: false,
-    error: null,
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set) => ({
+            user: null,
+            isAuthenticated: false,
 
-    setUser: (user) => set({
-        user,
-        isAuthenticated: !!user
-    }),
+            setUser: (user) => set({
+                user,
+                isAuthenticated: true
+            }),
 
-    setLoading: (loading) => set({
-        isLoading: loading
-    }),
-
-    setError: (error) => set({
-        error
-    }),
-
-    logout: () => set({
-        user: null,
-        isAuthenticated: false,
-        hasToken: false
-    }),
-
-    reset: () => set({
-        user: null,
-        isLoading: false,
-        isAuthenticated: false,
-        hasToken: false,
-        error: null
-    })
-}))
+            clearUser: () => set({
+                user: null,
+                isAuthenticated: false
+            }),
+        }),
+        {
+            name: 'auth-storage',
+            partialize: (state) => ({
+                user: state.user,
+                isAuthenticated: state.isAuthenticated
+            }),
+        }
+    )
+);

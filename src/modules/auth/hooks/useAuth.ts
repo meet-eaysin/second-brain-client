@@ -1,21 +1,17 @@
-import { useAuthStore } from '../store/authStore'
-import { useCurrentUser } from '../services/authQueries.ts'
-import { getToken } from '../utils/tokenUtils'
+import { useAuthStore } from '../store/authStore';
+import { useCurrentUser } from '../services/authQueries';
+import { hasToken } from '../utils/tokenUtils';
 
 export const useAuth = () => {
-    const authState = useAuthStore()
-    const token = getToken()
-
-    // Fetch user data if token exists but user is not set
-    const { isLoading: isUserLoading } = useCurrentUser()
-
-    const isLoading = authState.isLoading || isUserLoading
-    const isAuthenticated = !!authState.user || !!token
+    const { user, isAuthenticated } = useAuthStore();
+    const userQuery = useCurrentUser();
 
     return {
-        ...authState,
-        isLoading,
+        user,
         isAuthenticated,
-        hasToken: !!token,
-    }
-}
+        isLoading: userQuery.isLoading,
+        hasToken: hasToken(),
+        error: userQuery.error,
+        refetch: userQuery.refetch,
+    };
+};

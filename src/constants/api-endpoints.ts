@@ -1,10 +1,17 @@
 export const API_ENDPOINTS = {
     AUTH: {
-        LOGIN: '/auth/login',
-        REGISTER: '/auth/register',
-        GOOGLE: '/auth/google',
-        REFRESH: '/auth/refresh',
+        SIGN_IN: '/auth/sign-in',
+        SIGN_UP: '/auth/sign-up',
+        GOOGLE_AUTH: '/auth/google',
+        GOOGLD_AUTH_CALLBACK: '/auth/google/callback',
+        REFRESH_TOKEN: '/auth/refresh',
         LOGOUT: '/auth/logout',
+        LOGOUT_ALL: '/auth/logout-all',
+        FORGOT_PASSWORD: '/auth/forgot-password',
+        CHANGE_PASSWORD: '/auth/change-password',
+        RESET_PASSWORD: '/auth/reset-password',
+        VERIFY_OTP: '/auth/verify-otp',
+        VERIFY_EMAIL: '/auth/verify-email',
         ME: '/auth/me',
     },
     USERS: {

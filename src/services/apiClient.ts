@@ -2,67 +2,70 @@ import axios, {
     type AxiosInstance,
     type AxiosResponse,
     type InternalAxiosRequestConfig
-} from 'axios'
-import {getToken, removeToken, setToken} from "@/modules/auth/utils/tokenUtils.ts";
+} from 'axios';
+import {
+    getToken,
+    removeTokens,
+    setToken,
+    getRefreshToken
+} from "@/modules/auth/utils/tokenUtils.ts";
+import {useAuthStore} from "@/modules/auth/store/authStore.ts";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const apiClient: AxiosInstance = axios.create({
     baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
-})
+});
 
-// Request interceptor to add auth token
 apiClient.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
-        const token = getToken()
+        const token = getToken();
         if (token) {
-            config.headers = config.headers || {}
-            config.headers.Authorization = `Bearer ${token}`
+            config.headers.Authorization = `Bearer ${token}`;
         }
-        return config
+        return config;
     },
-    (error) => {
-        return Promise.reject(error)
-    }
-)
+    (error) => Promise.reject(error)
+);
 
-// Response interceptor for token refresh
 apiClient.interceptors.response.use(
-    (response: AxiosResponse) => {
-        return response
-    },
+    (response: AxiosResponse) => response,
     async (error) => {
-        const originalRequest = error.config
+        const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
-            originalRequest._retry = true
+            originalRequest._retry = true;
 
-            try {
-                const refreshToken = localStorage.getItem('refreshToken')
-                if (refreshToken) {
-                    const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+            const refreshToken = getRefreshToken();
+            if (refreshToken) {
+                try {
+                    const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
                         refreshToken
-                    })
+                    });
 
-                    const { token } = response.data
-                    setToken(token)
+                    const { accessToken } = response.data.data;
+                    setToken(accessToken);
 
-                    originalRequest.headers.Authorization = `Bearer ${token}`
-                    return apiClient(originalRequest)
+                    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                    return apiClient(originalRequest);
+                } catch (refreshError) {
+                    removeTokens();
+                    useAuthStore.getState().clearUser();
+                    window.location.href = '/auth/sign-in';
+                    return Promise.reject(refreshError);
                 }
-            } catch (error) {
-                console.error('Error refreshing token:', error)
-                removeToken()
-                localStorage.removeItem('refreshToken')
-                window.location.href = '/auth/login'
+            } else {
+                removeTokens();
+                useAuthStore.getState().clearUser();
+                window.location.href = '/auth/sign-in';
             }
         }
 
-        return Promise.reject(error)
+        return Promise.reject(error);
     }
-)
+);
 
-export default apiClient
+export default apiClient;

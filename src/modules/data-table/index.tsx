@@ -10,7 +10,7 @@ import { tasks } from './data/tasks'
 import {Header} from "@/layout/header.tsx";
 import {Main} from "@/layout/main.tsx";
 
-export default function Tasks() {
+export default function DataTablePage() {
     return (
         <TasksProvider>
             <Header fixed>

@@ -1,8 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { authApi } from './authApi.ts'
 import { useAuthStore } from '../store/authStore.ts'
-import { removeToken, setToken } from '../utils/tokenUtils.ts'
-// import type {ApiResponse} from "@/types/api.types.ts";
+import { setToken, setRefreshToken, hasToken, removeTokens} from '../utils/tokenUtils.ts'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import type {AxiosError} from "axios";
+import type {ApiResponse} from "@/types/api.types.ts";
+import {useEffect} from "react";
+import type {AuthResponse} from "@/modules/auth/types/auth.types.ts";
+import {getDashboardLink, getSignOutLink} from "@/app/router/router-link.ts";
+
 
 export const AUTH_KEYS = {
     user: ['auth', 'user'] as const,
@@ -11,105 +18,193 @@ export const AUTH_KEYS = {
     googleLogin: ['auth', 'google'] as const,
 }
 
-export const useCurrentUser = () => {
-    // const { setUser, setLoading, setError } = useAuthStore()
+interface LoginMutationOptions {
+    onSuccess?: (data: AuthResponse) => void;
+    onError?: (error: Error) => void;
+}
 
-    return useQuery({
+export const useCurrentUser = () => {
+    const { setUser, clearUser } = useAuthStore();
+
+    const query = useQuery({
         queryKey: AUTH_KEYS.user,
         queryFn: authApi.getCurrentUser,
-        enabled: !!localStorage.getItem('token'),
-        // onSuccess: (data: ApiResponse) => {
-        //     setUser(data.data)
-        //     setLoading(false)
-        // },
-        // onError: (error: Error) => {
-        //     setError(error.message)
-        //     setUser(null)
-        //     removeToken()
-        // },
-        retry: false,
-    })
-}
+        enabled: hasToken(),
+        staleTime: 5 * 60 * 1000,
+        gcTime: 10 * 60 * 1000,
+        retry: (failureCount, error: AxiosError) => {
+            if (error?.response?.status === 401) {
+                return false;
+            }
+            return failureCount < 2;
+        },
+    });
 
-export const useLogin = () => {
-    const queryClient = useQueryClient()
-    const { setUser, setLoading, setError } = useAuthStore()
+    useEffect(() => {
+        if (query.data) {
+            setUser(query.data);
+        }
+    }, [query.data, setUser]);
+
+    useEffect(() => {
+        if (query.error) {
+            const error = query.error as AxiosError;
+            if (error?.response?.status === 401) {
+                removeTokens();
+                clearUser();
+            }
+        }
+    }, [query.error, clearUser]);
+
+    return query;
+};
+
+export const useLoginMutation = (options: LoginMutationOptions) => {
+    const { setUser } = useAuthStore();
+    const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: authApi.login,
-        onMutate: () => {
-            setLoading(true)
-            setError(null)
-        },
+        mutationFn: ({ email, password }: { email: string; password: string }) =>
+            authApi.login(email, password),
         onSuccess: (data) => {
-            setToken(data.token)
-            setUser(data.user)
-            queryClient.setQueryData(AUTH_KEYS.user, { user: data.user })
-            setLoading(false)
-        },
-        onError: (error: Error) => {
-            setError(error.message)
-            setLoading(false)
-        },
-    })
-}
+            setToken(data.accessToken);
+            setRefreshToken(data.refreshToken);
+            setUser(data.user);
 
-export const useRegister = () => {
-    const queryClient = useQueryClient()
-    const { setUser, setLoading, setError } = useAuthStore()
+            queryClient.invalidateQueries({ queryKey: AUTH_KEYS.user });
+            if (options?.onSuccess) options.onSuccess(data);
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Login failed';
+            if (options?.onError) options.onError(error);
+            toast.error(message);
+        },
+    });
+};
+
+export const useRegisterMutation = () => {
+    const navigate = useNavigate();
 
     return useMutation({
         mutationFn: authApi.register,
-        onMutate: () => {
-            setLoading(true)
-            setError(null)
+        onSuccess: () => {
+            toast.success('Registration successful! Please login.');
+            navigate(getSignOutLink());
         },
-        onSuccess: (data) => {
-            setToken(data.token)
-            setUser(data.user)
-            queryClient.setQueryData(AUTH_KEYS.user, { user: data.user })
-            setLoading(false)
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Registration failed';
+            toast.error(message);
         },
-        onError: (error: Error) => {
-            setError(error.message)
-            setLoading(false)
-        },
-    })
-}
+    });
+};
 
-export const useGoogleLogin = () => {
-    const queryClient = useQueryClient()
-    const { setUser, setLoading, setError } = useAuthStore()
+export const useGoogleLoginMutation = () => {
+    const queryClient = useQueryClient();
+    const { setUser } = useAuthStore();
+    const navigate = useNavigate();
 
     return useMutation({
-        mutationFn: authApi.googleLogin,
-        onMutate: () => {
-            setLoading(true)
-            setError(null)
-        },
+        mutationFn: authApi.handleGoogleCallback,
         onSuccess: (data) => {
-            setToken(data.token)
-            setUser(data.user)
-            queryClient.setQueryData(AUTH_KEYS.user, { user: data.user })
-            setLoading(false)
-        },
-        onError: (error: Error) => {
-            setError(error.message)
-            setLoading(false)
-        },
-    })
-}
+            setToken(data.accessToken);
+            setRefreshToken(data.refreshToken);
 
-export const useLogout = () => {
-    const queryClient = useQueryClient()
-    const { logout } = useAuthStore()
+            setUser(data.user);
+
+            queryClient.setQueryData(AUTH_KEYS.user, data.user);
+
+            toast.success('Google login successful');
+            navigate(getDashboardLink());
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Google login failed';
+            toast.error(message);
+        },
+    });
+};
+
+export const useLogoutMutation = () => {
+    const { clearUser } = useAuthStore();
+    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: authApi.logout,
         onSuccess: () => {
-            removeToken()
-            logout()
-            queryClient.clear()
+            removeTokens();
+            clearUser();
+            queryClient.clear();
+            window.location.href = getSignOutLink();
         },
-    })
-}
+        onError: () => {
+            removeTokens();
+            clearUser();
+            queryClient.clear();
+            window.location.href = getSignOutLink();
+        },
+    });
+};
+
+export const useLogoutAllMutation = () => {
+    const queryClient = useQueryClient();
+    const { clearUser } = useAuthStore();
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: authApi.logoutAll,
+        onSettled: () => {
+            removeTokens();
+            clearUser();
+            queryClient.clear();
+            navigate(getSignOutLink());
+        },
+        onSuccess: () => {
+            toast.success('Logged out from all devices');
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Logout failed';
+            toast.error(message);
+        },
+    });
+};
+
+export const useChangePasswordMutation = () => {
+    return useMutation({
+        mutationFn: authApi.changePassword,
+        onSuccess: () => {
+            toast.success('Password changed successfully');
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Password change failed';
+            toast.error(message);
+        },
+    });
+};
+
+export const useForgotPasswordMutation = () => {
+    return useMutation({
+        mutationFn: authApi.forgotPassword,
+        onSuccess: () => {
+            toast.success('Password reset email sent successfully');
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Failed to send reset email';
+            toast.error(message);
+        },
+    });
+};
+
+export const useResetPasswordMutation = () => {
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: authApi.resetPassword,
+        onSuccess: () => {
+            toast.success('Password reset successfully');
+            navigate(getSignOutLink());
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Password reset failed';
+            toast.error(message);
+        },
+    });
+};

@@ -1,6 +1,4 @@
-import { DotsHorizontalIcon } from '@radix-ui/react-icons'
-import { Row } from '@tanstack/react-table'
-import { IconTrash } from '@tabler/icons-react'
+
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -18,6 +16,8 @@ import {
 import { useTasks } from '../context/tasks-context'
 import { labels } from '../data/data'
 import { taskSchema } from '../data/schema'
+import type {Row} from "@tanstack/react-table";
+import {LucideDotSquare, LucideTrash} from "lucide-react";
 
 interface DataTableRowActionsProps<TData> {
     row: Row<TData>
@@ -37,7 +37,7 @@ export function DataTableRowActions<TData>({
                     variant='ghost'
                     className='data-[state=open]:bg-muted flex h-8 w-8 p-0'
                 >
-                    <DotsHorizontalIcon className='h-4 w-4' />
+                    <LucideDotSquare className='h-4 w-4' />
                     <span className='sr-only'>Open menu</span>
                 </Button>
             </DropdownMenuTrigger>
@@ -74,7 +74,7 @@ export function DataTableRowActions<TData>({
                 >
                     Delete
                     <DropdownMenuShortcut>
-                        <IconTrash size={16} />
+                        <LucideTrash size={16} />
                     </DropdownMenuShortcut>
                 </DropdownMenuItem>
             </DropdownMenuContent>

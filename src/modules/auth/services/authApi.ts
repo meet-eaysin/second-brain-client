@@ -1,38 +1,67 @@
 import apiClient from "@/services/apiClient.ts";
 import type {
+    ApiResponse,
     AuthResponse,
-    GoogleAuthResponse,
-    LoginCredentials,
-    RegisterCredentials, User
+    RegisterCredentials,
+    User,
+    ChangePasswordCredentials,
+    ForgotPasswordCredentials,
+    ResetPasswordCredentials,
+    RefreshTokenResponse
 } from "@/modules/auth/types/auth.types.ts";
+import {API_ENDPOINTS} from "@/constants/api-endpoints.ts";
 
 export const authApi = {
-    login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-        const { data } = await apiClient.post<AuthResponse>('/auth/login', credentials)
-        return data
+    login: async (email: string, password: string) => {
+        const response = await apiClient.post<ApiResponse<{
+            user: User;
+            accessToken: string;
+            refreshToken: string;
+        }>>(API_ENDPOINTS.AUTH.SIGN_IN, { email, password });
+        return response.data.data;
     },
 
-    register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
-        const { data } = await apiClient.post<AuthResponse>('/auth/register', credentials)
-        return data
+    register: async (credentials: RegisterCredentials): Promise<User> => {
+        const response = await apiClient.post<ApiResponse<User>>(API_ENDPOINTS.AUTH.SIGN_UP, credentials)
+        return response.data.data
     },
 
-    googleLogin: async (token: string): Promise<GoogleAuthResponse> => {
-        const { data } = await apiClient.post<GoogleAuthResponse>('/auth/google', { token })
-        return data
+    refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
+        const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>(API_ENDPOINTS.AUTH.REFRESH_TOKEN, { refreshToken })
+        return response.data.data
     },
 
-    refreshToken: async (refreshToken: string): Promise<{ token: string }> => {
-        const { data } = await apiClient.post<{ token: string }>('/auth/refresh', { refreshToken })
-        return data
+    logout: async () => {
+        await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT);
     },
 
-    logout: async (): Promise<void> => {
-        await apiClient.post('/auth/logout')
+    logoutAll: async (): Promise<void> => {
+        await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT_ALL)
     },
 
-    getCurrentUser: async (): Promise<{ user: User }> => {
-        const { data } = await apiClient.get<{ user: User }>('/auth/me')
-        return data
+    getCurrentUser: async (): Promise<User> => {
+        const response = await apiClient.get<ApiResponse<User>>(API_ENDPOINTS.AUTH.ME);
+        return response.data.data;
+    },
+
+    changePassword: async (credentials: ChangePasswordCredentials): Promise<void> => {
+        await apiClient.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, credentials)
+    },
+
+    forgotPassword: async (credentials: ForgotPasswordCredentials): Promise<void> => {
+        await apiClient.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, credentials)
+    },
+
+    resetPassword: async (credentials: ResetPasswordCredentials): Promise<void> => {
+        await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, credentials)
+    },
+
+    getGoogleLoginUrl: async (): Promise<{ url: string }> => {
+        return { url: `${apiClient.defaults.baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}` }
+    },
+
+    handleGoogleCallback: async (code: string): Promise<AuthResponse> => {
+        const response = await apiClient.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.AUTH.GOOGLD_AUTH_CALLBACK, { code })
+        return response.data.data
     },
 }

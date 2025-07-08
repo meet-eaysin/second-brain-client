@@ -1,50 +1,32 @@
-
-import { AuthNotFound } from './components/AuthNotFound'
-import {ErrorBoundary} from "@/app/providers/ErrorBoundary.tsx";
-import {AuthLayout} from "@/modules/auth/components/AuthLayout.tsx";
-import {LoginPage} from "@/modules/auth/pages/login-page.tsx";
-import {RegisterPage} from "@/modules/auth/pages/RegisterPage.tsx";
-import {ForgotPasswordPage} from "@/modules/auth/pages/ForgotPasswordPage.tsx";
+import { AuthNotFoundPage } from './pages/auth-not-found-page.tsx'
+import {OtpPage} from "@/modules/auth/pages/otp-page.tsx";
+import {SignInPage} from "@/modules/auth/pages/sign-in-page.tsx";
+import {SignUpPage} from "@/modules/auth/pages/sign-up-page.tsx";
+import {ForgotPasswordPage} from "@/modules/auth/pages/forgot-password-page.tsx";
 
 export const authRoutes = [
     {
-        path: 'login',
-        element: (
-            <ErrorBoundary>
-                <AuthLayout title="Sign in to your account">
-                    <LoginPage />
-                </AuthLayout>
-            </ErrorBoundary>
-        ),
+        path: "sign-in",
+        element: <SignInPage/>,
     },
     {
-        path: 'register',
-        element: (
-            <ErrorBoundary>
-                <AuthLayout title="Create your account">
-                    <RegisterPage />
-                </AuthLayout>
-            </ErrorBoundary>
-        ),
+        path: "sign-up",
+        element: <SignUpPage/>,
     },
     {
-        path: 'forgot-password',
-        element: (
-            <ErrorBoundary>
-                <AuthLayout title="Reset your password">
-                    <ForgotPasswordPage />
-                </AuthLayout>
-            </ErrorBoundary>
-        ),
+        path: "change-password",
+        element: <div>Change Password</div>
+    },
+    {
+        path: "forgot-password",
+        element: <ForgotPasswordPage/>,
+    },
+    {
+        path: "otp",
+        element: <OtpPage/>,
     },
     {
         path: '*',
-        element: (
-            <ErrorBoundary>
-                <AuthLayout title="Page Not Found">
-                    <AuthNotFound />
-                </AuthLayout>
-            </ErrorBoundary>
-        ),
+        element: <AuthNotFoundPage/>,
     },
 ]
