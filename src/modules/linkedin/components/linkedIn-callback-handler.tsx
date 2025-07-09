@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useLinkedInCallbackMutation } from "@/modules/linkedin/services/linkedinQueries.ts";
 import React, { useEffect } from "react";
 import { parseLinkedInCallback } from "@/modules/linkedin/services/linkedinApi.ts";
@@ -9,35 +9,33 @@ import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 
 const LinkedInCallbackHandler: React.FC = () => {
     const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const callbackMutation = useLinkedInCallbackMutation();
+
+    const { code, state } = parseLinkedInCallback(searchParams);
 
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                const { code, state } = parseLinkedInCallback(searchParams);
+                
                 await callbackMutation.mutateAsync({ code, state });
 
+                console.log('LinkedIn callback processed successfully:', { code, state });
                 toast.success('LinkedIn account connected successfully!');
-                navigate('/social-accounts', { replace: true });
+                // navigate('/social-accounts', { replace: true });
             } catch (error) {
                 console.error('LinkedIn callback error:', error);
                 toast.error('Failed to connect LinkedIn account');
-                navigate('/social-accounts', { replace: true });
+                // navigate('/social-accounts', { replace: true });
             }
         };
-
-        if (searchParams.has('code')) {
+        if (code !== undefined && code !== null) {
             handleCallback();
-        } else if (searchParams.has('error')) {
-            // Handle OAuth error (user denied access, etc.)
-            const error = searchParams.get('error');
-            const errorDescription = searchParams.get('error_description');
-
-            toast.error(`LinkedIn authentication failed: ${errorDescription || error}`);
-            navigate('/social-accounts', { replace: true });
+            console.log(code);
         }
-    }, [searchParams, callbackMutation, navigate]);
+            // navigate('/social-accounts', { replace: true });
+        
+    }, [code]);
 
     if (callbackMutation.isPending) {
         return (

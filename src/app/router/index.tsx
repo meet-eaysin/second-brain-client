@@ -1,7 +1,6 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ErrorBoundary } from '../providers/error-boundary.tsx'
 import { authRoutes } from '@/modules/auth'
-import { linkedinRoutes } from '@/modules/linkedin'
 import {
     getAuthParentLink,
     getHomeLink,
@@ -17,6 +16,7 @@ import {
     NotFoundPage,
     ProtectedRoute
 } from "@/app/router/lazy-components";
+import { linkedinRoutes } from '@/modules/linkedin/index.tsx';
 
 const router = createBrowserRouter([
     {
