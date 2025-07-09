@@ -20,6 +20,17 @@ export const API_ENDPOINTS = {
         UPDATE: (id: string) => `/users/${id}`,
         DELETE: (id: string) => `/users/${id}`,
     },
+    LINKEDIN: {
+        AUTH_INITIATE: '/social/linkedin/auth/initiate',
+        AUTH_CALLBACK: '/social/linkedin/auth/callback',
+        DISCONNECT: '/social/linkedin/disconnect',
+        CONNECTION_STATUS: '/social/linkedin/connection',
+        SYNC_POSTS: '/social/linkedin/sync',
+        POSTS: '/social/linkedin/posts',
+        CREATE_POST: '/social/linkedin/posts',
+        LIKE_POST: (postId: string) => `/social/linkedin/posts/${postId}/like`,
+        COMMENT_POST: (postId: string) => `/social/linkedin/posts/${postId}/comment`,
+    },
     DASHBOARD: {
         STATS: '/dashboard/stats',
         ANALYTICS: '/dashboard/analytics',

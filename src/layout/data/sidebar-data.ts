@@ -5,7 +5,7 @@ import {
     GalleryVerticalEnd, LucideBarChart, LucideBug,
     LucideCheckLine, LucideDiameter, LucideFerrisWheel, LucideHelpCircle,
     LucideLayoutDashboard, LucideLock, LucideMessageCircle, LucideNavigation,
-    LucidePackage, LucideServer, LucideSignal, LucideToolCase, LucideUser, LucideUserCog
+    LucidePackage, LucideServer, LucideShare2, LucideSignal, LucideToolCase, LucideUser, LucideUserCog
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -38,18 +38,27 @@ export const sidebarData: SidebarData = {
             items: [
                 {
                     title: 'Dashboard',
-                    url: '/',
+                    url: '/app/dashboard',
                     icon: LucideLayoutDashboard,
                 },
                 {
-                    title: 'Tasks',
-                    url: '/tasks',
+                    title: 'Data Tables',
+                    url: '/app/data-tables',
                     icon: LucideCheckLine,
                 },
                 {
-                    title: 'Apps',
-                    url: '/apps',
-                    icon: LucidePackage,
+                    title: 'Social Connect',
+                    icon: LucideShare2,
+                    items: [
+                        {
+                            title: 'Dashboard',
+                            url: '/app/social-connect/dashboard',
+                        },
+                        {
+                            title: 'LinkedIn',
+                            url: '/app/social-connect/linkedin',
+                        },
+                    ],
                 },
                 {
                     title: 'Chats',

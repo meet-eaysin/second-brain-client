@@ -10,10 +10,18 @@ export const getResetPasswordLink = () => "/auth/reset-password";
 export const getVerifyEmailLink = () => "/auth/verify-email";
 export const getChangePasswordLink = () => "/auth/change-password";
 
+// LinkedIn routes (nested under /app)
+export const getSocialConnectParentLink = () => "/app/social-connect";
+export const getLinkedinLink = () => "/app/social-connect/linkedin";
+export const getLinkedinCallbackLink = () => "/app/social-connect/linkedin/callback";
+
 // Public routes
-export const getHomeLink = () => "/"; // Landing page
+export const getHomeLink = () => "/";
 
 // Protected routes (authenticated)
-export const getAppLink = () => "/app"; // Main app entry
+export const getAppLink = () => "/app";
 export const getDashboardLink = () => "/app/dashboard";
 export const getDataTablesLink = () => "/app/data-tables";
+
+// Social routes
+export const getSocialLink = () => "/social";

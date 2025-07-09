@@ -1,12 +1,22 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { ErrorBoundary } from '../providers/ErrorBoundary'
+import { ErrorBoundary } from '../providers/error-boundary.tsx'
 import { authRoutes } from '@/modules/auth'
-import { AuthenticatedLayout } from '@/layout/AuthenticatedLayout.tsx'
-import Dashboard from "@/modules/dashboard";
-import {ProtectedRoute} from "@/modules/auth/components/protected-route.tsx";
-import {getAuthParentLink, getHomeLink} from "@/app/router/router-link.ts";
-import DataTablePage from "@/modules/data-table";
-import {HomePage} from "@/modules/home";
+import { linkedinRoutes } from '@/modules/linkedin'
+import {
+    getAuthParentLink,
+    getHomeLink,
+    getAppLink,
+    getDashboardLink,
+    getDataTablesLink,
+} from "@/app/router/router-link.ts";
+import {
+    AuthenticatedLayout,
+    DashboardPage,
+    DataTablePage,
+    HomePage,
+    NotFoundPage,
+    ProtectedRoute
+} from "@/app/router/lazy-components";
 
 const router = createBrowserRouter([
     {
@@ -17,33 +27,32 @@ const router = createBrowserRouter([
             </ErrorBoundary>
         ),
     },
-    // Auth routes (public)
     {
         path: getAuthParentLink(),
-        children: [
-            ...authRoutes
-        ]
+        children: authRoutes
     },
     {
-        path: "/app",
+        path: getAppLink(),
         element: (
-            <ErrorBoundary>
-                <ProtectedRoute>
-                    <AuthenticatedLayout />
-                </ProtectedRoute>
-            </ErrorBoundary>
+            <ProtectedRoute>
+                <AuthenticatedLayout />
+            </ProtectedRoute>
         ),
         children: [
+            {
+                path: "social-connect",
+                children: linkedinRoutes
+            },
             {
                 index: true,
                 element: <div className="text-center text-gray-600">Welcome to Dashboard</div>,
             },
             {
-                path: "dashboard",
-                element: <Dashboard/>,
+                path: getDashboardLink().replace('/app/', ''),
+                element: <DashboardPage/>,
             },
             {
-                path: "data-tables",
+                path: getDataTablesLink().replace('/app/', ''),
                 element: <DataTablePage/>,
             },
         ],
@@ -52,12 +61,7 @@ const router = createBrowserRouter([
         path: '*',
         element: (
             <ErrorBoundary>
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                    <div className="text-center">
-                        <h1 className="text-2xl font-bold text-gray-900">404 - Page Not Found</h1>
-                        <p className="text-gray-600 mt-2">The page you're looking for doesn't exist.</p>
-                    </div>
-                </div>
+                <NotFoundPage/>
             </ErrorBoundary>
         ),
     },

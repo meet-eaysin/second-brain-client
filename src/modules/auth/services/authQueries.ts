@@ -32,7 +32,7 @@ export const useCurrentUser = () => {
         enabled: hasToken(),
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
-        retry: (failureCount, error: AxiosError) => {
+        retry: (failureCount: number, error: AxiosError) => {
             if (error?.response?.status === 401) {
                 return false;
             }
@@ -66,7 +66,7 @@ export const useLoginMutation = (options: LoginMutationOptions) => {
     return useMutation({
         mutationFn: ({ email, password }: { email: string; password: string }) =>
             authApi.login(email, password),
-        onSuccess: (data) => {
+        onSuccess: (data: AuthResponse) => {
             setToken(data.accessToken);
             setRefreshToken(data.refreshToken);
             setUser(data.user);
@@ -105,7 +105,7 @@ export const useGoogleLoginMutation = () => {
 
     return useMutation({
         mutationFn: authApi.handleGoogleCallback,
-        onSuccess: (data) => {
+        onSuccess: (data: AuthResponse) => {
             setToken(data.accessToken);
             setRefreshToken(data.refreshToken);
 

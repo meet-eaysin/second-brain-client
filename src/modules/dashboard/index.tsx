@@ -16,7 +16,7 @@ import {Main} from "@/layout/main.tsx";
 import {Overview} from "@/modules/dashboard/components/overview.tsx";
 import {RecentSales} from "@/modules/dashboard/components/recent-sales.tsx";
 
-export default function Dashboard() {
+const Dashboard = () => {
     return (
         <>
             {/* ===== Top Heading ===== */}
@@ -187,6 +187,8 @@ export default function Dashboard() {
     </>
 )
 }
+
+export default Dashboard;
 
 const topNav = [
     {

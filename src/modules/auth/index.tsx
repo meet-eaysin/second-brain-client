@@ -1,32 +1,35 @@
-import { AuthNotFoundPage } from './pages/auth-not-found-page.tsx'
-import {OtpPage} from "@/modules/auth/pages/otp-page.tsx";
-import {SignInPage} from "@/modules/auth/pages/sign-in-page.tsx";
-import {SignUpPage} from "@/modules/auth/pages/sign-up-page.tsx";
-import {ForgotPasswordPage} from "@/modules/auth/pages/forgot-password-page.tsx";
+import {
+    SignInPage,
+    SignUpPage,
+    ForgotPasswordPage,
+    OtpPage,
+    AuthNotFoundPage
+} from '@/app/router/lazy-components'
+import type {RouteObject} from "react-router-dom";
 
-export const authRoutes = [
+export const authRoutes: RouteObject[] = [
     {
         path: "sign-in",
-        element: <SignInPage/>,
+        element: <SignInPage />,
     },
     {
         path: "sign-up",
-        element: <SignUpPage/>,
+        element: <SignUpPage />,
     },
     {
         path: "change-password",
-        element: <div>Change Password</div>
+        element: <div>Change Password</div>, // Consider making this a lazy component too
     },
     {
         path: "forgot-password",
-        element: <ForgotPasswordPage/>,
+        element: <ForgotPasswordPage />,
     },
     {
         path: "otp",
-        element: <OtpPage/>,
+        element: <OtpPage />,
     },
     {
         path: '*',
-        element: <AuthNotFoundPage/>,
+        element: <AuthNotFoundPage />,
     },
 ]

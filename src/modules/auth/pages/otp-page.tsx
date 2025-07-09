@@ -1,9 +1,7 @@
-import {ErrorBoundary} from "@/app/providers/ErrorBoundary.tsx";
+import Otp from "@/modules/auth/components/otp";
 
-export const OtpPage = () => {
-    return (
-        <ErrorBoundary>
-                <OtpPage />
-        </ErrorBoundary>
-    )
+const OtpPage = () => {
+    return <Otp />
 }
+
+export default OtpPage;

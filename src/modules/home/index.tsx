@@ -3,7 +3,7 @@ import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { getSignInLink, getSignUpLink, getDashboardLink } from '@/app/router/router-link.ts';
 import { Button } from '@/components/ui/button';
 
-export const HomePage = () => {
+const HomePage = () => {
     const { isAuthenticated } = useAuth();
 
     return (
@@ -112,3 +112,5 @@ export const HomePage = () => {
         </div>
     );
 };
+
+export default HomePage;

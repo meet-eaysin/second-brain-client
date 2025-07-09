@@ -11,7 +11,7 @@ interface Props {
     children?: React.ReactNode
 }
 
-export function AuthenticatedLayout({ children }: Props) {
+function AuthenticatedLayout({ children }: Props) {
     const defaultOpen = Cookies.get('sidebar_state') !== 'false'
 
     return (
@@ -37,3 +37,5 @@ export function AuthenticatedLayout({ children }: Props) {
         </SearchProvider>
     )
 }
+
+export default AuthenticatedLayout

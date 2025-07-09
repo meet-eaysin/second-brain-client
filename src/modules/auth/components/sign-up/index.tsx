@@ -9,6 +9,7 @@ import {
 import AuthLayout from "@/modules/auth/layout/auth-layout.tsx";
 import {Link} from "react-router-dom";
 import {SignUpForm} from "@/modules/auth/components/sign-up/sign-up-form.tsx";
+import {getSignInLink} from "@/app/router/router-link.ts";
 
 export default function SignUp() {
     return (
@@ -22,7 +23,7 @@ export default function SignUp() {
                         Enter your email and password to create an account. <br />
                         Already have an account?{' '}
                         <Link
-                            to='/sign-in'
+                            to={getSignInLink()}
                             className='hover:text-primary underline underline-offset-4'
                         >
                             Sign In

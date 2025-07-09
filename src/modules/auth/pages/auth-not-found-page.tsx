@@ -1,4 +1,4 @@
-export const AuthNotFoundPage = () => {
+const AuthNotFoundPage = () => {
     return (
         <div className="text-center">
             <h3 className="text-lg font-medium text-gray-900">Page Not Found</h3>
@@ -6,3 +6,5 @@ export const AuthNotFoundPage = () => {
         </div>
     )
 }
+
+export default AuthNotFoundPage;

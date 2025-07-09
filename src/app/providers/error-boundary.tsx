@@ -3,6 +3,10 @@ import {Component, type ErrorInfo, type ReactNode} from 'react'
 interface Props {
     children: ReactNode
     fallback?: ReactNode
+    FallbackComponent?: ({error, resetErrorBoundary}: {
+        error: Error;
+        resetErrorBoundary: () => void;
+    }) => ReactNode
     onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
@@ -26,9 +30,24 @@ export class ErrorBoundary extends Component<Props, State> {
         this.props.onError?.(error, errorInfo)
     }
 
+    resetErrorBoundary = () => {
+        this.setState({ hasError: false, error: undefined })
+    }
+
     render() {
-        if (this.state.hasError) {
-            return this.props.fallback || (
+        if (this.state.hasError && this.state.error) {
+            if (this.props.FallbackComponent) {
+                return this.props.FallbackComponent({
+                    error: this.state.error,
+                    resetErrorBoundary: this.resetErrorBoundary
+                })
+            }
+
+            if (this.props.fallback) {
+                return this.props.fallback
+            }
+
+            return (
                 <div className="flex items-center justify-center h-64">
                     <div className="text-center">
                         <h2 className="text-lg font-semibold text-gray-900">Something went wrong</h2>
@@ -36,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
                             {this.state.error?.message || 'An unexpected error occurred'}
                         </p>
                         <button
-                            onClick={() => this.setState({ hasError: false })}
+                            onClick={this.resetErrorBoundary}
                             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
                             Try again
