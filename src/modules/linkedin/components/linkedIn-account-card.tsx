@@ -5,10 +5,21 @@ import {Button} from "@/components/ui/button.tsx";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import React from "react";
-import type {SocialConnectionStatus, TLinkedInProfile} from "@/modules/social-connections/types";
+import type { TProfile} from "@/modules/social-connections/types";
+
+export type TLinkedInProfileInformation = {
+    platform: "LINKEDIN";
+    isConnected: boolean;
+    connection: {
+        profile: TProfile;
+        connectedAt: string;
+        lastSyncAt: string;
+        email: string | undefined;
+    } | null;
+}
 
 export const LinkedInAccountCard: React.FC<{
-    connectionData: SocialConnectionStatus<TLinkedInProfile>;
+    connectionData: TLinkedInProfileInformation;
     onConnect: () => void;
     onDisconnect: () => void;
     onSync: () => void;

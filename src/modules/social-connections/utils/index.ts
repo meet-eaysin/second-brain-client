@@ -1,6 +1,6 @@
-import type {SocialCallbackParams, SocialPlatform} from "@/modules/social-connections/types";
+import type {ESocialPlatform, TSocialCallbackParams} from "@/modules/social-connections/types";
 
-export const parseSocialCallback = (searchParams: URLSearchParams): SocialCallbackParams => {
+export const parseSocialCallback = (searchParams: URLSearchParams): TSocialCallbackParams => {
     const code = searchParams.get('code');
     const state = searchParams.get('state');
 
@@ -14,10 +14,10 @@ export const parseSocialCallback = (searchParams: URLSearchParams): SocialCallba
     };
 };
 
-export const getSupportedPlatforms = (): SocialPlatform[] => {
+export const getSupportedPlatforms = (): ESocialPlatform[] => {
     return ['LINKEDIN', 'FACEBOOK', 'INSTAGRAM', 'TWITTER', 'YOUTUBE', 'TWITTER'];
 };
 
-export const isPlatformSupported = (platform: string): platform is SocialPlatform => {
-    return getSupportedPlatforms().includes(platform as SocialPlatform);
+export const isPlatformSupported = (platform: string): platform is ESocialPlatform => {
+    return getSupportedPlatforms().includes(platform as ESocialPlatform);
 };

@@ -148,7 +148,7 @@ const SocialAccounts: React.FC = () => {
                 {/* LinkedIn Account */}
                 {linkedInConnectionData && (
                     <LinkedInAccountCard
-                        connectionData={linkedInConnectionData}
+                        connectionData={linkedInConnectionData || {}}
                         onConnect={handleConnect}
                         onDisconnect={handleDisconnect}
                         onSync={handleSync}
