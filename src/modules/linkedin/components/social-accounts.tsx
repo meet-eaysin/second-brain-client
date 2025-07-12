@@ -1,12 +1,5 @@
-// social-accounts.tsx (Improved version)
 import { useSearchParams } from "react-router-dom";
 import React from "react";
-import {
-    useLinkedInAuthMutation,
-    useLinkedInConnectionQuery,
-    useLinkedInDisconnectMutation,
-    useLinkedInSyncMutation
-} from "@/modules/linkedin/services/linkedinQueries.ts";
 import { toast } from "sonner";
 import { AlertCircle, Building2, Globe, Loader2, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
@@ -16,15 +9,18 @@ import { Separator } from "@/components/ui/separator.tsx";
 import { LinkedInAccountCard } from "@/modules/linkedin/components/linkedIn-account-card.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import LinkedInCallbackHandler from "@/modules/linkedin/components/linkedIn-callback-handler.tsx";
+import {
+    useSocialAuthMutation,
+    useSocialConnectionQuery, useSocialDisconnectMutation, useSocialSyncMutation
+} from "@/modules/social-connections/services/social-connection-queries.ts";
 
 const SocialAccounts: React.FC = () => {
     const [searchParams] = useSearchParams();
-    const { data: connectionData, isLoading, error, refetch } = useLinkedInConnectionQuery();
-    const authMutation = useLinkedInAuthMutation();
-    const disconnectMutation = useLinkedInDisconnectMutation();
-    const syncMutation = useLinkedInSyncMutation();
+    const { data: connectionData, isLoading, error, refetch } = useSocialConnectionQuery("LINKEDIN");
+    const authMutation = useSocialAuthMutation("LINKEDIN");
+    const disconnectMutation = useSocialDisconnectMutation("LINKEDIN");
+    const syncMutation = useSocialSyncMutation("LINKEDIN");
 
-    // Handle OAuth callback
     if (searchParams.has('code') && searchParams.has('state')) {
         return <LinkedInCallbackHandler />;
     }

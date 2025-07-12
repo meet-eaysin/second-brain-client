@@ -1,5 +1,4 @@
 import { useSearchParams } from "react-router-dom";
-import { useLinkedInCallbackMutation } from "@/modules/linkedin/services/linkedinQueries.ts";
 import React, { useEffect } from "react";
 import { parseLinkedInCallback } from "@/modules/linkedin/services/linkedinApi.ts";
 import { toast } from "sonner";

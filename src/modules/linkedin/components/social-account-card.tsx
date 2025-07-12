@@ -30,6 +30,7 @@ export const LinkedInAccountCard: React.FC<{
                 minute: '2-digit'
             });
         } catch (error) {
+            console.error(error);
             return 'Invalid date';
         }
     };
