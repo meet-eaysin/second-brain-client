@@ -5,10 +5,10 @@ import {Button} from "@/components/ui/button.tsx";
 import {Avatar, AvatarFallback, AvatarImage} from "@/components/ui/avatar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import React from "react";
-import type {LinkedInConnectionStatus} from "@/modules/linkedin/types";
+import type {SocialConnectionStatus, TLinkedInProfile} from "@/modules/social-connections/types";
 
 export const LinkedInAccountCard: React.FC<{
-    connectionData: LinkedInConnectionStatus;
+    connectionData: SocialConnectionStatus<TLinkedInProfile>;
     onConnect: () => void;
     onDisconnect: () => void;
     onSync: () => void;
@@ -16,7 +16,7 @@ export const LinkedInAccountCard: React.FC<{
     isDisconnecting: boolean;
     isSyncing: boolean;
 }> = ({ connectionData, onConnect, onDisconnect, onSync, isConnecting, isDisconnecting, isSyncing }) => {
-    const { isConnected, connection } = connectionData;
+    const { connection, isConnected } = connectionData;
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -28,23 +28,9 @@ export const LinkedInAccountCard: React.FC<{
         });
     };
 
-    const getProfileImage = () => {
-        return connection?.profile?.profilePicture?.['displayImage~']?.elements?.[0]?.identifiers?.[0]?.identifier;
-    };
-
-    const getFullName = () => {
-        const firstName = connection?.profile?.firstName?.localized?.['en_US'] || '';
-        const lastName = connection?.profile?.lastName?.localized?.['en_US'] || '';
-        return `${firstName} ${lastName}`.trim();
-    };
-
-    const getHeadline = () => {
-        return connection?.profile?.headline?.localized?.['en_US'] || '';
-    };
-
     const getLinkedInUrl = () => {
-        return connection?.profile?.vanityName
-            ? `https://linkedin.com/in/${connection.profile.vanityName}`
+        return connection?.profile?.name
+            ? `https://linkedin.com/in/${connection.profile.name}`
             : '#';
     };
 
@@ -122,24 +108,26 @@ export const LinkedInAccountCard: React.FC<{
                     {/* Profile Information */}
                     <div className="flex items-start space-x-4">
                         <Avatar className="w-16 h-16">
-                            <AvatarImage src={getProfileImage()} alt="LinkedIn Profile" />
+                            <AvatarImage src={connection?.profile?.picture} alt="LinkedIn Profile" />
                             <AvatarFallback className="bg-[#0077b5] text-white">
-                                {getFullName().split(' ').map(n => n[0]).join('')}
+                                {connection?.profile?.name
+                                    ? connection.profile.name.split(' ').map(n => n[0]).join('')
+                                    : 'LN'}
                             </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-1">
-                                <h3 className="text-lg font-semibold truncate">{getFullName()}</h3>
+                                <h3 className="text-lg font-semibold truncate">{connection?.profile?.name}</h3>
                                 <Button variant="ghost" size="sm" asChild>
                                     <a href={getLinkedInUrl()} target="_blank" rel="noopener noreferrer">
                                         <ExternalLink className="w-4 h-4" />
                                     </a>
                                 </Button>
                             </div>
-                            <p className="text-sm text-muted-foreground mb-2">{getHeadline()}</p>
-                            {connection?.profile?.vanityName && (
+                            <p className="text-sm text-muted-foreground mb-2">{connection?.profile?.headline}</p>
+                            {connection?.profile?.given_name && (
                                 <p className="text-xs text-muted-foreground">
-                                    linkedin.com/in/{connection.profile.vanityName}
+                                    linkedin.com/in/{connection.profile.name}
                                 </p>
                             )}
                         </div>

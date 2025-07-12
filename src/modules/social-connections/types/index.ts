@@ -1,4 +1,4 @@
-export type SocialPlatform = 'LINKEDIN' | 'FACEBOOK' | "TWITTER" | "INSTAGRAM" | "YOUTUBE" | "TIKTOK"
+export type ESocialPlatform = 'LINKEDIN' | 'FACEBOOK' | "TWITTER" | "INSTAGRAM" | "YOUTUBE" | "TIKTOK"
 
 export type TLinkedInProfile = {
     sub: string;
@@ -7,120 +7,81 @@ export type TLinkedInProfile = {
     family_name: string;
     email: string;
     email_verified: boolean;
-    picture?: string;
+    picture: string;
     locale?: {
         language: string;
         country: string;
     };
     headline?: string;
-    publicProfileUrl?: string;
     industry?: string;
     location?: string;
     summary?: string;
 }
 
-
-export type TFacebookProfile = {
-    id: string;
+export type TProfile = {
+    sub: string;
     name: string;
+    given_name: string;
+    family_name: string;
     email: string;
-    picture: {
-        data: {
-            url: string;
-        };
+    email_verified: boolean;
+    picture: string;
+    locale?: {
+        language: string;
+        country: string;
     };
+    headline?: string;
+    industry?: string;
+    location?: string;
+    summary?: string;
 }
 
-export interface TwitterProfile {
-    id: string;
-    username: string;
-    name: string;
-    profile_image_url: string;
-    followers_count: number;
-    following_count: number;
-}
-
-export interface InstagramProfile {
-    id: string;
-    username: string;
-    account_type: 'PERSONAL' | 'BUSINESS';
-    media_count: number;
-    followers_count: number;
-}
-
-export interface YouTubeProfile {
-    id: string;
-    snippet: {
-        title: string;
-        description: string;
-        thumbnails: {
-            default: { url: string };
-        };
-    };
-    statistics: {
-        subscriberCount: string;
-        videoCount: string;
-    };
-}
-
-export interface TikTokProfile {
-    id: string;
-    username: string;
-    display_name: string;
-    avatar_url: string;
-    follower_count: number;
-    following_count: number;
-}
-
-export type PlatformProfileMap = {
-    linkedin: TLinkedInProfile;
-    facebook: TFacebookProfile;
-    twitter: TwitterProfile;
-    instagram: InstagramProfile;
-    youtube: YouTubeProfile;
-    tiktok: TikTokProfile;
-};
-
-export interface SocialAuthResponse {
+export type TSocialAuthResponse = {
     authUrl: string;
     state?: string;
 }
 
-export interface SocialConnectionStatus<T> {
-    platform: SocialPlatform;
+export type TConnectionStatus<T> =  {
     isConnected: boolean;
-    connection: {
-        profile: Record<string, T>;
-        connectedAt: string;
-        lastSyncAt: string;
-        email?: string;
-    } | null;
+    connectedAt: string;
+    lastSyncAt: string;
+    email: string;
+    profile: TProfileInformation<T>;
 }
 
-export interface AllConnectionsStatus<T> {
-    totalConnections: number;
-    platforms: Record<SocialPlatform, {
-        isConnected: boolean;
-        profile: Record<string, T> | null;
-        connectedAt: string | null;
-        lastSyncAt: string | null;
-        email: string | null;
-    }>;
-    connections: Array<{
-        platform: SocialPlatform;
-        profile: Record<string, T>;
-        connectedAt: string;
-        lastSyncAt: string;
-        email?: string;
-    }>;
+export interface TConnectionsStatus {
+    totalConnections: number
+    platforms: TPlatforms
 }
 
-export interface SocialPost<T> {
+export interface TPlatforms {
+    linkedin: TProfileInformation<TProfile>
+    facebook: TProfileInformation<TProfile>
+    instagram: TProfileInformation<TProfile>
+    twitter: TProfileInformation<TProfile>
+    youtube: TProfileInformation<TProfile>
+    tiktok: TProfileInformation<TProfile>
+}
+
+export type TProfileInformation<T> = {
+    isConnected: boolean
+    profile: T
+    connectedAt: string
+    lastSyncAt: string
+    email: string
+}
+
+export type TLocale = {
+    language: string
+    country: string
+}
+
+export type TSocialPost<T> = {
     id: string;
-    platform: SocialPlatform;
+    platform: ESocialPlatform;
     content: string;
     createdAt: string;
-    author: Record<string, T>;
+    author: T;
     engagement: {
         likes: number;
         comments: number;
@@ -129,8 +90,8 @@ export interface SocialPost<T> {
     url?: string;
 }
 
-export interface SocialPostsResponse<T> {
-    posts: SocialPost<T>[];
+export type TSocialPostsResponse<T> = {
+    posts: TSocialPost<T>[];
     pagination: {
         page: number;
         limit: number;
@@ -139,12 +100,12 @@ export interface SocialPostsResponse<T> {
     };
 }
 
-export interface SocialSyncResponse<T> {
-    posts: SocialPost<T>[];
+export type TSocialSyncResponse<T> = {
+    posts: TSocialPost<T>[];
     synced: number;
 }
 
-export interface CreateSocialPostPayload {
+export type TCreateSocialPostPayload = {
     text: string;
     visibility?: 'PUBLIC' | 'PRIVATE' | 'CONNECTIONS';
     media?: Array<{
@@ -155,15 +116,7 @@ export interface CreateSocialPostPayload {
     }>;
 }
 
-export interface SocialProfile<T> {
-    platform: SocialPlatform;
-    profile: Record<string, T>;
-    connectedAt: string;
-    lastSyncAt: string;
-    email?: string;
-}
-
-export interface SocialCallbackParams {
+export type TSocialCallbackParams = {
     code: string;
     state?: string;
 }

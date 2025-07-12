@@ -2,19 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { toast } from "sonner";
 import type { ApiResponse } from '@/types/api.types';
-import type {
-    AllConnectionsStatus, CreateSocialPostPayload,
-    SocialCallbackParams,
-    SocialConnectionStatus,
-    SocialPlatform
-} from "@/modules/social-connections/types";
 import {socialApi} from "@/modules/social-connections/services/social-connection-apis.ts";
+import type {
+    ESocialPlatform,
+    TConnectionsStatus,
+    TConnectionStatus, TCreateSocialPostPayload,
+    TSocialCallbackParams
+} from "@/modules/social-connections/types";
 
 type BaseQueryKey = readonly ['social'];
 type ConnectionsQueryKey = readonly [...BaseQueryKey, 'connections'];
-type ConnectionQueryKey = readonly [...BaseQueryKey, 'connection', SocialPlatform];
-type PostsQueryKey = readonly [...BaseQueryKey, 'posts', SocialPlatform, number, number];
-type ProfileQueryKey = readonly [...BaseQueryKey, 'profile', SocialPlatform];
+type ConnectionQueryKey = readonly [...BaseQueryKey, 'connection', ESocialPlatform];
+type PostsQueryKey = readonly [...BaseQueryKey, 'posts', ESocialPlatform, number, number];
+type ProfileQueryKey = readonly [...BaseQueryKey, 'profile', ESocialPlatform];
 
 type PlatformPostsQueryKey = readonly [...BaseQueryKey, 'posts', string, number, number];
 type PlatformConnectionQueryKey = readonly [...BaseQueryKey, 'connection', string];
@@ -26,10 +26,10 @@ const createSocialKeys = () => {
     return {
         all: base,
         connections: (): ConnectionsQueryKey => [...base, 'connections'] as const,
-        connection: (platform: SocialPlatform): ConnectionQueryKey => [...base, 'connection', platform] as const,
-        posts: (platform: SocialPlatform, page: number, limit: number): PostsQueryKey =>
+        connection: (platform: ESocialPlatform): ConnectionQueryKey => [...base, 'connection', platform] as const,
+        posts: (platform: ESocialPlatform, page: number, limit: number): PostsQueryKey =>
             [...base, 'posts', platform, page, limit] as const,
-        profile: (platform: SocialPlatform): ProfileQueryKey => [...base, 'profile', platform] as const,
+        profile: (platform: ESocialPlatform): ProfileQueryKey => [...base, 'profile', platform] as const,
         linkedin: {
             connection: [...base, 'connection', 'linkedin'] as PlatformConnectionQueryKey,
             posts: (page: number, limit: number): PlatformPostsQueryKey =>
@@ -53,10 +53,10 @@ const createSocialKeys = () => {
 
 export const SOCIAL_KEYS = createSocialKeys();
 
-export const useSocialConnectionsQuery = () => {
+export const useSocialConnectionsQuery = <T = unknown>() => {
     return useQuery({
         queryKey: SOCIAL_KEYS.connections(),
-        queryFn: () => socialApi.getConnectionStatus() as Promise<AllConnectionsStatus<unknown>>,
+        queryFn: () => socialApi.getConnectionStatus<T>() as Promise<TConnectionsStatus>,
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
         retry: (failureCount, error: AxiosError) => {
@@ -68,10 +68,10 @@ export const useSocialConnectionsQuery = () => {
     });
 };
 
-export const useSocialConnectionQuery = <T = unknown>(platform: SocialPlatform) => {
+export const useSocialConnectionQuery = <T = unknown>(platform: ESocialPlatform) => {
     return useQuery({
         queryKey: SOCIAL_KEYS.connection(platform),
-        queryFn: () => socialApi.getConnectionStatus<T>(platform) as Promise<SocialConnectionStatus<T>>,
+        queryFn: () => socialApi.getConnectionStatus<T>(platform) as Promise<TConnectionStatus<T>>,
         staleTime: 5 * 60 * 1000,
         gcTime: 10 * 60 * 1000,
         retry: (failureCount, error: AxiosError) => {
@@ -83,7 +83,7 @@ export const useSocialConnectionQuery = <T = unknown>(platform: SocialPlatform) 
     });
 };
 
-export const useSocialAuthMutation = (platform: SocialPlatform) => {
+export const useSocialAuthMutation = (platform: ESocialPlatform) => {
     return useMutation({
         mutationFn: (state?: string) => socialApi.initiateAuth(platform, state),
         onSuccess: (data) => {
@@ -96,11 +96,11 @@ export const useSocialAuthMutation = (platform: SocialPlatform) => {
     });
 };
 
-export const useSocialCallbackMutation = (platform: SocialPlatform) => {
+export const useSocialCallbackMutation = (platform: ESocialPlatform) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (params: SocialCallbackParams) => socialApi.handleCallback(platform, params),
+        mutationFn: (params: TSocialCallbackParams) => socialApi.handleCallback(platform, params),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: SOCIAL_KEYS.connection(platform) });
             queryClient.invalidateQueries({ queryKey: SOCIAL_KEYS.connections() });
@@ -113,7 +113,7 @@ export const useSocialCallbackMutation = (platform: SocialPlatform) => {
     });
 };
 
-export const useSocialDisconnectMutation = (platform: SocialPlatform) => {
+export const useSocialDisconnectMutation = (platform: ESocialPlatform) => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -130,7 +130,7 @@ export const useSocialDisconnectMutation = (platform: SocialPlatform) => {
     });
 };
 
-export const useSocialPostsQuery = <T = unknown>(platform: SocialPlatform, page = 1, limit = 10) => {
+export const useSocialPostsQuery = <T = unknown>(platform: ESocialPlatform, page = 1, limit = 10) => {
     return useQuery({
         queryKey: SOCIAL_KEYS.posts(platform, page, limit),
         queryFn: () => socialApi.getPosts<T>(platform, page, limit),
@@ -145,7 +145,7 @@ export const useSocialPostsQuery = <T = unknown>(platform: SocialPlatform, page 
     });
 };
 
-export const useSocialSyncMutation = <T = unknown>(platform: SocialPlatform) => {
+export const useSocialSyncMutation = <T = unknown>(platform: ESocialPlatform) => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -161,11 +161,11 @@ export const useSocialSyncMutation = <T = unknown>(platform: SocialPlatform) => 
     });
 };
 
-export const useSocialCreatePostMutation = <T = unknown>(platform: SocialPlatform) => {
+export const useSocialCreatePostMutation = <T = unknown>(platform: ESocialPlatform) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (postData: CreateSocialPostPayload) => socialApi.createPost<T>(platform, postData),
+        mutationFn: (postData: TCreateSocialPostPayload) => socialApi.createPost<T>(platform, postData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [...SOCIAL_KEYS.all, 'posts', platform] });
             toast.success(`${platform} post created successfully!`);
@@ -177,7 +177,7 @@ export const useSocialCreatePostMutation = <T = unknown>(platform: SocialPlatfor
     });
 };
 
-export const useSocialLikeMutation = (platform: SocialPlatform) => {
+export const useSocialLikeMutation = (platform: ESocialPlatform) => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -193,7 +193,7 @@ export const useSocialLikeMutation = (platform: SocialPlatform) => {
     });
 };
 
-export const useSocialCommentMutation = (platform: SocialPlatform) => {
+export const useSocialCommentMutation = (platform: ESocialPlatform) => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -210,7 +210,7 @@ export const useSocialCommentMutation = (platform: SocialPlatform) => {
     });
 };
 
-export const useSocialProfileQuery = <T = unknown>(platform: SocialPlatform) => {
+export const useSocialProfileQuery = <T = unknown>(platform: ESocialPlatform) => {
     return useQuery({
         queryKey: SOCIAL_KEYS.profile(platform),
         queryFn: () => socialApi.getProfile<T>(platform),

@@ -1,15 +1,16 @@
-import { useSearchParams } from "react-router-dom";
+import {useNavigate, useSearchParams} from "react-router-dom";
 import React, { useEffect } from "react";
 import { parseLinkedInCallback } from "@/modules/linkedin/services/linkedinApi.ts";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
+import {useSocialCallbackMutation} from "@/modules/social-connections/services/social-connection-queries.ts";
 
 const LinkedInCallbackHandler: React.FC = () => {
     const [searchParams] = useSearchParams();
-    // const navigate = useNavigate();
-    const callbackMutation = useLinkedInCallbackMutation();
+    const navigate = useNavigate();
+    const callbackMutation = useSocialCallbackMutation("LINKEDIN");
 
     const { code, state } = parseLinkedInCallback(searchParams);
 
@@ -21,18 +22,18 @@ const LinkedInCallbackHandler: React.FC = () => {
 
                 console.log('LinkedIn callback processed successfully:', { code, state });
                 toast.success('LinkedIn account connected successfully!');
-                // navigate('/social-accounts', { replace: true });
+                navigate('/app/social-connect/dashboard', { replace: true });
             } catch (error) {
                 console.error('LinkedIn callback error:', error);
                 toast.error('Failed to connect LinkedIn account');
-                // navigate('/social-accounts', { replace: true });
+                navigate('/app/social-connect/dashboard', { replace: true });
             }
         };
         if (code !== undefined && code !== null) {
             handleCallback();
             console.log(code);
         }
-            // navigate('/social-accounts', { replace: true });
+            navigate('/app/social-connect/dashboard', { replace: true });
         
     }, [code]);
 

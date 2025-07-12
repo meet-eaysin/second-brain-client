@@ -11,16 +11,17 @@ import { Badge } from "@/components/ui/badge.tsx";
 import LinkedInCallbackHandler from "@/modules/linkedin/components/linkedIn-callback-handler.tsx";
 import {
     useSocialAuthMutation,
-    useSocialConnectionQuery, useSocialDisconnectMutation, useSocialSyncMutation
+    useSocialConnectionsQuery, useSocialDisconnectMutation, useSocialSyncMutation
 } from "@/modules/social-connections/services/social-connection-queries.ts";
 
 const SocialAccounts: React.FC = () => {
     const [searchParams] = useSearchParams();
-    const { data: connectionData, isLoading, error, refetch } = useSocialConnectionQuery("LINKEDIN");
+    const { data: connectionsData, isLoading, error, refetch } = useSocialConnectionsQuery();
     const authMutation = useSocialAuthMutation("LINKEDIN");
     const disconnectMutation = useSocialDisconnectMutation("LINKEDIN");
     const syncMutation = useSocialSyncMutation("LINKEDIN");
 
+    console.log("** connectionsDat", connectionsData)
     if (searchParams.has('code') && searchParams.has('state')) {
         return <LinkedInCallbackHandler />;
     }
@@ -31,7 +32,6 @@ const SocialAccounts: React.FC = () => {
         authMutation.mutate(state, {
             onSuccess: (data) => {
                 console.log("LinkedIn auth initiated:", data);
-                // The auth mutation should redirect to LinkedIn
                 if (data?.authUrl) {
                     window.location.href = data.authUrl;
                 }
@@ -97,8 +97,19 @@ const SocialAccounts: React.FC = () => {
         );
     }
 
-    const connectedCount = connectionData?.isConnected ? 1 : 0;
-    const totalAvailable = 3; // LinkedIn, Facebook, Instagram
+    const connectedCount = connectionsData?.totalConnections || 0;
+    const totalAvailable = 3;
+    const linkedInConnection = connectionsData?.platforms?.linkedin
+    const linkedInConnectionData = linkedInConnection ? {
+        platform: 'LINKEDIN' as const,
+        isConnected: linkedInConnection.isConnected,
+        connection: linkedInConnection.isConnected ? {
+            profile: linkedInConnection.profile,
+            connectedAt: linkedInConnection.connectedAt!,
+            lastSyncAt: linkedInConnection.lastSyncAt!,
+            email: linkedInConnection.email || undefined
+        } : null
+    } : null;
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
@@ -135,9 +146,9 @@ const SocialAccounts: React.FC = () => {
                 </Card>
 
                 {/* LinkedIn Account */}
-                {connectionData && (
+                {linkedInConnectionData && (
                     <LinkedInAccountCard
-                        connectionData={connectionData}
+                        connectionData={linkedInConnectionData}
                         onConnect={handleConnect}
                         onDisconnect={handleDisconnect}
                         onSync={handleSync}

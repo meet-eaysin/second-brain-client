@@ -108,37 +108,6 @@ export interface TLinkedInTokenResponse {
     scope: string;
 }
 
-export interface TLinkedInProfile {
-    id: string;
-    firstName: {
-        localized: Record<string, string>;
-        preferredLocale: {
-            country: string;
-            language: string;
-        };
-    };
-    lastName: {
-        localized: Record<string, string>;
-        preferredLocale: {
-            country: string;
-            language: string;
-        };
-    };
-    headline?: {
-        localized: Record<string, string>;
-    };
-    profilePicture?: {
-        'displayImage~': {
-            elements: Array<{
-                identifiers: Array<{
-                    identifier: string;
-                }>;
-            }>;
-        };
-    };
-    vanityName?: string;
-}
-
 export interface TLinkedInEmailResponse {
     elements: Array<{
         'handle~': {
