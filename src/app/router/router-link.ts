@@ -23,5 +23,19 @@ export const getAppLink = () => "/app";
 export const getDashboardLink = () => "/app/dashboard";
 export const getDataTablesLink = () => "/app/data-tables";
 
+// User Management routes
+export const getUsersLink = () => "/app/users";
+export const getUserLink = (id: string) => `/app/users/${id}`;
+
+// Database routes
+export const getDatabasesLink = () => "/app/databases";
+export const getDatabaseLink = (id: string) => `/app/databases/${id}`;
+export const getCreateDatabaseLink = () => "/app/databases/new";
+
+// Admin routes
+export const getAdminLink = () => "/app/admin";
+export const getAdminUsersLink = () => "/app/admin/users";
+export const getAdminStatsLink = () => "/app/admin/stats";
+
 // Social routes
 export const getSocialLink = () => "/social";

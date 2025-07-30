@@ -13,6 +13,9 @@ export const ForgotPasswordPage = withLazyLoading(() =>
 export const OtpPage = withLazyLoading(() =>
     import('@/modules/auth/pages/otp-page')
 )
+export const GoogleCallbackPage = withLazyLoading(() =>
+    import('@/modules/auth/pages/google-callback-page')
+)
 export const AuthNotFoundPage = withLazyLoading(() =>
     import('@/modules/auth/pages/auth-not-found-page')
 )
@@ -22,8 +25,11 @@ export const DashboardPage = withLazyLoading(() =>
 export const DataTablePage = withLazyLoading(() =>
     import('@/modules/data-table')
 )
-export const LinkedInPage = withLazyLoading(() =>
-    import('@/modules/linkedin/pages/social-accounts-page')
+export const DatabaseModule = withLazyLoading(() =>
+    import('@/modules/databases')
+)
+export const UsersPage = withLazyLoading(() =>
+    import('@/modules/users').then(module => ({ default: module.UsersPage }))
 )
 export const HomePage = withLazyLoading(() =>
     import('@/modules/home')
@@ -34,10 +40,6 @@ export const AuthenticatedLayout = withLazyLoading(() =>
 export const NotFoundPage = withLazyLoading(() =>
     import('@/components/not-found')
 )
-export const SocialAccountsPage = withLazyLoading(() =>
-    import("@/modules/linkedin/pages/social-accounts-page")
-)
-export const LinkedInCallbackHandlerPage = withLazyLoading(() => import("@/modules/linkedin/components/linkedIn-callback-handler"))
 export const ProtectedRoute = withLazyLoading(() =>
     import("@/modules/auth/components/protected-route")
 )

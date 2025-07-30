@@ -3,6 +3,7 @@ import {
     SignUpPage,
     ForgotPasswordPage,
     OtpPage,
+    GoogleCallbackPage,
     AuthNotFoundPage
 } from '@/app/router/lazy-components'
 import type {RouteObject} from "react-router-dom";
@@ -27,6 +28,10 @@ export const authRoutes: RouteObject[] = [
     {
         path: "otp",
         element: <OtpPage />,
+    },
+    {
+        path: "google/callback",
+        element: <GoogleCallbackPage />,
     },
     {
         path: '*',

@@ -5,7 +5,8 @@ import {
     GalleryVerticalEnd, LucideBarChart, LucideBug,
     LucideCheckLine, LucideDiameter, LucideFerrisWheel, LucideHelpCircle,
     LucideLayoutDashboard, LucideLock, LucideMessageCircle, LucideNavigation,
-    LucidePackage, LucideServer, LucideShare2, LucideSignal, LucideToolCase, LucideUser, LucideUserCog
+    LucidePackage, LucideServer, LucideShare2, LucideSignal, LucideToolCase,
+    LucideUser, LucideUserCog, Database as DatabaseIcon, Users, Shield
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -42,9 +43,19 @@ export const sidebarData: SidebarData = {
                     icon: LucideLayoutDashboard,
                 },
                 {
+                    title: 'Databases',
+                    url: '/app/databases',
+                    icon: DatabaseIcon,
+                },
+                {
                     title: 'Data Tables',
                     url: '/app/data-tables',
                     icon: LucideCheckLine,
+                },
+                {
+                    title: 'Users',
+                    url: '/app/users',
+                    icon: Users,
                 },
                 {
                     title: 'Social Connect',
@@ -59,17 +70,6 @@ export const sidebarData: SidebarData = {
                             url: '/app/social-connect/linkedin',
                         },
                     ],
-                },
-                {
-                    title: 'Chats',
-                    url: '/chats',
-                    badge: '3',
-                    icon: LucideMessageCircle,
-                },
-                {
-                    title: 'Users',
-                    url: '/users',
-                    icon: LucideUser,
                 },
                 {
                     title: 'Secured by Clerk',
@@ -150,6 +150,21 @@ export const sidebarData: SidebarData = {
                             icon: LucideBarChart,
                         },
                     ],
+                },
+            ],
+        },
+        {
+            title: 'Administration',
+            items: [
+                {
+                    title: 'Admin Dashboard',
+                    url: '/app/admin',
+                    icon: Shield,
+                },
+                {
+                    title: 'User Management',
+                    url: '/app/admin/users',
+                    icon: LucideUserCog,
                 },
             ],
         },

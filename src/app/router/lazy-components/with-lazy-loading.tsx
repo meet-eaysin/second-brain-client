@@ -12,7 +12,7 @@ export const withLazyLoading = <T extends Record<string, any> = object>(
 
     return (props: T) => (
         <ErrorBoundary>
-            <Suspense fallback={fallback ? <LoadingFallback/> : <LoadingSpinner />}>
+            <Suspense fallback={fallback ? <LoadingFallback message="Loading page..." size="lg" variant="primary" /> : <LoadingSpinner size="lg" variant="primary" />}>
                 <LazyComponent {...props} />
             </Suspense>
         </ErrorBoundary>

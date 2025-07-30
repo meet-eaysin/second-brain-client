@@ -8,6 +8,7 @@ import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
 import {IconBrandGoogle} from "@tabler/icons-react";
 import {cn} from "@/lib/utils.ts";
+import { toast } from 'sonner';
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
 
@@ -16,12 +17,20 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 
     const handleGoogleLogin = async () => {
         try {
-            const response = await authApi.getGoogleLoginUrl()
-            if (response.url) {
-                window.location.href = response.url
+            // Check if Google OAuth is available
+            const isAvailable = await authApi.checkGoogleOAuthAvailability();
+            if (!isAvailable) {
+                toast.error('Google OAuth is not configured on the backend. Please use email/password login or contact your administrator.');
+                return;
             }
-        } catch (error) {
-            console.error('Failed to get Google login URL:', error)
+
+            const response = await authApi.getGoogleLoginUrl();
+            if (response.url) {
+                window.location.href = response.url;
+            }
+        } catch (error: any) {
+            console.error('Failed to get Google login URL:', error);
+            toast.error(error.message || 'Failed to initiate Google login. Please try again.');
         }
     }
 

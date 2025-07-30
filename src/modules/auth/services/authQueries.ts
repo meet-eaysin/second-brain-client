@@ -42,6 +42,7 @@ export const useCurrentUser = () => {
 
     useEffect(() => {
         if (query.data) {
+            // Set user data in memory only (not persisted to localStorage)
             setUser(query.data);
         }
     }, [query.data, setUser]);
@@ -50,6 +51,7 @@ export const useCurrentUser = () => {
         if (query.error) {
             const error = query.error as AxiosError;
             if (error?.response?.status === 401) {
+                // Clear tokens and user data on authentication error
                 removeTokens();
                 clearUser();
             }
@@ -67,10 +69,14 @@ export const useLoginMutation = (options: LoginMutationOptions) => {
         mutationFn: ({ email, password }: { email: string; password: string }) =>
             authApi.login(email, password),
         onSuccess: (data: AuthResponse) => {
+            // Store tokens in localStorage
             setToken(data.accessToken);
             setRefreshToken(data.refreshToken);
+
+            // Set user data in memory only (not persisted)
             setUser(data.user);
 
+            // Invalidate user query to ensure fresh data
             queryClient.invalidateQueries({ queryKey: AUTH_KEYS.user });
             if (options?.onSuccess) options.onSuccess(data);
         },
@@ -83,13 +89,25 @@ export const useLoginMutation = (options: LoginMutationOptions) => {
 };
 
 export const useRegisterMutation = () => {
+    const queryClient = useQueryClient();
+    const { setUser } = useAuthStore();
     const navigate = useNavigate();
 
     return useMutation({
         mutationFn: authApi.register,
-        onSuccess: () => {
-            toast.success('Registration successful! Please login.');
-            navigate(getSignOutLink());
+        onSuccess: (data: AuthResponse) => {
+            // Store tokens in localStorage
+            setToken(data.accessToken);
+            setRefreshToken(data.refreshToken);
+
+            // Set user data in memory only (not persisted)
+            setUser(data.user);
+
+            // Cache user data in React Query (memory only)
+            queryClient.setQueryData(AUTH_KEYS.user, data.user);
+
+            toast.success('Registration successful! Welcome to Second Brain.');
+            navigate(getDashboardLink());
         },
         onError: (error: AxiosError<ApiResponse>) => {
             const message = error.response?.data?.message || 'Registration failed';
@@ -106,11 +124,14 @@ export const useGoogleLoginMutation = () => {
     return useMutation({
         mutationFn: authApi.handleGoogleCallback,
         onSuccess: (data: AuthResponse) => {
+            // Store tokens in localStorage
             setToken(data.accessToken);
             setRefreshToken(data.refreshToken);
 
+            // Set user data in memory only (not persisted)
             setUser(data.user);
 
+            // Cache user data in React Query (memory only)
             queryClient.setQueryData(AUTH_KEYS.user, data.user);
 
             toast.success('Google login successful');
@@ -130,12 +151,16 @@ export const useLogoutMutation = () => {
     return useMutation({
         mutationFn: authApi.logout,
         onSuccess: () => {
+            // Clear tokens from localStorage
             removeTokens();
+            // Clear user data from memory and reset auth state
             clearUser();
+            // Clear all cached data
             queryClient.clear();
             window.location.href = getSignOutLink();
         },
         onError: () => {
+            // Even on error, clear local data for security
             removeTokens();
             clearUser();
             queryClient.clear();
@@ -152,8 +177,11 @@ export const useLogoutAllMutation = () => {
     return useMutation({
         mutationFn: authApi.logoutAll,
         onSettled: () => {
+            // Clear tokens from localStorage
             removeTokens();
+            // Clear user data from memory and reset auth state
             clearUser();
+            // Clear all cached data
             queryClient.clear();
             navigate(getSignOutLink());
         },

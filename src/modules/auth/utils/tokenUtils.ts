@@ -1,3 +1,4 @@
+// Token storage keys - only tokens are stored in localStorage, not user data
 const TOKEN_KEY = 'auth_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 

@@ -1,8 +1,5 @@
-import {type HTMLAttributes, useState} from 'react'
-import { z } from 'zod'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { IconBrandFacebook, IconBrandGithub } from '@tabler/icons-react'
+import {type HTMLAttributes} from 'react'
+import { IconBrandFacebook, IconBrandGithub, IconBrandGoogle } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -15,59 +12,56 @@ import {
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { PasswordInput } from '@/components/password-input'
+import { authApi } from '../../services/authApi.ts'
+import { useRegister } from '../../hooks/useRegister.ts'
+import { toast } from 'sonner'
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>
 
-const formSchema = z
-    .object({
-        email: z
-            .string()
-            .min(1, { message: 'Please enter your email' })
-            .email({ message: 'Invalid email address' }),
-        password: z
-            .string()
-            .min(1, {
-                message: 'Please enter your password',
-            })
-            .min(7, {
-                message: 'Password must be at least 7 characters long',
-            }),
-        confirmPassword: z.string(),
-    })
-    .refine((data) => data.password === data.confirmPassword, {
-        message: "Passwords don't match.",
-        path: ['confirmPassword'],
-    })
+
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
-    const [isLoading, setIsLoading] = useState(false)
+    const { form, handleRegister, isLoading, error } = useRegister();
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            email: '',
-            password: '',
-            confirmPassword: '',
-        },
-    })
+    const handleGoogleSignUp = async () => {
+        try {
+            // Check if Google OAuth is available
+            const isAvailable = await authApi.checkGoogleOAuthAvailability();
+            if (!isAvailable) {
+                toast.error('Google OAuth is not configured on the backend. Please use the registration form or contact your administrator.');
+                return;
+            }
 
-    function onSubmit(data: z.infer<typeof formSchema>) {
-        setIsLoading(true)
-        // eslint-disable-next-line no-console
-        console.log(data)
-
-        setTimeout(() => {
-            setIsLoading(false)
-        }, 3000)
+            const response = await authApi.getGoogleLoginUrl();
+            if (response.url) {
+                window.location.href = response.url;
+            }
+        } catch (error: any) {
+            console.error('Failed to get Google login URL:', error);
+            toast.error(error.message || 'Failed to initiate Google sign-up. Please try again.');
+        }
     }
 
     return (
         <Form {...form}>
             <form
-                onSubmit={form.handleSubmit(onSubmit)}
+                onSubmit={form.handleSubmit(handleRegister)}
                 className={cn('grid gap-3', className)}
                 {...props}
             >
+                <FormField
+                    control={form.control}
+                    name='username'
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                                <Input placeholder='username' {...field} disabled={isLoading} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
                 <FormField
                     control={form.control}
                     name='email'
@@ -75,12 +69,40 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                         <FormItem>
                             <FormLabel>Email</FormLabel>
                             <FormControl>
-                                <Input placeholder='name@example.com' {...field} />
+                                <Input placeholder='name@example.com' {...field} disabled={isLoading} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
+                <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                        control={form.control}
+                        name='firstName'
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>First Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder='John' {...field} disabled={isLoading} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name='lastName'
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Last Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder='Doe' {...field} disabled={isLoading} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <FormField
                     control={form.control}
                     name='password'
@@ -88,25 +110,13 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                         <FormItem>
                             <FormLabel>Password</FormLabel>
                             <FormControl>
-                                <PasswordInput placeholder='********' {...field} />
+                                <PasswordInput placeholder='********' {...field} disabled={isLoading} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name='confirmPassword'
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                                <PasswordInput placeholder='********' {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+
                 <Button className='mt-2' disabled={isLoading}>
                     Create Account
                 </Button>
@@ -122,24 +132,16 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                     </div>
                 </div>
 
-                <div className='grid grid-cols-2 gap-2'>
-                    <Button
-                        variant='outline'
-                        className='w-full'
-                        type='button'
-                        disabled={isLoading}
-                    >
-                        <IconBrandGithub className='h-4 w-4' /> GitHub
-                    </Button>
-                    <Button
-                        variant='outline'
-                        className='w-full'
-                        type='button'
-                        disabled={isLoading}
-                    >
-                        <IconBrandFacebook className='h-4 w-4' /> Facebook
-                    </Button>
-                </div>
+                <Button
+                    variant='outline'
+                    type='button'
+                    disabled={isLoading}
+                    onClick={handleGoogleSignUp}
+                    className="w-full"
+                >
+                    <IconBrandGoogle className='h-4 w-4 mr-2' />
+                    Continue with Google
+                </Button>
             </form>
         </Form>
     )

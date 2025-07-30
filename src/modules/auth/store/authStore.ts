@@ -27,8 +27,9 @@ export const useAuthStore = create<AuthState>()(
         }),
         {
             name: 'auth-storage',
+            // Only persist authentication state, not user data
+            // User data is kept in memory only and fetched fresh from API
             partialize: (state) => ({
-                user: state.user,
                 isAuthenticated: state.isAuthenticated
             }),
         }

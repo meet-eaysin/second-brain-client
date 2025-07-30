@@ -7,16 +7,19 @@ import {
     getAppLink,
     getDashboardLink,
     getDataTablesLink,
+    getDatabasesLink,
+    getUsersLink,
 } from "@/app/router/router-link.ts";
 import {
     AuthenticatedLayout,
     DashboardPage,
     DataTablePage,
+    DatabaseModule,
+    UsersPage,
     HomePage,
     NotFoundPage,
     ProtectedRoute
-} from "@/app/router/lazy-components";
-import { linkedinRoutes } from '@/modules/linkedin/index.tsx';
+} from "@/app/router/optimized-components";
 
 const router = createBrowserRouter([
     {
@@ -40,10 +43,6 @@ const router = createBrowserRouter([
         ),
         children: [
             {
-                path: "social-connect",
-                children: linkedinRoutes
-            },
-            {
                 index: true,
                 element: <div className="text-center text-gray-600">Welcome to Dashboard</div>,
             },
@@ -54,6 +53,14 @@ const router = createBrowserRouter([
             {
                 path: getDataTablesLink().replace('/app/', ''),
                 element: <DataTablePage/>,
+            },
+            {
+                path: getDatabasesLink().replace('/app/', '') + '/*',
+                element: <DatabaseModule/>,
+            },
+            {
+                path: getUsersLink().replace('/app/', ''),
+                element: <UsersPage/>,
             },
         ],
     },

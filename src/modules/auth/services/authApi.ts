@@ -21,8 +21,8 @@ export const authApi = {
         return response.data.data;
     },
 
-    register: async (credentials: RegisterCredentials): Promise<User> => {
-        const response = await apiClient.post<ApiResponse<User>>(API_ENDPOINTS.AUTH.SIGN_UP, credentials)
+    register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+        const response = await apiClient.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.AUTH.SIGN_UP, credentials)
         return response.data.data
     },
 
@@ -57,11 +57,28 @@ export const authApi = {
     },
 
     getGoogleLoginUrl: async (): Promise<{ url: string }> => {
-        return { url: `${apiClient.defaults.baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}` }
+        // The /auth/google endpoint should redirect to Google OAuth
+        // We return the URL for direct navigation
+        return { url: `${apiClient.defaults.baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}` };
+    },
+
+    // Check if Google OAuth is available
+    checkGoogleOAuthAvailability: async (): Promise<boolean> => {
+        try {
+            // Make a HEAD request to check if endpoint exists
+            await apiClient.head(API_ENDPOINTS.AUTH.GOOGLE_AUTH);
+            return true;
+        } catch (error: any) {
+            if (error.response?.status === 404) {
+                return false;
+            }
+            // For other errors (like redirects), assume it's available
+            return true;
+        }
     },
 
     handleGoogleCallback: async (code: string): Promise<AuthResponse> => {
-        const response = await apiClient.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.AUTH.GOOGLD_AUTH_CALLBACK, { code })
+        const response = await apiClient.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.AUTH.GOOGLE_AUTH_CALLBACK, { code })
         return response.data.data
     },
 }

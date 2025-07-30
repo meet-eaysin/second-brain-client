@@ -1,13 +1,20 @@
-export const LoadingSpinner = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
-    const sizeClasses = {
-        sm: 'w-4 h-4',
-        md: 'w-8 h-8',
-        lg: 'w-12 h-12',
-    }
+import React from 'react';
+import { ParticleLoader } from './loader/particle-loader.tsx';
 
+interface LoadingSpinnerProps {
+    size?: 'sm' | 'md' | 'lg' | 'xl';
+    variant?: 'default' | 'primary' | 'muted';
+    className?: string;
+}
+
+export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+    size = 'md',
+    variant = 'default',
+    className
+}) => {
     return (
         <div className="flex justify-center items-center">
-            <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${sizeClasses[size]}`}></div>
+            <ParticleLoader size={size} variant={variant} className={className} />
         </div>
-    )
-}
+    );
+};
