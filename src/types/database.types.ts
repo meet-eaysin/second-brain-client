@@ -187,6 +187,12 @@ export interface DatabaseQueryParams {
     workspaceId?: string;
     page?: number;
     limit?: number;
+    search?: string;
+    ownerId?: string;
+    excludeOwnerId?: string;
+    isPublic?: boolean;
+    sortBy?: 'name' | 'created' | 'updated';
+    sortOrder?: 'asc' | 'desc';
 }
 
 export interface RecordQueryParams {

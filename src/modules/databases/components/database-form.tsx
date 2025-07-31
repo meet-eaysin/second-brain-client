@@ -66,7 +66,6 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
     });
 
     const watchedIcon = form.watch('icon');
-    const watchedName = form.watch('name');
     const watchedIsPublic = form.watch('isPublic');
 
     useEffect(() => {
@@ -176,10 +175,10 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                       )}
 
                       {/* Cover Actions */}
-                      <div className="absolute top-3 right-3 flex gap-2">
+                      <div className="absolute bottom-4 right-3 flex gap-2">
                           <label className="cursor-pointer">
-                              <div className="flex items-center gap-1 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium hover:bg-white/30 transition-colors">
-                                  <Camera className="h-3.5 w-3.5" />
+                              <div className="flex items-center gap-1 px-2 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs font-medium hover:bg-white/30 transition-colors">
+                                  <Camera className="h-3 w-3" />
                                   {isUploadingCover ? 'Uploading...' : 'Change'}
                               </div>
                               <input
@@ -316,11 +315,6 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                                           />
                                       </FormControl>
                                       <FormMessage />
-                                      {watchedName && (
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            URL: /databases/{watchedName.toLowerCase().replace(/\s+/g, '-')}
-                                        </p>
-                                      )}
                                   </FormItem>
                                 )}
                               />
@@ -331,7 +325,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                             name="description"
                             render={({ field }) => (
                               <FormItem>
-                                  <FormLabel className="text-base font-medium">Description</FormLabel>
+                                  <FormLabel>Description</FormLabel>
                                   <FormControl>
                                       <Textarea
                                         {...field}
