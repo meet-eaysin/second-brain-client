@@ -19,6 +19,9 @@ export const GoogleCallbackPage = withLazyLoading(() =>
 export const AuthNotFoundPage = withLazyLoading(() =>
     import('@/modules/auth/pages/auth-not-found-page')
 )
+export const AuthErrorPage = withLazyLoading(() =>
+    import('@/modules/auth/pages/auth-error-page')
+)
 export const DashboardPage = withLazyLoading(() =>
     import('@/modules/dashboard')
 )

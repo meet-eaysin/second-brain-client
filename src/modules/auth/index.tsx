@@ -4,7 +4,8 @@ import {
     ForgotPasswordPage,
     OtpPage,
     GoogleCallbackPage,
-    AuthNotFoundPage
+    AuthNotFoundPage,
+    AuthErrorPage
 } from '@/app/router/lazy-components'
 import type {RouteObject} from "react-router-dom";
 
@@ -32,6 +33,10 @@ export const authRoutes: RouteObject[] = [
     {
         path: "google/callback",
         element: <GoogleCallbackPage />,
+    },
+    {
+        path: "error",
+        element: <AuthErrorPage />,
     },
     {
         path: '*',
