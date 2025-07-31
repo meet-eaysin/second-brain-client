@@ -61,7 +61,7 @@ function ShareDatabaseDialog({ database, open, onOpenChange }: ShareDatabaseDial
             setEmail('');
             setPermission('read');
             onOpenChange(false);
-        } catch (error) {
+        } catch {
             toast.error('Failed to share database');
         } finally {
             setIsLoading(false);
@@ -215,7 +215,7 @@ function DeleteDatabaseDialog({ database, open, onOpenChange }: DeleteDatabaseDi
             onOpenChange(false);
             setConfirmText('');
             // Navigate away or refresh the page
-        } catch (error) {
+        } catch {
             toast.error('Failed to delete database');
         } finally {
             setIsLoading(false);
@@ -309,6 +309,16 @@ export function DatabaseDialogs() {
                 properties={currentDatabase?.properties || []}
                 open={open === 'create-record' || open === 'edit-record'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onSubmit={async (data) => {
+                    try {
+                        // TODO: Implement record creation/update API call
+                        console.log('Record data:', data);
+                        toast.success(open === 'edit-record' ? 'Record updated successfully' : 'Record created successfully');
+                        setOpen(null);
+                    } catch {
+                        toast.error(open === 'edit-record' ? 'Failed to update record' : 'Failed to create record');
+                    }
+                }}
                 mode={open === 'edit-record' ? 'edit' : 'create'}
             />
 

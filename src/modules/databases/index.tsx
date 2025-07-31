@@ -8,6 +8,7 @@ export { DatabaseCard } from './components/database-card';
 export { DatabaseDataTable } from './components/database-data-table';
 export { DatabaseDialogs } from './components/database-dialogs';
 export { DatabasePrimaryButtons } from './components/database-primary-buttons';
+export { DatabaseQuickActions } from './components/database-quick-actions';
 export { DatabaseForm } from './components/database-form';
 export { DatabaseTemplates } from './components/database-templates';
 export { PropertyForm } from './components/property-form';

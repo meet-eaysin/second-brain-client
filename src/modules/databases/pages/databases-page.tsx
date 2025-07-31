@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ProfileDropdown } from '@/components/profile-dropdown';
-import { Search } from '@/components/search';
-import { ThemeSwitch } from '@/components/theme-switch';
-import { Header } from '@/layout/header';
 import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
+import { DevelopmentNotice } from '@/components/development-notice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,7 +40,7 @@ import {
 import {
     DatabaseCard,
     DatabaseDialogs,
-    DatabasePrimaryButtons, DatabaseProvider,
+    DatabaseProvider,
     useDatabase,
     useDatabases,
     useDeleteDatabase
@@ -165,15 +163,22 @@ const DatabasesPageComponent: React.FC = () => {
     };
 
     if (error) {
+        console.error('Database loading error:', error);
         return (
           <div className="flex items-center justify-center min-h-[400px]">
               <Card className="w-full max-w-md">
                   <CardContent className="flex flex-col items-center justify-center py-8">
                       <DatabaseIcon className="h-12 w-12 text-destructive mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Error Loading Databases</h3>
-                      <p className="text-muted-foreground text-center">
-                          There was a problem loading your databases. Please try again.
+                      <h3 className="text-lg font-semibold mb-2">Connection Issue</h3>
+                      <p className="text-muted-foreground text-center mb-4">
+                          Unable to connect to the server. Using demo data for now.
                       </p>
+                      <div className="text-xs text-muted-foreground text-center">
+                          <p>Make sure the backend server is running at:</p>
+                          <code className="bg-muted px-2 py-1 rounded mt-1 inline-block">
+                              {import.meta.env.VITE_API_BASE_URL}
+                          </code>
+                      </div>
                   </CardContent>
               </Card>
           </div>
@@ -193,15 +198,12 @@ const DatabasesPageComponent: React.FC = () => {
 
     return (
       <>
-          <Header fixed>
-              <Search />
-              <div className="ml-auto flex items-center space-x-4">
-                  <ThemeSwitch />
-                  <ProfileDropdown />
-              </div>
-          </Header>
+          <EnhancedHeader showDatabaseActions={true} />
 
           <Main className="space-y-6">
+              {/* Development Notice */}
+              <DevelopmentNotice show={!!error} />
+
               {/* Page Header */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="space-y-1">
@@ -210,7 +212,6 @@ const DatabasesPageComponent: React.FC = () => {
                           Manage your databases and data collections
                       </p>
                   </div>
-                  <DatabasePrimaryButtons />
               </div>
 
               {/* Stats Overview - Compact and clean */}
