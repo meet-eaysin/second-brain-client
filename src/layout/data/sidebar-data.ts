@@ -46,6 +46,7 @@ export const sidebarData: SidebarData = {
                     title: 'Databases',
                     url: '/app/databases',
                     icon: DatabaseIcon,
+                    isDynamic: true, // Mark as dynamic for special handling
                 },
                 {
                     title: 'Data Tables',

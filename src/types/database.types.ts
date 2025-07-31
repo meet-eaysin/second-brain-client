@@ -7,9 +7,25 @@ export interface Database {
     workspaceId?: string;
     ownerId: string;
     isPublic: boolean;
+    isFavorite?: boolean;
+    categoryId?: string;
+    tags?: string[];
     properties: DatabaseProperty[];
     views: DatabaseView[];
     permissions: DatabasePermission[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DatabaseCategory {
+    id: string;
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    ownerId: string;
+    isDefault?: boolean;
+    sortOrder?: number;
     createdAt: string;
     updatedAt: string;
 }
