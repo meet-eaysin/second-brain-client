@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/apiClient';
+import { apiClient } from '@/services/api-client.ts';
 
 export interface BackendStatus {
     isOnline: boolean;

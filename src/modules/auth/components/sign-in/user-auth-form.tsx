@@ -17,20 +17,17 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 
     const handleGoogleLogin = async () => {
         try {
-            // Check if Google OAuth is available
             const isAvailable = await authApi.checkGoogleOAuthAvailability();
             if (!isAvailable) {
                 toast.error('Google OAuth is not configured on the backend. Please use email/password login or contact your administrator.');
                 return;
             }
 
-            const response = await authApi.getGoogleLoginUrl();
-            if (response.url) {
-                window.location.href = response.url;
-            }
-        } catch (error: any) {
-            console.error('Failed to get Google login URL:', error);
-            toast.error(error.message || 'Failed to initiate Google login. Please try again.');
+            await authApi.initiateGoogleAuth();
+        } catch (error: unknown) {
+            console.error('Failed to initiate Google login:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to initiate Google login. Please try again.';
+            toast.error(errorMessage);
         }
     }
 
@@ -84,7 +81,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
 
                 {error && (
                     <div className="text-sm text-red-600">
-                        {error.message}
+                        {error instanceof Error ? error.message : String(error)}
                     </div>
                 )}
 

@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
     message: string
     code?: string
-    details?: any
+    details?: unknown
 }
 
 export interface PaginatedResponse<T> {
@@ -27,7 +27,7 @@ export interface QueryParams {
     limit?: number
     search?: string
     sort?: string
-    filter?: Record<string, any>
+    filter?: Record<string, unknown>
 }
 
 export interface BaseEntity {

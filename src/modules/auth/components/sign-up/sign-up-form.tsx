@@ -1,5 +1,5 @@
 import {type HTMLAttributes} from 'react'
-import { IconBrandFacebook, IconBrandGithub, IconBrandGoogle } from '@tabler/icons-react'
+import { IconBrandGoogle } from '@tabler/icons-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,27 +18,23 @@ import { toast } from 'sonner'
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>
 
-
-
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
-    const { form, handleRegister, isLoading, error } = useRegister();
+    const { form, handleRegister, isLoading } = useRegister();
 
     const handleGoogleSignUp = async () => {
         try {
-            // Check if Google OAuth is available
             const isAvailable = await authApi.checkGoogleOAuthAvailability();
             if (!isAvailable) {
                 toast.error('Google OAuth is not configured on the backend. Please use the registration form or contact your administrator.');
                 return;
             }
 
-            const response = await authApi.getGoogleLoginUrl();
-            if (response.url) {
-                window.location.href = response.url;
-            }
-        } catch (error: any) {
-            console.error('Failed to get Google login URL:', error);
-            toast.error(error.message || 'Failed to initiate Google sign-up. Please try again.');
+            await authApi.initiateGoogleAuth();
+
+        } catch (error: unknown) {
+            console.error('Failed to initiate Google sign-up:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Failed to initiate Google sign-up. Please try again.';
+            toast.error(errorMessage);
         }
     }
 

@@ -1,4 +1,4 @@
-import { apiClient } from './apiClient'
+import { apiClient } from './api-client.ts'
 import type {AxiosResponse, InternalAxiosRequestConfig} from "axios";
 
 export const setupInterceptors = () => {

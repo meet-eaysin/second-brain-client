@@ -85,7 +85,6 @@ export const useDeleteAccount = () => {
         onSuccess: () => {
             queryClient.clear();
             toast.success('Account deleted successfully');
-            // Redirect to login or home page
             window.location.href = '/';
         },
         onError: (error: AxiosError<ApiResponse>) => {

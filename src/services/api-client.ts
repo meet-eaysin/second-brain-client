@@ -55,7 +55,7 @@ apiClient.interceptors.response.use(
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     console.log('Token refreshed successfully, retrying original request');
                     return apiClient(originalRequest);
-                } catch (refreshError: any) {
+                } catch (refreshError: unknown) {
                     console.error('Token refresh failed:', refreshError);
 
                     // Clear tokens and redirect to login

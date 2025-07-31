@@ -1,50 +1,98 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useGoogleAuth } from '../hooks/useGoogleAuth';
+import { useAuthService } from '../hooks/useAuthService';
+import { authApi } from '../services/authApi';
 import { getSignInLink } from '@/app/router/router-link';
 import { toast } from 'sonner';
-import {FullScreenLoader} from "@/components/loader/full-screen-loader.tsx";
+import { FullScreenLoader } from "@/components/loader/full-screen-loader.tsx";
 
 const GoogleCallbackPage: React.FC = () => {
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { handleGoogleCallback, error } = useGoogleAuth();
+    const { handleGoogleCallback, error: googleAuthError } = useGoogleAuth();
+    const { handleGoogleTokens } = useAuthService();
+    const [isProcessing, setIsProcessing] = useState(true);
 
     useEffect(() => {
-        const code = searchParams.get('code');
-        const error = searchParams.get('error');
+        const processCallback = async () => {
+            try {
+                // Extract parameters from URL
+                const { accessToken, refreshToken, error } = authApi.handleTokensFromUrl(searchParams);
+                const code = searchParams.get('code');
 
-        if (error) {
-            console.error('Google OAuth error:', error);
-            toast.error('Google authentication failed. Please try again.');
-            navigate(getSignInLink(), { replace: true });
-            return;
-        }
+                // Handle OAuth errors
+                if (error) {
+                    console.error('Google OAuth error:', error);
 
-        if (!code) {
-            console.error('No authorization code received from Google');
-            toast.error('Invalid Google authentication response.');
-            navigate(getSignInLink(), { replace: true });
-            return;
-        }
+                    let errorMessage = 'Google authentication failed. Please try again.';
+                    switch (error) {
+                        case 'access_denied':
+                            errorMessage = 'Google authentication was cancelled. Please try again.';
+                            break;
+                        case 'invalid_state':
+                            errorMessage = 'Security validation failed. Please try again.';
+                            break;
+                        case 'oauth_failed':
+                            errorMessage = 'Google authentication failed. Please try again.';
+                            break;
+                        default:
+                            errorMessage = `Authentication error: ${error}`;
+                    }
 
-        // Handle the Google callback
-        handleGoogleCallback(code);
-    }, [searchParams, handleGoogleCallback, navigate]);
+                    toast.error(errorMessage);
+                    navigate(getSignInLink(), { replace: true });
+                    return;
+                }
 
-    // Handle errors
+                // Method 1: Handle direct tokens from server redirect (preferred method)
+                if (accessToken && refreshToken) {
+                    console.log('Processing Google OAuth with direct tokens');
+                    await handleGoogleTokens(accessToken, refreshToken);
+                    return;
+                }
+
+                // Method 2: Handle authorization code (fallback method)
+                if (code) {
+                    console.log('Processing Google OAuth with authorization code');
+                    handleGoogleCallback(code);
+                    return;
+                }
+
+                // No valid parameters found
+                console.error('No valid OAuth parameters received');
+                toast.error('Invalid Google authentication response.');
+                navigate(getSignInLink(), { replace: true });
+
+            } catch (error) {
+                console.error('Error processing Google callback:', error);
+                toast.error('Failed to process Google authentication.');
+                navigate(getSignInLink(), { replace: true });
+            } finally {
+                setIsProcessing(false);
+            }
+        };
+
+        processCallback();
+    }, [searchParams, handleGoogleCallback, handleGoogleTokens, navigate]);
+
+    // Handle Google Auth hook errors
     useEffect(() => {
-        if (error) {
-            console.error('Google authentication error:', error);
+        if (googleAuthError) {
+            console.error('Google authentication error:', googleAuthError);
             toast.error('Google authentication failed. Please try again.');
             navigate(getSignInLink(), { replace: true });
         }
-    }, [error, navigate]);
+    }, [googleAuthError, navigate]);
+
+    if (!isProcessing) {
+        return null; // Component will unmount after navigation
+    }
 
     return (
         <FullScreenLoader
-            message="Completing Google authentication..." 
-            size="lg" 
+            message="Completing Google authentication..."
+            size="lg"
             variant="primary"
         />
     );

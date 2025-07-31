@@ -2,14 +2,17 @@ openapi: 3.0.0
 info:
   title: Second Brain Server API
   description: |
-    Comprehensive API for user authentication and management with stateless JWT-based authentication.
+    Comprehensive personal intelligence platform API for knowledge management, creativity, learning, and personal growth.
 
     ## Features
     - **Stateless Authentication**: JWT-based authentication with no server-side sessions
     - **OAuth Integration**: Google OAuth support with CSRF protection
-    - **Rate Limiting**: Built-in rate limiting for security
-    - **Password Management**: Secure password reset and change functionality
-    - **Role-Based Access**: Support for different user roles (admin, moderator, user)
+    - **Database Management**: Create and manage custom databases with flexible schemas
+    - **Record Management**: CRUD operations for database records with rich property types
+    - **User Management**: Complete user lifecycle management with role-based access control
+    - **Rate Limiting**: Built-in rate limiting for security and performance
+    - **File Operations**: Import/export data in multiple formats (JSON, CSV, Excel)
+    - **Real-time Collaboration**: Share databases with granular permissions
 
     ## Authentication
     This API uses JWT Bearer tokens for authentication. Include the token in the Authorization header:
@@ -23,6 +26,25 @@ info:
     - Password Reset: 3 attempts per hour
     - Token Refresh: 10 attempts per 15 minutes
     - OAuth: 20 attempts per 15 minutes
+    - General API: 100 requests per 15 minutes
+
+    ## Database Property Types
+    - **TEXT**: Single-line text
+    - **NUMBER**: Numeric values
+    - **SELECT**: Single selection from predefined options
+    - **MULTI_SELECT**: Multiple selections from predefined options
+    - **DATE**: Date and time values
+    - **CHECKBOX**: Boolean values
+    - **URL**: Web links
+    - **EMAIL**: Email addresses
+    - **PHONE**: Phone numbers
+    - **RELATION**: Links to records in other databases
+    - **FORMULA**: Calculated values based on other properties
+    - **ROLLUP**: Aggregated values from related records
+    - **CREATED_TIME**: Automatically set creation timestamp
+    - **CREATED_BY**: Automatically set creator user
+    - **LAST_EDITED_TIME**: Automatically updated timestamp
+    - **LAST_EDITED_BY**: Automatically updated editor user
   version: 1.0.0
   contact:
     name: API Support
@@ -33,25 +55,57 @@ info:
 servers:
   - url: http://localhost:5000/api/v1
     description: Development server
-  - url: https://api.example.com/v1
+  - url: https://your-domain.com/api/v1
     description: Production server
 tags:
+  - name: System
+    description: |
+      System-level endpoints for health checks and API information.
+      These endpoints provide basic server status and API metadata.
   - name: Authentication
     description: |
       User authentication operations including registration, login, logout, and token management.
-      All authentication endpoints use stateless JWT tokens.
+      All authentication endpoints use stateless JWT tokens with comprehensive security features.
   - name: OAuth
     description: |
       OAuth authentication flows for third-party providers like Google.
-      Includes CSRF protection and secure callback handling.
+      Includes CSRF protection, secure callback handling, and automatic account linking.
   - name: Password Management
     description: |
       Password-related operations including password change and reset functionality.
-      Uses stateless JWT tokens for password reset links.
-  - name: Users
+      Uses stateless JWT tokens for password reset links with time-based expiration.
+  - name: User Management
     description: |
-      User management operations for profile management and administrative functions.
-      Requires authentication and appropriate permissions.
+      User profile management and administrative functions.
+      Includes profile updates, account management, and user statistics.
+  - name: User Administration
+    description: |
+      Administrative operations for managing users across the platform.
+      Requires elevated permissions (moderator/admin roles).
+  - name: Database Management
+    description: |
+      Core database operations including creation, updates, deletion, and configuration.
+      Supports flexible schema design with custom properties and views.
+  - name: Database Properties
+    description: |
+      Manage database schema by adding, updating, and removing properties.
+      Supports various property types including relations, formulas, and rollups.
+  - name: Database Views
+    description: |
+      Create and manage different views of database data.
+      Supports filtering, sorting, grouping, and custom layouts.
+  - name: Record Management
+    description: |
+      CRUD operations for database records with rich property value handling.
+      Supports batch operations and complex data types.
+  - name: Database Sharing
+    description: |
+      Share databases with other users and manage access permissions.
+      Supports granular permission levels (read, write, admin).
+  - name: Data Import/Export
+    description: |
+      Import and export database data in multiple formats.
+      Supports JSON, CSV, and Excel formats with flexible mapping options.
 components:
   securitySchemes:
     bearerAuth:
@@ -1015,6 +1069,152 @@ components:
           example: 2023-01-01T00:00:00Z
 
 paths:
+  /:
+    get:
+      tags: [System]
+      summary: API welcome message
+      description: |
+        Returns basic API information and available endpoints.
+        Useful for API discovery and health verification.
+      operationId: getApiInfo
+      responses:
+        '200':
+          description: API information retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Welcome to Second Brain Server API
+                  version:
+                    type: string
+                    example: v1
+                  environment:
+                    type: string
+                    example: production
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2023-01-01T12:00:00Z
+                  endpoints:
+                    type: object
+                    properties:
+                      health:
+                        type: string
+                        example: /health
+                      api:
+                        type: string
+                        example: /api/v1
+                      docs:
+                        type: string
+                        example: /api/v1/docs
+                  documentation:
+                    type: string
+                    example: /api/v1/docs
+
+  /health:
+    get:
+      tags: [System]
+      summary: Health check endpoint
+      description: |
+        Returns server health status including uptime, memory usage, and environment information.
+        Used for monitoring and load balancer health checks.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Server is running!
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2023-01-01T12:00:00Z
+                  environment:
+                    type: string
+                    example: production
+                  version:
+                    type: string
+                    example: 1.0.0
+                  uptime:
+                    type: number
+                    description: Server uptime in seconds
+                    example: 86400
+                  memory:
+                    type: object
+                    properties:
+                      rss:
+                        type: number
+                        description: Resident Set Size in bytes
+                        example: 52428800
+                      heapTotal:
+                        type: number
+                        description: Total heap size in bytes
+                        example: 20971520
+                      heapUsed:
+                        type: number
+                        description: Used heap size in bytes
+                        example: 15728640
+                      external:
+                        type: number
+                        description: External memory usage in bytes
+                        example: 1048576
+
+  /api:
+    get:
+      tags: [System]
+      summary: API status endpoint
+      description: |
+        Returns API status and available endpoints.
+        Alternative health check endpoint with API-specific information.
+      operationId: getApiStatus
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: API is running!
+                  version:
+                    type: string
+                    example: v1
+                  endpoints:
+                    type: object
+                    properties:
+                      health:
+                        type: string
+                        example: /health
+                      api:
+                        type: string
+                        example: /api/v1
+                      docs:
+                        type: string
+                        example: /api/v1/docs
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: 2023-01-01T12:00:00Z
+
   /auth/sign-up:
     post:
       tags: [Authentication]

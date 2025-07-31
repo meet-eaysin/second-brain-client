@@ -59,7 +59,7 @@ export const UsersPage: React.FC = () => {
         setQueryParams(prev => ({ ...prev, page }));
     };
 
-    const handleEditUser = (user: any) => {
+    const handleEditUser = (user: User) => {
         // TODO: Open edit user modal
         console.log('Edit user:', user);
     };

@@ -5,7 +5,7 @@ import type {ReactNode} from "react";
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            retry: (failureCount, error: any) => {
+            retry: (failureCount, error: unknown) => {
                 if (error?.response?.status === 401) {
                     return false;
                 }

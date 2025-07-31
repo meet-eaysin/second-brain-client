@@ -19,7 +19,7 @@ export const authRoutes: RouteObject[] = [
     },
     {
         path: "change-password",
-        element: <div>Change Password</div>, // Consider making this a lazy component too
+        element: <div>Change Password</div>,
     },
     {
         path: "forgot-password",

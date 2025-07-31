@@ -1,4 +1,4 @@
-import { apiClient } from '@/services/apiClient';
+import { apiClient } from '@/services/api-client.ts';
 import { API_ENDPOINTS } from '@/constants/api-endpoints';
 import type {
     Database,

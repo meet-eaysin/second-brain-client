@@ -1,6 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { ErrorBoundary } from '../providers/error-boundary.tsx'
 import { authRoutes } from '@/modules/auth'
+import { lazy } from 'react'
 import {
     getAuthParentLink,
     getHomeLink,
@@ -21,6 +22,9 @@ import {
     ProtectedRoute
 } from "@/app/router/optimized-components";
 
+// Lazy load unauthorized page
+const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
+
 const router = createBrowserRouter([
     {
         path: getHomeLink(),
@@ -33,6 +37,14 @@ const router = createBrowserRouter([
     {
         path: getAuthParentLink(),
         children: authRoutes
+    },
+    {
+        path: '/unauthorized',
+        element: (
+            <ErrorBoundary>
+                <UnauthorizedPage />
+            </ErrorBoundary>
+        ),
     },
     {
         path: getAppLink(),

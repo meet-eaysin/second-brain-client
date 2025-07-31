@@ -100,7 +100,7 @@ export type ViewType = 'TABLE' | 'BOARD' | 'TIMELINE' | 'CALENDAR' | 'GALLERY' |
 export interface ViewFilter {
     propertyId: string;
     operator: string;
-    value: any;
+    value: unknown;
 }
 
 export interface ViewSort {
@@ -138,18 +138,18 @@ export interface UpdateViewRequest {
 export interface DatabaseRecord {
     id: string;
     databaseId: string;
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
     createdAt: string;
     updatedAt: string;
     createdBy: string;
 }
 
 export interface CreateRecordRequest {
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
 }
 
 export interface UpdateRecordRequest {
-    properties: Record<string, any>;
+    properties: Record<string, unknown>;
 }
 
 export type PermissionLevel = 'read' | 'write' | 'admin';

@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLoginMutation } from '../services/authQueries.ts';
+import { useAuthStore } from '../store/authStore';
 import type { LoginCredentials } from "@/modules/auth/types/auth.types.ts";
 import {useNavigate} from "react-router-dom";
 import {getDashboardLink} from "@/app/router/router-link.ts";
@@ -13,13 +14,14 @@ const loginSchema = z.object({
 
 export const useLogin = () => {
     const navigate = useNavigate();
+    const { intendedPath, setIntendedPath } = useAuthStore();
 
     const loginMutation = useLoginMutation({
         onSuccess: () => {
-            const intendedPath = localStorage.getItem('intendedPath') || getDashboardLink();
-            localStorage.removeItem('intendedPath');
-
-            navigate(intendedPath, { replace: true });
+            // Navigate to intended path or dashboard
+            const targetPath = intendedPath || getDashboardLink();
+            setIntendedPath(null); // Clear intended path
+            navigate(targetPath, { replace: true });
         },
         onError: (error) => {
             console.error('Login failed:', error);

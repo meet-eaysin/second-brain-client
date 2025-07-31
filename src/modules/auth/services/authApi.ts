@@ -1,4 +1,4 @@
-import apiClient from "@/services/apiClient.ts";
+import apiClient from "@/services/api-client.ts";
 import type {
     ApiResponse,
     AuthResponse,
@@ -56,29 +56,44 @@ export const authApi = {
         await apiClient.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, credentials)
     },
 
+    initiateGoogleAuth: async (): Promise<void> => {
+        window.location.href = `${apiClient.defaults.baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}`;
+    },
+
     getGoogleLoginUrl: async (): Promise<{ url: string }> => {
-        // The /auth/google endpoint should redirect to Google OAuth
-        // We return the URL for direct navigation
         return { url: `${apiClient.defaults.baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}` };
     },
 
-    // Check if Google OAuth is available
     checkGoogleOAuthAvailability: async (): Promise<boolean> => {
         try {
-            // Make a HEAD request to check if endpoint exists
             await apiClient.head(API_ENDPOINTS.AUTH.GOOGLE_AUTH);
             return true;
-        } catch (error: any) {
-            if (error.response?.status === 404) {
-                return false;
+        } catch (error: unknown) {
+            if (error && typeof error === 'object' && 'response' in error) {
+                const axiosError = error as { response?: { status?: number } };
+                if (axiosError.response?.status === 404) {
+                    return false;
+                }
             }
-            // For other errors (like redirects), assume it's available
             return true;
         }
     },
 
+    // Handle Google OAuth callback with authorization code
     handleGoogleCallback: async (code: string): Promise<AuthResponse> => {
         const response = await apiClient.post<ApiResponse<AuthResponse>>(API_ENDPOINTS.AUTH.GOOGLE_AUTH_CALLBACK, { code })
         return response.data.data
+    },
+
+    handleTokensFromUrl: (searchParams: URLSearchParams): {
+        accessToken?: string;
+        refreshToken?: string;
+        error?: string
+    } => {
+        return {
+            accessToken: searchParams.get('token') || undefined,
+            refreshToken: searchParams.get('refreshToken') || undefined,
+            error: searchParams.get('error') || undefined
+        };
     },
 }

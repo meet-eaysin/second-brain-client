@@ -8,7 +8,7 @@ import type {AxiosError} from "axios";
 import type {ApiResponse} from "@/types/api.types.ts";
 import {useEffect} from "react";
 import type {AuthResponse} from "@/modules/auth/types/auth.types.ts";
-import {getDashboardLink, getSignOutLink} from "@/app/router/router-link.ts";
+import {getDashboardLink, getSignInLink} from "@/app/router/router-link.ts";
 
 
 export const AUTH_KEYS = {
@@ -61,13 +61,16 @@ export const useCurrentUser = () => {
     return query;
 };
 
-export const useLoginMutation = (options: LoginMutationOptions) => {
-    const { setUser } = useAuthStore();
+export const useLoginMutation = (options?: LoginMutationOptions) => {
+    const { setUser, setLoading } = useAuthStore();
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: ({ email, password }: { email: string; password: string }) =>
             authApi.login(email, password),
+        onMutate: () => {
+            setLoading(true);
+        },
         onSuccess: (data: AuthResponse) => {
             // Store tokens in localStorage
             setToken(data.accessToken);
@@ -76,13 +79,18 @@ export const useLoginMutation = (options: LoginMutationOptions) => {
             // Set user data in memory only (not persisted)
             setUser(data.user);
 
-            // Invalidate user query to ensure fresh data
-            queryClient.invalidateQueries({ queryKey: AUTH_KEYS.user });
+            // Cache user data in React Query
+            queryClient.setQueryData(AUTH_KEYS.user, data.user);
+
+            setLoading(false);
+            toast.success('Login successful! Welcome back.');
+
             if (options?.onSuccess) options.onSuccess(data);
         },
         onError: (error: AxiosError<ApiResponse>) => {
+            setLoading(false);
             const message = error.response?.data?.message || 'Login failed';
-            if (options?.onError) options.onError(error);
+            if (options?.onError) options.onError(error as Error);
             toast.error(message);
         },
     });
@@ -90,11 +98,14 @@ export const useLoginMutation = (options: LoginMutationOptions) => {
 
 export const useRegisterMutation = () => {
     const queryClient = useQueryClient();
-    const { setUser } = useAuthStore();
+    const { setUser, setLoading, intendedPath, setIntendedPath } = useAuthStore();
     const navigate = useNavigate();
 
     return useMutation({
         mutationFn: authApi.register,
+        onMutate: () => {
+            setLoading(true);
+        },
         onSuccess: (data: AuthResponse) => {
             // Store tokens in localStorage
             setToken(data.accessToken);
@@ -106,10 +117,16 @@ export const useRegisterMutation = () => {
             // Cache user data in React Query (memory only)
             queryClient.setQueryData(AUTH_KEYS.user, data.user);
 
+            setLoading(false);
             toast.success('Registration successful! Welcome to Second Brain.');
-            navigate(getDashboardLink());
+
+            // Navigate to intended path or dashboard
+            const targetPath = intendedPath || getDashboardLink();
+            setIntendedPath(null); // Clear intended path
+            navigate(targetPath, { replace: true });
         },
         onError: (error: AxiosError<ApiResponse>) => {
+            setLoading(false);
             const message = error.response?.data?.message || 'Registration failed';
             toast.error(message);
         },
@@ -118,11 +135,14 @@ export const useRegisterMutation = () => {
 
 export const useGoogleLoginMutation = () => {
     const queryClient = useQueryClient();
-    const { setUser } = useAuthStore();
+    const { setUser, setLoading, intendedPath, setIntendedPath } = useAuthStore();
     const navigate = useNavigate();
 
     return useMutation({
         mutationFn: authApi.handleGoogleCallback,
+        onMutate: () => {
+            setLoading(true);
+        },
         onSuccess: (data: AuthResponse) => {
             // Store tokens in localStorage
             setToken(data.accessToken);
@@ -134,22 +154,77 @@ export const useGoogleLoginMutation = () => {
             // Cache user data in React Query (memory only)
             queryClient.setQueryData(AUTH_KEYS.user, data.user);
 
-            toast.success('Google login successful');
-            navigate(getDashboardLink());
+            setLoading(false);
+            toast.success('Google login successful! Welcome to Second Brain.');
+
+            // Navigate to intended path or dashboard
+            const targetPath = intendedPath || getDashboardLink();
+            setIntendedPath(null); // Clear intended path
+            navigate(targetPath, { replace: true });
         },
         onError: (error: AxiosError<ApiResponse>) => {
+            setLoading(false);
             const message = error.response?.data?.message || 'Google login failed';
             toast.error(message);
+            navigate(getSignInLink(), { replace: true });
+        },
+    });
+};
+
+// New mutation for handling tokens from URL parameters
+export const useGoogleTokenMutation = () => {
+    const queryClient = useQueryClient();
+    const { setUser, setLoading, intendedPath, setIntendedPath } = useAuthStore();
+    const navigate = useNavigate();
+
+    return useMutation({
+        mutationFn: async ({ accessToken, refreshToken }: { accessToken: string; refreshToken: string }) => {
+            // Store tokens
+            setToken(accessToken);
+            setRefreshToken(refreshToken);
+
+            // Fetch user data with the new token
+            return await authApi.getCurrentUser();
+        },
+        onMutate: () => {
+            setLoading(true);
+        },
+        onSuccess: (user) => {
+            // Set user data in memory
+            setUser(user);
+
+            // Cache user data in React Query
+            queryClient.setQueryData(AUTH_KEYS.user, user);
+
+            setLoading(false);
+            toast.success('Google authentication successful! Welcome to Second Brain.');
+
+            // Navigate to intended path or dashboard
+            const targetPath = intendedPath || getDashboardLink();
+            setIntendedPath(null); // Clear intended path
+            navigate(targetPath, { replace: true });
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            setLoading(false);
+            // Clear any stored tokens on error
+            removeTokens();
+
+            const message = error.response?.data?.message || 'Authentication failed';
+            toast.error(message);
+            navigate(getSignInLink(), { replace: true });
         },
     });
 };
 
 export const useLogoutMutation = () => {
-    const { clearUser } = useAuthStore();
+    const { clearUser, setLoading } = useAuthStore();
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: authApi.logout,
+        onMutate: () => {
+            setLoading(true);
+        },
         onSuccess: () => {
             // Clear tokens from localStorage
             removeTokens();
@@ -157,40 +232,56 @@ export const useLogoutMutation = () => {
             clearUser();
             // Clear all cached data
             queryClient.clear();
-            window.location.href = getSignOutLink();
+            setLoading(false);
+            toast.success('Logged out successfully');
+            window.location.href = getSignInLink();
         },
-        onError: () => {
+        onError: (error: AxiosError<ApiResponse>) => {
             // Even on error, clear local data for security
             removeTokens();
             clearUser();
             queryClient.clear();
-            window.location.href = getSignOutLink();
+            setLoading(false);
+
+            const message = error.response?.data?.message || 'Logout failed';
+            toast.error(message);
+            window.location.href = getSignInLink();
         },
     });
 };
 
 export const useLogoutAllMutation = () => {
     const queryClient = useQueryClient();
-    const { clearUser } = useAuthStore();
+    const { clearUser, setLoading } = useAuthStore();
     const navigate = useNavigate();
 
     return useMutation({
         mutationFn: authApi.logoutAll,
-        onSettled: () => {
+        onMutate: () => {
+            setLoading(true);
+        },
+        onSuccess: () => {
             // Clear tokens from localStorage
             removeTokens();
             // Clear user data from memory and reset auth state
             clearUser();
             // Clear all cached data
             queryClient.clear();
-            navigate(getSignOutLink());
-        },
-        onSuccess: () => {
-            toast.success('Logged out from all devices');
+            setLoading(false);
+
+            toast.success('Logged out from all devices successfully');
+            navigate(getSignInLink());
         },
         onError: (error: AxiosError<ApiResponse>) => {
-            const message = error.response?.data?.message || 'Logout failed';
+            // Even on error, clear local data for security
+            removeTokens();
+            clearUser();
+            queryClient.clear();
+            setLoading(false);
+
+            const message = error.response?.data?.message || 'Logout from all devices failed';
             toast.error(message);
+            navigate(getSignInLink());
         },
     });
 };

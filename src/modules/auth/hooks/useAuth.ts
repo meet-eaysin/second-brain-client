@@ -3,15 +3,26 @@ import { useCurrentUser } from '../services/authQueries';
 import { hasToken } from '../utils/tokenUtils';
 
 export const useAuth = () => {
-    const { user, isAuthenticated } = useAuthStore();
+    const {
+        user,
+        isAuthenticated,
+        isLoading: storeLoading,
+        error: storeError,
+        intendedPath,
+        setIntendedPath,
+        clearError
+    } = useAuthStore();
     const userQuery = useCurrentUser();
 
     return {
         user,
         isAuthenticated,
-        isLoading: userQuery.isLoading,
+        isLoading: storeLoading || userQuery.isLoading,
         hasToken: hasToken(),
-        error: userQuery.error,
+        error: storeError || userQuery.error,
+        intendedPath,
+        setIntendedPath,
+        clearError,
         refetch: userQuery.refetch,
     };
 };
