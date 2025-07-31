@@ -35,6 +35,10 @@ export const authRoutes: RouteObject[] = [
         element: <GoogleCallbackPage />,
     },
     {
+        path: "callback",
+        element: <GoogleCallbackPage />,
+    },
+    {
         path: "error",
         element: <AuthErrorPage />,
     },

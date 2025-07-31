@@ -127,7 +127,6 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             </span>
                     </div>
                 </div>
-
                 <Button
                     variant='outline'
                     type='button'

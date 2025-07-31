@@ -1,11 +1,5 @@
-import React from 'react';
-import { useDatabase } from '../context/database-context';
-import { DatabaseForm } from './database-form';
-import { PropertyForm } from './property-form';
-import { RecordForm } from './record-form';
-import { ViewForm } from './view-form';
-import { ShareDatabaseDialog } from './share-database-dialog';
-import { DeleteDatabaseDialog } from './delete-database-dialog';
+import {DatabaseForm, PropertyForm, RecordForm, useDatabase, ViewForm} from "@/modules/databases";
+
 
 export function DatabaseDialogs() {
     const { 
