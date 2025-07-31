@@ -52,7 +52,7 @@ export default function DatabaseProvider({ children }: Props) {
     
     // Search and filters
     const [searchQuery, setSearchQuery] = useState('');
-    const [filters, setFilters] = useState<Array<{ property: string; operator: string; value: any }>>([]);
+    const [filters, setFilters] = useState<Array<{ property: string; operator: string; value: unknown }>>([]);
     const [sorts, setSorts] = useState<Array<{ property: string; direction: 'asc' | 'desc' }>>([]);
 
     return (

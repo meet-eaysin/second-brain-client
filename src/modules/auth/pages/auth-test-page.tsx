@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -115,7 +114,7 @@ export default function AuthTestPage() {
                                 <div><strong>Email:</strong> {user.email}</div>
                                 <div><strong>Name:</strong> {user.firstName} {user.lastName}</div>
                                 <div><strong>Role:</strong> {user.role}</div>
-                                <div><strong>Status:</strong> {user.status}</div>
+                                <div><strong>Status:</strong> {user.isActive ? 'Active' : 'Inactive'}</div>
                             </div>
                         </div>
                     )}

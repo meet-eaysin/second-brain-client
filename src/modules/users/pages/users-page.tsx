@@ -10,9 +10,9 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Users, UserPlus, Filter } from 'lucide-react';
+import { Search, Users, UserPlus } from 'lucide-react';
 import { UserTable } from '../components/user-table';
-import { useUsers, useUpdateUser, useDeleteUser, useToggleUserStatus, useUpdateUserRole } from '../services/userQueries';
+import { useUsers, useDeleteUser, useToggleUserStatus, useUpdateUserRole } from '../services/userQueries';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import type { UserQueryParams, UserRole, User } from '@/types/user.types';
 
@@ -26,7 +26,7 @@ export const UsersPage: React.FC = () => {
     });
 
     const { data: usersData, isLoading } = useUsers(queryParams);
-    const updateUserMutation = useUpdateUser();
+    // const updateUserMutation = useUpdateUser();
     const deleteUserMutation = useDeleteUser();
     const toggleStatusMutation = useToggleUserStatus();
     const updateRoleMutation = useUpdateUserRole();

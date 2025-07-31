@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
 import { Database as DatabaseIcon, Plus, FolderOpen, Star, Clock, Users } from 'lucide-react';
-import { useDatabases } from '../services/databaseQueries';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import type { NavCollapsible } from '@/layout/types';
+import type { NavItem } from '@/layout/types';
+import {useDatabases} from "@/modules/databases";
 
 export const useDatabaseSidebar = () => {
     const { user } = useAuth();
     const { data: databasesData, isLoading } = useDatabases({ limit: 50 });
 
-    const databaseNavItems = useMemo((): NavCollapsible => {
+    const databaseNavItems = useMemo((): NavItem => {
         if (isLoading || !databasesData?.databases) {
             return {
                 title: 'Databases',
@@ -25,15 +25,14 @@ export const useDatabaseSidebar = () => {
 
         const databases = databasesData.databases;
         
-        // Group databases by categories
         const myDatabases = databases.filter(db => db.ownerId === user?.id);
         const sharedDatabases = databases.filter(db => db.ownerId !== user?.id);
         const recentDatabases = databases
             .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
             .slice(0, 5);
-        const favoriteDatabases = databases.filter(db => db.isFavorite); // Assuming we add this field
+        const favoriteDatabases = databases.filter(db => db.isFavorite);
 
-        const items = [
+        const items: NavItem[] = [
             {
                 title: 'All Databases',
                 url: '/app/databases',
@@ -46,7 +45,6 @@ export const useDatabaseSidebar = () => {
             }
         ];
 
-        // Add recent databases if any
         if (recentDatabases.length > 0) {
             items.push({
                 title: 'Recent',
@@ -59,7 +57,6 @@ export const useDatabaseSidebar = () => {
             });
         }
 
-        // Add favorite databases if any
         if (favoriteDatabases.length > 0) {
             items.push({
                 title: 'Favorites',
@@ -72,7 +69,6 @@ export const useDatabaseSidebar = () => {
             });
         }
 
-        // Add my databases
         if (myDatabases.length > 0) {
             items.push({
                 title: 'My Databases',
@@ -85,7 +81,6 @@ export const useDatabaseSidebar = () => {
             });
         }
 
-        // Add shared databases
         if (sharedDatabases.length > 0) {
             items.push({
                 title: 'Shared with Me',

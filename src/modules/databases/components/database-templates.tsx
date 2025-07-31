@@ -16,9 +16,7 @@ import {
     ShoppingCart, 
     BookOpen, 
     Briefcase, 
-    Home,
     Target,
-    Zap,
     Database as DatabaseIcon
 } from 'lucide-react';
 
@@ -33,7 +31,7 @@ interface DatabaseTemplate {
         type: string;
         required?: boolean;
     }>;
-    sampleData?: any[];
+    sampleData?: Record<string, unknown>[];
 }
 
 const templates: DatabaseTemplate[] = [
@@ -137,7 +135,7 @@ const templates: DatabaseTemplate[] = [
 interface DatabaseTemplatesProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSelectTemplate: (template: DatabaseTemplate) => void;
+    onSelectTemplate: (template: DatabaseTemplate | null) => void;
 }
 
 export const DatabaseTemplates: React.FC<DatabaseTemplatesProps> = ({

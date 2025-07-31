@@ -13,11 +13,11 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTasks } from '../context/tasks-context'
-import { labels } from '../data/data'
-import { taskSchema } from '../data/schema'
 import type {Row} from "@tanstack/react-table";
 import {LucideDotSquare, LucideTrash} from "lucide-react";
+import {taskSchema} from "@/modules/data-table/data/schema.ts";
+import {useTasks} from "@/modules/data-table/context/tasks-context.tsx";
+import {labels} from "@/modules/data-table/data/data.tsx";
 
 interface DataTableRowActionsProps<TData> {
     row: Row<TData>

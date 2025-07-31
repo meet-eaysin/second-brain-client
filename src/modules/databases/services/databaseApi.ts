@@ -20,30 +20,46 @@ import type {
 import type { ApiResponse } from '@/types/api.types';
 
 export const databaseApi = {
-    // Database CRUD
     getDatabases: async (params?: DatabaseQueryParams): Promise<PaginatedDatabasesResponse> => {
-        const response = await apiClient.get<ApiResponse<any[]>>(
+        const response = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(
             API_ENDPOINTS.DATABASES.LIST,
             { params }
         );
 
-        // Normalize the API response to match frontend Database interface
         const rawDatabases = response.data.data || [];
-        const databases = rawDatabases.map((db: any): Database => ({
-            id: db._id || db.id,
-            name: db.name,
-            description: db.description,
-            icon: db.icon,
-            cover: db.cover,
-            workspaceId: db.workspaceId,
-            ownerId: db.userId || db.ownerId || db.createdBy,
-            isPublic: db.isPublic || false,
-            properties: db.properties || [],
-            views: db.views || [],
-            permissions: db.sharedWith || db.permissions || [], // Map sharedWith to permissions
-            createdAt: db.createdAt,
-            updatedAt: db.updatedAt,
-        }));
+        const databases = rawDatabases.map((db: Record<string, unknown>): Database => {
+            const getString = (value: unknown, fallback = ''): string => {
+                return typeof value === 'string' ? value : fallback;
+            };
+
+            const getOptionalString = (value: unknown): string | undefined => {
+                return typeof value === 'string' ? value : undefined;
+            };
+
+            const getBoolean = (value: unknown): boolean => {
+                return typeof value === 'boolean' ? value : false;
+            };
+
+            const getArray = <T>(value: unknown): T[] => {
+                return Array.isArray(value) ? value : [];
+            };
+
+            return {
+                id: getString(db._id) || getString(db.id),
+                name: getString(db.name),
+                description: getOptionalString(db.description),
+                icon: getOptionalString(db.icon),
+                cover: getOptionalString(db.cover),
+                workspaceId: getString(db.workspaceId),
+                ownerId: getString(db.userId) || getString(db.ownerId) || getString(db.createdBy),
+                isPublic: getBoolean(db.isPublic),
+                properties: getArray(db.properties),
+                views: getArray(db.views),
+                permissions: getArray(db.sharedWith) || getArray(db.permissions),
+                createdAt: getString(db.createdAt),
+                updatedAt: getString(db.updatedAt),
+            };
+        });
 
         return {
             databases,
@@ -80,7 +96,6 @@ export const databaseApi = {
         await apiClient.delete(API_ENDPOINTS.DATABASES.DELETE(id));
     },
 
-    // Property Management
     addProperty: async (databaseId: string, data: CreatePropertyRequest): Promise<Database> => {
         const response = await apiClient.post<ApiResponse<Database>>(
             API_ENDPOINTS.DATABASES.PROPERTIES(databaseId),
@@ -108,7 +123,6 @@ export const databaseApi = {
         return response.data.data;
     },
 
-    // View Management
     addView: async (databaseId: string, data: CreateViewRequest): Promise<Database> => {
         const response = await apiClient.post<ApiResponse<Database>>(
             API_ENDPOINTS.DATABASES.VIEWS(databaseId),
@@ -136,7 +150,6 @@ export const databaseApi = {
         return response.data.data;
     },
 
-    // Record Management
     getRecords: async (
         databaseId: string,
         params?: RecordQueryParams
@@ -179,7 +192,6 @@ export const databaseApi = {
         await apiClient.delete(API_ENDPOINTS.DATABASES.RECORD(databaseId, recordId));
     },
 
-    // Permission Management
     shareDatabase: async (databaseId: string, data: ShareDatabaseRequest): Promise<Database> => {
         const response = await apiClient.post<ApiResponse<Database>>(
             API_ENDPOINTS.DATABASES.SHARE(databaseId),

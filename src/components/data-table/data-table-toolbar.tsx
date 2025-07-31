@@ -1,10 +1,10 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DataTableViewOptions } from '../components/data-table-view-options'
-import { priorities, statuses } from '../data/data'
 import { DataTableFacetedFilter } from './data-table-faceted-filter'
 import type {Table} from "@tanstack/react-table";
 import {LucideCross} from "lucide-react";
+import {priorities, statuses} from "@/modules/data-table/data/data.tsx";
+import {DataTableViewOptions} from "@/components/data-table/data-table-view-options.tsx";
 
 interface DataTableToolbarProps<TData> {
     table: Table<TData>

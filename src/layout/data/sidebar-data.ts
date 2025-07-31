@@ -4,9 +4,9 @@ import {
     Command,
     GalleryVerticalEnd, LucideBarChart, LucideBug,
     LucideCheckLine, LucideDiameter, LucideFerrisWheel, LucideHelpCircle,
-    LucideLayoutDashboard, LucideLock, LucideMessageCircle, LucideNavigation,
+    LucideLayoutDashboard, LucideLock, LucideNavigation,
     LucidePackage, LucideServer, LucideShare2, LucideSignal, LucideToolCase,
-    LucideUser, LucideUserCog, Database as DatabaseIcon, Users, Shield
+    LucideUserCog, Database as DatabaseIcon, Users, Shield
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -46,7 +46,7 @@ export const sidebarData: SidebarData = {
                     title: 'Databases',
                     url: '/app/databases',
                     icon: DatabaseIcon,
-                    isDynamic: true, // Mark as dynamic for special handling
+                    isDynamic: true,
                 },
                 {
                     title: 'Data Tables',

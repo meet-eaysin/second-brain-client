@@ -11,7 +11,7 @@ import {
 } from '../services/authQueries';
 import { useAuthStore } from '../store/authStore';
 import { hasToken, removeTokens } from '../utils/tokenUtils';
-import { getDashboardLink, getSignInLink } from '@/app/router/router-link';
+import { getSignInLink } from '@/app/router/router-link';
 import type { LoginCredentials, RegisterCredentials } from '../types/auth.types';
 
 /**
@@ -25,7 +25,6 @@ export const useAuthService = () => {
         isAuthenticated, 
         isLoading, 
         error, 
-        intendedPath,
         setIntendedPath,
         clearError,
         setLoading 

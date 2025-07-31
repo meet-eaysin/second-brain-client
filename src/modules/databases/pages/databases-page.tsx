@@ -30,13 +30,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import type { DatabaseQueryParams, Database } from '@/types/database.types';
-import { DatabaseCard } from '../components/database-card';
-import { DatabaseDialogs } from '../components/database-dialogs';
-import { DatabasePrimaryButtons } from '../components/database-primary-buttons';
-import { useDatabase } from '../context/database-context';
-import { useDatabases, useDeleteDatabase } from '../services/databaseQueries';
 import { PageErrorBoundary } from '@/components/error-boundary';
-import DatabaseProvider from '../context/database-context';
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -45,6 +39,14 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import {
+    DatabaseCard,
+    DatabaseDialogs,
+    DatabasePrimaryButtons, DatabaseProvider,
+    useDatabase,
+    useDatabases,
+    useDeleteDatabase
+} from "@/modules/databases";
 
 const DatabasesPageComponent: React.FC = () => {
     const navigate = useNavigate();

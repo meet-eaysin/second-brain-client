@@ -16,19 +16,24 @@ interface BaseNavItem {
     title: string
     badge?: string
     icon?: React.ElementType
+    isDynamic?: boolean
 }
 
+interface NavItem extends BaseNavItem {
+    url?: LinkProps['to']
+    items?: NavItem[]
+}
+
+// Legacy types for backward compatibility
 type NavLink = BaseNavItem & {
     url: LinkProps['to']
     items?: never
 }
 
 type NavCollapsible = BaseNavItem & {
-    items: (BaseNavItem & { url: LinkProps['to'] })[]
-    url?: never
+    items: NavItem[]
+    url?: LinkProps['to']
 }
-
-type NavItem = NavCollapsible | NavLink
 
 interface NavGroup {
     title: string

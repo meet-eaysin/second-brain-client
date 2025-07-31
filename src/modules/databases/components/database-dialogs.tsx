@@ -32,7 +32,11 @@ import { Separator } from '@/components/ui/separator';
 import { Copy, Mail, Trash2, Users, Globe, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database, PermissionLevel } from '@/types/database.types';
-import {DatabaseForm, PropertyForm, RecordForm, useDatabase, ViewForm} from "@/modules/databases";
+import { DatabaseForm } from "./database-form";
+import { PropertyForm } from "./property-form";
+import { RecordForm } from "./record-form";
+import { ViewForm } from "./view-form";
+import { useDatabase } from "../context/database-context";
 
 // Share Database Dialog Component
 interface ShareDatabaseDialogProps {

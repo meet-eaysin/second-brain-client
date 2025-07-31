@@ -16,7 +16,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar'
 import { Link, useLocation } from "react-router-dom";
-import type { NavGroup } from "@/layout/types.ts";
+import type { NavGroup, NavItem } from "@/layout/types.ts";
 import { Badge } from "@/components/ui/badge.tsx";
 import { useDatabaseSidebar } from '@/modules/databases/hooks/useDatabaseSidebar';
 
@@ -43,17 +43,24 @@ export function DynamicNavGroup({ title, items }: DynamicNavGroupProps) {
             <SidebarGroupLabel>{title}</SidebarGroupLabel>
             <SidebarMenu>
                 {processedItems.map((item) => {
-                    const key = `${item.title}-${item.url}`
+                    const key = `${item.title}-${item.url || 'no-url'}`
 
-                    if (!item.items)
+                    // Handle simple links (items with URL but no sub-items)
+                    if (!item.items && item.url)
                         return <SidebarMenuLink key={key} item={item} href={href} />
 
-                    if (state === 'collapsed' && !isMobile)
-                        return (
-                            <SidebarMenuCollapsedDropdown key={key} item={item} href={href} />
-                        )
+                    // Handle collapsible items (items with sub-items)
+                    if (item.items) {
+                        if (state === 'collapsed' && !isMobile)
+                            return (
+                                <SidebarMenuCollapsedDropdown key={key} item={item} href={href} />
+                            )
 
-                    return <SidebarMenuCollapsible key={key} item={item} href={href} />
+                        return <SidebarMenuCollapsible key={key} item={item} href={href} />
+                    }
+
+                    // Skip items that have no URL and no sub-items
+                    return null;
                 })}
             </SidebarMenu>
         </SidebarGroup>
@@ -68,11 +75,16 @@ const SidebarMenuLink = ({
     item,
     href,
 }: {
-    item: any
+    item: NavItem
     href: string
 }) => {
     const { setOpenMobile } = useSidebar()
     const isActive = item.url === href
+
+    // Only render if item has a valid URL
+    if (!item.url) {
+        return null;
+    }
 
     return (
         <SidebarMenuItem>
@@ -95,11 +107,11 @@ const SidebarMenuCollapsible = ({
     item,
     href,
 }: {
-    item: any
+    item: NavItem
     href: string
 }) => {
     const { setOpenMobile } = useSidebar()
-    const isActive = item.items?.some((subItem: any) => subItem.url === href)
+    const isActive = item.items?.some((subItem: NavItem) => subItem.url === href)
 
     return (
         <Collapsible
@@ -118,7 +130,7 @@ const SidebarMenuCollapsible = ({
                 </CollapsibleTrigger>
                 <CollapsibleContent className='CollapsibleContent'>
                     <SidebarMenuSub>
-                        {item.items.map((subItem: any) => {
+                        {item.items?.map((subItem: NavItem) => {
                             const isSubActive = subItem.url === href
                             
                             if (subItem.items) {
@@ -136,14 +148,14 @@ const SidebarMenuCollapsible = ({
                                             </CollapsibleTrigger>
                                             <CollapsibleContent>
                                                 <SidebarMenuSub>
-                                                    {subItem.items.map((nestedItem: any) => (
+                                                    {subItem.items.filter(nestedItem => nestedItem.url).map((nestedItem: NavItem) => (
                                                         <SidebarMenuSubItem key={nestedItem.title}>
                                                             <SidebarMenuSubButton
                                                                 asChild
                                                                 isActive={nestedItem.url === href}
                                                             >
-                                                                <Link 
-                                                                    to={nestedItem.url} 
+                                                                <Link
+                                                                    to={nestedItem.url!}
                                                                     onClick={() => setOpenMobile(false)}
                                                                 >
                                                                     <span>{nestedItem.title}</span>
@@ -159,14 +171,19 @@ const SidebarMenuCollapsible = ({
                                 )
                             }
 
+                            // Only render if subItem has a valid URL
+                            if (!subItem.url) {
+                                return null;
+                            }
+
                             return (
                                 <SidebarMenuSubItem key={subItem.title}>
                                     <SidebarMenuSubButton
                                         asChild
                                         isActive={isSubActive}
                                     >
-                                        <Link 
-                                            to={subItem.url} 
+                                        <Link
+                                            to={subItem.url}
                                             onClick={() => setOpenMobile(false)}
                                         >
                                             {subItem.icon && <subItem.icon />}
@@ -188,9 +205,8 @@ const SidebarMenuCollapsedDropdown = ({
     item,
     href,
 }: {
-    item: any
+    item: NavItem
     href: string
 }) => {
-    // Implementation for collapsed dropdown (similar to existing)
     return <SidebarMenuLink item={item} href={href} />
 }

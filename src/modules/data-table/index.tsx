@@ -1,14 +1,14 @@
 import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Search } from '@/components/search'
 import { ThemeSwitch } from '@/components/theme-switch'
-import { columns } from './components/columns'
-import { DataTable } from './components/data-table'
 import { TasksDialogs } from './components/tasks-dialogs'
 import { TasksPrimaryButtons } from './components/tasks-primary-buttons'
 import TasksProvider from './context/tasks-context'
 import { tasks } from './data/tasks'
 import {Header} from "@/layout/header.tsx";
 import {Main} from "@/layout/main.tsx";
+import {DataTable} from "@/components/data-table/data-table.tsx";
+import {columns} from "@/components/data-table/columns.tsx";
 
 export default function DataTablePage() {
     return (

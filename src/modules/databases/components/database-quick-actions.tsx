@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, FolderPlus, Import, Template, Star } from 'lucide-react';
+import { Plus, FolderPlus, Import, Layout } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -9,7 +9,7 @@ import {
     DropdownMenuTrigger,
     DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { useDatabase } from '../context/database-context';
+import {useDatabase} from "@/modules/databases";
 
 export const DatabaseQuickActions: React.FC = () => {
     const { setOpen } = useDatabase();
@@ -56,7 +56,7 @@ export const DatabaseQuickActions: React.FC = () => {
                     </DropdownMenuItem>
                     
                     <DropdownMenuItem onClick={handleCreateFromTemplate}>
-                        <Template className="h-4 w-4 mr-2" />
+                        <Layout className="h-4 w-4 mr-2" />
                         Create from Template
                     </DropdownMenuItem>
                     

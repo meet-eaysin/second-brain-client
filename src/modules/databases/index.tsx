@@ -9,6 +9,7 @@ export { DatabaseDataTable } from './components/database-data-table';
 export { DatabaseDialogs } from './components/database-dialogs';
 export { DatabasePrimaryButtons } from './components/database-primary-buttons';
 export { DatabaseForm } from './components/database-form';
+export { DatabaseTemplates } from './components/database-templates';
 export { PropertyForm } from './components/property-form';
 export { RecordForm } from './components/record-form';
 export { ViewForm } from './components/view-form';

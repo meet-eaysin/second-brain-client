@@ -1,6 +1,5 @@
 import {useAuth} from "@/modules/auth/hooks/useAuth.ts";
 import {Navigate, Outlet} from "react-router-dom";
-import React from "react";
 import {getDashboardLink} from "@/app/router/router-link.ts";
 
 const PublicRoute = () => {

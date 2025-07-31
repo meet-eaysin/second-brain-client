@@ -2,7 +2,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { useAuthService } from '../hooks/useAuthService';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '@/components/loading-spinner';
@@ -32,15 +31,12 @@ export const AuthDemo: React.FC = () => {
         logout,
         logoutAll,
         refreshToken,
-        checkAuth,
         loginLoading,
         logoutLoading,
         logoutAllLoading
     } = useAuthService();
 
     const { intendedPath } = useAuth();
-
-    const authStatus = checkAuth();
 
     const handleGoogleLogin = async () => {
         try {
