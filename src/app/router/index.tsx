@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import { ErrorBoundary } from '../providers/error-boundary.tsx'
 import { authRoutes } from '@/modules/auth'
 import { lazy } from 'react'
@@ -19,7 +19,8 @@ import {
     UsersPage,
     HomePage,
     NotFoundPage,
-    ProtectedRoute
+    ProtectedRoute,
+    PublicRoute
 } from "@/app/router/lazy-components";
 
 const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
     },
     {
         path: getAuthParentLink(),
+        element: <PublicRoute />,
         children: authRoutes
     },
     {
@@ -55,7 +57,7 @@ const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <div className="text-center text-gray-600">Welcome to Dashboard</div>,
+                element: <Navigate to={getDashboardLink()} replace />,
             },
             {
                 path: getDashboardLink().replace('/app/', ''),

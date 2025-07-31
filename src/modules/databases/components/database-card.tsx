@@ -42,10 +42,11 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
     currentUserId,
 }) => {
     const isOwner = database.ownerId === currentUserId;
-    const canEdit = isOwner || database.permissions.some(
+    const permissions = database.permissions || [];
+    const canEdit = isOwner || permissions.some(
         p => p.userId === currentUserId && ['write', 'admin'].includes(p.permission)
     );
-    const canDelete = isOwner || database.permissions.some(
+    const canDelete = isOwner || permissions.some(
         p => p.userId === currentUserId && p.permission === 'admin'
     );
 
@@ -178,7 +179,6 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
                         </div>
                     )}
 
-                    {/* Footer */}
                     <div className="flex items-center justify-between pt-2 border-t">
                         <span className="text-xs text-muted-foreground">
                             Updated {formatDate(database.updatedAt)}

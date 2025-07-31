@@ -46,3 +46,6 @@ export const NotFoundPage = withLazyLoading(() =>
 export const ProtectedRoute = withLazyLoading(() =>
     import("@/modules/auth/components/protected-route")
 )
+export const PublicRoute = withLazyLoading(() =>
+    import("@/modules/auth/components/public-route")
+)

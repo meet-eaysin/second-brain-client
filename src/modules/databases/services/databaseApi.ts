@@ -22,13 +22,29 @@ import type { ApiResponse } from '@/types/api.types';
 export const databaseApi = {
     // Database CRUD
     getDatabases: async (params?: DatabaseQueryParams): Promise<PaginatedDatabasesResponse> => {
-        const response = await apiClient.get<ApiResponse<Database[]>>(
+        const response = await apiClient.get<ApiResponse<any[]>>(
             API_ENDPOINTS.DATABASES.LIST,
             { params }
         );
 
-        // Your API returns array in data field, so wrap it in pagination format
-        const databases = response.data.data || [];
+        // Normalize the API response to match frontend Database interface
+        const rawDatabases = response.data.data || [];
+        const databases = rawDatabases.map((db: any): Database => ({
+            id: db._id || db.id,
+            name: db.name,
+            description: db.description,
+            icon: db.icon,
+            cover: db.cover,
+            workspaceId: db.workspaceId,
+            ownerId: db.userId || db.ownerId || db.createdBy,
+            isPublic: db.isPublic || false,
+            properties: db.properties || [],
+            views: db.views || [],
+            permissions: db.sharedWith || db.permissions || [], // Map sharedWith to permissions
+            createdAt: db.createdAt,
+            updatedAt: db.updatedAt,
+        }));
+
         return {
             databases,
             total: databases.length,
