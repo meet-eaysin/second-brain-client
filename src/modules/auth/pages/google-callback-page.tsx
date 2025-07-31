@@ -17,9 +17,20 @@ const GoogleCallbackPage: React.FC = () => {
     useEffect(() => {
         const processCallback = async () => {
             try {
+                console.log('🔄 Google Callback Page - Processing callback...');
+                console.log('📍 Current URL:', window.location.href);
+                console.log('🔍 Search Params:', Object.fromEntries(searchParams.entries()));
+
                 // Extract parameters from URL
                 const { accessToken, refreshToken, error } = authApi.handleTokensFromUrl(searchParams);
                 const code = searchParams.get('code');
+
+                console.log('🎫 Extracted tokens:', {
+                    hasAccessToken: !!accessToken,
+                    hasRefreshToken: !!refreshToken,
+                    hasCode: !!code,
+                    error
+                });
 
                 // Handle OAuth errors
                 if (error) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ProfileDropdown } from '@/components/profile-dropdown';
 import { Search } from '@/components/search';
@@ -19,20 +19,18 @@ export default function DatabaseDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const {
-        currentDatabase,
         setCurrentDatabase,
         setCurrentRecord,
         setOpen,
         searchQuery,
         filters,
         sorts,
-        visibleProperties,
         setVisibleProperties,
     } = useDatabase();
 
     // Fetch database data
     const { data: database, isLoading: isDatabaseLoading } = useDatabaseQuery(id!);
-    const { data: recordsData, isLoading: isRecordsLoading } = useRecords(id!, {
+    const { data: recordsData } = useRecords(id!, {
         search: searchQuery,
         filters: JSON.stringify(filters),
         sorts: JSON.stringify(sorts),

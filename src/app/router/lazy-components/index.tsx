@@ -28,11 +28,11 @@ export const DashboardPage = withLazyLoading(() =>
 export const DataTablePage = withLazyLoading(() =>
     import('@/modules/data-table')
 )
-export const DatabaseModule = withLazyLoading(() =>
-    import('@/modules/databases')
+export const DatabasesPage = withLazyLoading(() =>
+    import('@/modules/databases/pages/databases-page')
 )
 export const UsersPage = withLazyLoading(() =>
-    import('@/modules/users').then(module => ({ default: module.UsersPage }))
+    import('@/modules/users/pages/users-page')
 )
 export const HomePage = withLazyLoading(() =>
     import('@/modules/home')

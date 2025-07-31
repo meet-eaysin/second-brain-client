@@ -5,15 +5,14 @@ import type {ReactNode} from "react";
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            retry: (failureCount, error: unknown) => {
-                if (error?.response?.status === 401) {
-                    return false;
-                }
-                return failureCount < 2;
-            },
-            refetchOnWindowFocus: false,
-            staleTime: 5 * 60 * 1000,
-            gcTime: 10 * 60 * 1000,
+            retry: false,                 // Completely disable retries
+            refetchOnWindowFocus: false,  // Never refetch on focus
+            refetchOnMount: false,        // Never refetch on mount
+            refetchOnReconnect: false,    // Never refetch on reconnect
+            refetchInterval: false,       // No automatic intervals
+            staleTime: Infinity,          // Never consider data stale
+            gcTime: Infinity,             // Never garbage collect
+            networkMode: 'online',        // Only when online
         },
     },
 })

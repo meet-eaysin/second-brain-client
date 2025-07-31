@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     Sheet,
     SheetContent,
@@ -16,7 +15,7 @@ interface RecordFormProps {
     mode?: 'create' | 'edit';
 }
 
-export function RecordForm({ record, properties, open, onOpenChange, mode = 'create' }: RecordFormProps) {
+export function RecordForm({ properties, open, onOpenChange, mode = 'create' }: RecordFormProps) {
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="overflow-y-auto">

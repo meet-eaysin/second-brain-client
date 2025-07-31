@@ -14,7 +14,7 @@ import { Search, Users, UserPlus, Filter } from 'lucide-react';
 import { UserTable } from '../components/user-table';
 import { useUsers, useUpdateUser, useDeleteUser, useToggleUserStatus, useUpdateUserRole } from '../services/userQueries';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
-import type { UserQueryParams, UserRole } from '@/types/user.types';
+import type { UserQueryParams, UserRole, User } from '@/types/user.types';
 
 export const UsersPage: React.FC = () => {
     const { user: currentUser } = useAuth();
@@ -237,3 +237,5 @@ export const UsersPage: React.FC = () => {
         </div>
     );
 };
+
+export default UsersPage;

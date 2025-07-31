@@ -19,16 +19,15 @@ import { Badge } from '@/components/ui/badge';
 import { Search as SearchIcon, Database as DatabaseIcon, Plus, Grid, List } from 'lucide-react';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import type { DatabaseQueryParams, Database } from '@/types/database.types';
-import {
-    DatabaseCard,
-    DatabaseDialogs,
-    DatabasePrimaryButtons,
-    useDatabase,
-    useDatabases,
-    useDeleteDatabase
-} from "@/modules/databases";
+import { DatabaseCard } from '../components/database-card';
+import { DatabaseDialogs } from '../components/database-dialogs';
+import { DatabasePrimaryButtons } from '../components/database-primary-buttons';
+import { useDatabase } from '../context/database-context';
+import { useDatabases, useDeleteDatabase } from '../services/databaseQueries';
+import { PageErrorBoundary } from '@/components/error-boundary';
+import DatabaseProvider from '../context/database-context';
 
-export const DatabasesPage: React.FC = () => {
+const DatabasesPageComponent: React.FC = () => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
     const { setCurrentDatabase, setOpen } = useDatabase();
@@ -39,8 +38,12 @@ export const DatabasesPage: React.FC = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const { data: databasesData, isLoading } = useDatabases(queryParams);
+    const { data: databasesData, isLoading, error } = useDatabases(queryParams);
     const deleteDatabaseMutation = useDeleteDatabase();
+
+    console.log("Database data:", databasesData);
+    console.log("Loading:", isLoading);
+    console.log("Error:", error);
 
     const handleSearch = (search: string) => {
         setSearchQuery(search);
@@ -87,37 +90,19 @@ export const DatabasesPage: React.FC = () => {
         setOpen('create-database');
     };
 
-    const stats = databasesData ? {
-        total: databasesData.total,
-        owned: databasesData.databases.filter(d => d.ownerId === currentUser?.id).length,
-        shared: databasesData.databases.filter(d => d.ownerId !== currentUser?.id).length,
-        public: databasesData.databases.filter(d => d.isPublic).length,
-    } : null;
+    const stats = {
+        total: databasesData?.total || 0,
+        owned: databasesData?.databases?.filter(d => d.ownerId === currentUser?.id)?.length || 0,
+        shared: databasesData?.databases?.filter(d => d.ownerId !== currentUser?.id)?.length || 0,
+        public: databasesData?.databases?.filter(d => d.isPublic)?.length || 0,
+    };
+
+    if (error) {
+        return <div>Error loading databases</div>;
+    }
 
     if (isLoading) {
-        return (
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-                        <div className="h-4 w-64 bg-muted animate-pulse rounded mt-2" />
-                    </div>
-                    <div className="h-10 w-32 bg-muted animate-pulse rounded" />
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                    {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-24 bg-muted animate-pulse rounded-lg" />
-                    ))}
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {[...Array(6)].map((_, i) => (
-                        <div key={i} className="h-64 bg-muted animate-pulse rounded-lg" />
-                    ))}
-                </div>
-            </div>
-        );
+        return <div>Loading databases...</div>;
     }
 
     return (
@@ -142,8 +127,7 @@ export const DatabasesPage: React.FC = () => {
                 </div>
 
             {/* Stats Cards */}
-            {stats && (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Total Databases</CardTitle>
@@ -181,7 +165,6 @@ export const DatabasesPage: React.FC = () => {
                         </CardContent>
                     </Card>
                 </div>
-            )}
 
             {/* Filters and View Toggle */}
             <Card>
@@ -236,11 +219,11 @@ export const DatabasesPage: React.FC = () => {
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold">
-                        {databasesData ? `${databasesData.databases.length} of ${databasesData.total} databases` : 'Loading...'}
+                        {databasesData ? `${databasesData.databases?.length || 0} of ${databasesData.total || 0} databases` : 'Loading...'}
                     </h2>
                 </div>
 
-                {databasesData?.databases.length === 0 ? (
+                {(!databasesData?.databases || databasesData.databases.length === 0) ? (
                     <Card>
                         <CardContent className="flex flex-col items-center justify-center py-12">
                             <DatabaseIcon className="h-12 w-12 text-muted-foreground mb-4" />
@@ -259,7 +242,7 @@ export const DatabasesPage: React.FC = () => {
                         ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" 
                         : "space-y-4"
                     }>
-                        {databasesData?.databases.map((database) => (
+                        {databasesData?.databases?.map((database) => (
                             <DatabaseCard
                                 key={database.id}
                                 database={database}
@@ -274,10 +257,10 @@ export const DatabasesPage: React.FC = () => {
                 )}
 
                 {/* Pagination */}
-                {databasesData && databasesData.totalPages > 1 && (
+                {databasesData && (databasesData.totalPages || 0) > 1 && (
                     <div className="flex items-center justify-between space-x-2 py-4">
                         <div className="text-sm text-muted-foreground">
-                            Page {databasesData.currentPage} of {databasesData.totalPages}
+                            Page {databasesData.currentPage || 1} of {databasesData.totalPages || 1}
                         </div>
                         <div className="flex space-x-2">
                             <Button
@@ -292,7 +275,7 @@ export const DatabasesPage: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 onClick={() => handlePageChange(queryParams.page! + 1)}
-                                disabled={queryParams.page === databasesData.totalPages}
+                                disabled={queryParams.page === (databasesData.totalPages || 1)}
                             >
                                 Next
                             </Button>
@@ -306,3 +289,14 @@ export const DatabasesPage: React.FC = () => {
         </>
     );
 };
+
+// Wrap with provider and error boundary
+export const DatabasesPage: React.FC = () => (
+    <PageErrorBoundary>
+        <DatabaseProvider>
+            <DatabasesPageComponent />
+        </DatabaseProvider>
+    </PageErrorBoundary>
+);
+
+export default DatabasesPage;

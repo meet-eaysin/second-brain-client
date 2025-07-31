@@ -7,15 +7,15 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const { isLoading, hasToken } = useAuth();
+    const { isLoading, hasToken, isInitialized } = useAuth();
 
-    if (hasToken && isLoading) {
+    if (hasToken && !isInitialized && isLoading) {
         return (
-            <FullScreenLoader
-                message="Authenticating..."
-                size="lg"
-                variant="primary"
-            />
+          <FullScreenLoader
+            message="Authenticating..."
+            size="lg"
+            variant="primary"
+          />
         );
     }
 

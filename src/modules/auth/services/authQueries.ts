@@ -8,8 +8,7 @@ import type {AxiosError} from "axios";
 import type {ApiResponse} from "@/types/api.types.ts";
 import {useEffect} from "react";
 import type {AuthResponse} from "@/modules/auth/types/auth.types.ts";
-import {getDashboardLink, getSignInLink} from "@/app/router/router-link.ts";
-
+import {getDashboardLink, getSignInLink, getSignOutLink} from "@/app/router/router-link.ts";
 
 export const AUTH_KEYS = {
     user: ['auth', 'user'] as const,
@@ -23,40 +22,59 @@ interface LoginMutationOptions {
     onError?: (error: Error) => void;
 }
 
+// Global flag to prevent multiple instances
+let isUserQueryActive = false;
+
 export const useCurrentUser = () => {
     const { setUser, clearUser } = useAuthStore();
 
+    // Check if we already have user data in store
+    const { user: existingUser } = useAuthStore();
+
+    // Only enable query if we don't have user data and token exists
+    const tokenExists = hasToken();
+    const shouldFetch = tokenExists && !existingUser && !isUserQueryActive;
+
     const query = useQuery({
         queryKey: AUTH_KEYS.user,
-        queryFn: authApi.getCurrentUser,
-        enabled: hasToken(),
-        staleTime: 5 * 60 * 1000,
-        gcTime: 10 * 60 * 1000,
-        retry: (failureCount: number, error: AxiosError) => {
-            if (error?.response?.status === 401) {
-                return false;
+        queryFn: async () => {
+            isUserQueryActive = true;
+            try {
+                const result = await authApi.getCurrentUser();
+                return result;
+            } finally {
+                isUserQueryActive = false;
             }
-            return failureCount < 2;
         },
+        enabled: shouldFetch,
+        staleTime: Infinity,             // Never consider stale
+        gcTime: Infinity,                // Never garbage collect
+        refetchOnWindowFocus: false,     // Never refetch on window focus
+        refetchOnMount: false,           // Never refetch on mount
+        refetchOnReconnect: false,       // Never refetch on reconnect
+        refetchInterval: false,          // No automatic refetching
+        retry: false,                    // No retries
+        networkMode: 'online',           // Only run when online
     });
 
+    // Only set user data once when query succeeds
     useEffect(() => {
-        if (query.data) {
-            // Set user data in memory only (not persisted to localStorage)
+        if (query.data && query.isSuccess) {
             setUser(query.data);
         }
-    }, [query.data, setUser]);
+    }, [query.data, query.isSuccess]);
 
+    // Handle errors only once
     useEffect(() => {
-        if (query.error) {
+        if (query.error && query.isError) {
             const error = query.error as AxiosError;
             if (error?.response?.status === 401) {
-                // Clear tokens and user data on authentication error
                 removeTokens();
                 clearUser();
+                isUserQueryActive = false; // Reset flag on error
             }
         }
-    }, [query.error, clearUser]);
+    }, [query.error, query.isError]);
 
     return query;
 };

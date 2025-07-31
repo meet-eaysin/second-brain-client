@@ -15,14 +15,13 @@ import {
     AuthenticatedLayout,
     DashboardPage,
     DataTablePage,
-    DatabaseModule,
+    DatabasesPage,
     UsersPage,
     HomePage,
     NotFoundPage,
     ProtectedRoute
-} from "@/app/router/optimized-components";
+} from "@/app/router/lazy-components";
 
-// Lazy load unauthorized page
 const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
 
 const router = createBrowserRouter([
@@ -68,7 +67,7 @@ const router = createBrowserRouter([
             },
             {
                 path: getDatabasesLink().replace('/app/', '') + '/*',
-                element: <DatabaseModule/>,
+                element: <DatabasesPage/>,
             },
             {
                 path: getUsersLink().replace('/app/', ''),

@@ -1,20 +1,19 @@
-import  {lazy, Suspense, type ComponentType} from 'react'
-import { ErrorBoundary } from '@/app/providers/error-boundary'
-import {LoadingSpinner} from "@/components/loading-spinner.tsx";
-import {LoadingFallback} from "@/components/loading-fallback.tsx";
+import { lazy, Suspense, type ComponentType } from 'react'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const withLazyLoading = <T extends Record<string, any> = object>(
-    importFunc: () => Promise<{ default: ComponentType<T> }>,
-    fallback?: ComponentType
+const SimpleLoader = () => (
+    <div className="flex items-center justify-center min-h-[200px]">
+        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+    </div>
+)
+
+export const withLazyLoading = (
+    importFunc: () => Promise<{ default: ComponentType<any> }>
 ) => {
     const LazyComponent = lazy(importFunc)
 
-    return (props: T) => (
-        <ErrorBoundary>
-            <Suspense fallback={fallback ? <LoadingFallback message="Loading page..." size="lg" variant="primary" /> : <LoadingSpinner size="lg" variant="primary" />}>
-                <LazyComponent {...props} />
-            </Suspense>
-        </ErrorBoundary>
+    return (props: any) => (
+        <Suspense fallback={<SimpleLoader />}>
+            <LazyComponent {...props} />
+        </Suspense>
     )
 }

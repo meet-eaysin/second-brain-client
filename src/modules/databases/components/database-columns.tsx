@@ -1,4 +1,3 @@
-import React from 'react';
 import { type ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -30,16 +29,22 @@ import type { DatabaseRecord, DatabaseProperty } from '@/types/database.types';
 
 // Property type icons
 const propertyTypeIcons = {
-    text: Type,
-    number: Hash,
-    select: Tag,
-    multiselect: Tag,
-    date: Calendar,
-    checkbox: CheckSquare,
-    person: Users,
-    url: LinkIcon,
-    email: Mail,
-    phone: Phone,
+    TEXT: Type,
+    NUMBER: Hash,
+    SELECT: Tag,
+    MULTI_SELECT: Tag,
+    DATE: Calendar,
+    CHECKBOX: CheckSquare,
+    URL: LinkIcon,
+    EMAIL: Mail,
+    PHONE: Phone,
+    RELATION: Users,
+    FORMULA: Hash,
+    ROLLUP: Hash,
+    CREATED_TIME: Calendar,
+    CREATED_BY: Users,
+    LAST_EDITED_TIME: Calendar,
+    LAST_EDITED_BY: Users,
 };
 
 // Status and priority colors
@@ -68,21 +73,21 @@ const renderCellValue = (property: DatabaseProperty, value: any) => {
     }
 
     switch (property.type) {
-        case 'select':
-            const colorClass = statusColors[value as keyof typeof statusColors] || 
-                             priorityColors[value as keyof typeof priorityColors] || 
+        case 'SELECT':
+            const colorClass = statusColors[value as keyof typeof statusColors] ||
+                             priorityColors[value as keyof typeof priorityColors] ||
                              'bg-gray-100 text-gray-800';
             return <Badge className={colorClass}>{value}</Badge>;
 
-        case 'multiselect':
+        case 'MULTI_SELECT':
             if (!Array.isArray(value)) return <span className="text-muted-foreground">-</span>;
             return (
                 <div className="flex flex-wrap gap-1">
                     {value.map((option, index) => (
-                        <Badge 
-                            key={index} 
-                            className={statusColors[option as keyof typeof statusColors] || 
-                                     priorityColors[option as keyof typeof priorityColors] || 
+                        <Badge
+                            key={index}
+                            className={statusColors[option as keyof typeof statusColors] ||
+                                     priorityColors[option as keyof typeof priorityColors] ||
                                      'bg-gray-100 text-gray-800'}
                         >
                             {option}
@@ -91,18 +96,18 @@ const renderCellValue = (property: DatabaseProperty, value: any) => {
                 </div>
             );
 
-        case 'checkbox':
+        case 'CHECKBOX':
             return <Checkbox checked={value === true || value === 'true'} disabled />;
 
-        case 'date':
+        case 'DATE':
             return value ? new Date(value).toLocaleDateString() : '-';
 
-        case 'url':
+        case 'URL':
             return (
-                <a 
-                    href={value} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
+                <a
+                    href={value}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-blue-600 hover:underline truncate max-w-xs"
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -110,10 +115,10 @@ const renderCellValue = (property: DatabaseProperty, value: any) => {
                 </a>
             );
 
-        case 'email':
+        case 'EMAIL':
             return (
-                <a 
-                    href={`mailto:${value}`} 
+                <a
+                    href={`mailto:${value}`}
                     className="text-blue-600 hover:underline"
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -121,10 +126,10 @@ const renderCellValue = (property: DatabaseProperty, value: any) => {
                 </a>
             );
 
-        case 'phone':
+        case 'PHONE':
             return (
-                <a 
-                    href={`tel:${value}`} 
+                <a
+                    href={`tel:${value}`}
                     className="text-blue-600 hover:underline"
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -132,7 +137,24 @@ const renderCellValue = (property: DatabaseProperty, value: any) => {
                 </a>
             );
 
-        case 'person':
+        case 'RELATION':
+            return (
+                <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate max-w-xs">{value}</span>
+                </div>
+            );
+
+        case 'FORMULA':
+        case 'ROLLUP':
+            return <span className="truncate max-w-xs font-mono text-sm">{String(value)}</span>;
+
+        case 'CREATED_TIME':
+        case 'LAST_EDITED_TIME':
+            return value ? new Date(value).toLocaleString() : '-';
+
+        case 'CREATED_BY':
+        case 'LAST_EDITED_BY':
             return (
                 <div className="flex items-center gap-2">
                     <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
@@ -199,9 +221,9 @@ export const generateDatabaseColumns = (
             },
             enableSorting: true,
             enableHiding: true,
-            filterFn: (row, id, value) => {
+            filterFn: (row, _id, value) => {
                 const cellValue = row.original.properties[property.id];
-                if (property.type === 'multiselect' && Array.isArray(cellValue)) {
+                if (property.type === 'MULTI_SELECT' && Array.isArray(cellValue)) {
                     return value.some((v: string) => cellValue.includes(v));
                 }
                 return value.includes(cellValue);

@@ -1,58 +1,7 @@
-import { createBrowserRouter, RouterProvider, Routes, Route, Outlet } from 'react-router-dom';
-import DatabaseProvider from './context/database-context';
-import { DatabasesPage } from './pages/databases-page';
-import DatabaseDetailPage from './pages/database-detail-page';
-
-// Database Layout Component that provides context
-function DatabaseLayout() {
-    return (
-        <DatabaseProvider>
-            <Outlet />
-        </DatabaseProvider>
-    );
-}
-
-// Create standalone database router using createBrowserRouter
-// This is for when the database module is used as a standalone app
-export const databaseRouter = createBrowserRouter([
-    {
-        path: '/',
-        element: <DatabaseLayout />,
-        children: [
-            {
-                index: true,
-                element: <DatabasesPage />,
-            },
-            {
-                path: ':id',
-                element: <DatabaseDetailPage />,
-            },
-        ],
-    },
-]);
-
-// Standalone Database App Component using createBrowserRouter
-export function StandaloneDatabaseApp() {
-    return <RouterProvider router={databaseRouter} />;
-}
-
-// Main Database Module Component for integration with main app router
-// This uses Routes/Route for nested routing within the main app
-export default function DatabaseModule() {
-    return (
-        <DatabaseProvider>
-            <Routes>
-                <Route index element={<DatabasesPage />} />
-                <Route path=":id" element={<DatabaseDetailPage />} />
-            </Routes>
-        </DatabaseProvider>
-    );
-}
+// Database module exports - no router here to avoid circular dependencies
 
 // Pages
 export { DatabasesPage } from './pages/databases-page';
-export { default as DatabaseDetailPage } from './pages/database-detail-page';
-export { default as DatabaseDemoPage } from './pages/database-demo-page';
 
 // Components
 export { DatabaseCard } from './components/database-card';

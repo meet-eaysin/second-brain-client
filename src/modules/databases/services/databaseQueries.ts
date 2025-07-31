@@ -30,12 +30,11 @@ export const DATABASE_KEYS = {
         [...DATABASE_KEYS.records(databaseId), 'detail', recordId] as const,
 };
 
-// Database Queries
 export const useDatabases = (params?: DatabaseQueryParams) => {
     return useQuery({
         queryKey: DATABASE_KEYS.list(params),
         queryFn: () => databaseApi.getDatabases(params),
-        staleTime: 5 * 60 * 1000, // 5 minutes
+        staleTime: 5 * 60 * 1000,
     });
 };
 

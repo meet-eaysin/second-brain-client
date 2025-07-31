@@ -5,10 +5,10 @@ import {
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
-// import type { DatabaseProperty } from '@/types/database.types';
+import type {DatabaseProperty} from "@/types/database.types.ts";
 
 interface PropertyFormProps {
-    // property?: DatabaseProperty | null;
+    property?: DatabaseProperty | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
     mode?: 'create' | 'edit';

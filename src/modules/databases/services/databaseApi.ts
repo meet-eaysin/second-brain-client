@@ -22,11 +22,19 @@ import type { ApiResponse } from '@/types/api.types';
 export const databaseApi = {
     // Database CRUD
     getDatabases: async (params?: DatabaseQueryParams): Promise<PaginatedDatabasesResponse> => {
-        const response = await apiClient.get<ApiResponse<PaginatedDatabasesResponse>>(
+        const response = await apiClient.get<ApiResponse<Database[]>>(
             API_ENDPOINTS.DATABASES.LIST,
             { params }
         );
-        return response.data.data;
+
+        // Your API returns array in data field, so wrap it in pagination format
+        const databases = response.data.data || [];
+        return {
+            databases,
+            total: databases.length,
+            totalPages: 1,
+            currentPage: 1,
+        };
     },
 
     createDatabase: async (data: CreateDatabaseRequest): Promise<Database> => {
