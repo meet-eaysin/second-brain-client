@@ -1,21 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -25,20 +10,17 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PropertyForm } from './property-form';
 import { DatabaseForm } from './database-form';
+import { DatabaseViewRenderer } from './database-view-renderer';
 import { useDatabase } from '../hooks/database-hooks';
 import { useCreateRecord, useDeleteRecord, useRecords, useUpdateRecord } from '../hooks/record-hooks';
-import type { Database, DatabaseProperty, DatabaseRecord, PropertyType, DatabaseView } from '@/types/database.types';
+import type { DatabaseProperty, DatabaseRecord, DatabaseView } from '@/types/database.types';
 import {
     Plus,
-    Trash2,
     MoreHorizontal,
     Settings,
-    Edit,
-    Pencil,
     PlusCircle,
     ViewIcon,
     Filter,
@@ -46,8 +28,8 @@ import {
     Table as TableIcon,
     Grid,
     Calendar,
-    LayoutList,
-    LayoutBoard,
+    List,
+    Columns,
     Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -232,8 +214,8 @@ export default function DataTablePage() {
 
     const viewTypeIcons: Record<string, React.ReactNode> = {
         'TABLE': <TableIcon className="h-4 w-4" />,
-        'BOARD': <LayoutBoard className="h-4 w-4" />,
-        'LIST': <LayoutList className="h-4 w-4" />,
+        'BOARD': <Columns className="h-4 w-4" />,
+        'LIST': <List className="h-4 w-4" />,
         'GALLERY': <Grid className="h-4 w-4" />,
         'CALENDAR': <Calendar className="h-4 w-4" />,
         'TIMELINE': <Clock className="h-4 w-4" />,
@@ -308,86 +290,15 @@ export default function DataTablePage() {
                 </div>
             )}
 
-            {/* Table View */}
-            <Card>
-                <CardContent className="p-0">
-                    {isLoadingRecords ? (
-                        <div className="flex justify-center items-center h-64">
-                            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                        </div>
-                    ) : !recordsData || recordsData.records.length === 0 ? (
-                        <div className="text-center py-10">
-                            <h3 className="text-lg font-medium mb-2">No records found</h3>
-                            <p className="text-muted-foreground mb-4">Add your first record to get started</p>
-                            <Button onClick={handleCreateRecord}>
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Record
-                            </Button>
-                        </div>
-                    ) : (
-                        <div className="border rounded-md overflow-hidden">
-                            <div className="overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            {getVisibleProperties().map(property => (
-                                                <TableHead key={property.id} className="whitespace-nowrap">
-                                                    {property.name}
-                                                </TableHead>
-                                            ))}
-                                            <TableHead className="w-[100px]">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {recordsData.records.map(record => (
-                                            <TableRow key={record.id}>
-                                                {getVisibleProperties().map(property => {
-                                                    const value = record.properties[property.id];
-                                                    return (
-                                                        <TableCell key={`${record.id}-${property.id}`} className="py-2">
-                                                            <div 
-                                                                className="min-h-8 px-2 py-1 rounded hover:bg-muted/50 cursor-pointer"
-                                                                onClick={() => {
-                                                                    // Here you would open an inline editor or modal for the cell
-                                                                    toast.info(`Editing ${property.name}`);
-                                                                }}
-                                                            >
-                                                                {renderCellValue(property, value)}
-                                                            </div>
-                                                        </TableCell>
-                                                    );
-                                                })}
-                                                <TableCell className="py-2">
-                                                    <div className="flex items-center gap-1">
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon"
-                                                            onClick={() => {
-                                                                // Edit record
-                                                                setEditingRecord(record);
-                                                            }}
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="icon"
-                                                            className="text-destructive hover:text-destructive"
-                                                            onClick={() => handleDeleteRecord(record.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            {/* Database View Renderer */}
+            <DatabaseViewRenderer
+                database={database}
+                currentView={getCurrentView()!}
+                records={recordsData?.records || []}
+                isLoading={isLoadingRecords}
+                onRecordEdit={(record) => setEditingRecord(record)}
+                onRecordDelete={handleDeleteRecord}
+            />
 
             {/* Database edit dialog */}
             <DatabaseForm

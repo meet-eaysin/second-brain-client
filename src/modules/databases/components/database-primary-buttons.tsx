@@ -14,6 +14,7 @@ import {
     Settings,
     Share,
     MoreHorizontal,
+    Columns,
 } from 'lucide-react';
 import {useDatabaseContext} from "@/modules/databases";
 
@@ -50,7 +51,12 @@ export function DatabasePrimaryButtons() {
                     <Plus className="mr-2 h-4 w-4" />
                     Add Record
                 </Button>
-                
+
+                <Button variant="outline" onClick={() => setOpen('create-property')}>
+                    <Columns className="mr-2 h-4 w-4" />
+                    Add Property
+                </Button>
+
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline">
@@ -58,10 +64,6 @@ export function DatabasePrimaryButtons() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setOpen('create-property')}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Property
-                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setOpen('create-view')}>
                             <Plus className="mr-2 h-4 w-4" />
                             Add View

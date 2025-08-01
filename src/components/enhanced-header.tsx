@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { DatabaseQuickActions } from '@/modules/databases';
 
 interface EnhancedHeaderProps {
     className?: string;
@@ -106,11 +105,6 @@ export function EnhancedHeader({ className, showDatabaseActions = false }: Enhan
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                     <Bell className="h-4 w-4" />
                 </Button>
-                
-                {/* Show Database Quick Actions on database pages */}
-                {showDatabaseActions && (
-                    <DatabaseQuickActions variant="compact" />
-                )}
                 
                 {/* Default Quick Add button when not on database pages */}
                 {!showDatabaseActions && (

@@ -297,6 +297,7 @@ export function DatabaseDialogs() {
             />
 
             <PropertyForm
+                property={open === 'edit-property' ? currentProperty : null}
                 open={open === 'create-property' || open === 'edit-property'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
                 onSubmit={async (values) => {
@@ -309,18 +310,8 @@ export function DatabaseDialogs() {
                         toast.error(open === 'edit-property' ? 'Failed to update property' : 'Failed to create property');
                     }
                 }}
-                propertyId={open === 'edit-property' ? currentProperty?.id : undefined}
-                initialData={open === 'edit-property' && currentProperty ? {
-                    name: currentProperty.name,
-                    type: currentProperty.type,
-                    description: currentProperty.description,
-                    required: currentProperty.required,
-                    selectOptions: currentProperty.selectOptions?.map(option => ({
-                        name: option.name,
-                        color: option.color,
-                    })) || [],
-                } : undefined}
-                databaseId={currentDatabase?.id || ''}
+                mode={open === 'edit-property' ? 'edit' : 'create'}
+                isLoading={false}
             />
 
             {/* Record Form */}

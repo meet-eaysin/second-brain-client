@@ -1,26 +1,25 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
     MoreHorizontal, 
     Database as DatabaseIcon, 
-    Users, 
     Eye, 
     Edit, 
     Share, 
     Trash2,
     Lock,
-    Globe
+    Globe,
+    Clock,
+    FileText
 } from 'lucide-react';
 import type { Database } from '@/types/database.types';
 
@@ -50,146 +49,285 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
         p => p.userId === currentUserId && p.permission === 'admin'
     );
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
+    const formatRelativeTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays === 0) return 'Today';
+        if (diffInDays === 1) return 'Yesterday';
+        if (diffInDays < 7) return `${diffInDays}d ago`;
+        if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w ago`;
+        if (diffInDays < 365) return `${Math.floor(diffInDays / 30)}mo ago`;
+        return `${Math.floor(diffInDays / 365)}y ago`;
     };
 
-    const getPermissionLevel = () => {
-        if (isOwner) return 'Owner';
-        const permission = database.permissions.find(p => p.userId === currentUserId);
-        return permission ? permission.permission.charAt(0).toUpperCase() + permission.permission.slice(1) : 'Read';
+    const getVisibilityInfo = () => {
+        if (database.isPublic) {
+            return {
+                icon: Globe,
+                label: 'Public',
+                variant: 'default' as const,
+            };
+        }
+        
+        if (permissions.length > 0) {
+            return {
+                icon: Share,
+                label: `Shared with ${permissions.length}`,
+                variant: 'secondary' as const,
+            };
+        }
+        
+        return {
+            icon: Lock,
+            label: 'Private',
+            variant: 'outline' as const,
+        };
     };
+
+    const visibilityInfo = getVisibilityInfo();
+    const VisibilityIcon = visibilityInfo.icon;
 
     return (
-        <Card className="group hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                    <div className="flex space-x-2">
-                        <div className="flex h-6 w-6 mt-1 items-center justify-center">
+        <Card className="group hover:shadow-md py-0 transition-all duration-200 cursor-pointer border">
+            <CardContent className="p-6">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                        {/* Icon */}
+                        <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center">
                             {database.icon ? (
-                                <span className="text-xs">{database.icon}</span>
+                                <span className="text-lg">{database.icon}</span>
                             ) : (
-                                <DatabaseIcon className="h-5 w-5 text-primary" />
+                                <DatabaseIcon className="w-4 h-4 text-primary" />
                             )}
                         </div>
-                        <div>
-                            <CardTitle className="text-lg">{database.name}</CardTitle>
-                            <div className="flex items-center space-x-2 mt-1">
-                                <Badge variant={database.isPublic ? 'default' : 'secondary'} className="text-xs">
-                                    {database.isPublic ? (
-                                        <>
-                                            <Globe className="mr-1 h-3 w-3" />
-                                            Public
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Lock className="mr-1 h-3 w-3" />
-                                            Private
-                                        </>
-                                    )}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                    {getPermissionLevel()}
-                                </Badge>
-                            </div>
+                        
+                        {/* Title and Description */}
+                        <div className="flex-1 min-w-0">
+                            <h3 
+                                className="font-semibold text-base truncate mb-1 cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => onView?.(database)}
+                                title={database.name}
+                            >
+                                {database.name}
+                            </h3>
+                            {database.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                                    {database.description}
+                                </p>
+                            )}
                         </div>
                     </div>
+
+                    {/* Actions Menu */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                                variant="ghost" 
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                            >
                                 <MoreHorizontal className="h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem onClick={() => onView?.(database)}>
                                 <Eye className="mr-2 h-4 w-4" />
-                                View Database
+                                Open Database
                             </DropdownMenuItem>
                             {canEdit && (
                                 <DropdownMenuItem onClick={() => onEdit?.(database)}>
                                     <Edit className="mr-2 h-4 w-4" />
-                                    Edit Database
+                                    Edit
                                 </DropdownMenuItem>
                             )}
                             {(isOwner || canEdit) && (
                                 <DropdownMenuItem onClick={() => onShare?.(database)}>
                                     <Share className="mr-2 h-4 w-4" />
-                                    Share Database
+                                    Share
                                 </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator />
                             {canDelete && (
-                                <DropdownMenuItem 
-                                    onClick={() => onDelete?.(database.id)}
-                                    className="text-destructive"
-                                >
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete Database
-                                </DropdownMenuItem>
+                                <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                        onClick={() => onDelete?.(database.id)}
+                                        className="text-destructive focus:text-destructive"
+                                    >
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                </>
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
-            </CardHeader>
-            <CardContent>
-                {database.description && (
-                    <CardDescription className="mb-4 line-clamp-2">
-                        {database.description}
-                    </CardDescription>
-                )}
-                
-                <div className="space-y-3">
-                    {/* Properties and Views Info */}
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <div className="flex items-center space-x-4">
-                            <span>{database.properties.length} properties</span>
-                            <span>{database.views.length} views</span>
-                        </div>
-                        {database.permissions.length > 0 && (
-                            <div className="flex items-center space-x-1">
-                                <Users className="h-3 w-3" />
-                                <span>{database.permissions.length + 1}</span>
-                            </div>
+
+                {/* Stats */}
+                <div className="flex items-center gap-4 mb-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                        <FileText className="w-4 h-4" />
+                        <span>{database.properties?.length || 0} fields</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        <span>{database.views?.length || 0} views</span>
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                    <div className="flex items-center gap-3">
+                        {/* Visibility Badge */}
+                        <Badge variant={visibilityInfo.variant} className="text-xs">
+                            <VisibilityIcon className="w-3 h-3 mr-1" />
+                            {visibilityInfo.label}
+                        </Badge>
+                        
+                        {/* Owner Badge */}
+                        {isOwner && (
+                            <Badge variant="outline" className="text-xs">
+                                Owner
+                            </Badge>
                         )}
                     </div>
 
-                    {/* Shared Users */}
-                    {database.permissions.length > 0 && (
-                        <div className="flex items-center space-x-2">
-                            <span className="text-xs text-muted-foreground">Shared with:</span>
-                            <div className="flex -space-x-1">
-                                {database.permissions.slice(0, 3).map((permission) => (
-                                    <Avatar key={permission.userId} className="h-6 w-6 border-2 border-background">
-                                        <AvatarFallback className="text-xs">
-                                            {permission.userId.slice(0, 2).toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                ))}
-                                {database.permissions.length > 3 && (
-                                    <div className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-muted text-xs">
-                                        +{database.permissions.length - 3}
-                                    </div>
+                    {/* Last Updated */}
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="w-3 h-3" />
+                        <span>{formatRelativeTime(database.updatedAt)}</span>
+                    </div>
+                </div>
+
+                {/* Hover Action */}
+                <div className="mt-4">
+                    <Button 
+                        onClick={() => onView?.(database)}
+                        className="w-full"
+                        size="sm"
+                    >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Open Database
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
+    );
+};
+
+// Optional: Compact variant for dense layouts
+export const DatabaseCardCompact: React.FC<DatabaseCardProps> = ({
+    database,
+    onView,
+    onEdit,
+    onShare,
+    onDelete,
+    currentUserId,
+}) => {
+    const isOwner = database.ownerId === currentUserId;
+    const permissions = database.permissions || [];
+    const canEdit = isOwner || permissions.some(
+        p => p.userId === currentUserId && ['write', 'admin'].includes(p.permission)
+    );
+    const canDelete = isOwner || permissions.some(
+        p => p.userId === currentUserId && p.permission === 'admin'
+    );
+
+    const formatRelativeTime = (dateString: string) => {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffInMs = now.getTime() - date.getTime();
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays === 0) return 'Today';
+        if (diffInDays === 1) return 'Yesterday';
+        if (diffInDays < 7) return `${diffInDays}d`;
+        if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w`;
+        return `${Math.floor(diffInDays / 30)}mo`;
+    };
+
+    return (
+        <Card className="group hover:shadow-md transition-all duration-200 cursor-pointer border">
+            <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                    {/* Icon */}
+                    <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                        {database.icon ? (
+                            <span className="text-sm">{database.icon}</span>
+                        ) : (
+                            <DatabaseIcon className="w-4 h-4 text-primary" />
+                        )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                            <h3 
+                                className="font-medium truncate cursor-pointer hover:text-primary transition-colors"
+                                onClick={() => onView?.(database)}
+                                title={database.name}
+                            >
+                                {database.name}
+                            </h3>
+                            <div className="flex items-center gap-2 shrink-0">
+                                {database.isPublic ? (
+                                    <Globe className="w-3 h-3 text-green-600" />
+                                ) : permissions.length > 0 ? (
+                                    <Share className="w-3 h-3 text-blue-600" />
+                                ) : (
+                                    <Lock className="w-3 h-3 text-muted-foreground" />
                                 )}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm"
+                                            className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                            <MoreHorizontal className="h-3 w-3" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-40">
+                                        <DropdownMenuItem onClick={() => onView?.(database)}>
+                                            <Eye className="mr-2 h-3 w-3" />
+                                            Open
+                                        </DropdownMenuItem>
+                                        {canEdit && (
+                                            <DropdownMenuItem onClick={() => onEdit?.(database)}>
+                                                <Edit className="mr-2 h-3 w-3" />
+                                                Edit
+                                            </DropdownMenuItem>
+                                        )}
+                                        {(isOwner || canEdit) && (
+                                            <DropdownMenuItem onClick={() => onShare?.(database)}>
+                                                <Share className="mr-2 h-3 w-3" />
+                                                Share
+                                            </DropdownMenuItem>
+                                        )}
+                                        {canDelete && (
+                                            <>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem 
+                                                    onClick={() => onDelete?.(database.id)}
+                                                    className="text-destructive"
+                                                >
+                                                    <Trash2 className="mr-2 h-3 w-3" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-2 border-t">
-                        <span className="text-xs text-muted-foreground">
-                            Updated {formatDate(database.updatedAt)}
-                        </span>
-                        <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => onView?.(database)}
-                        >
-                            Open
-                        </Button>
+                        
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span>{database.properties?.length || 0} fields • {database.views?.length || 0} views</span>
+                            <span>{formatRelativeTime(database.updatedAt)}</span>
+                        </div>
                     </div>
                 </div>
             </CardContent>

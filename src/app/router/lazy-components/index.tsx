@@ -33,6 +33,9 @@ export const DataTablePage = withLazyLoading(() =>
 export const DatabasesPage = withLazyLoading(() =>
     import('@/modules/databases/pages/databases-page')
 )
+export const DatabaseDetailPage = withLazyLoading(() =>
+    import('@/modules/databases/pages/database-detail-page')
+)
 export const DatabaseTemplatesPage = withLazyLoading(() =>
     import('@/modules/databases/pages/database-templates-page')
 )

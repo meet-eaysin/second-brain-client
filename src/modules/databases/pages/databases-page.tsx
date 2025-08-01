@@ -5,37 +5,28 @@ import { EnhancedHeader } from '@/components/enhanced-header';
 import { DevelopmentNotice } from '@/components/development-notice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import {
-    Search as SearchIcon,
-    Database as DatabaseIcon,
-    Plus,
-    Grid,
-    List,
-    SortAsc,
-    SortDesc,
-    Filter,
-    MoreHorizontal
-} from 'lucide-react';
-import { useAuth } from '@/modules/auth/hooks/useAuth';
-import type { DatabaseQueryParams, Database } from '@/types/database.types';
-import { PageErrorBoundary } from '@/components/error-boundary';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     DropdownMenu,
-    DropdownMenuCheckboxItem,
     DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+    Database as DatabaseIcon,
+    Plus,
+    Search,
+    Grid,
+    List,
+    ArrowUpDown,
+    Clock,
+} from 'lucide-react';
+import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { DatabaseQueryParams, Database } from '@/types/database.types';
+import { PageErrorBoundary } from '@/components/error-boundary';
+
 import {
     DatabaseCard,
     DatabaseDialogs,
@@ -44,69 +35,92 @@ import {
     useDatabases,
     useDeleteDatabase
 } from "@/modules/databases";
+import { getDatabasesTableColumns } from '../components/databases-table-columns';
+import { DatabasesDataTable } from '../components/databases-data-table';
 
 const DatabasesPageComponent: React.FC = () => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
     const { setCurrentDatabase, setOpen } = useDatabaseContext();
 
-    // State for filters and sorting
+    // Simplified state management
     const [searchQuery, setSearchQuery] = useState('');
-    const [filterOwner, setFilterOwner] = useState<'all' | 'mine' | 'shared'>('all');
-    const [filterPublic, setFilterPublic] = useState<'all' | 'public' | 'private'>('all');
-    const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt' | 'lastAccessedAt'>('updatedAt');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [activeTab, setActiveTab] = useState<'all' | 'mine' | 'shared' | 'public'>('all');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+    const [sortBy, setSortBy] = useState<'updatedAt' | 'name' | 'createdAt'>('updatedAt');
+    const [isSearching, setIsSearching] = useState(false);
 
-    // Build query parameters based on current filters
+    // Build query parameters
     const [queryParams, setQueryParams] = useState<DatabaseQueryParams>({
         page: 1,
         limit: 12,
+        sortBy: 'updatedAt',
+        sortOrder: 'desc',
     });
 
-    // Update query params when filters change
+    // Debounced search and filter updates
     useEffect(() => {
-        const newParams: DatabaseQueryParams = {
-            page: 1,
-            limit: 12,
-        };
+        setIsSearching(true);
+        
+        const timer = setTimeout(() => {
+            const newParams: DatabaseQueryParams = {
+                page: 1,
+                limit: 12,
+                sortBy,
+                sortOrder: 'desc',
+            };
 
-        // Add search query
-        if (searchQuery.trim()) {
-            newParams.search = searchQuery.trim();
-        }
+            if (searchQuery.trim()) {
+                newParams.search = searchQuery.trim();
+            }
 
-        // Add owner filter
-        if (filterOwner === 'mine') {
-            newParams.ownerId = currentUser?.id;
-        } else if (filterOwner === 'shared') {
-            newParams.excludeOwnerId = currentUser?.id;
-        }
+            // Tab-based filtering
+            switch (activeTab) {
+                case 'mine':
+                    newParams.ownerId = currentUser?.id;
+                    break;
+                case 'shared':
+                    newParams.excludeOwnerId = currentUser?.id;
+                    newParams.isPublic = false;
+                    break;
+                case 'public':
+                    newParams.isPublic = true;
+                    break;
+            }
 
-        // Add public filter
-        if (filterPublic === 'public') {
-            newParams.isPublic = true;
-        } else if (filterPublic === 'private') {
-            newParams.isPublic = false;
-        }
+            setQueryParams(newParams);
+            setIsSearching(false);
+        }, 300);
 
-        // Add sorting
-        newParams.sortBy = sortBy;
-        newParams.sortOrder = sortOrder;
-
-        setQueryParams(newParams);
-    }, [searchQuery, filterOwner, filterPublic, sortBy, sortOrder, currentUser?.id]);
+        return () => clearTimeout(timer);
+    }, [searchQuery, activeTab, sortBy, currentUser?.id]);
 
     const { data: databasesData, isLoading, error } = useDatabases(queryParams);
     const deleteDatabaseMutation = useDeleteDatabase();
 
-    const handlePageChange = (page: number) => {
-        setQueryParams(prev => ({ ...prev, page }));
-    };
+    // Event handlers
+    const handleViewDatabase = (database: any) => {
+        console.log('handleViewDatabase called with:', database);
 
-    const handleViewDatabase = (database: Database) => {
+        // API response has id field, so use it directly
+        const databaseId = database?.id;
+
+        console.log('Database ID check:', {
+            id: database?.id,
+            hasId: !!database?.id,
+            databaseObject: database
+        });
+
+        if (!databaseId) {
+            console.error('Database ID is missing:', database);
+            console.error('Full database object:', JSON.stringify(database, null, 2));
+            alert('Cannot view database: Missing database ID. Please check the console for details.');
+            return;
+        }
+
+        console.log('Navigating to:', `/app/databases/${databaseId}`);
         setCurrentDatabase(database);
-        navigate(`/app/databases/${database.id}`);
+        navigate(`/app/databases/${databaseId}`);
     };
 
     const handleEditDatabase = (database: Database) => {
@@ -129,376 +143,293 @@ const DatabasesPageComponent: React.FC = () => {
         setOpen('create-database');
     };
 
-    // Filter databases based on current filters (client-side filtering as backup)
-    const filteredDatabases = useMemo(() => {
-        if (!databasesData?.databases) return [];
+    // Computed values
+    const databases = databasesData?.databases || [];
+    const totalCount = databasesData?.total || 0;
+    const isLoadingState = isLoading || isSearching;
 
-        return databasesData.databases.filter(database => {
-            // Search filter
-            if (searchQuery.trim()) {
-                const query = searchQuery.toLowerCase();
-                const matchesSearch = database.name.toLowerCase().includes(query) ||
-                  database.description?.toLowerCase().includes(query);
-                if (!matchesSearch) return false;
-            }
+    // Tab counts for better UX
+    const tabCounts = useMemo(() => {
+        if (!databases.length) return { all: 0, mine: 0, shared: 0, public: 0 };
+        
+        return {
+            all: totalCount,
+            mine: databases.filter(d => d.ownerId === currentUser?.id).length,
+            shared: databases.filter(d => d.ownerId !== currentUser?.id && !d.isPublic).length,
+            public: databases.filter(d => d.isPublic).length,
+        };
+    }, [databases, totalCount, currentUser?.id]);
 
-            // Owner filter
-            if (filterOwner === 'mine' && database.ownerId !== currentUser?.id) return false;
-            if (filterOwner === 'shared' && database.ownerId === currentUser?.id) return false;
-
-            // Public filter
-            if (filterPublic === 'public' && !database.isPublic) return false;
-            if (filterPublic === 'private' && database.isPublic) return false;
-
-            return true;
-        });
-    }, [databasesData?.databases, searchQuery, filterOwner, filterPublic, currentUser?.id]);
-
-    const stats = {
-        total: databasesData?.total || 0,
-        owned: databasesData?.databases?.filter(d => d.ownerId === currentUser?.id)?.length || 0,
-        shared: databasesData?.databases?.filter(d => d.ownerId !== currentUser?.id)?.length || 0,
-        public: databasesData?.databases?.filter(d => d.isPublic)?.length || 0,
-    };
-
+    // Error state
     if (error) {
-        console.error('Database loading error:', error);
         return (
-          <div className="flex items-center justify-center min-h-[400px]">
-              <Card className="w-full max-w-md">
-                  <CardContent className="flex flex-col items-center justify-center py-8">
-                      <DatabaseIcon className="h-12 w-12 text-destructive mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">Connection Issue</h3>
-                      <p className="text-muted-foreground text-center mb-4">
-                          Unable to connect to the server. Using demo data for now.
-                      </p>
-                      <div className="text-xs text-muted-foreground text-center">
-                          <p>Make sure the backend server is running at:</p>
-                          <code className="bg-muted px-2 py-1 rounded mt-1 inline-block">
-                              {import.meta.env.VITE_API_BASE_URL}
-                          </code>
-                      </div>
-                  </CardContent>
-              </Card>
-          </div>
+            <div>
+                <EnhancedHeader showDatabaseActions={true} />
+                <Main className="flex items-center justify-center min-h-[60vh]">
+                    <Card className="w-full max-w-md">
+                        <CardContent className="flex flex-col items-center justify-center py-12">
+                            <DatabaseIcon className="h-12 w-12 text-destructive mb-4" />
+                            <h3 className="text-lg font-semibold mb-2">Connection Issue</h3>
+                            <p className="text-muted-foreground text-center mb-4">
+                                Unable to connect to the server. Please try again.
+                            </p>
+                            <Button variant="outline" onClick={() => window.location.reload()}>
+                                Retry
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </Main>
+            </div>
         );
     }
 
-    if (isLoading) {
+    // Loading state
+    if (isLoadingState && !databases.length) {
         return (
-          <div className="flex items-center justify-center min-h-[400px]">
-              <div className="flex flex-col items-center space-y-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <p className="text-muted-foreground">Loading databases...</p>
-              </div>
-          </div>
+            <div>
+                <EnhancedHeader showDatabaseActions={true} />
+                <Main className="space-y-8">
+                    <DevelopmentNotice show={!!error} />
+                    
+                    {/* Header skeleton */}
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-48" />
+                        <Skeleton className="h-4 w-96" />
+                    </div>
+
+                    {/* Tabs skeleton */}
+                    <div className="space-y-4">
+                        <Skeleton className="h-10 w-full max-w-md" />
+                        <div className="flex gap-4">
+                            <Skeleton className="h-10 w-64" />
+                            <Skeleton className="h-10 w-32" />
+                        </div>
+                    </div>
+
+                    {/* Content skeleton */}
+                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                        {[...Array(6)].map((_, i) => (
+                            <Card key={i}>
+                                <CardContent className="p-6">
+                                    <Skeleton className="h-6 w-3/4 mb-2" />
+                                    <Skeleton className="h-4 w-full mb-4" />
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-6 w-16" />
+                                        <Skeleton className="h-6 w-20" />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </Main>
+            </div>
         );
     }
 
     return (
-      <>
-          <EnhancedHeader showDatabaseActions={true} />
+        <>
+            <EnhancedHeader showDatabaseActions={true} />
+            
+            <Main className="space-y-8">
+                <DevelopmentNotice show={!!error} />
 
-          <Main className="space-y-6">
-              {/* Development Notice */}
-              <DevelopmentNotice show={!!error} />
+                {/* Clean Header */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
+                    <p className="text-muted-foreground">
+                        Manage your databases and data collections
+                    </p>
+                </div>
 
-              {/* Page Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="space-y-1">
-                      <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
-                      <p className="text-muted-foreground">
-                          Manage your databases and data collections
-                      </p>
-                  </div>
-              </div>
+                {/* Simplified Navigation Tabs */}
+                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'mine' | 'shared' | 'public')} className="space-y-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <TabsList className="grid w-full max-w-md grid-cols-4">
+                            <TabsTrigger value="all" className="text-xs">
+                                All {tabCounts.all > 0 && `(${tabCounts.all})`}
+                            </TabsTrigger>
+                            <TabsTrigger value="mine" className="text-xs">
+                                Mine {tabCounts.mine > 0 && `(${tabCounts.mine})`}
+                            </TabsTrigger>
+                            <TabsTrigger value="shared" className="text-xs">
+                                Shared {tabCounts.shared > 0 && `(${tabCounts.shared})`}
+                            </TabsTrigger>
+                            <TabsTrigger value="public" className="text-xs">
+                                Public {tabCounts.public > 0 && `(${tabCounts.public})`}
+                            </TabsTrigger>
+                        </TabsList>
 
-              {/* Stats Overview - Compact and clean */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Total</CardTitle>
-                          <DatabaseIcon className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                          <div className="text-2xl font-bold">{stats.total}</div>
-                      </CardContent>
-                  </Card>
-                  <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Owned</CardTitle>
-                          <Badge variant="default" className="h-5 px-2 text-xs">
-                              {stats.owned}
-                          </Badge>
-                      </CardHeader>
-                      <CardContent>
-                          <div className="text-2xl font-bold">{stats.owned}</div>
-                      </CardContent>
-                  </Card>
-                  <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Shared</CardTitle>
-                          <Badge variant="secondary" className="h-5 px-2 text-xs">
-                              {stats.shared}
-                          </Badge>
-                      </CardHeader>
-                      <CardContent>
-                          <div className="text-2xl font-bold">{stats.shared}</div>
-                      </CardContent>
-                  </Card>
-                  <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium">Public</CardTitle>
-                          <Badge variant="outline" className="h-5 px-2 text-xs">
-                              {stats.public}
-                          </Badge>
-                      </CardHeader>
-                      <CardContent>
-                          <div className="text-2xl font-bold">{stats.public}</div>
-                      </CardContent>
-                  </Card>
-              </div>
+                        <div className="flex items-center gap-3">
+                            {/* Search */}
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search databases..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 w-64"
+                                />
+                            </div>
 
-              {/* Search and Filters */}
-              <Card className={'gap-3'}>
-                  <CardHeader className="pb-1">
-                      <div className="flex items-center gap-2">
-                          <Filter className="h-4 w-4" />
-                          <CardTitle className="text-base">Search & Filter</CardTitle>
-                      </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                      {/* Search Bar */}
-                      <div className="relative">
-                          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search databases by name or description..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-10"
-                          />
-                      </div>
+                            {/* Sort */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm">
+                                        <ArrowUpDown className="h-4 w-4 mr-2" />
+                                        Sort
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => setSortBy('updatedAt')}>
+                                        <Clock className="h-4 w-4 mr-2" />
+                                        Recently Updated
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('name')}>
+                                        <DatabaseIcon className="h-4 w-4 mr-2" />
+                                        Name
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setSortBy('createdAt')}>
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        Date Created
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
 
-                      {/*<Separator />*/}
-
-                      {/* Filter Controls */}
-                      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                          <div className="flex flex-wrap gap-3">
-                              {/* Owner Filter */}
-                              <div className="flex flex-col gap-1">
-                                  <label className="text-xs font-medium text-muted-foreground">
-                                      Ownership
-                                  </label>
-                                  <Select value={filterOwner} onValueChange={(value: 'all' | 'mine' | 'shared') => setFilterOwner(value)}>
-                                      <SelectTrigger className="w-[120px] h-9">
-                                          <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="all">All</SelectItem>
-                                          <SelectItem value="mine">Mine</SelectItem>
-                                          <SelectItem value="shared">Shared</SelectItem>
-                                      </SelectContent>
-                                  </Select>
-                              </div>
-
-                              {/* Public Filter */}
-                              <div className="flex flex-col gap-1">
-                                  <label className="text-xs font-medium text-muted-foreground">
-                                      Visibility
-                                  </label>
-                                  <Select value={filterPublic} onValueChange={(value: 'all' | 'public' | 'private') => setFilterPublic(value)}>
-                                      <SelectTrigger className="w-[120px] h-9">
-                                          <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="all">All</SelectItem>
-                                          <SelectItem value="public">Public</SelectItem>
-                                          <SelectItem value="private">Private</SelectItem>
-                                      </SelectContent>
-                                  </Select>
-                              </div>
-
-                              {/* Sort Options */}
-                              <div className="flex flex-col gap-1">
-                                  <label className="text-xs font-medium text-muted-foreground">
-                                      Sort
-                                  </label>
-                                  <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                          <Button variant="outline" size="sm" className="h-9 w-[140px] justify-between">
-                                              <span className="flex items-center gap-2">
-                                                  {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
-                                                  {sortBy === 'name' ? 'Name' :
-                                                   sortBy === 'createdAt' ? 'Created' :
-                                                   sortBy === 'updatedAt' ? 'Updated' :
-                                                   'Last Accessed'}
-                                              </span>
-                                              <MoreHorizontal className="h-3 w-3" />
-                                          </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="start" className="w-48">
-                                          <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuCheckboxItem
-                                            checked={sortBy === 'name'}
-                                            onCheckedChange={(checked) => checked && setSortBy('name')}
-                                          >
-                                              Name
-                                          </DropdownMenuCheckboxItem>
-                                          <DropdownMenuCheckboxItem
-                                            checked={sortBy === 'createdAt'}
-                                            onCheckedChange={(checked) => checked && setSortBy('createdAt')}
-                                          >
-                                              Created Date
-                                          </DropdownMenuCheckboxItem>
-                                          <DropdownMenuCheckboxItem
-                                            checked={sortBy === 'updatedAt'}
-                                            onCheckedChange={(checked) => checked && setSortBy('updatedAt')}
-                                          >
-                                              Updated Date
-                                          </DropdownMenuCheckboxItem>
-                                          <DropdownMenuCheckboxItem
-                                            checked={sortBy === 'lastAccessedAt'}
-                                            onCheckedChange={(checked) => checked && setSortBy('lastAccessedAt')}
-                                          >
-                                              Last Accessed
-                                          </DropdownMenuCheckboxItem>
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuCheckboxItem
-                                            checked={sortOrder === 'asc'}
-                                            onCheckedChange={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                                          >
-                                              Ascending
-                                          </DropdownMenuCheckboxItem>
-                                      </DropdownMenuContent>
-                                  </DropdownMenu>
-                              </div>
-                          </div>
-
-                          {/* View Mode Toggle */}
-                          <div className="flex flex-col gap-1">
-                              <label className="text-xs font-medium text-muted-foreground">
-                                  View
-                              </label>
-                              <div className="flex items-center">
-                                  <Button
-                                    variant={viewMode === 'grid' ? 'default' : 'outline'}
+                            {/* View Toggle */}
+                            <div className="flex items-center border rounded-lg overflow-hidden">
+                                <Button
+                                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
                                     size="sm"
                                     onClick={() => setViewMode('grid')}
-                                    className="rounded-r-none h-9 px-3"
-                                  >
-                                      <Grid className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant={viewMode === 'list' ? 'default' : 'outline'}
+                                    className="rounded-none h-8 px-3 border-0"
+                                >
+                                    <Grid className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant={viewMode === 'list' ? 'default' : 'ghost'}
                                     size="sm"
                                     onClick={() => setViewMode('list')}
-                                    className="rounded-l-none h-9 px-3 border-l-0"
-                                  >
-                                      <List className="h-4 w-4" />
-                                  </Button>
-                              </div>
-                          </div>
-                      </div>
-                  </CardContent>
-              </Card>
-
-              {/* Results Section */}
-              <div className="space-y-4">
-                  {/* Results Header */}
-                  <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">
-                          Showing {filteredDatabases.length} of {stats.total} databases
-                      </p>
-                  </div>
-
-                  {/* Databases Grid/List */}
-                  {(!filteredDatabases || filteredDatabases.length === 0) ? (
-                    <Card>
-                        <CardContent className="flex flex-col items-center justify-center py-16">
-                            <DatabaseIcon className="h-16 w-16 text-muted-foreground/50 mb-4" />
-                            <h3 className="text-xl font-semibold mb-2">
-                                {searchQuery || filterOwner !== 'all' || filterPublic !== 'all'
-                                  ? 'No databases found'
-                                  : 'No databases yet'
-                                }
-                            </h3>
-                            <p className="text-muted-foreground text-center max-w-md mb-6">
-                                {searchQuery || filterOwner !== 'all' || filterPublic !== 'all'
-                                  ? 'Try adjusting your search terms or filters to find what you\'re looking for.'
-                                  : 'Get started by creating your first database to store and organize your data.'
-                                }
-                            </p>
-                            {(!searchQuery && filterOwner === 'all' && filterPublic === 'all') && (
-                              <Button onClick={handleCreateDatabase} size="lg">
-                                  <Plus className="mr-2 h-4 w-4" />
-                                  Create Your First Database
-                              </Button>
-                            )}
-                        </CardContent>
-                    </Card>
-                  ) : (
-                    <div className={viewMode === 'grid'
-                      ? "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                      : "space-y-3"
-                    }>
-                        {filteredDatabases.map((database) => (
-                          <DatabaseCard
-                            key={database.id}
-                            database={database}
-                            onView={handleViewDatabase}
-                            onEdit={handleEditDatabase}
-                            onShare={handleShareDatabase}
-                            onDelete={handleDeleteDatabase}
-                            currentUserId={currentUser?.id}
-                          />
-                        ))}
+                                    className="rounded-none h-8 px-3 border-0"
+                                >
+                                    <List className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
                     </div>
-                  )}
 
-                  {/* Pagination */}
-                  {databasesData && (databasesData.totalPages || 0) > 1 && (
-                    <Card>
-                        <CardContent className="flex items-center justify-between py-4">
-                            <div className="text-sm text-muted-foreground">
-                                Page {databasesData.currentPage || 1} of {databasesData.totalPages || 1}
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handlePageChange(queryParams.page! - 1)}
-                                  disabled={queryParams.page === 1}
-                                >
-                                    Previous
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handlePageChange(queryParams.page! + 1)}
-                                  disabled={queryParams.page === (databasesData.totalPages || 1)}
-                                >
-                                    Next
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                  )}
-              </div>
-          </Main>
+                    {/* Tab Content - Clean and Focused */}
+                    <TabsContent value={activeTab} className="space-y-6">
+                        {databases.length === 0 ? (
+                            <Card>
+                                <CardContent className="flex flex-col items-center justify-center py-16">
+                                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                        <DatabaseIcon className="h-8 w-8 text-muted-foreground" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold mb-2">
+                                        {searchQuery ? 'No databases found' : 
+                                         activeTab === 'mine' ? 'No databases created yet' :
+                                         activeTab === 'shared' ? 'No shared databases' :
+                                         activeTab === 'public' ? 'No public databases' : 
+                                         'No databases yet'}
+                                    </h3>
+                                    <p className="text-muted-foreground text-center max-w-md mb-6">
+                                        {searchQuery ? 'Try adjusting your search terms.' :
+                                         activeTab === 'mine' ? 'Create your first database to get started.' :
+                                         activeTab === 'shared' ? 'Databases shared with you will appear here.' :
+                                         activeTab === 'public' ? 'Public databases from the community will appear here.' :
+                                         'Create your first database to get started.'}
+                                    </p>
+                                    {(!searchQuery && (activeTab === 'all' || activeTab === 'mine')) && (
+                                        <Button onClick={handleCreateDatabase} size="lg">
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Create Database
+                                        </Button>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        ) : (
+                            <>
+                                {/* Results Summary */}
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm text-muted-foreground">
+                                        {databases.length} database{databases.length !== 1 ? 's' : ''} found
+                                        {searchQuery && ` for "${searchQuery}"`}
+                                    </p>
+                                    {isLoadingState && (
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                                            Searching...
+                                        </div>
+                                    )}
+                                </div>
 
-          <DatabaseDialogs />
-      </>
+                                {/* Database Grid/List */}
+                                {viewMode === 'grid' ? (
+                                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                                        {databases.map((database) => (
+                                            <DatabaseCard
+                                                key={database.id}
+                                                database={database}
+                                                onView={handleViewDatabase}
+                                                onEdit={handleEditDatabase}
+                                                onShare={handleShareDatabase}
+                                                onDelete={handleDeleteDatabase}
+                                                currentUserId={currentUser?.id}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <DatabasesDataTable
+                                        columns={getDatabasesTableColumns({
+                                            onView: handleViewDatabase,
+                                            onEdit: handleEditDatabase,
+                                            onShare: handleShareDatabase,
+                                            onDelete: handleDeleteDatabase,
+                                            currentUserId: currentUser?.id,
+                                        })}
+                                        data={databases}
+                                        searchQuery={searchQuery}
+                                        onSearchChange={setSearchQuery}
+                                        filterOwner="all"
+                                        onFilterOwnerChange={() => {}}
+                                        filterPublic="all"
+                                        onFilterPublicChange={() => {}}
+                                        sortBy={sortBy}
+                                        onSortByChange={setSortBy}
+                                        sortOrder="desc"
+                                        onSortOrderChange={() => {}}
+                                        onCreateDatabase={handleCreateDatabase}
+                                        onRowClick={handleViewDatabase}
+                                    />
+                                )}
+                            </>
+                        )}
+                    </TabsContent>
+                </Tabs>
+
+                {/* Floating Action Button for Mobile */}
+                <div className="fixed bottom-6 right-6 sm:hidden">
+                    <Button
+                        onClick={handleCreateDatabase}
+                        size="lg"
+                        className="h-14 w-14 rounded-full shadow-lg"
+                    >
+                        <Plus className="h-6 w-6" />
+                    </Button>
+                </div>
+            </Main>
+
+            <DatabaseDialogs />
+        </>
     );
 };
 
-// Wrap with provider and error boundary
 export const DatabasesPage: React.FC = () => (
-  <PageErrorBoundary>
-      <DatabaseProvider>
-          <DatabasesPageComponent />
-      </DatabaseProvider>
-  </PageErrorBoundary>
+    <PageErrorBoundary>
+        <DatabaseProvider>
+            <DatabasesPageComponent />
+        </DatabaseProvider>
+    </PageErrorBoundary>
 );
 
 export default DatabasesPage;

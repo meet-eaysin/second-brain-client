@@ -91,7 +91,7 @@ export function DatabaseTableToolbar<TData>({
         if (selectedRows.length > 0) {
             // Handle bulk delete
             selectedRows.forEach((row) => {
-                onRecordDelete?.((row.original as any).id);
+                onRecordDelete?.((row.original).id);
             });
             table.resetRowSelection();
         }
@@ -223,20 +223,20 @@ export function DatabaseTableToolbar<TData>({
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem onClick={handleExport}>
+                        <DropdownMenuCheckboxItem onClick={handleExport} className={"px-4"}>
                             <Download className="h-4 w-4 mr-2" />
                             Export data
                         </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem onClick={handleImport}>
+                        <DropdownMenuCheckboxItem onClick={handleImport} className={"px-4"}>
                             <Upload className="h-4 w-4 mr-2" />
                             Import data
                         </DropdownMenuCheckboxItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem onClick={() => setOpen('create-property')}>
+                        <DropdownMenuCheckboxItem onClick={() => setOpen('create-property')} className={"px-4"}>
                             <Plus className="h-4 w-4 mr-2" />
                             Add property
                         </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem onClick={() => setOpen('create-view')}>
+                        <DropdownMenuCheckboxItem onClick={() => setOpen('create-view')} className={"px-4"}>
                             <Settings className="h-4 w-4 mr-2" />
                             Manage views
                         </DropdownMenuCheckboxItem>
@@ -245,15 +245,6 @@ export function DatabaseTableToolbar<TData>({
 
                 {/* View options */}
                 <DataTableViewOptions table={table} />
-
-                {/* Add record button */}
-                <Button
-                    size="sm"
-                    onClick={() => setOpen('create-record')}
-                >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add record
-                </Button>
             </div>
         </div>
     );

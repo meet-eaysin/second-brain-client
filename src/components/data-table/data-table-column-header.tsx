@@ -8,7 +8,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {LucideArrowDown, LucideArrowUp, LucideCaravan, LucideEyeOff} from "lucide-react";
+import {LucideArrowDown, LucideArrowUp, ArrowUpDown, LucideEyeOff} from "lucide-react";
 import type {Column} from "@tanstack/react-table";
 
 interface DataTableColumnHeaderProps<TData, TValue>
@@ -41,7 +41,7 @@ export function DataTableColumnHeader<TData, TValue>({
                         ) : column.getIsSorted() === 'asc' ? (
                             <LucideArrowUp className='ml-2 h-4 w-4' />
                         ) : (
-                            <LucideCaravan className='ml-2 h-4 w-4' />
+                           <ArrowUpDown className='ml-2 h-4 w-4' />
                         )}
                     </Button>
                 </DropdownMenuTrigger>

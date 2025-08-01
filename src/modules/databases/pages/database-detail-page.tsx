@@ -11,8 +11,8 @@ import { DatabaseDataTable } from '../components/database-data-table';
 import { DatabaseDialogs } from '../components/database-dialogs';
 import { DatabasePrimaryButtons } from '../components/database-primary-buttons';
 import { generateDatabaseColumns } from '../components/database-columns';
-import { useDatabase } from '../context/database-context';
-import { useDatabase as useDatabaseQuery, useRecords } from '../services/databaseQueries';
+import { useDatabase, useRecords } from '../services/databaseQueries';
+import { useDatabaseContext } from '../context/database-context';
 import type { DatabaseRecord } from '@/types/database.types';
 
 export default function DatabaseDetailPage() {
@@ -26,10 +26,10 @@ export default function DatabaseDetailPage() {
         filters,
         sorts,
         setVisibleProperties,
-    } = useDatabase();
+    } = useDatabaseContext();
 
     // Fetch database data
-    const { data: database, isLoading: isDatabaseLoading } = useDatabaseQuery(id!);
+    const { data: database, isLoading: isDatabaseLoading } = useDatabase(id!);
     const { data: recordsData } = useRecords(id!, {
         search: searchQuery,
         filters: JSON.stringify(filters),

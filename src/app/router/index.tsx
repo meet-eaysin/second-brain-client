@@ -18,6 +18,7 @@ import {
     DashboardPage,
     DataTablePage,
     DatabasesPage,
+    DatabaseDetailPage,
     DatabaseTemplatesPage,
     DatabaseImportPage,
     UsersPage,
@@ -30,6 +31,7 @@ import AIAssistantPage from '@/modules/ai-assistant/pages/ai-assistant-page';
 import KnowledgeGraphPage from '@/modules/second-brain/pages/knowledge-graph-page';
 import NotesPage from '@/modules/second-brain/pages/notes-page';
 import SearchPage from '@/modules/second-brain/pages/search-page';
+import { DatabaseProvider } from '@/modules/databases';
 
 const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
 
@@ -130,6 +132,16 @@ const router = createBrowserRouter([
             {
                 path: getDatabasesLink().replace('/app/', ''),
                 element: <DatabasesPage/>,
+            },
+            {
+                path: 'databases/:id',
+                element: (
+                    <ErrorBoundary>
+                        <DatabaseProvider>
+                            <DatabaseDetailPage/>
+                        </DatabaseProvider>
+                    </ErrorBoundary>
+                ),
             },
             {
                 path: getDatabaseTemplatesLink().replace('/app/', ''),

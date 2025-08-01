@@ -74,15 +74,36 @@ export const databaseApi = {
             const apiData = response.data.data;
             const databases = apiData.databases || [];
 
+            console.log('📊 Raw databases from API:', databases);
+            console.log('📊 First database raw:', databases[0]);
+
             // Transform each database to match our interface
-            const transformedDatabases: Database[] = databases.map((db: any) => ({
-                id: db._id, // Use _id directly as id
+            const transformedDatabases: Database[] = databases.map((db: any) => {
+                console.log('🔄 Transforming database:', {
+                    _id: db._id,
+                    id: db.id,
+                    name: db.name,
+                    userId: db.userId,
+                    createdBy: db.createdBy,
+                    allKeys: Object.keys(db)
+                });
+
+                // The API response shows id field exists, so use it directly
+                const actualId = db.id || db._id || db.databaseId;
+                console.log('🆔 ID resolution:', {
+                    actualId,
+                    using: actualId === db.id ? 'id' : actualId === db._id ? '_id' : 'databaseId',
+                    originalId: db.id
+                });
+
+                return {
+                    id: actualId, // Use the resolved ID
                 name: db.name,
                 description: db.description,
                 icon: db.icon,
                 cover: db.cover,
                 workspaceId: db.workspaceId,
-                ownerId: db.userId || db.createdBy,
+                ownerId: db.userId || db.createdBy, // This should be the user ID, not database ID
                 isPublic: db.isPublic,
                 isFavorite: db.isFavorite,
                 categoryId: db.categoryId,
@@ -101,7 +122,8 @@ export const databaseApi = {
                 permissions: db.permissions || [],
                 createdAt: db.createdAt,
                 updatedAt: db.updatedAt
-            }));
+                };
+            });
 
             // Create paginated response
             // Note: Your API doesn't seem to provide pagination metadata yet
@@ -116,6 +138,7 @@ export const databaseApi = {
             };
 
             console.log('✅ Transformed databases:', paginatedResponse);
+            console.log('📊 First transformed database:', transformedDatabases[0]);
             return paginatedResponse;
 
         } catch (error) {
