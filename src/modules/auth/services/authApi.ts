@@ -33,10 +33,36 @@ export const authApi = {
         return response.data.data
     },
 
-    getCurrentUser: async (): Promise<User> => {
-        const response = await apiClient.get<ApiResponse<User>>(API_ENDPOINTS.AUTH.ME);
-        return response.data.data;
-    },
+    // Get current user with request deduplication
+    getCurrentUser: (() => {
+        let currentRequest: Promise<User> | null = null;
+        let requestCount = 0;
+
+        return async (): Promise<User> => {
+            requestCount++;
+
+            // If there's already a request in progress, return it
+            if (currentRequest) {
+                console.log(`🔄 Reusing existing /auth/me request (call #${requestCount})`);
+                return currentRequest;
+            }
+
+            console.log(`🚀 Making new /auth/me request (call #${requestCount})`);
+            console.log('📍 Request initiated from:', new Error().stack?.split('\n')[2]?.trim());
+
+            currentRequest = apiClient.get<ApiResponse<User>>(API_ENDPOINTS.AUTH.ME)
+                .then(response => {
+                    console.log(`✅ /auth/me request completed (call #${requestCount})`);
+                    return response.data.data;
+                })
+                .finally(() => {
+                    // Clear the request after completion
+                    currentRequest = null;
+                });
+
+            return currentRequest;
+        };
+    })(),
 
     // Session Management
     logout: async () => {

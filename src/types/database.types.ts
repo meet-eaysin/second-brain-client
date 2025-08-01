@@ -207,7 +207,7 @@ export interface DatabaseQueryParams {
     ownerId?: string;
     excludeOwnerId?: string;
     isPublic?: boolean;
-    sortBy?: 'name' | 'created' | 'updated';
+    sortBy?: 'name' | 'createdAt' | 'updatedAt' | 'lastAccessedAt';
     sortOrder?: 'asc' | 'desc';
 }
 

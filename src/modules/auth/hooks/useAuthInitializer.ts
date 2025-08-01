@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '../store/authStore';
-import { authApi } from '../services/authApi';
+import { useCurrentUser } from '../services/authQueries';
 import { hasToken, removeTokens } from '../utils/tokenUtils';
 
 export const useAuthInitializer = () => {
@@ -12,36 +12,35 @@ export const useAuthInitializer = () => {
         setError,
     } = useAuthStore();
 
+    // Use React Query instead of direct API call
+    const userQuery = useCurrentUser();
     const isInitializingRef = useRef(false);
 
-    const initializeAuth = useCallback(async () => {
-        if (isInitializingRef.current || isInitialized || !hasToken()) {
-            return;
-        }
-
-        isInitializingRef.current = true;
-        setLoading(true);
-
-        try {
-            const userData = await authApi.getCurrentUser();
-            setUser(userData);
-        } catch (error: any) {
+    // Handle React Query results
+    useEffect(() => {
+        if (userQuery.data && userQuery.isSuccess) {
+            console.log('🔄 useAuthInitializer: Setting user from React Query');
+            setUser(userQuery.data);
+            setLoading(false);
+        } else if (userQuery.error && userQuery.isError) {
+            console.log('❌ useAuthInitializer: Error from React Query');
+            const error = userQuery.error as any;
             if (error?.response?.status === 401) {
                 removeTokens();
                 clearUser();
             } else {
                 setError(error?.message || 'Authentication failed');
             }
-        } finally {
             setLoading(false);
-            isInitializingRef.current = false;
+        } else if (userQuery.isLoading) {
+            setLoading(true);
         }
-    }, [isInitialized, setUser, clearUser, setLoading, setError]);
+    }, [userQuery.data, userQuery.error, userQuery.isSuccess, userQuery.isError, userQuery.isLoading, setUser, clearUser, setLoading, setError]);
 
-    useEffect(() => {
-        initializeAuth();
-    }, []);
-
-    return { refetch: initializeAuth };
+    return {
+        refetch: userQuery.refetch,
+        isLoading: userQuery.isLoading,
+        error: userQuery.error
+    };
 };
 

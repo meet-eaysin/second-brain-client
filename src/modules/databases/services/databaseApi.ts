@@ -19,235 +19,108 @@ import type {
 } from '@/types/database.types';
 import type { ApiResponse } from '@/types/api.types';
 
-// Mock data for development
-const mockDatabases: Database[] = [
-    {
-        id: '1',
-        name: 'Project Management',
-        description: 'Track projects, tasks, and deadlines',
-        icon: '📋',
-        workspaceId: 'workspace-1',
-        ownerId: 'user-1',
-        isPublic: false,
-        isFavorite: true,
-        properties: [],
-        views: [],
-        permissions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '2',
-        name: 'Content Calendar',
-        description: 'Plan and organize content creation',
-        icon: '📅',
-        workspaceId: 'workspace-1',
-        ownerId: 'user-1',
-        isPublic: true,
-        isFavorite: false,
-        properties: [],
-        views: [],
-        permissions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-    {
-        id: '3',
-        name: 'Customer Database',
-        description: 'Manage customer information and interactions',
-        icon: '👥',
-        workspaceId: 'workspace-1',
-        ownerId: 'user-2',
-        isPublic: false,
-        isFavorite: false,
-        properties: [],
-        views: [],
-        permissions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-    },
-];
+// No more mock data - using real API responses
 
 export const databaseApi = {
     getDatabase: async (databaseId: string): Promise<Database> => {
-        try {
-            const response = await apiClient.get<ApiResponse<Database>>(
-                `${API_ENDPOINTS.DATABASES.DETAIL}/${databaseId}`
-            );
-            return response.data.data;
-        } catch (error) {
-            console.warn('Get database API call failed, using mock response:', error);
+        const response = await apiClient.get<ApiResponse<any>>(
+            API_ENDPOINTS.DATABASES.BY_ID(databaseId)
+        );
 
-            // Return mock database
-            const mockDatabase: Database = {
-                id: databaseId,
-                name: 'Mock Database',
-                description: 'This is a mock database for development',
-                icon: '📊',
-                cover: '',
-                workspaceId: 'workspace-1',
-                ownerId: 'user-1',
-                isPublic: false,
-                properties: [
-                    {
-                        id: 'prop-1',
-                        name: 'Name',
-                        type: 'TEXT',
-                        required: true,
-                        isVisible: true,
-                        order: 0,
-                    },
-                    {
-                        id: 'prop-2',
-                        name: 'Number',
-                        type: 'NUMBER',
-                        required: false,
-                        isVisible: true,
-                        order: 1,
-                    },
-                    {
-                        id: 'prop-3',
-                        name: 'Status',
-                        type: 'SELECT',
-                        required: false,
-                        isVisible: true,
-                        order: 2,
-                        selectOptions: [
-                            { id: 'status-1', name: 'Todo', color: '#e91e63' },
-                            { id: 'status-2', name: 'In Progress', color: '#2196f3' },
-                            { id: 'status-3', name: 'Done', color: '#4caf50' },
-                        ],
-                    },
-                ],
-                views: [
-                    {
-                        id: 'view-1',
-                        name: 'Table View',
-                        type: 'TABLE',
-                        isDefault: true,
-                        filters: [],
-                        sorts: [],
-                        visibleProperties: ['prop-1', 'prop-2', 'prop-3'],
-                    },
-                ],
-                permissions: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
+        const db = response.data.data;
 
-            return mockDatabase;
-        }
+        // Transform the API response to match our interface
+        const transformedDatabase: Database = {
+            id: db._id || db.id,
+            name: db.name,
+            description: db.description,
+            icon: db.icon,
+            cover: db.cover,
+            workspaceId: db.workspaceId,
+            ownerId: db.userId || db.createdBy,
+            isPublic: db.isPublic,
+            isFavorite: db.isFavorite,
+            categoryId: db.categoryId,
+            tags: db.tags || [],
+            properties: db.properties || [],
+            views: (db.views || []).map((view: any) => ({
+                id: view.id || view._id,
+                name: view.name,
+                type: view.type?.toUpperCase() || 'TABLE',
+                isDefault: view.isDefault,
+                filters: view.filters || [],
+                sorts: view.sorts || [],
+                groupBy: view.groupBy,
+                visibleProperties: view.visibleProperties || []
+            })),
+            permissions: db.permissions || [],
+            createdAt: db.createdAt,
+            updatedAt: db.updatedAt
+        };
+
+        return transformedDatabase;
     },
 
     getDatabases: async (params = {}): Promise<PaginatedDatabasesResponse> => {
         try {
-            const response = await apiClient.get<ApiResponse<PaginatedDatabasesResponse>>(
-                API_ENDPOINTS.DATABASES.LIST,
-                { params }
-            );
-            return response.data.data;
-        } catch (error) {
-            console.warn('Get databases API call failed, using mock response:', error);
-
-            // Return mock databases list
-            const mockDatabases: PaginatedDatabasesResponse = {
-                databases: [
-                    {
-                        id: 'db-1',
-                        name: 'Projects',
-                        description: 'Track all company projects',
-                        icon: '🚀',
-                        workspaceId: 'workspace-1',
-                        ownerId: 'user-1',
-                        isPublic: true,
-                        properties: [],
-                        views: [],
-                        permissions: [],
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    },
-                    {
-                        id: 'db-2',
-                        name: 'Team Members',
-                        description: 'Employee directory',
-                        icon: '👥',
-                        workspaceId: 'workspace-1',
-                        ownerId: 'user-1',
-                        isPublic: false,
-                        properties: [],
-                        views: [],
-                        permissions: [],
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                    },
-                ],
-                total: 2,
-                totalPages: 1,
-                currentPage: 1,
-            };
-
-            return mockDatabases;
-        }
-    },
-
-    getDatabases: async (params?: DatabaseQueryParams): Promise<PaginatedDatabasesResponse> => {
-        try {
-            const response = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(
+            const response = await apiClient.get<ApiResponse<{ databases: any[] }>>(
                 API_ENDPOINTS.DATABASES.LIST,
                 { params }
             );
 
-            const rawDatabases = response.data.data || [];
-            const databases = rawDatabases.map((db: Record<string, unknown>): Database => {
-                const getString = (value: unknown, fallback = ''): string => {
-                    return typeof value === 'string' ? value : fallback;
-                };
+            console.log('✅ Raw API response:', response.data);
 
-                const getOptionalString = (value: unknown): string | undefined => {
-                    return typeof value === 'string' ? value : undefined;
-                };
+            // Map the API response to our expected format
+            const apiData = response.data.data;
+            const databases = apiData.databases || [];
 
-                const getBoolean = (value: unknown): boolean => {
-                    return typeof value === 'boolean' ? value : false;
-                };
+            // Transform each database to match our interface
+            const transformedDatabases: Database[] = databases.map((db: any) => ({
+                id: db._id, // Use _id directly as id
+                name: db.name,
+                description: db.description,
+                icon: db.icon,
+                cover: db.cover,
+                workspaceId: db.workspaceId,
+                ownerId: db.userId || db.createdBy,
+                isPublic: db.isPublic,
+                isFavorite: db.isFavorite,
+                categoryId: db.categoryId,
+                tags: db.tags || [],
+                properties: db.properties || [],
+                views: (db.views || []).map((view: any) => ({
+                    id: view._id, // Use _id directly as id for views too
+                    name: view.name,
+                    type: view.type?.toUpperCase() || 'TABLE',
+                    isDefault: view.isDefault,
+                    filters: view.filters || [],
+                    sorts: view.sorts || [],
+                    groupBy: view.groupBy,
+                    visibleProperties: view.visibleProperties || []
+                })),
+                permissions: db.permissions || [],
+                createdAt: db.createdAt,
+                updatedAt: db.updatedAt
+            }));
 
-                const getArray = <T>(value: unknown): T[] => {
-                    return Array.isArray(value) ? value : [];
-                };
-
-                return {
-                    id: getString(db._id) || getString(db.id),
-                    name: getString(db.name),
-                    description: getOptionalString(db.description),
-                    icon: getOptionalString(db.icon),
-                    cover: getOptionalString(db.cover),
-                    workspaceId: getString(db.workspaceId),
-                    ownerId: getString(db.userId) || getString(db.ownerId) || getString(db.createdBy),
-                    isPublic: getBoolean(db.isPublic),
-                    properties: getArray(db.properties),
-                    views: getArray(db.views),
-                    permissions: getArray(db.sharedWith) || getArray(db.permissions),
-                    createdAt: getString(db.createdAt),
-                    updatedAt: getString(db.updatedAt),
-                };
-            });
-
-            return {
-                databases,
-                total: databases.length,
-                totalPages: 1,
-                currentPage: 1,
+            // Create paginated response
+            // Note: Your API doesn't seem to provide pagination metadata yet
+            // You may need to update your backend to include total, totalPages, etc.
+            const paginatedResponse: PaginatedDatabasesResponse = {
+                databases: transformedDatabases,
+                total: databases.length, // TODO: Backend should provide this
+                totalPages: 1, // TODO: Backend should provide this
+                currentPage: params.page || 1,
+                hasNextPage: false, // TODO: Backend should provide this
+                hasPreviousPage: (params.page || 1) > 1
             };
+
+            console.log('✅ Transformed databases:', paginatedResponse);
+            return paginatedResponse;
+
         } catch (error) {
-            console.warn('API call failed, using mock data for development:', error);
-
-            // Return mock data for development
-            return {
-                databases: mockDatabases,
-                total: mockDatabases.length,
-                totalPages: 1,
-                currentPage: 1,
-            };
+            console.error('❌ Get databases API call failed:', error);
+            throw error; // Re-throw the error instead of returning mock data
         }
     },
 
@@ -260,18 +133,42 @@ export const databaseApi = {
     },
 
     getDatabaseById: async (id: string): Promise<Database> => {
-        try {
-            const response = await apiClient.get<ApiResponse<Database>>(
-                API_ENDPOINTS.DATABASES.BY_ID(id)
-            );
-            return response.data.data;
-        } catch (error) {
-            console.warn('Get database by ID API call failed, using mock response:', error);
+        const response = await apiClient.get<ApiResponse<any>>(
+            API_ENDPOINTS.DATABASES.BY_ID(id)
+        );
 
-            // Return mock database
-            const mockDatabase = mockDatabases.find(db => db.id === id) || mockDatabases[0];
-            return mockDatabase;
-        }
+        const db = response.data.data;
+
+        // Transform the API response to match our interface
+        const transformedDatabase: Database = {
+            id: db._id, // Use _id directly as id
+            name: db.name,
+            description: db.description,
+            icon: db.icon,
+            cover: db.cover,
+            workspaceId: db.workspaceId,
+            ownerId: db.userId || db.createdBy,
+            isPublic: db.isPublic,
+            isFavorite: db.isFavorite,
+            categoryId: db.categoryId,
+            tags: db.tags || [],
+            properties: db.properties || [],
+            views: (db.views || []).map((view: any) => ({
+                id: view._id, // Use _id directly as id for views too
+                name: view.name,
+                type: view.type?.toUpperCase() || 'TABLE',
+                isDefault: view.isDefault,
+                filters: view.filters || [],
+                sorts: view.sorts || [],
+                groupBy: view.groupBy,
+                visibleProperties: view.visibleProperties || []
+            })),
+            permissions: db.permissions || [],
+            createdAt: db.createdAt,
+            updatedAt: db.updatedAt
+        };
+
+        return transformedDatabase;
     },
 
     updateDatabase: async (id: string, data: UpdateDatabaseRequest): Promise<Database> => {

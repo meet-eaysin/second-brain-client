@@ -54,7 +54,7 @@ const DatabasesPageComponent: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [filterOwner, setFilterOwner] = useState<'all' | 'mine' | 'shared'>('all');
     const [filterPublic, setFilterPublic] = useState<'all' | 'public' | 'private'>('all');
-    const [sortBy, setSortBy] = useState<'name' | 'created' | 'updated'>('updated');
+    const [sortBy, setSortBy] = useState<'name' | 'createdAt' | 'updatedAt' | 'lastAccessedAt'>('updatedAt');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -328,7 +328,10 @@ const DatabasesPageComponent: React.FC = () => {
                                           <Button variant="outline" size="sm" className="h-9 w-[140px] justify-between">
                                               <span className="flex items-center gap-2">
                                                   {sortOrder === 'asc' ? <SortAsc className="h-3 w-3" /> : <SortDesc className="h-3 w-3" />}
-                                                  {sortBy === 'name' ? 'Name' : sortBy === 'created' ? 'Created' : 'Updated'}
+                                                  {sortBy === 'name' ? 'Name' :
+                                                   sortBy === 'createdAt' ? 'Created' :
+                                                   sortBy === 'updatedAt' ? 'Updated' :
+                                                   'Last Accessed'}
                                               </span>
                                               <MoreHorizontal className="h-3 w-3" />
                                           </Button>
@@ -343,16 +346,22 @@ const DatabasesPageComponent: React.FC = () => {
                                               Name
                                           </DropdownMenuCheckboxItem>
                                           <DropdownMenuCheckboxItem
-                                            checked={sortBy === 'created'}
-                                            onCheckedChange={(checked) => checked && setSortBy('created')}
+                                            checked={sortBy === 'createdAt'}
+                                            onCheckedChange={(checked) => checked && setSortBy('createdAt')}
                                           >
                                               Created Date
                                           </DropdownMenuCheckboxItem>
                                           <DropdownMenuCheckboxItem
-                                            checked={sortBy === 'updated'}
-                                            onCheckedChange={(checked) => checked && setSortBy('updated')}
+                                            checked={sortBy === 'updatedAt'}
+                                            onCheckedChange={(checked) => checked && setSortBy('updatedAt')}
                                           >
                                               Updated Date
+                                          </DropdownMenuCheckboxItem>
+                                          <DropdownMenuCheckboxItem
+                                            checked={sortBy === 'lastAccessedAt'}
+                                            onCheckedChange={(checked) => checked && setSortBy('lastAccessedAt')}
+                                          >
+                                              Last Accessed
                                           </DropdownMenuCheckboxItem>
                                           <DropdownMenuSeparator />
                                           <DropdownMenuCheckboxItem

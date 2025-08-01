@@ -35,6 +35,17 @@ export const useCurrentUser = () => {
     const tokenExists = hasToken();
     const shouldFetch = tokenExists && !existingUser && !isUserQueryActive;
 
+    // Debug logging with stack trace to identify caller
+    if (import.meta.env.DEV) {
+        console.log('🔍 useCurrentUser called from:', new Error().stack?.split('\n')[2]?.trim());
+        console.log('🔍 useCurrentUser conditions:', {
+            tokenExists,
+            hasExistingUser: !!existingUser,
+            isUserQueryActive,
+            shouldFetch
+        });
+    }
+
     const query = useQuery({
         queryKey: AUTH_KEYS.user,
         queryFn: async () => {
@@ -47,14 +58,15 @@ export const useCurrentUser = () => {
             }
         },
         enabled: shouldFetch,
-        staleTime: Infinity,             // Never consider stale
-        gcTime: Infinity,                // Never garbage collect
+        staleTime: 15 * 60 * 1000,       // 15 minutes stale time
+        gcTime: 30 * 60 * 1000,          // 30 minutes garbage collection
         refetchOnWindowFocus: false,     // Never refetch on window focus
         refetchOnMount: false,           // Never refetch on mount
         refetchOnReconnect: false,       // Never refetch on reconnect
         refetchInterval: false,          // No automatic refetching
-        retry: false,                    // No retries
+        retry: 1,                        // Retry once on failure
         networkMode: 'online',           // Only run when online
+        notifyOnChangeProps: ['data', 'error', 'isLoading'], // Only notify on these changes
     });
 
     // Only set user data once when query succeeds
