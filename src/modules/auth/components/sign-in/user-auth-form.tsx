@@ -10,40 +10,35 @@ import {Button} from "@/components/ui/button.tsx";
 import {IconBrandGoogle} from "@tabler/icons-react";
 import {cn} from "@/lib/utils.ts";
 import { toast } from 'sonner';
-import {useAuthService} from "@/modules/auth/hooks/useAuthService.ts";
+import { usePerformance } from '@/hooks/usePerformance';
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
+    usePerformance('UserAuthForm');
+
     const { form, handleLogin, isLoading, error } = useLogin()
     const [googleLoading, setGoogleLoading] = useState(false)
 
     const handleGoogleLogin = async () => {
         try {
             setGoogleLoading(true);
-            
-            const isAvailable = await authApi.checkGoogleOAuthAvailability();
-            if (!isAvailable) {
-                toast.error('Google OAuth is not configured on the backend. Please use email/password login or contact your administrator.');
-                return;
-            }
+            console.log('🔄 Initiating Google OAuth redirect...');
 
-            console.log('🚀 Initiating Google OAuth popup...');
-            
-            // This will now properly generate the OAuth URL with state management
-            const { accessToken, refreshToken } = await authApi.initiateGoogleAuthPopup();
-            
-            console.log('✅ Tokens received, processing authentication...');
-            const { handleGoogleTokens } = useAuthService();
-            await handleGoogleTokens(accessToken, refreshToken);
-            
+            // Use redirect flow - fast and reliable
+            await authApi.initiateGoogleAuth();
+
+            // Note: The page will redirect to Google, so code after this won't execute
+            // User will be redirected to Google, then back to /auth/callback
+            // The callback page will handle the tokens and redirect to dashboard
+
         } catch (error: unknown) {
-            console.error('Failed to initiate Google login:', error);
+            console.error('❌ Failed to initiate Google login:', error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to initiate Google login. Please try again.';
             toast.error(errorMessage);
-        } finally {
-            setGoogleLoading(false);
+            setGoogleLoading(false); // Only set loading to false on error
         }
+        // Note: Don't set loading to false in finally block since page will redirect
     }
 
     const isFormLoading = isLoading || googleLoading

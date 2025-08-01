@@ -1,49 +1,33 @@
-import type {LinkProps} from "react-router-dom";
+import type {LucideIcon} from "lucide-react";
 
-interface User {
+export interface SidebarUser {
     name: string
     email: string
     avatar: string
 }
 
-interface Team {
+export interface SidebarTeam {
     name: string
-    logo: React.ElementType
+    logo: LucideIcon
     plan: string
 }
 
-interface BaseNavItem {
+export interface SidebarNavItem {
     title: string
+    url?: string
+    icon?: LucideIcon
     badge?: string
-    icon?: React.ElementType
     isDynamic?: boolean
+    items?: SidebarNavItem[]
 }
 
-interface NavItem extends BaseNavItem {
-    url?: LinkProps['to']
-    items?: NavItem[]
-}
-
-// Legacy types for backward compatibility
-type NavLink = BaseNavItem & {
-    url: LinkProps['to']
-    items?: never
-}
-
-type NavCollapsible = BaseNavItem & {
-    items: NavItem[]
-    url?: LinkProps['to']
-}
-
-interface NavGroup {
+export interface SidebarNavGroup {
     title: string
-    items: NavItem[]
+    items: SidebarNavItem[]
 }
 
-interface SidebarData {
-    user: User
-    teams: Team[]
-    navGroups: NavGroup[]
+export interface SidebarData {
+    user: SidebarUser
+    teams: SidebarTeam[]
+    navGroups: SidebarNavGroup[]
 }
-
-export type { SidebarData, NavGroup, NavItem, NavCollapsible, NavLink }

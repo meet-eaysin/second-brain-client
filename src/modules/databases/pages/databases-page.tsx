@@ -40,7 +40,7 @@ import {
     DatabaseCard,
     DatabaseDialogs,
     DatabaseProvider,
-    useDatabase,
+    useDatabaseContext,
     useDatabases,
     useDeleteDatabase
 } from "@/modules/databases";
@@ -48,7 +48,7 @@ import {
 const DatabasesPageComponent: React.FC = () => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
-    const { setCurrentDatabase, setOpen } = useDatabase();
+    const { setCurrentDatabase, setOpen } = useDatabaseContext();
 
     // State for filters and sorting
     const [searchQuery, setSearchQuery] = useState('');

@@ -19,8 +19,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 {sidebarData.navGroups.map((props) => {
-                    // Use DynamicNavGroup for the General group that contains databases
-                    if (props.title === 'General') {
+                    // Use DynamicNavGroup for groups that need active state handling
+                    if (props.title === 'General' || props.title === 'Second Brain') {
                         return <DynamicNavGroup key={props.title} {...props} />
                     }
                     return <NavGroup key={props.title} {...props} />

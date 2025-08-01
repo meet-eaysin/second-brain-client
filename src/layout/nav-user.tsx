@@ -23,6 +23,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar'
 import {Link} from "react-router-dom";
+import { useLogout } from '@/modules/auth/hooks/useLogout';
 
 export function NavUser({
                             user,
@@ -33,7 +34,8 @@ export function NavUser({
         avatar: string
     }
 }) {
-    const { isMobile } = useSidebar()
+    const { isMobile } = useSidebar();
+    const { handleLogout, isLoading } = useLogout();
 
     return (
         <SidebarMenu>
@@ -102,9 +104,13 @@ export function NavUser({
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>
+                        <DropdownMenuItem
+                            onClick={handleLogout}
+                            disabled={isLoading}
+                            className="cursor-pointer"
+                        >
                             <LogOut />
-                            Log out
+                            {isLoading ? 'Logging out...' : 'Log out'}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

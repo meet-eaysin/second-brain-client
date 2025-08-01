@@ -47,6 +47,11 @@ export const useDatabase = (id: string) => {
     });
 };
 
+export interface UpdateDatabaseParams {
+    id: string;
+    data: UpdateDatabaseRequest;
+}
+
 // Database Mutations
 export const useCreateDatabase = () => {
     const queryClient = useQueryClient();
@@ -58,8 +63,21 @@ export const useCreateDatabase = () => {
             toast.success('Database created successfully');
         },
         onError: (error: AxiosError<ApiResponse>) => {
-            const message = error.response?.data?.message || 'Failed to create database';
-            toast.error(message);
+            console.error('❌ Create database error:', error.response?.data);
+
+            // Handle validation errors
+            if (error.response?.status === 400 && error.response?.data?.error?.errors) {
+                const validationErrors = error.response.data.error.errors;
+                const errorMessages = Object.entries(validationErrors).map(([field, message]) => {
+                    return `${field}: ${Array.isArray(message) ? message[0] : message}`;
+                });
+                toast.error(`Validation failed: ${errorMessages.join(', ')}`);
+            } else {
+                const message = error.response?.data?.error?.message ||
+                              error.response?.data?.message ||
+                              'Failed to create database';
+                toast.error(message);
+            }
         },
     });
 };
@@ -68,16 +86,28 @@ export const useUpdateDatabase = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ id, data }: { id: string; data: UpdateDatabaseRequest }) =>
-            databaseApi.updateDatabase(id, data),
+        mutationFn: ({ id, data }: UpdateDatabaseParams) => databaseApi.updateDatabase(id, data),
         onSuccess: (_, { id }) => {
             queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(id) });
             queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
             toast.success('Database updated successfully');
         },
         onError: (error: AxiosError<ApiResponse>) => {
-            const message = error.response?.data?.message || 'Failed to update database';
-            toast.error(message);
+            console.error('❌ Update database error:', error.response?.data);
+
+            // Handle validation errors
+            if (error.response?.status === 400 && error.response?.data?.error?.errors) {
+                const validationErrors = error.response.data.error.errors;
+                const errorMessages = Object.entries(validationErrors).map(([field, message]) => {
+                    return `${field}: ${Array.isArray(message) ? message[0] : message}`;
+                });
+                toast.error(`Validation failed: ${errorMessages.join(', ')}`);
+            } else {
+                const message = error.response?.data?.error?.message ||
+                              error.response?.data?.message ||
+                              'Failed to update database';
+                toast.error(message);
+            }
         },
     });
 };

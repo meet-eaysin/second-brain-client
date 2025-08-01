@@ -1,12 +1,13 @@
 import {withLazyLoading} from "@/app/router/lazy-components/with-lazy-loading.tsx";
 
+// Preload critical auth pages for faster navigation
+const signInPageImport = () => import('@/modules/auth/pages/sign-in-page');
+const signUpPageImport = () => import('@/modules/auth/pages/sign-up-page');
+const dashboardPageImport = () => import('@/modules/dashboard');
+
 // For components with default exports, import directly
-export const SignInPage = withLazyLoading(() =>
-    import('@/modules/auth/pages/sign-in-page')
-)
-export const SignUpPage = withLazyLoading(() =>
-    import('@/modules/auth/pages/sign-up-page')
-)
+export const SignInPage = withLazyLoading(signInPageImport)
+export const SignUpPage = withLazyLoading(signUpPageImport)
 export const ForgotPasswordPage = withLazyLoading(() =>
     import('@/modules/auth/pages/forgot-password-page')
 )
@@ -25,9 +26,7 @@ export const AuthNotFoundPage = withLazyLoading(() =>
 export const AuthErrorPage = withLazyLoading(() =>
     import('@/modules/auth/pages/auth-error-page')
 )
-export const DashboardPage = withLazyLoading(() =>
-    import('@/modules/dashboard')
-)
+export const DashboardPage = withLazyLoading(dashboardPageImport)
 export const DataTablePage = withLazyLoading(() =>
     import('@/modules/data-table')
 )

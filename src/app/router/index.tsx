@@ -9,7 +9,9 @@ import {
     getDashboardLink,
     getDataTablesLink,
     getDatabasesLink,
-    getUsersLink, getDatabaseTemplatesLink, getDatabaseImportLink,
+    getUsersLink,
+    getDatabaseTemplatesLink,
+    getDatabaseImportLink,
 } from "@/app/router/router-link.ts";
 import {
     AuthenticatedLayout,
@@ -25,6 +27,9 @@ import {
     PublicRoute
 } from "@/app/router/lazy-components";
 import AIAssistantPage from '@/modules/ai-assistant/pages/ai-assistant-page';
+import KnowledgeGraphPage from '@/modules/second-brain/pages/knowledge-graph-page';
+import NotesPage from '@/modules/second-brain/pages/notes-page';
+import SearchPage from '@/modules/second-brain/pages/search-page';
 
 const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
 
@@ -32,9 +37,9 @@ const router = createBrowserRouter([
     {
         path: getHomeLink(),
         element: (
-            <ErrorBoundary>
-                <HomePage />
-            </ErrorBoundary>
+          <ErrorBoundary>
+              <HomePage />
+          </ErrorBoundary>
         ),
     },
     {
@@ -45,17 +50,17 @@ const router = createBrowserRouter([
     {
         path: '/unauthorized',
         element: (
-            <ErrorBoundary>
-                <UnauthorizedPage />
-            </ErrorBoundary>
+          <ErrorBoundary>
+              <UnauthorizedPage />
+          </ErrorBoundary>
         ),
     },
     {
         path: getAppLink(),
         element: (
-            <ProtectedRoute>
-                <AuthenticatedLayout />
-            </ProtectedRoute>
+          <ProtectedRoute>
+              <AuthenticatedLayout />
+          </ProtectedRoute>
         ),
         children: [
             {
@@ -69,6 +74,54 @@ const router = createBrowserRouter([
             {
                 path: 'ai-assistant',
                 element: <AIAssistantPage/>,
+            },
+            {
+                path: 'knowledge-graph',
+                element: <KnowledgeGraphPage />,
+            },
+            {
+                path: 'notes',
+                element: <NotesPage />,
+            },
+            {
+                path: 'ideas',
+                element: <NotesPage />,
+            },
+            {
+                path: 'capture',
+                element: <NotesPage />,
+            },
+            {
+                path: 'collections',
+                element: <NotesPage />,
+            },
+            {
+                path: 'favorites',
+                element: <NotesPage />,
+            },
+            {
+                path: 'recent',
+                element: <NotesPage />,
+            },
+            {
+                path: 'search',
+                element: <SearchPage />,
+            },
+            {
+                path: 'templates',
+                element: <NotesPage />,
+            },
+            {
+                path: 'calendar',
+                element: <NotesPage />,
+            },
+            {
+                path: 'tags',
+                element: <NotesPage />,
+            },
+            {
+                path: 'archive',
+                element: <NotesPage />,
             },
             {
                 path: getDataTablesLink().replace('/app/', ''),
@@ -95,9 +148,9 @@ const router = createBrowserRouter([
     {
         path: '*',
         element: (
-            <ErrorBoundary>
-                <NotFoundPage/>
-            </ErrorBoundary>
+          <ErrorBoundary>
+              <NotFoundPage/>
+          </ErrorBoundary>
         ),
     },
 ])

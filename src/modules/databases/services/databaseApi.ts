@@ -69,6 +69,127 @@ const mockDatabases: Database[] = [
 ];
 
 export const databaseApi = {
+    getDatabase: async (databaseId: string): Promise<Database> => {
+        try {
+            const response = await apiClient.get<ApiResponse<Database>>(
+                `${API_ENDPOINTS.DATABASES.DETAIL}/${databaseId}`
+            );
+            return response.data.data;
+        } catch (error) {
+            console.warn('Get database API call failed, using mock response:', error);
+
+            // Return mock database
+            const mockDatabase: Database = {
+                id: databaseId,
+                name: 'Mock Database',
+                description: 'This is a mock database for development',
+                icon: '📊',
+                cover: '',
+                workspaceId: 'workspace-1',
+                ownerId: 'user-1',
+                isPublic: false,
+                properties: [
+                    {
+                        id: 'prop-1',
+                        name: 'Name',
+                        type: 'TEXT',
+                        required: true,
+                        isVisible: true,
+                        order: 0,
+                    },
+                    {
+                        id: 'prop-2',
+                        name: 'Number',
+                        type: 'NUMBER',
+                        required: false,
+                        isVisible: true,
+                        order: 1,
+                    },
+                    {
+                        id: 'prop-3',
+                        name: 'Status',
+                        type: 'SELECT',
+                        required: false,
+                        isVisible: true,
+                        order: 2,
+                        selectOptions: [
+                            { id: 'status-1', name: 'Todo', color: '#e91e63' },
+                            { id: 'status-2', name: 'In Progress', color: '#2196f3' },
+                            { id: 'status-3', name: 'Done', color: '#4caf50' },
+                        ],
+                    },
+                ],
+                views: [
+                    {
+                        id: 'view-1',
+                        name: 'Table View',
+                        type: 'TABLE',
+                        isDefault: true,
+                        filters: [],
+                        sorts: [],
+                        visibleProperties: ['prop-1', 'prop-2', 'prop-3'],
+                    },
+                ],
+                permissions: [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            return mockDatabase;
+        }
+    },
+
+    getDatabases: async (params = {}): Promise<PaginatedDatabasesResponse> => {
+        try {
+            const response = await apiClient.get<ApiResponse<PaginatedDatabasesResponse>>(
+                API_ENDPOINTS.DATABASES.LIST,
+                { params }
+            );
+            return response.data.data;
+        } catch (error) {
+            console.warn('Get databases API call failed, using mock response:', error);
+
+            // Return mock databases list
+            const mockDatabases: PaginatedDatabasesResponse = {
+                databases: [
+                    {
+                        id: 'db-1',
+                        name: 'Projects',
+                        description: 'Track all company projects',
+                        icon: '🚀',
+                        workspaceId: 'workspace-1',
+                        ownerId: 'user-1',
+                        isPublic: true,
+                        properties: [],
+                        views: [],
+                        permissions: [],
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    },
+                    {
+                        id: 'db-2',
+                        name: 'Team Members',
+                        description: 'Employee directory',
+                        icon: '👥',
+                        workspaceId: 'workspace-1',
+                        ownerId: 'user-1',
+                        isPublic: false,
+                        properties: [],
+                        views: [],
+                        permissions: [],
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                    },
+                ],
+                total: 2,
+                totalPages: 1,
+                currentPage: 1,
+            };
+
+            return mockDatabases;
+        }
+    },
+
     getDatabases: async (params?: DatabaseQueryParams): Promise<PaginatedDatabasesResponse> => {
         try {
             const response = await apiClient.get<ApiResponse<Record<string, unknown>[]>>(
@@ -131,34 +252,11 @@ export const databaseApi = {
     },
 
     createDatabase: async (data: CreateDatabaseRequest): Promise<Database> => {
-        try {
-            const response = await apiClient.post<ApiResponse<Database>>(
-                API_ENDPOINTS.DATABASES.CREATE,
-                data
-            );
-            return response.data.data;
-        } catch (error) {
-            console.warn('Create database API call failed, using mock response:', error);
-
-            // Return mock created database
-            const mockDatabase: Database = {
-                id: `mock-${Date.now()}`,
-                name: data.name,
-                description: data.description,
-                icon: data.icon,
-                cover: data.cover,
-                workspaceId: data.workspaceId || 'workspace-1',
-                ownerId: 'user-1',
-                isPublic: data.isPublic || false,
-                properties: [],
-                views: [],
-                permissions: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            };
-
-            return mockDatabase;
-        }
+        const response = await apiClient.post<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.CREATE,
+            data
+        );
+        return response.data.data;
     },
 
     getDatabaseById: async (id: string): Promise<Database> => {

@@ -30,7 +30,7 @@ describe('Authentication Flow Integration', () => {
 
   it('should allow authenticated users to access protected routes', async () => {
     // Mock authenticated state
-    localStorage.setItem('accessToken', 'mock-token')
+    localStorage.setItem('auth_token', 'mock-token')
 
     render(<MockApp />, { queryClient })
 
@@ -59,7 +59,7 @@ describe('Authentication Flow Integration', () => {
 
   it('should handle logout flow', async () => {
     // Start with authenticated state
-    localStorage.setItem('accessToken', 'mock-token')
+    localStorage.setItem('auth_token', 'mock-token')
 
     render(<MockApp />, { queryClient })
 
@@ -73,12 +73,12 @@ describe('Authentication Flow Integration', () => {
     })
 
     // Token should be cleared
-    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('auth_token')).toBeNull()
   })
 
   it('should handle token expiration', async () => {
     // Mock expired token
-    localStorage.setItem('accessToken', 'expired-token')
+    localStorage.setItem('auth_token', 'expired-token')
 
     render(<MockApp />, { queryClient })
 

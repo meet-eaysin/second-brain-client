@@ -10,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
     Form,
     FormControl,
@@ -23,17 +24,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { X, Image, Camera, Globe, Lock } from 'lucide-react';
+import { X, Image, Camera, Globe, Lock, Database as DatabaseIcon, Grid } from 'lucide-react';
 import type { Database } from '@/types/database.types';
 import { useCreateDatabase, useUpdateDatabase } from "@/modules/databases";
+import { PropertyList } from './property-list';
 import {Switch} from "@/components/ui/switch.tsx";
 
 const databaseFormSchema = z.object({
-    name: z.string().min(1, 'Database name is required'),
-    description: z.string().optional(),
-    icon: z.string().optional(),
+    name: z.string().min(1, 'Database name is required').max(100, 'Database name must be less than 100 characters'),
+    description: z.string().max(500, 'Description must be less than 500 characters').optional(),
+    icon: z.string().max(50, 'Icon must be less than 50 characters').optional(),
     cover: z.string().optional(),
     isPublic: z.boolean(),
+    workspaceId: z.string().optional(),
 });
 
 type DatabaseFormValues = z.infer<typeof databaseFormSchema>;
@@ -62,6 +65,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
             icon: '📋',
             cover: '',
             isPublic: false,
+            workspaceId: undefined,
         },
     });
 
@@ -77,6 +81,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                     icon: database.icon || '📋',
                     cover: database.cover || '',
                     isPublic: database.isPublic,
+                    workspaceId: database.workspaceId,
                 };
                 form.reset(formData);
                 setCoverPreview(database.cover || null);
@@ -87,6 +92,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                     icon: '📋',
                     cover: '',
                     isPublic: false,
+                    workspaceId: undefined,
                 };
                 form.reset(defaultData);
                 setCoverPreview(null);
@@ -133,19 +139,31 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
 
     const onSubmit = async (values: DatabaseFormValues) => {
         try {
+            console.log('📤 Submitting database form with values:', values);
+
+            // Filter out undefined values to avoid sending them to the backend
+            const cleanedValues = Object.fromEntries(
+                Object.entries(values).filter(([, value]) => value !== undefined && value !== '')
+            ) as DatabaseFormValues;
+
+            console.log('📤 Cleaned values for API:', cleanedValues);
+
             if (mode === 'edit' && database) {
                 await updateDatabaseMutation.mutateAsync({
                     id: database.id,
-                    data: values,
+                    data: cleanedValues,
                 });
             } else {
-                await createDatabaseMutation.mutateAsync(values);
+                await createDatabaseMutation.mutateAsync(cleanedValues);
             }
+
+            // Only close and reset if successful
             onOpenChange(false);
             form.reset();
             setCoverPreview(null);
         } catch (error) {
-            console.error('Error saving database:', error);
+            console.error('❌ Error saving database:', error);
+            // Don't close the modal on error - let the mutation's onError handle the toast
         }
     };
 
@@ -237,7 +255,20 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
               </div>
 
               <div className="px-6 pb-6 overflow-y-auto flex-1">
-                  <Form {...form}>
+                  <Tabs defaultValue="general" className="w-full mt-2">
+                      <TabsList className="grid grid-cols-2 mb-6">
+                          <TabsTrigger value="general" className="flex items-center gap-2">
+                              <DatabaseIcon className="h-4 w-4" />
+                              General Settings
+                          </TabsTrigger>
+                          <TabsTrigger value="properties" className="flex items-center gap-2">
+                              <Grid className="h-4 w-4" />
+                              Properties
+                          </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="general">
+                          <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                           {showIconPicker && (
                             <Card className="p-4 border-dashed">
@@ -375,6 +406,23 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                           </Card>
                       </form>
                   </Form>
+                      </TabsContent>
+
+                      <TabsContent value="properties">
+                          {database?.id ? (
+                              <PropertyList
+                                  databaseId={database.id}
+                                  properties={database.properties || []}
+                              />
+                          ) : (
+                              <div className="text-center py-8">
+                                  <p className="text-muted-foreground mb-4">
+                                      Save the database first to add properties.
+                                  </p>
+                              </div>
+                          )}
+                      </TabsContent>
+                  </Tabs>
               </div>
 
               {/* Footer */}

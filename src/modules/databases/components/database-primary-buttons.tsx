@@ -15,10 +15,10 @@ import {
     Share,
     MoreHorizontal,
 } from 'lucide-react';
-import { useDatabase } from '../context/database-context';
+import {useDatabaseContext} from "@/modules/databases";
 
 export function DatabasePrimaryButtons() {
-    const { setOpen, currentDatabase } = useDatabase();
+    const { setOpen, currentDatabase } = useDatabaseContext();
 
     const handleCreateDatabase = () => {
         setOpen('create-database');

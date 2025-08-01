@@ -28,7 +28,6 @@ export function EnhancedHeader({ className, showDatabaseActions = false }: Enhan
         const path = location.pathname;
         const segments = path.split('/').filter(Boolean);
         
-        // Map segments to user-friendly names
         const segmentMap: Record<string, string> = {
             'app': 'App',
             'dashboard': 'Dashboard',

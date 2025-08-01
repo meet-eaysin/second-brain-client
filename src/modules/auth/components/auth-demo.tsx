@@ -5,12 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { useAuthService } from '../hooks/useAuthService';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '@/components/loading-spinner';
-import { 
-    User, 
-    LogOut, 
-    Shield, 
-    Clock, 
-    CheckCircle, 
+import {
+    User,
+    LogOut,
+    Shield,
+    Clock,
+    CheckCircle,
     XCircle,
     RefreshCw,
     Users
@@ -278,7 +278,7 @@ export const AuthDemo: React.FC = () => {
                                     Logout All Devices
                                 </Button>
 
-                                <Button 
+                                <Button
                                     onClick={handleRefreshToken}
                                     variant="outline"
                                     className="flex items-center gap-2"

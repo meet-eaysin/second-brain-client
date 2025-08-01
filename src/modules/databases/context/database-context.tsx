@@ -82,11 +82,11 @@ export default function DatabaseProvider({ children }: Props) {
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useDatabase = () => {
+export const useDatabaseContext = () => {
     const databaseContext = useContext(DatabaseContext);
 
     if (!databaseContext) {
-        throw new Error('useDatabase has to be used within <DatabaseProvider>');
+        throw new Error('useDatabaseContext has to be used within <DatabaseProvider>');
     }
 
     return databaseContext;

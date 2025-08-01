@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { LoadingSpinner } from "@/components/loading-spinner.tsx";
 import { useAuth } from "@/modules/auth/hooks/useAuth.ts";
@@ -21,10 +21,15 @@ export const AuthGuard = ({
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Memoize current path to prevent unnecessary re-calculations
+    const currentPath = useMemo(() =>
+        location.pathname + location.search,
+        [location.pathname, location.search]
+    );
+
     useEffect(() => {
         // Store intended path for post-login redirect
         if (!isAuthenticated && !hasToken) {
-            const currentPath = location.pathname + location.search;
             if (currentPath !== redirectTo && currentPath !== '/auth/sign-up') {
                 setIntendedPath(currentPath);
             }

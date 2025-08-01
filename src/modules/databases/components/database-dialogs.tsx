@@ -36,7 +36,7 @@ import { DatabaseForm } from "./database-form";
 import { PropertyForm } from "./property-form";
 import { RecordForm } from "./record-form";
 import { ViewForm } from "./view-form";
-import { useDatabase } from "../context/database-context";
+import {useDatabaseContext} from "@/modules/databases";
 
 // Share Database Dialog Component
 interface ShareDatabaseDialogProps {
@@ -285,7 +285,7 @@ export function DatabaseDialogs() {
         currentDatabase, 
         currentRecord, 
         currentProperty 
-    } = useDatabase();
+    } = useDatabaseContext();
 
     return (
         <>
@@ -297,10 +297,30 @@ export function DatabaseDialogs() {
             />
 
             <PropertyForm
-                property={open === 'edit-property' ? currentProperty : null}
                 open={open === 'create-property' || open === 'edit-property'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
-                mode={open === 'edit-property' ? 'edit' : 'create'}
+                onSubmit={async (values) => {
+                    try {
+                        // TODO: Implement property creation/update API call
+                        console.log('Property data:', values);
+                        toast.success(open === 'edit-property' ? 'Property updated successfully' : 'Property created successfully');
+                        setOpen(null);
+                    } catch {
+                        toast.error(open === 'edit-property' ? 'Failed to update property' : 'Failed to create property');
+                    }
+                }}
+                propertyId={open === 'edit-property' ? currentProperty?.id : undefined}
+                initialData={open === 'edit-property' && currentProperty ? {
+                    name: currentProperty.name,
+                    type: currentProperty.type,
+                    description: currentProperty.description,
+                    required: currentProperty.required,
+                    selectOptions: currentProperty.selectOptions?.map(option => ({
+                        name: option.name,
+                        color: option.color,
+                    })) || [],
+                } : undefined}
+                databaseId={currentDatabase?.id || ''}
             />
 
             {/* Record Form */}

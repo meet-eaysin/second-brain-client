@@ -14,13 +14,24 @@ export { DatabaseTemplates } from './components/database-templates';
 export { PropertyForm } from './components/property-form';
 export { RecordForm } from './components/record-form';
 export { ViewForm } from './components/view-form';
+export { PropertyList } from './components/property-list';
 
+// Hooks
+export { useDatabaseById, useDatabases } from './hooks/database-hooks';
+export { useCreateProperty, useUpdateProperty, useDeleteProperty, useReorderProperties } from './hooks/property-hooks';
+export { useRecords, useCreateRecord, useUpdateRecord, useDeleteRecord } from './hooks/record-hooks';
+
+// Services
+export { useCreateDatabase, useUpdateDatabase, useDeleteDatabase } from './services/databaseQueries';
+
+// Routes
+export { databaseRoutes } from './router/routes';
 // Services
 export { databaseApi } from './services/databaseApi';
 export * from './services/databaseQueries';
 
 // Context
-export { default as DatabaseProvider, useDatabase } from './context/database-context';
+export { default as DatabaseProvider, useDatabaseContext } from './context/database-context';
 
 // Types are exported from the main types directory
 export type * from '@/types/database.types';

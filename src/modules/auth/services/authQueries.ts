@@ -62,7 +62,7 @@ export const useCurrentUser = () => {
         if (query.data && query.isSuccess) {
             setUser(query.data);
         }
-    }, [query.data, query.isSuccess]);
+    }, [query.data, query.isSuccess, setUser]);
 
     // Handle errors only once
     useEffect(() => {
@@ -74,7 +74,7 @@ export const useCurrentUser = () => {
                 isUserQueryActive = false; // Reset flag on error
             }
         }
-    }, [query.error, query.isError]);
+    }, [query.error, query.isError, clearUser]);
 
     return query;
 };
@@ -107,9 +107,28 @@ export const useLoginMutation = (options?: LoginMutationOptions) => {
         },
         onError: (error: AxiosError<ApiResponse>) => {
             setLoading(false);
-            const message = error.response?.data?.message || 'Login failed';
+
+            // Handle different types of errors
+            if (error.response?.status === 401) {
+                toast.error('Invalid email or password. Please try again.');
+            } else if (error.response?.status === 429) {
+                toast.error('Too many login attempts. Please wait a few minutes before trying again.');
+            } else if (error.response?.status === 422) {
+                const validationErrors = error.response.data?.errors;
+                if (validationErrors) {
+                    const firstError = Object.values(validationErrors)[0];
+                    toast.error(Array.isArray(firstError) ? firstError[0] : 'Validation error');
+                } else {
+                    toast.error('Please check your input and try again.');
+                }
+            } else if (!error.response) {
+                toast.error('Network error. Please check your connection and try again.');
+            } else {
+                const message = error.response?.data?.message || 'Login failed. Please try again.';
+                toast.error(message);
+            }
+
             if (options?.onError) options.onError(error as Error);
-            toast.error(message);
         },
     });
 };
@@ -145,8 +164,30 @@ export const useRegisterMutation = () => {
         },
         onError: (error: AxiosError<ApiResponse>) => {
             setLoading(false);
-            const message = error.response?.data?.message || 'Registration failed';
-            toast.error(message);
+
+            // Handle different types of registration errors
+            if (error.response?.status === 409) {
+                toast.error('An account with this email already exists. Please sign in instead.');
+            } else if (error.response?.status === 422) {
+                const validationErrors = error.response.data?.errors;
+                if (validationErrors) {
+                    // Show specific validation errors
+                    const errorMessages = Object.entries(validationErrors).map(([field, messages]) => {
+                        const messageArray = Array.isArray(messages) ? messages : [messages];
+                        return `${field}: ${messageArray[0]}`;
+                    });
+                    toast.error(errorMessages[0]); // Show first error
+                } else {
+                    toast.error('Please check your input and try again.');
+                }
+            } else if (error.response?.status === 429) {
+                toast.error('Too many registration attempts. Please wait a few minutes before trying again.');
+            } else if (!error.response) {
+                toast.error('Network error. Please check your connection and try again.');
+            } else {
+                const message = error.response?.data?.message || 'Registration failed. Please try again.';
+                toast.error(message);
+            }
         },
     });
 };
@@ -241,9 +282,11 @@ export const useLogoutMutation = () => {
     return useMutation({
         mutationFn: authApi.logout,
         onMutate: () => {
+            console.log('🔄 Starting logout process...');
             setLoading(true);
         },
         onSuccess: () => {
+            console.log('✅ Logout successful, cleaning up...');
             // Clear tokens from localStorage
             removeTokens();
             // Clear user data from memory and reset auth state
@@ -252,17 +295,23 @@ export const useLogoutMutation = () => {
             queryClient.clear();
             setLoading(false);
             toast.success('Logged out successfully');
+            console.log('🔄 Redirecting to sign in page...');
             window.location.href = getSignInLink();
         },
         onError: (error: AxiosError<ApiResponse>) => {
+            console.error('❌ Logout failed, but cleaning up locally:', error);
             // Even on error, clear local data for security
             removeTokens();
             clearUser();
             queryClient.clear();
             setLoading(false);
 
-            const message = error.response?.data?.message || 'Logout failed';
+            const message = error.response?.data?.error?.message ||
+                          error.response?.data?.message ||
+                          'Logout failed';
+            console.error('❌ Logout error message:', message);
             toast.error(message);
+            console.log('🔄 Redirecting to sign in page after error...');
             window.location.href = getSignInLink();
         },
     });

@@ -8,11 +8,10 @@ import {
     LucidePackage, LucideServer, LucideToolCase,
     LucideUserCog, Database as DatabaseIcon, Users, Shield, Brain,
     BookOpen, Search, Calendar, Archive, Tags,
-    Network, FileText, Bookmark, TriangleDashed
+    Network, FileText, Bookmark
 } from 'lucide-react'
-import { type SidebarData } from '../types'
 
-export const sidebarData: SidebarData = {
+export const sidebarData = {
     user: {
         name: 'satnaing',
         email: 'satnaingdev@gmail.com',
@@ -45,84 +44,6 @@ export const sidebarData: SidebarData = {
                     icon: LucideLayoutDashboard,
                 },
                 {
-                    title: 'Second Brain',
-                    icon: TriangleDashed,
-                    items: [
-                        {
-                            title: 'Knowledge Graph',
-                            url: '/app/knowledge-graph',
-                            icon: Network,
-                        },
-                        {
-                            title: 'Notes & Ideas',
-                            icon: BookOpen,
-                            items: [
-                                {
-                                    title: 'All Notes',
-                                    url: '/app/notes',
-                                },
-                                {
-                                    title: 'Ideas',
-                                    url: '/app/ideas',
-                                },
-                                {
-                                    title: 'Quick Capture',
-                                    url: '/app/capture',
-                                },
-                            ],
-                        },
-                        {
-                            title: 'Collections',
-                            icon: Bookmark,
-                            items: [
-                                {
-                                    title: 'All Collections',
-                                    url: '/app/collections',
-                                },
-                                {
-                                    title: 'Favorites',
-                                    url: '/app/favorites',
-                                },
-                                {
-                                    title: 'Recent',
-                                    url: '/app/recent',
-                                },
-                            ],
-                        },
-                        {
-                            title: 'Smart Search',
-                            url: '/app/search',
-                            icon: Search,
-                        },
-                        {
-                            title: 'AI Assistant',
-                            url: '/app/ai-assistant',
-                            icon: Brain,
-                            badge: 'Upcoming',
-                        },
-                        {
-                            title: 'Templates',
-                            url: '/app/templates',
-                            icon: FileText,
-                        },
-                        {
-                            title: 'Calendar View',
-                            url: '/app/calendar',
-                            icon: Calendar,
-                        },
-                        {
-                            title: 'Tags',
-                            url: '/app/tags',
-                            icon: Tags,
-                        },
-                        {
-                            title: 'Archive',
-                            url: '/app/archive',
-                            icon: Archive,
-                        },
-                    ],
-                },
-                {
                     title: 'Databases',
                     url: '/app/databases',
                     icon: DatabaseIcon,
@@ -133,6 +54,83 @@ export const sidebarData: SidebarData = {
                     url: '/app/users',
                     icon: Users,
                 }
+            ],
+        },
+        {
+            title: 'Second Brain',
+            items: [
+                {
+                    title: 'Knowledge Graph',
+                    url: '/app/knowledge-graph',
+                    icon: Network,
+                },
+                {
+                    title: 'Notes & Ideas',
+                    icon: BookOpen,
+                    items: [
+                        {
+                            title: 'All Notes',
+                            url: '/app/notes',
+                        },
+                        {
+                            title: 'Ideas',
+                            url: '/app/ideas',
+                        },
+                        {
+                            title: 'Quick Capture',
+                            url: '/app/capture',
+                        },
+                    ],
+                },
+                {
+                    title: 'Collections',
+                    icon: Bookmark,
+                    items: [
+                        {
+                            title: 'All Collections',
+                            url: '/app/collections',
+                        },
+                        {
+                            title: 'Favorites',
+                            url: '/app/favorites',
+                        },
+                        {
+                            title: 'Recent',
+                            url: '/app/recent',
+                        },
+                    ],
+                },
+                {
+                    title: 'Smart Search',
+                    url: '/app/search',
+                    icon: Search,
+                },
+                {
+                    title: 'AI Assistant',
+                    url: '/app/ai-assistant',
+                    icon: Brain,
+                    badge: 'Upcoming',
+                },
+                {
+                    title: 'Templates',
+                    url: '/app/templates',
+                    icon: FileText,
+                },
+                {
+                    title: 'Calendar View',
+                    url: '/app/calendar',
+                    icon: Calendar,
+                },
+                {
+                    title: 'Tags',
+                    url: '/app/tags',
+                    icon: Tags,
+                },
+                {
+                    title: 'Archive',
+                    url: '/app/archive',
+                    icon: Archive,
+                },
             ],
         },
         {

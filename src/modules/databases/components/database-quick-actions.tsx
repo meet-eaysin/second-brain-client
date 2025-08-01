@@ -24,7 +24,7 @@ import {
     DropdownMenuShortcut,
     DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu';
-import { useDatabase } from "@/modules/databases";
+import {useDatabaseContext} from "@/modules/databases";
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -42,7 +42,7 @@ export const DatabaseQuickActions: React.FC<DatabaseQuickActionsProps> = ({
     className,
     variant = 'default'
 }) => {
-    const { setOpen } = useDatabase();
+    const { setOpen } = useDatabaseContext();
     const navigate = useNavigate();
 
     const handleCreateDatabase = () => {

@@ -18,6 +18,7 @@ export const apiClient: AxiosInstance = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 10000, // 10 second timeout
 });
 
 apiClient.interceptors.request.use(
@@ -26,14 +27,45 @@ apiClient.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // Log request details for debugging (development only)
+        if (import.meta.env.DEV && config.method?.toUpperCase() === 'POST' && config.url?.includes('/databases')) {
+            console.log('📤 Database API Request:', {
+                method: config.method,
+                url: config.url,
+                data: config.data
+            });
+        }
+
         return config;
     },
     (error) => Promise.reject(error)
 );
 
 apiClient.interceptors.response.use(
-    (response: AxiosResponse) => response,
+    (response: AxiosResponse) => {
+        // Log response details for debugging database API calls (development only)
+        if (import.meta.env.DEV && response.config.url?.includes('/databases')) {
+            console.log('📥 Database API Response:', {
+                method: response.config.method,
+                url: response.config.url,
+                status: response.status,
+                data: response.data
+            });
+        }
+        return response;
+    },
     async (error) => {
+        // Log error details for debugging database API calls (development only)
+        if (import.meta.env.DEV && error.config?.url?.includes('/databases')) {
+            console.error('❌ Database API Error:', {
+                method: error.config.method,
+                url: error.config.url,
+                status: error.response?.status,
+                data: error.response?.data,
+                requestData: error.config.data
+            });
+        }
         const originalRequest = error.config;
 
         // Handle 401 Unauthorized - Token expired/invalid

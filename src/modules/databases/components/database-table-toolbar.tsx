@@ -27,8 +27,8 @@ import {
     Settings,
 } from 'lucide-react';
 import type { DatabaseRecord, DatabaseProperty } from '@/types/database.types';
-import { useDatabase } from '../context/database-context';
 import { toast } from 'sonner';
+import {useDatabaseContext} from "@/modules/databases";
 
 interface DatabaseTableToolbarProps<TData> {
     table: Table<TData>;
@@ -43,7 +43,7 @@ export function DatabaseTableToolbar<TData>({
     onRecordEdit,
     onRecordDelete,
 }: DatabaseTableToolbarProps<TData>) {
-    const { setOpen, searchQuery, setSearchQuery } = useDatabase();
+    const { setOpen, searchQuery, setSearchQuery } = useDatabaseContext();
     const isFiltered = table.getState().columnFilters.length > 0;
     const selectedRows = table.getFilteredSelectedRowModel().rows;
 

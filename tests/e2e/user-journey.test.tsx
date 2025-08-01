@@ -135,7 +135,7 @@ describe('Complete User Journey E2E', () => {
     })
 
     // Verify user is logged out
-    expect(localStorage.getItem('accessToken')).toBeNull()
+    expect(localStorage.getItem('auth_token')).toBeNull()
   })
 
   it('should handle error scenarios gracefully', async () => {
