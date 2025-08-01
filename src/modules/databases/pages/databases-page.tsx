@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
     Search as SearchIcon,
     Database as DatabaseIcon,
@@ -261,8 +260,8 @@ const DatabasesPageComponent: React.FC = () => {
               </div>
 
               {/* Search and Filters */}
-              <Card>
-                  <CardHeader className="pb-3">
+              <Card className={'gap-3'}>
+                  <CardHeader className="pb-1">
                       <div className="flex items-center gap-2">
                           <Filter className="h-4 w-4" />
                           <CardTitle className="text-base">Search & Filter</CardTitle>
@@ -280,7 +279,7 @@ const DatabasesPageComponent: React.FC = () => {
                           />
                       </div>
 
-                      <Separator />
+                      {/*<Separator />*/}
 
                       {/* Filter Controls */}
                       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">

@@ -24,6 +24,7 @@ import {
     ProtectedRoute,
     PublicRoute
 } from "@/app/router/lazy-components";
+import AIAssistantPage from '@/modules/ai-assistant/pages/ai-assistant-page';
 
 const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
 
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
             {
                 path: getDashboardLink().replace('/app/', ''),
                 element: <DashboardPage/>,
+            },
+            {
+                path: 'ai-assistant',
+                element: <AIAssistantPage/>,
             },
             {
                 path: getDataTablesLink().replace('/app/', ''),

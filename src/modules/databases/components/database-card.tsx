@@ -68,10 +68,10 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
         <Card className="group hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                    <div className="flex space-x-2">
+                        <div className="flex h-6 w-6 mt-1 items-center justify-center">
                             {database.icon ? (
-                                <span className="text-lg">{database.icon}</span>
+                                <span className="text-xs">{database.icon}</span>
                             ) : (
                                 <DatabaseIcon className="h-5 w-5 text-primary" />
                             )}

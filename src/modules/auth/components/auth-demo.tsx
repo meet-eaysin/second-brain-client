@@ -40,9 +40,11 @@ export const AuthDemo: React.FC = () => {
 
     const handleGoogleLogin = async () => {
         try {
+            console.log('🚀 Demo: Initiating Google OAuth popup...');
             await loginWithGoogle();
+            console.log('✅ Demo: Google authentication successful');
         } catch (error: unknown) {
-            console.error('Google login failed:', error);
+            console.error('Demo: Google login failed:', error);
         }
     };
 

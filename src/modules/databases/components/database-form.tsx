@@ -282,17 +282,17 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                             </Card>
                           )}
 
-                          <div className="grid grid-cols-10 gap-3 items-end">
+                          <div className="flex gap-3 items-end">
                               <FormField
                                 control={form.control}
                                 name="icon"
                                 render={({ field }) => (
-                                  <FormItem className="col-span-2">
+                                  <FormItem className="w-[10%]">
                                       <FormLabel>Icon</FormLabel>
                                       <FormControl>
                                           <Input
                                             {...field}
-                                            className="w-full text-center"
+                                            className="text-center"
                                             placeholder="📋"
                                             disabled={isLoading}
                                           />
@@ -305,7 +305,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                                 control={form.control}
                                 name="name"
                                 render={({ field }) => (
-                                  <FormItem className="col-span-8">
+                                  <FormItem className="w-[90%]">
                                       <FormLabel>Database Name</FormLabel>
                                       <FormControl>
                                           <Input

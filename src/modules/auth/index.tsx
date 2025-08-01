@@ -1,13 +1,15 @@
+import { type RouteObject } from "react-router-dom";
+import { ForgotPasswordPage } from "./pages/forgot-password-page.tsx";
+import ChangePasswordPage from "./pages/change-password-page.tsx";
+import ResetPasswordPage from "./pages/reset-password-page.tsx";
 import {
-    SignInPage,
-    SignUpPage,
-    ForgotPasswordPage,
-    OtpPage,
+    AuthErrorPage, AuthNotFoundPage,
     GoogleCallbackPage,
-    AuthNotFoundPage,
-    AuthErrorPage
-} from '@/app/router/lazy-components'
-import type {RouteObject} from "react-router-dom";
+    GooglePopupCallbackPage,
+    OtpPage,
+    SignInPage,
+    SignUpPage
+} from "@/app/router/lazy-components";
 
 export const authRoutes: RouteObject[] = [
     {
@@ -20,11 +22,15 @@ export const authRoutes: RouteObject[] = [
     },
     {
         path: "change-password",
-        element: <div>Change Password</div>,
+        element: <ChangePasswordPage />,
     },
     {
         path: "forgot-password",
         element: <ForgotPasswordPage />,
+    },
+    {
+        path: "reset-password",
+        element: <ResetPasswordPage />,
     },
     {
         path: "otp",
@@ -33,6 +39,10 @@ export const authRoutes: RouteObject[] = [
     {
         path: "google/callback",
         element: <GoogleCallbackPage />,
+    },
+    {
+        path: "google/popup-callback",
+        element: <GooglePopupCallbackPage />,
     },
     {
         path: "callback",
@@ -47,3 +57,8 @@ export const authRoutes: RouteObject[] = [
         element: <AuthNotFoundPage />,
     },
 ]
+
+export { useAuth } from "./hooks/useAuth.ts";
+export { useAuthService } from "./hooks/useAuthService.ts";
+export { AuthGuard } from "./components/auth-guard.tsx";
+export type { User, AuthResponse } from "./types/auth.types.ts";

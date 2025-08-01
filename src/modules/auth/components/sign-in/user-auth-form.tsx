@@ -1,4 +1,5 @@
 import type {HTMLAttributes} from "react";
+import { useState } from "react";
 import {useLogin} from "@/modules/auth/hooks/useLogin.ts";
 import {authApi} from "@/modules/auth/services/authApi.ts";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form.tsx";
@@ -9,27 +10,43 @@ import {Button} from "@/components/ui/button.tsx";
 import {IconBrandGoogle} from "@tabler/icons-react";
 import {cn} from "@/lib/utils.ts";
 import { toast } from 'sonner';
+import {useAuthService} from "@/modules/auth/hooks/useAuthService.ts";
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     const { form, handleLogin, isLoading, error } = useLogin()
+    const [googleLoading, setGoogleLoading] = useState(false)
 
     const handleGoogleLogin = async () => {
         try {
+            setGoogleLoading(true);
+            
             const isAvailable = await authApi.checkGoogleOAuthAvailability();
             if (!isAvailable) {
                 toast.error('Google OAuth is not configured on the backend. Please use email/password login or contact your administrator.');
                 return;
             }
 
-            await authApi.initiateGoogleAuth();
+            console.log('🚀 Initiating Google OAuth popup...');
+            
+            // This will now properly generate the OAuth URL with state management
+            const { accessToken, refreshToken } = await authApi.initiateGoogleAuthPopup();
+            
+            console.log('✅ Tokens received, processing authentication...');
+            const { handleGoogleTokens } = useAuthService();
+            await handleGoogleTokens(accessToken, refreshToken);
+            
         } catch (error: unknown) {
             console.error('Failed to initiate Google login:', error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to initiate Google login. Please try again.';
             toast.error(errorMessage);
+        } finally {
+            setGoogleLoading(false);
         }
     }
+
+    const isFormLoading = isLoading || googleLoading
 
     return (
         <Form {...form}>
@@ -85,7 +102,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                     </div>
                 )}
 
-                <Button className='mt-2' disabled={isLoading}>
+                <Button className='mt-2' disabled={isFormLoading}>
                     {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
 
@@ -103,12 +120,12 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                 <Button
                     variant='outline'
                     type='button'
-                    disabled={isLoading}
+                    disabled={isFormLoading}
                     onClick={handleGoogleLogin}
                     className="w-full"
                 >
                     <IconBrandGoogle className='h-4 w-4 mr-2' />
-                    Continue with Google
+                    {googleLoading ? 'Authenticating...' : 'Continue with Google'}
                 </Button>
             </form>
         </Form>

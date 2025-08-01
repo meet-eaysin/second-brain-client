@@ -4,22 +4,21 @@ export interface User {
     username: string
     firstName?: string
     lastName?: string
-    profilePicture?: string
     role: string
-    isActive: boolean
-    authProvider: 'LOCAL' | 'GOOGLE'
-    googleId?: string
+    authProvider: 'email' | 'google'
     isEmailVerified: boolean
-    lastLoginAt?: string
     createdAt: string
     updatedAt: string
 }
 
-export interface AuthState {
-    user: User | null
-    isAuthenticated: boolean
-    isLoading: boolean
-    error: string | null
+export interface AuthResponse {
+    user: User
+    accessToken: string
+    refreshToken: string
+}
+
+export interface RefreshTokenResponse {
+    accessToken: string
 }
 
 export interface LoginCredentials {
@@ -28,8 +27,8 @@ export interface LoginCredentials {
 }
 
 export interface RegisterCredentials {
-    username: string
     email: string
+    username: string
     password: string
     firstName?: string
     lastName?: string
@@ -45,29 +44,31 @@ export interface ForgotPasswordCredentials {
 }
 
 export interface ResetPasswordCredentials {
-    accessToken: string
+    resetToken: string
     newPassword: string
 }
 
-export interface AuthResponse {
-    user: User
-    accessToken: string
-    refreshToken: string
-}
-
-export interface GoogleAuthResponse {
-    user: User
-    accessToken: string
-    refreshToken: string
-}
-
-export interface RefreshTokenResponse {
-    accessToken: string
-}
-
-export interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = any> {
     success: boolean
     message: string
     data: T
+    errors?: Record<string, string[]>
+}
+
+export interface AuthError {
+    message: string
+    code?: string
+    field?: string
+}
+
+export interface GoogleAuthResult {
+    accessToken: string
+    refreshToken: string
+    user: User
+}
+
+export interface PopupMessage {
+    type: 'GOOGLE_AUTH_SUCCESS' | 'GOOGLE_AUTH_ERROR'
+    data?: GoogleAuthResult
     error?: string
 }

@@ -2,11 +2,13 @@
 import {
     AudioWaveform,
     Command,
-    GalleryVerticalEnd, LucideBarChart, LucideBug,
-    LucideCheckLine, LucideDiameter, LucideFerrisWheel, LucideHelpCircle,
-    LucideLayoutDashboard, LucideLock, LucideNavigation,
-    LucidePackage, LucideServer, LucideShare2, LucideSignal, LucideToolCase,
-    LucideUserCog, Database as DatabaseIcon, Users, Shield
+    GalleryVerticalEnd,
+    LucideCheckLine, LucideDiameter, LucideHelpCircle,
+    LucideLayoutDashboard, LucideNavigation,
+    LucidePackage, LucideServer, LucideToolCase,
+    LucideUserCog, Database as DatabaseIcon, Users, Shield, Brain,
+    BookOpen, Search, Calendar, Archive, Tags,
+    Network, FileText, Bookmark, TriangleDashed
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -43,115 +45,94 @@ export const sidebarData: SidebarData = {
                     icon: LucideLayoutDashboard,
                 },
                 {
+                    title: 'Second Brain',
+                    icon: TriangleDashed,
+                    items: [
+                        {
+                            title: 'Knowledge Graph',
+                            url: '/app/knowledge-graph',
+                            icon: Network,
+                        },
+                        {
+                            title: 'Notes & Ideas',
+                            icon: BookOpen,
+                            items: [
+                                {
+                                    title: 'All Notes',
+                                    url: '/app/notes',
+                                },
+                                {
+                                    title: 'Ideas',
+                                    url: '/app/ideas',
+                                },
+                                {
+                                    title: 'Quick Capture',
+                                    url: '/app/capture',
+                                },
+                            ],
+                        },
+                        {
+                            title: 'Collections',
+                            icon: Bookmark,
+                            items: [
+                                {
+                                    title: 'All Collections',
+                                    url: '/app/collections',
+                                },
+                                {
+                                    title: 'Favorites',
+                                    url: '/app/favorites',
+                                },
+                                {
+                                    title: 'Recent',
+                                    url: '/app/recent',
+                                },
+                            ],
+                        },
+                        {
+                            title: 'Smart Search',
+                            url: '/app/search',
+                            icon: Search,
+                        },
+                        {
+                            title: 'AI Assistant',
+                            url: '/app/ai-assistant',
+                            icon: Brain,
+                            badge: 'Upcoming',
+                        },
+                        {
+                            title: 'Templates',
+                            url: '/app/templates',
+                            icon: FileText,
+                        },
+                        {
+                            title: 'Calendar View',
+                            url: '/app/calendar',
+                            icon: Calendar,
+                        },
+                        {
+                            title: 'Tags',
+                            url: '/app/tags',
+                            icon: Tags,
+                        },
+                        {
+                            title: 'Archive',
+                            url: '/app/archive',
+                            icon: Archive,
+                        },
+                    ],
+                },
+                {
                     title: 'Databases',
                     url: '/app/databases',
                     icon: DatabaseIcon,
                     isDynamic: true,
                 },
                 {
-                    title: 'Data Tables',
-                    url: '/app/data-tables',
-                    icon: LucideCheckLine,
-                },
-                {
                     title: 'Users',
                     url: '/app/users',
                     icon: Users,
-                },
-                {
-                    title: 'Social Connect',
-                    icon: LucideShare2,
-                    items: [
-                        {
-                            title: 'Dashboard',
-                            url: '/app/social-connect/dashboard',
-                        },
-                        {
-                            title: 'LinkedIn',
-                            url: '/app/social-connect/linkedin',
-                        },
-                    ],
-                },
-                {
-                    title: 'Secured by Clerk',
-                    icon: LucideSignal,
-                    items: [
-                        {
-                            title: 'Sign In',
-                            url: '/clerk/sign-in',
-                        },
-                        {
-                            title: 'Sign Up',
-                            url: '/clerk/sign-up',
-                        },
-                        {
-                            title: 'User Management',
-                            url: '/clerk/user-management',
-                        },
-                    ],
-                },
-            ],
-        },
-        {
-            title: 'Pages',
-            items: [
-                {
-                    title: 'Auth',
-                    icon: LucideLock,
-                    items: [
-                        {
-                            title: 'Sign In',
-                            url: '/sign-in',
-                        },
-                        {
-                            title: 'Sign In (2 Col)',
-                            url: '/sign-in-2',
-                        },
-                        {
-                            title: 'Sign Up',
-                            url: '/sign-up',
-                        },
-                        {
-                            title: 'Forgot Password',
-                            url: '/forgot-password',
-                        },
-                        {
-                            title: 'OTP',
-                            url: '/otp',
-                        },
-                    ],
-                },
-                {
-                    title: 'Errors',
-                    icon: LucideBug,
-                    items: [
-                        {
-                            title: 'Unauthorized',
-                            url: '/401',
-                            icon: LucideLock,
-                        },
-                        {
-                            title: 'Forbidden',
-                            url: '/403',
-                            icon: LucideUserCog,
-                        },
-                        {
-                            title: 'Not Found',
-                            url: '/404',
-                            icon: LucideFerrisWheel,
-                        },
-                        {
-                            title: 'Internal Server Error',
-                            url: '/500',
-                            icon: LucideServer,
-                        },
-                        {
-                            title: 'Maintenance Error',
-                            url: '/503',
-                            icon: LucideBarChart,
-                        },
-                    ],
-                },
+                }
             ],
         },
         {
@@ -201,6 +182,11 @@ export const sidebarData: SidebarData = {
                             url: '/settings/display',
                             icon: LucideDiameter,
                         },
+                        {
+                            title: 'Data Tables',
+                            url: '/app/data-tables',
+                            icon: LucideCheckLine,
+                        },
                     ],
                 },
                 {
@@ -209,6 +195,6 @@ export const sidebarData: SidebarData = {
                     icon: LucideHelpCircle,
                 },
             ],
-        },
+        }
     ],
 }

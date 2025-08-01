@@ -9,7 +9,8 @@ import {
     ChevronDown,
     Zap,
     Copy,
-    Download
+    Download,
+    Brain
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -81,7 +82,6 @@ export const DatabaseQuickActions: React.FC<DatabaseQuickActionsProps> = ({
                 <Button
                     onClick={handleCreateDatabase}
                     size="sm"
-                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0"
                 >
                     <Plus className="h-4 w-4 mr-1" />
                     <span className="hidden sm:inline">New</span>
@@ -197,13 +197,15 @@ export const DatabaseQuickActions: React.FC<DatabaseQuickActionsProps> = ({
                         </DropdownMenuItem>
 
                         <DropdownMenuItem onClick={handleAIGenerate} className="py-2">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gradient-to-br from-amber-100 to-orange-100 mr-3">
-                                <Sparkles className="h-4 w-4 text-amber-600" />
+                            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-gradient-to-br from-purple-100 to-indigo-100 mr-3">
+                                <Brain className="h-4 w-4 text-purple-600" />
                             </div>
                             <div className="flex-1">
                                 <div className="font-medium flex items-center gap-2">
                                     Generate with AI
-                                    <Badge variant="secondary" className="text-xs">New</Badge>
+                                    <Badge variant="secondary" className="text-xs px-1.5 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400">
+                                        Upcoming
+                                    </Badge>
                                 </div>
                                 <div className="text-xs text-muted-foreground">AI-powered database creation</div>
                             </div>

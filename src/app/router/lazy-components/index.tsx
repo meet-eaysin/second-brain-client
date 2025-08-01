@@ -16,6 +16,9 @@ export const OtpPage = withLazyLoading(() =>
 export const GoogleCallbackPage = withLazyLoading(() =>
     import('@/modules/auth/pages/google-callback-page')
 )
+export const GooglePopupCallbackPage = withLazyLoading(() =>
+    import('@/modules/auth/pages/google-popup-callback-page')
+)
 export const AuthNotFoundPage = withLazyLoading(() =>
     import('@/modules/auth/pages/auth-not-found-page')
 )

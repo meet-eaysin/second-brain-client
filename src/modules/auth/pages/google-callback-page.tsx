@@ -6,6 +6,8 @@ import { authApi } from '../services/authApi';
 import { getSignInLink } from '@/app/router/router-link';
 import { toast } from 'sonner';
 import { FullScreenLoader } from "@/components/loader/full-screen-loader.tsx";
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, CheckCircle } from 'lucide-react';
 
 const GoogleCallbackPage: React.FC = () => {
     const [searchParams] = useSearchParams();
@@ -13,6 +15,7 @@ const GoogleCallbackPage: React.FC = () => {
     const { handleGoogleCallback, error: googleAuthError } = useGoogleAuth();
     const { handleGoogleTokens } = useAuthService();
     const [isProcessing, setIsProcessing] = useState(true);
+    const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
 
     useEffect(() => {
         const processCallback = async () => {
@@ -35,6 +38,7 @@ const GoogleCallbackPage: React.FC = () => {
                 // Handle OAuth errors
                 if (error) {
                     console.error('Google OAuth error:', error);
+                    setStatus('error');
 
                     let errorMessage = 'Google authentication failed. Please try again.';
                     switch (error) {
@@ -52,33 +56,36 @@ const GoogleCallbackPage: React.FC = () => {
                     }
 
                     toast.error(errorMessage);
-                    navigate(getSignInLink(), { replace: true });
+                    setTimeout(() => navigate(getSignInLink(), { replace: true }), 3000);
                     return;
                 }
 
                 // Method 1: Handle direct tokens from server redirect (preferred method)
                 if (accessToken && refreshToken) {
-                    console.log('Processing Google OAuth with direct tokens');
+                    console.log('✅ Processing Google OAuth with direct tokens');
+                    setStatus('success');
                     await handleGoogleTokens(accessToken, refreshToken);
                     return;
                 }
 
                 // Method 2: Handle authorization code (fallback method)
                 if (code) {
-                    console.log('Processing Google OAuth with authorization code');
+                    console.log('🔄 Processing Google OAuth with authorization code');
                     handleGoogleCallback(code);
                     return;
                 }
 
                 // No valid parameters found
-                console.error('No valid OAuth parameters received');
+                console.error('❌ No valid OAuth parameters received');
+                setStatus('error');
                 toast.error('Invalid Google authentication response.');
-                navigate(getSignInLink(), { replace: true });
+                setTimeout(() => navigate(getSignInLink(), { replace: true }), 3000);
 
             } catch (error) {
-                console.error('Error processing Google callback:', error);
+                console.error('❌ Error processing Google callback:', error);
+                setStatus('error');
                 toast.error('Failed to process Google authentication.');
-                navigate(getSignInLink(), { replace: true });
+                setTimeout(() => navigate(getSignInLink(), { replace: true }), 3000);
             } finally {
                 setIsProcessing(false);
             }
@@ -91,21 +98,68 @@ const GoogleCallbackPage: React.FC = () => {
     useEffect(() => {
         if (googleAuthError) {
             console.error('Google authentication error:', googleAuthError);
+            setStatus('error');
             toast.error('Google authentication failed. Please try again.');
-            navigate(getSignInLink(), { replace: true });
+            setTimeout(() => navigate(getSignInLink(), { replace: true }), 3000);
         }
     }, [googleAuthError, navigate]);
 
-    if (!isProcessing) {
-        return null; // Component will unmount after navigation
+    if (status === 'success') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background p-4">
+                <Card className="w-full max-w-md">
+                    <CardContent className="pt-6">
+                        <div className="text-center space-y-4">
+                            <div className="flex justify-center">
+                                <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-full">
+                                    <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                                </div>
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold">Authentication Successful!</h2>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Redirecting you to the dashboard...
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
+    }
+
+    if (status === 'error') {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background p-4">
+                <Card className="w-full max-w-md">
+                    <CardContent className="pt-6">
+                        <div className="text-center space-y-4">
+                            <div className="flex justify-center">
+                                <div className="p-3 bg-red-100 dark:bg-red-900/20 rounded-full">
+                                    <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
+                                </div>
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold">Authentication Failed</h2>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                    Redirecting you back to sign in...
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        );
     }
 
     return (
-        <FullScreenLoader
-            message="Completing Google authentication..."
-            size="lg"
-            variant="primary"
-        />
+        <div className="min-h-screen flex items-center justify-center bg-background">
+            <FullScreenLoader
+                message="Processing Google authentication..."
+                size="lg"
+                variant="primary"
+            />
+        </div>
     );
 };
 

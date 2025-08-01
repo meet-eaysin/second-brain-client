@@ -59,7 +59,7 @@ export const useAuthService = () => {
         }
     };
 
-    // Google OAuth redirect
+    // Google OAuth popup
     const loginWithGoogle = async () => {
         try {
             clearError();
@@ -77,11 +77,19 @@ export const useAuthService = () => {
                 throw new Error('Google OAuth is not configured. Please use email/password login or contact your administrator.');
             }
 
-            // Redirect to Google OAuth
-            await authApi.initiateGoogleAuth();
+            console.log('🚀 Initiating Google OAuth popup...');
+            
+            // Use popup for Google OAuth - this will generate the URL with proper state
+            const { accessToken, refreshToken } = await authApi.initiateGoogleAuthPopup();
+            
+            console.log('✅ Tokens received from popup');
+            
+            // Handle the tokens
+            await handleGoogleTokens(accessToken, refreshToken);
+            
         } catch (error: unknown) {
             setLoading(false);
-            console.error('Google OAuth initiation failed:', error);
+            console.error('Google OAuth failed:', error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to initiate Google login. Please try again.';
             toast.error(errorMessage);
             throw error;

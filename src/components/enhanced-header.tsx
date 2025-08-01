@@ -4,13 +4,13 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-    Search, 
-    Plus, 
-    Command, 
-    Bell, 
+import {
+    Search,
+    Plus,
+    Command,
+    Bell,
     Sparkles,
-    Brain 
+     TriangleDashed
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -35,18 +35,18 @@ export function EnhancedHeader({ className, showDatabaseActions = false }: Enhan
             'databases': 'Databases',
             'notes': 'Notes',
             'ideas': 'Ideas',
-            'search': 'Search',
+            'search': 'Smart Search',
             'settings': 'Settings',
             'favorites': 'Favorites',
             'tags': 'Tags',
             'collections': 'Collections',
-            'calendar': 'Calendar',
+            'calendar': 'Calendar View',
             'recent': 'Recent',
             'templates': 'Templates',
             'archive': 'Archive',
             'capture': 'Quick Capture',
-            'graph': 'Knowledge Graph',
-            'actions': 'Quick Actions',
+            'knowledge-graph': 'Knowledge Graph',
+            'ai-assistant': 'AI Assistant',
         };
         
         return segments.map(segment => segmentMap[segment] || segment);
@@ -63,8 +63,9 @@ export function EnhancedHeader({ className, showDatabaseActions = false }: Enhan
             <Breadcrumb>
                 <BreadcrumbList>
                     <BreadcrumbItem className="hidden md:block">
-                        <BreadcrumbLink href="/app/dashboard" className="flex items-center gap-1">
-                            <Brain className="h-4 w-4" />
+                        <BreadcrumbLink href="/app/dashboard" className="flex items-center gap-2">
+                            <TriangleDashed className="h-4 w-4" />
+                            {/*<TriangleDashed />*/}
                             Second Brain
                         </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -123,6 +124,9 @@ export function EnhancedHeader({ className, showDatabaseActions = false }: Enhan
                 <Button variant="outline" size="sm" className="hidden md:flex items-center gap-1">
                     <Sparkles className="h-4 w-4" />
                     AI Assistant
+                    <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400">
+                        Upcoming
+                    </Badge>
                 </Button>
             </div>
         </header>

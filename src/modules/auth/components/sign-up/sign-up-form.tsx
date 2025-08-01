@@ -15,28 +15,42 @@ import { PasswordInput } from '@/components/password-input'
 import { authApi } from '../../services/authApi.ts'
 import { useRegister } from '../../hooks/useRegister.ts'
 import { toast } from 'sonner'
+import { useState } from 'react'
+import { useAuthService } from '../../hooks/useAuthService.ts'
 
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
     const { form, handleRegister, isLoading } = useRegister();
+    const [googleLoading, setGoogleLoading] = useState(false);
 
     const handleGoogleSignUp = async () => {
         try {
+            setGoogleLoading(true);
+            
             const isAvailable = await authApi.checkGoogleOAuthAvailability();
             if (!isAvailable) {
                 toast.error('Google OAuth is not configured on the backend. Please use the registration form or contact your administrator.');
                 return;
             }
 
-            await authApi.initiateGoogleAuth();
+            console.log('🚀 Initiating Google OAuth popup for sign-up...');
+            const { accessToken, refreshToken } = await authApi.initiateGoogleAuthPopup();
+            
+            console.log('✅ Tokens received, processing authentication...');
+            const { handleGoogleTokens } = useAuthService();
+            await handleGoogleTokens(accessToken, refreshToken);
 
         } catch (error: unknown) {
             console.error('Failed to initiate Google sign-up:', error);
             const errorMessage = error instanceof Error ? error.message : 'Failed to initiate Google sign-up. Please try again.';
             toast.error(errorMessage);
+        } finally {
+            setGoogleLoading(false);
         }
     }
+
+    const isFormLoading = isLoading || googleLoading;
 
     return (
         <Form {...form}>
@@ -130,12 +144,12 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                 <Button
                     variant='outline'
                     type='button'
-                    disabled={isLoading}
+                    disabled={isFormLoading}
                     onClick={handleGoogleSignUp}
                     className="w-full"
                 >
                     <IconBrandGoogle className='h-4 w-4 mr-2' />
-                    Continue with Google
+                    {googleLoading ? 'Authenticating...' : 'Continue with Google'}
                 </Button>
             </form>
         </Form>
