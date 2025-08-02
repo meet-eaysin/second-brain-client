@@ -14,7 +14,7 @@ interface ViewFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     properties: DatabaseProperty[];
-    onSubmit?: (viewData: CreateViewRequest) => void;
+    onSubmit?: (viewData: CreateViewRequest) => Promise<void>;
 }
 
 const viewTypes: { value: ViewType; label: string; icon: React.ReactNode; description: string }[] = [
@@ -66,7 +66,7 @@ export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormP
         sorts: []
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!formData.name.trim()) {
@@ -84,18 +84,24 @@ export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormP
             return;
         }
 
-        onSubmit?.(formData);
-        onOpenChange(false);
+        try {
+            await onSubmit?.(formData);
+            // Only close and reset form if submission was successful
+            onOpenChange(false);
 
-        // Reset form
-        setFormData({
-            name: '',
-            type: 'TABLE',
-            isDefault: false,
-            visibleProperties: properties.map(p => p.id),
-            filters: [],
-            sorts: []
-        });
+            // Reset form
+            setFormData({
+                name: '',
+                type: 'TABLE',
+                isDefault: false,
+                visibleProperties: properties.map(p => p.id),
+                filters: [],
+                sorts: []
+            });
+        } catch (error) {
+            console.error('Failed to submit view:', error);
+            // Don't close the dialog on error - let the user see the error and fix it
+        }
     };
 
     const handlePropertyToggle = (propertyId: string, checked: boolean) => {

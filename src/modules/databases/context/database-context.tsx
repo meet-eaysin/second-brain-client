@@ -1,8 +1,8 @@
 import React, { useState, createContext, useContext } from 'react';
-import type { Database, DatabaseRecord, DatabaseProperty } from '@/types/database.types';
+import type { Database, DatabaseRecord, DatabaseProperty, DatabaseView } from '@/types/database.types';
 import useDialogState from '@/hooks/use-dialog-state';
 
-type DatabaseDialogType = 'create-database' | 'edit-database' | 'create-property' | 'edit-property' | 'create-record' | 'edit-record' | 'create-view' | 'share-database' | 'delete-database';
+type DatabaseDialogType = 'create-database' | 'edit-database' | 'create-property' | 'edit-property' | 'create-record' | 'edit-record' | 'view-record' | 'create-view' | 'edit-view' | 'share-database' | 'delete-database';
 
 interface DatabaseContextType {
     // Dialog state
@@ -16,6 +16,8 @@ interface DatabaseContextType {
     setCurrentRecord: React.Dispatch<React.SetStateAction<DatabaseRecord | null>>;
     currentProperty: DatabaseProperty | null;
     setCurrentProperty: React.Dispatch<React.SetStateAction<DatabaseProperty | null>>;
+    currentView: DatabaseView | null;
+    setCurrentView: React.Dispatch<React.SetStateAction<DatabaseView | null>>;
     
     // View state
     selectedRecords: Set<string>;
@@ -45,6 +47,7 @@ export default function DatabaseProvider({ children }: Props) {
     const [currentDatabase, setCurrentDatabase] = useState<Database | null>(null);
     const [currentRecord, setCurrentRecord] = useState<DatabaseRecord | null>(null);
     const [currentProperty, setCurrentProperty] = useState<DatabaseProperty | null>(null);
+    const [currentView, setCurrentView] = useState<DatabaseView | null>(null);
     
     // View state
     const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
@@ -65,6 +68,8 @@ export default function DatabaseProvider({ children }: Props) {
             setCurrentRecord,
             currentProperty,
             setCurrentProperty,
+            currentView,
+            setCurrentView,
             selectedRecords,
             setSelectedRecords,
             visibleProperties,

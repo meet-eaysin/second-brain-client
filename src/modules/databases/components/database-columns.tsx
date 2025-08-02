@@ -9,43 +9,17 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header';
+import { DatabaseTableHeader } from './database-table-header';
 import {
     MoreHorizontal,
     Edit,
     Copy,
     Trash2,
-    Calendar,
-    Hash,
-    Type,
-    CheckSquare,
-    Users,
-    Link as LinkIcon,
-    Tag,
-    Mail,
-    Phone,
 } from 'lucide-react';
 import type { DatabaseRecord, DatabaseProperty } from '@/types/database.types';
+import { EditableCell } from './editable-cell';
 
-// Property type icons
-const propertyTypeIcons = {
-    TEXT: Type,
-    NUMBER: Hash,
-    SELECT: Tag,
-    MULTI_SELECT: Tag,
-    DATE: Calendar,
-    CHECKBOX: CheckSquare,
-    URL: LinkIcon,
-    EMAIL: Mail,
-    PHONE: Phone,
-    RELATION: Users,
-    FORMULA: Hash,
-    ROLLUP: Hash,
-    CREATED_TIME: Calendar,
-    CREATED_BY: Users,
-    LAST_EDITED_TIME: Calendar,
-    LAST_EDITED_BY: Users,
-};
+// Property type icons are now handled by DatabaseTableHeader component
 
 // Status and priority colors
 const statusColors = {
@@ -67,32 +41,64 @@ const priorityColors = {
 };
 
 // Utility function to render cell value based on property type
-const renderCellValue = (property: DatabaseProperty, value: any) => {
+const renderCellValue = (property: DatabaseProperty, value: unknown) => {
     if (!value && value !== false && value !== 0) {
         return <span className="text-muted-foreground">-</span>;
     }
 
     switch (property.type) {
-        case 'SELECT':
+        case 'SELECT': {
+            // Handle new API response structure where SELECT returns option object
+            if (typeof value === 'object' && value !== null && 'name' in value && 'color' in value) {
+                const option = value as { id: string; name: string; color: string };
+                return (
+                    <Badge
+                        className="text-white border-0"
+                        style={{ backgroundColor: option.color }}
+                    >
+                        {option.name}
+                    </Badge>
+                );
+            }
+
+            // Fallback for old API response structure (option ID as string)
             const colorClass = statusColors[value as keyof typeof statusColors] ||
                              priorityColors[value as keyof typeof priorityColors] ||
                              'bg-gray-100 text-gray-800';
             return <Badge className={colorClass}>{value}</Badge>;
+        }
 
         case 'MULTI_SELECT':
             if (!Array.isArray(value)) return <span className="text-muted-foreground">-</span>;
             return (
                 <div className="flex flex-wrap gap-1">
-                    {value.map((option, index) => (
-                        <Badge
-                            key={index}
-                            className={statusColors[option as keyof typeof statusColors] ||
-                                     priorityColors[option as keyof typeof priorityColors] ||
-                                     'bg-gray-100 text-gray-800'}
-                        >
-                            {option}
-                        </Badge>
-                    ))}
+                    {value.map((option, index) => {
+                        // Handle new API response structure where MULTI_SELECT returns option objects
+                        if (typeof option === 'object' && option !== null && 'name' in option && 'color' in option) {
+                            const optionObj = option as { id: string; name: string; color: string };
+                            return (
+                                <Badge
+                                    key={optionObj.id || index}
+                                    className="text-white border-0"
+                                    style={{ backgroundColor: optionObj.color }}
+                                >
+                                    {optionObj.name}
+                                </Badge>
+                            );
+                        }
+
+                        // Fallback for old API response structure (option ID as string)
+                        return (
+                            <Badge
+                                key={index}
+                                className={statusColors[option as keyof typeof statusColors] ||
+                                         priorityColors[option as keyof typeof priorityColors] ||
+                                         'bg-gray-100 text-gray-800'}
+                            >
+                                {option}
+                            </Badge>
+                        );
+                    })}
                 </div>
             );
 
@@ -173,7 +179,9 @@ const renderCellValue = (property: DatabaseProperty, value: any) => {
 export const generateDatabaseColumns = (
     properties: DatabaseProperty[],
     onEdit?: (record: DatabaseRecord) => void,
-    onDelete?: (recordId: string) => void
+    onDelete?: (recordId: string) => void,
+    onUpdateRecord?: (recordId: string, propertyId: string, newValue: any) => void,
+    isFrozen?: boolean
 ): ColumnDef<DatabaseRecord>[] => {
     const columns: ColumnDef<DatabaseRecord>[] = [
         // Selection column
@@ -201,31 +209,71 @@ export const generateDatabaseColumns = (
 
     // Add property columns
     properties.forEach((property) => {
-        const PropertyIcon = propertyTypeIcons[property.type as keyof typeof propertyTypeIcons] || Type;
-        
         columns.push({
             accessorKey: `properties.${property.id}`,
             id: property.id,
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title={property.name}>
-                    <div className="flex items-center gap-2">
-                        <PropertyIcon className="h-4 w-4 text-muted-foreground" />
-                        <span>{property.name}</span>
-                        {property.required && <span className="text-red-500">*</span>}
-                    </div>
-                </DataTableColumnHeader>
+                <DatabaseTableHeader
+                    property={property}
+                    sortDirection={
+                        column.getIsSorted() === 'asc' ? 'asc' :
+                        column.getIsSorted() === 'desc' ? 'desc' :
+                        null
+                    }
+                    isFiltered={column.getFilterValue() !== undefined}
+                    isFrozen={false} // TODO: Get from view state
+                    onPropertyUpdate={() => {
+                        // Refresh table data if needed
+                        console.log('Property updated, refreshing table...');
+                    }}
+                />
             ),
             cell: ({ row }) => {
                 const value = row.original.properties[property.id];
+
+                // Use EditableCell if onUpdateRecord is provided, otherwise use static rendering
+                if (onUpdateRecord) {
+                    return (
+                        <EditableCell
+                            property={property}
+                            value={value}
+                            record={row.original}
+                            onSave={onUpdateRecord}
+                            onCancel={() => {}}
+                            isFrozen={isFrozen}
+                        />
+                    );
+                }
+
                 return renderCellValue(property, value);
             },
             enableSorting: true,
             enableHiding: true,
             filterFn: (row, _id, value) => {
                 const cellValue = row.original.properties[property.id];
+
                 if (property.type === 'MULTI_SELECT' && Array.isArray(cellValue)) {
-                    return value.some((v: string) => cellValue.includes(v));
+                    return value.some((v: string) => {
+                        return cellValue.some((option: string | { id: string; name: string; color: string }) => {
+                            // Handle new API response structure (option objects)
+                            if (typeof option === 'object' && option !== null && 'id' in option) {
+                                return option.id === v || option.name === v;
+                            }
+                            // Handle old API response structure (option IDs)
+                            return option === v;
+                        });
+                    });
                 }
+
+                if (property.type === 'SELECT') {
+                    // Handle new API response structure (option object)
+                    if (typeof cellValue === 'object' && cellValue !== null && 'id' in cellValue) {
+                        return value.includes(cellValue.id) || value.includes(cellValue.name);
+                    }
+                    // Handle old API response structure (option ID)
+                    return value.includes(cellValue);
+                }
+
                 return value.includes(cellValue);
             },
         });

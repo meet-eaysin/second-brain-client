@@ -13,6 +13,10 @@ export interface Database {
     properties: DatabaseProperty[];
     views: DatabaseView[];
     permissions: DatabasePermission[];
+    frozen?: boolean;
+    frozenAt?: string;
+    frozenBy?: string;
+    frozenReason?: string;
     createdAt: string;
     updatedAt: string;
 }

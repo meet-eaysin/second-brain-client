@@ -17,7 +17,6 @@ import {
     Edit,
     Share,
     Trash2,
-    Database,
     Users,
     Globe,
     Lock,
@@ -76,11 +75,6 @@ export function getDatabasesTableColumns({
                 const database = row.original;
                 return (
                     <div className="flex items-center space-x-3 min-w-0">
-                        <div className="flex-shrink-0">
-                            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                                <Database className="h-5 w-5 text-white" />
-                            </div>
-                        </div>
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                                 <p className="text-sm font-medium text-foreground truncate">

@@ -26,6 +26,11 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
     Type,
     Hash,
     Calendar,
@@ -38,7 +43,9 @@ import {
     Plus,
     X,
     Settings,
-    Save
+    Save,
+    Check,
+    Shuffle
 } from 'lucide-react';
 import type { DatabaseProperty, PropertyType, SelectOption } from '@/types/database.types';
 
@@ -133,6 +140,11 @@ const OPTION_COLORS = [
     '#ec4899', '#f43f5e', '#64748b', '#6b7280', '#374151'
 ];
 
+// Generate a random color from the predefined palette
+const getRandomColor = () => {
+    return OPTION_COLORS[Math.floor(Math.random() * OPTION_COLORS.length)];
+};
+
 // Property name suggestions based on type
 const PROPERTY_SUGGESTIONS = {
     TEXT: ['Title', 'Description', 'Notes', 'Summary', 'Content', 'Comments'],
@@ -158,6 +170,7 @@ export function PropertyForm({
 }: PropertyFormProps) {
     const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
     const [newOptionName, setNewOptionName] = useState('');
+    const [useAutoColors, setUseAutoColors] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
     const form = useForm<PropertyFormData>({
@@ -200,28 +213,38 @@ export function PropertyForm({
 
     const handleSubmit = async (data: PropertyFormData) => {
         try {
+            // Prepare select options - remove color if auto-colors is enabled
+            const processedSelectOptions = ['SELECT', 'MULTI_SELECT'].includes(data.type)
+                ? selectOptions.map(option => useAutoColors
+                    ? { id: option.id, name: option.name } // Omit color for auto-generation
+                    : option // Include color
+                  )
+                : undefined;
+
             const propertyData: Partial<DatabaseProperty> = {
                 name: data.name,
                 type: data.type,
                 description: data.description,
                 required: data.required,
                 isVisible: data.isVisible,
-                selectOptions: ['SELECT', 'MULTI_SELECT'].includes(data.type) ? selectOptions : undefined
+                selectOptions: processedSelectOptions
             };
 
             await onSubmit(propertyData);
-            onOpenChange(false);
+            // Only close the dialog if the submission was successful
+            // The parent component (database-dialogs.tsx) will handle closing on success
         } catch (error) {
             console.error('Failed to submit property:', error);
+            // Don't close the dialog on error - let the user see the error and fix it
         }
     };
 
-    const addSelectOption = () => {
+    const addSelectOption = (customColor?: string) => {
         if (newOptionName.trim()) {
             const newOption: SelectOption = {
                 id: `option_${Date.now()}`,
                 name: newOptionName.trim(),
-                color: OPTION_COLORS[selectOptions.length % OPTION_COLORS.length]
+                color: customColor || getRandomColor()
             };
             setSelectOptions(prev => [...prev, newOption]);
             setNewOptionName('');
@@ -233,6 +256,7 @@ export function PropertyForm({
     };
 
     const updateOptionColor = (optionId: string, color: string) => {
+        console.log('Updating option color:', optionId, color);
         setSelectOptions(prev =>
             prev.map(option =>
                 option.id === optionId ? { ...option, color } : option
@@ -245,11 +269,27 @@ export function PropertyForm({
 
         return (
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Options</label>
-                    <Badge variant="outline" className="text-xs">
-                        {selectOptions.length} option{selectOptions.length !== 1 ? 's' : ''}
-                    </Badge>
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Options</label>
+                        <Badge variant="outline" className="text-xs">
+                            {selectOptions.length} option{selectOptions.length !== 1 ? 's' : ''}
+                        </Badge>
+                    </div>
+
+                    {/* Auto-color toggle */}
+                    <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium">Auto-generate colors</span>
+                            <span className="text-xs text-muted-foreground">
+                                Let the server automatically assign colors to options
+                            </span>
+                        </div>
+                        <Checkbox
+                            checked={useAutoColors}
+                            onCheckedChange={(checked) => setUseAutoColors(Boolean(checked))}
+                        />
+                    </div>
                 </div>
                 <div className="flex gap-2">
                     <Input
@@ -264,9 +304,65 @@ export function PropertyForm({
                         }}
                         className="flex-1"
                     />
+
+                    {/* Color picker for new option - hidden when auto-colors is enabled */}
+                    {!useAutoColors && (
+                        <DropdownMenu modal={false}>
+                            <DropdownMenuTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="px-3"
+                                >
+                                    <div className="w-4 h-4 rounded-full bg-gradient-to-r from-red-500 to-blue-500 mr-2" />
+                                    Color
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <div className="p-2">
+                                    <div className="text-xs font-medium mb-2 text-muted-foreground">Choose Color</div>
+                                    <div className="grid grid-cols-5 gap-1 mb-2">
+                                        {OPTION_COLORS.map((color) => (
+                                            <Button
+                                                key={color}
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0 rounded-full border hover:scale-110 transition-transform"
+                                                style={{ backgroundColor: color }}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    addSelectOption(color);
+                                                }}
+                                                disabled={!newOptionName.trim()}
+                                            />
+                                        ))}
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full text-xs"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            addSelectOption();
+                                        }}
+                                        disabled={!newOptionName.trim()}
+                                    >
+                                        <Shuffle className="h-3 w-3 mr-1" />
+                                        Random Color
+                                    </Button>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+
                     <Button
                         type="button"
-                        onClick={addSelectOption}
+                        onClick={() => addSelectOption()}
                         disabled={!newOptionName.trim()}
                         size="sm"
                     >
@@ -279,14 +375,66 @@ export function PropertyForm({
                         {selectOptions.map((option) => (
                             <div key={option.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                                 <div className="flex items-center gap-2 flex-1">
-                                    <div
-                                        className="w-4 h-4 rounded-full border cursor-pointer"
-                                        style={{ backgroundColor: option.color }}
-                                        onClick={() => {
-                                            const newColor = OPTION_COLORS[Math.floor(Math.random() * OPTION_COLORS.length)];
-                                            updateOptionColor(option.id, newColor);
-                                        }}
-                                    />
+                                    {/* Color Picker Dropdown - hidden when auto-colors is enabled */}
+                                    {!useAutoColors ? (
+                                        <DropdownMenu modal={false}>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-6 w-6 p-0 rounded-full border-2 border-background shadow-sm"
+                                                    style={{ backgroundColor: option.color }}
+                                                >
+                                                    <span className="sr-only">Change color</span>
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="start" className="w-48">
+                                                <div className="p-2">
+                                                    <div className="text-xs font-medium mb-2 text-muted-foreground">Choose Color</div>
+                                                    <div className="grid grid-cols-5 gap-1 mb-2">
+                                                        {OPTION_COLORS.map((color) => (
+                                                            <Button
+                                                                key={color}
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-6 w-6 p-0 rounded-full border hover:scale-110 transition-transform"
+                                                                style={{ backgroundColor: color }}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    updateOptionColor(option.id, color);
+                                                                }}
+                                                            >
+                                                                {option.color === color && (
+                                                                    <Check className="h-3 w-3 text-white drop-shadow-sm" />
+                                                                )}
+                                                            </Button>
+                                                        ))}
+                                                    </div>
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="w-full text-xs"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            updateOptionColor(option.id, getRandomColor());
+                                                        }}
+                                                    >
+                                                        <Shuffle className="h-3 w-3 mr-1" />
+                                                        Random Color
+                                                    </Button>
+                                                </div>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    ) : (
+                                        <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                                            <Shuffle className="h-3 w-3 text-muted-foreground" />
+                                        </div>
+                                    )}
                                     <span className="text-sm font-medium">{option.name}</span>
                                 </div>
                                 <Button

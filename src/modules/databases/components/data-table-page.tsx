@@ -131,7 +131,8 @@ export default function DataTablePage() {
 
     const handleUpdateCell = async (recordId: string, propertyId: string, value: any) => {
         try {
-            const record = recordsData?.records.find(r => r.id === recordId);
+            const records = recordsData?.data?.records || recordsData?.records || [];
+            const record = records.find(r => r.id === recordId);
             if (!record) return;
 
             await updateRecordMutation.mutateAsync({
@@ -294,7 +295,7 @@ export default function DataTablePage() {
             <DatabaseViewRenderer
                 database={database}
                 currentView={getCurrentView()!}
-                records={recordsData?.records || []}
+                records={recordsData?.data?.records || recordsData?.records || []}
                 isLoading={isLoadingRecords}
                 onRecordEdit={(record) => setEditingRecord(record)}
                 onRecordDelete={handleDeleteRecord}

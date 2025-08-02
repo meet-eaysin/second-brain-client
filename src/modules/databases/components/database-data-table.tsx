@@ -23,7 +23,16 @@ import {
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/data-table/data-table-pagination';
 import { DatabaseTableToolbar } from './database-table-toolbar';
+import { ColumnManager, HiddenPropertiesPanel } from './property-visibility';
+import {
+    useTogglePropertyVisibility,
+    useUpdateViewVisibility,
+    useShowAllPropertiesInView,
+    useHideNonRequiredProperties,
+    usePropertyVisibilityState
+} from '../hooks/usePropertyVisibility';
 import type { DatabaseRecord, DatabaseProperty } from '@/types/database.types';
+import { useDatabaseContext } from '../context/database-context';
 
 interface DatabaseDataTableProps {
     columns: ColumnDef<DatabaseRecord, any>[];
@@ -32,6 +41,8 @@ interface DatabaseDataTableProps {
     onRecordSelect?: (record: DatabaseRecord) => void;
     onRecordEdit?: (record: DatabaseRecord) => void;
     onRecordDelete?: (recordId: string) => void;
+    databaseId?: string;
+    showPropertyVisibility?: boolean;
 }
 
 export function DatabaseDataTable({
@@ -41,11 +52,82 @@ export function DatabaseDataTable({
     onRecordSelect,
     onRecordEdit,
     onRecordDelete,
+    databaseId,
+    showPropertyVisibility = true,
 }: DatabaseDataTableProps) {
+
+    const { currentDatabase, currentView } = useDatabaseContext();
     const [rowSelection, setRowSelection] = React.useState({});
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [sorting, setSorting] = React.useState<SortingState>([]);
+
+    // Property visibility hooks
+    const togglePropertyMutation = useTogglePropertyVisibility();
+    const updateViewVisibilityMutation = useUpdateViewVisibility();
+    const showAllPropertiesMutation = useShowAllPropertiesInView();
+    const hideNonRequiredMutation = useHideNonRequiredProperties();
+
+    // Get property visibility state
+    const {
+        hiddenProperties,
+        hiddenCount,
+    } = usePropertyVisibilityState(properties, currentView);
+
+    const dbId = databaseId || currentDatabase?.id;
+
+    // Property visibility handlers
+    const handleToggleProperty = (propertyId: string, isVisible: boolean) => {
+        if (!dbId) return;
+        togglePropertyMutation.mutate({ databaseId: dbId, propertyId, isVisible });
+    };
+
+    const handleUpdateViewVisibility = (visibleProperties: string[]) => {
+        if (!dbId || !currentView?.id) return;
+        updateViewVisibilityMutation.mutate({
+            databaseId: dbId,
+            viewId: currentView.id,
+            visibleProperties
+        });
+    };
+
+    const handleShowAllProperties = () => {
+        if (!dbId || !currentView?.id) return;
+        showAllPropertiesMutation.mutate({ databaseId: dbId, viewId: currentView.id });
+    };
+
+    const handleHideNonRequired = () => {
+        if (!dbId || !currentView?.id) return;
+        hideNonRequiredMutation.mutate({ databaseId: dbId, viewId: currentView.id });
+    };
+
+    const handleRestoreAllGlobal = () => {
+        if (!dbId) return;
+        // Restore all globally hidden properties
+        hiddenProperties
+            .filter(p => p.isVisible === false)
+            .forEach(property => {
+                togglePropertyMutation.mutate({
+                    databaseId: dbId,
+                    propertyId: property.id,
+                    isVisible: true
+                });
+            });
+    };
+
+    const handleRestoreAllView = () => {
+        if (!dbId || !currentView?.id) return;
+        // Show all properties that are globally visible but hidden in current view
+        const allVisiblePropertyIds = properties
+            .filter(p => p.isVisible !== false)
+            .map(p => p.id);
+
+        updateViewVisibilityMutation.mutate({
+            databaseId: dbId,
+            viewId: currentView.id,
+            visibleProperties: allVisiblePropertyIds
+        });
+    };    
 
     const table = useReactTable({
         data,
@@ -71,12 +153,54 @@ export function DatabaseDataTable({
 
     return (
         <div className="space-y-4">
-            <DatabaseTableToolbar 
-                table={table} 
-                properties={properties}
-                onRecordEdit={onRecordEdit}
-                onRecordDelete={onRecordDelete}
-            />
+            <div className="flex items-center justify-between">
+                <DatabaseTableToolbar
+                    table={table}
+                    properties={properties}
+                    currentView={currentView}
+                    onRecordEdit={onRecordEdit}
+                    onRecordDelete={onRecordDelete}
+                    onViewUpdate={() => {
+                        // Refresh table when view is updated
+                        console.log('View updated, refreshing table...');
+                    }}
+                />
+
+                {/* Column Manager */}
+                {showPropertyVisibility && dbId && (
+                    <ColumnManager
+                        properties={properties}
+                        currentView={currentView}
+                        databaseId={dbId}
+                        onToggleProperty={handleToggleProperty}
+                        onUpdateViewVisibility={handleUpdateViewVisibility}
+                        onShowAll={handleShowAllProperties}
+                        onHideNonRequired={handleHideNonRequired}
+                        isLoading={
+                            togglePropertyMutation.isPending ||
+                            updateViewVisibilityMutation.isPending ||
+                            showAllPropertiesMutation.isPending ||
+                            hideNonRequiredMutation.isPending
+                        }
+                    />
+                )}
+            </div>
+
+            {/* Hidden Properties Panel */}
+            {showPropertyVisibility && dbId && hiddenCount > 0 && (
+                <HiddenPropertiesPanel
+                    properties={properties}
+                    currentView={currentView}
+                    onToggleProperty={handleToggleProperty}
+                    onRestoreAllGlobal={handleRestoreAllGlobal}
+                    onRestoreAllView={handleRestoreAllView}
+                    isLoading={
+                        togglePropertyMutation.isPending ||
+                        updateViewVisibilityMutation.isPending
+                    }
+                />
+            )}
+
             <div className="rounded-md border">
                 <Table>
                     <TableHeader>

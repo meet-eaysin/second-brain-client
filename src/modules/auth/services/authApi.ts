@@ -105,7 +105,10 @@ export const authApi = {
     // Google OAuth - Redirect Flow (Simple and Reliable)
     initiateGoogleAuth: async (): Promise<void> => {
         console.log('🔄 Initiating Google OAuth redirect...');
-        window.location.href = API_ENDPOINTS.AUTH.GOOGLE_AUTH;
+        const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+        const googleAuthUrl = `${baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}`;
+        console.log('🔗 Redirecting to:', googleAuthUrl);
+        window.location.href = googleAuthUrl;
     },
 
     // Google OAuth - Get URL for redirect (alternative method)

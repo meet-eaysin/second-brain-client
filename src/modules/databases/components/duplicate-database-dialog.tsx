@@ -34,7 +34,7 @@ import {
 import { Copy, Database, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { databaseApi } from '../services/databaseApi';
-import { useWorkspace } from '@/modules/workspaces/context/workspace-context';
+// import { useWorkspace } from '@/modules/workspaces/context/workspace-context';
 import type { Database, DatabaseCategory } from '@/types/database.types';
 
 const duplicateFormSchema = z.object({
@@ -65,7 +65,9 @@ export function DuplicateDatabaseDialog({
 }: DuplicateDatabaseDialogProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [duplicatedDatabase, setDuplicatedDatabase] = useState<Database | null>(null);
-    const { workspaces, currentWorkspace } = useWorkspace();
+    // Temporarily disable workspace functionality until WorkspaceProvider is set up
+    const workspaces: any[] = [];
+    const currentWorkspace = null;
 
     const form = useForm<DuplicateFormValues>({
         resolver: zodResolver(duplicateFormSchema),

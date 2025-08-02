@@ -470,7 +470,7 @@ export function RecordForm({
     return (
         <Sheet open={open} onOpenChange={onOpenChange}>
             <SheetContent className="overflow-y-auto w-[500px] sm:w-[600px] px-6">
-                <SheetHeader className="space-y-4 pb-6">
+                <SheetHeader className="space-y-4 px-0">
                     <SheetTitle className="text-xl">
                         {mode === 'create' ? 'Create Record' : 'Edit Record'}
                     </SheetTitle>
@@ -486,7 +486,7 @@ export function RecordForm({
                     <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pb-6">
                         {properties.filter(p => p.isVisible !== false).map(renderField)}
 
-                        <SheetFooter className="flex gap-3 pt-6 border-t">
+                        <SheetFooter className="flex gap-3 pt-6 px-0 border-t">
                             <Button
                                 type="button"
                                 variant="outline"

@@ -128,6 +128,24 @@ export const useDeleteDatabase = () => {
     });
 };
 
+export const useFreezeDatabase = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, frozen, reason }: { databaseId: string; frozen: boolean; reason?: string }) =>
+            databaseApi.freezeDatabase(databaseId, frozen, reason),
+        onSuccess: (_, { databaseId, frozen }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
+            toast.success(frozen ? 'Database frozen successfully' : 'Database unfrozen successfully');
+        },
+        onError: (error: AxiosError<ApiResponse>) => {
+            const message = error.response?.data?.message || 'Failed to update database freeze status';
+            toast.error(message);
+        },
+    });
+};
+
 // Property Mutations
 export const useAddProperty = () => {
     const queryClient = useQueryClient();
@@ -187,44 +205,19 @@ export const useDeleteProperty = () => {
     });
 };
 
-// View Mutations
-export const useAddView = () => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: ({ databaseId, data }: { databaseId: string; data: CreateViewRequest }) =>
-            databaseApi.addView(databaseId, data),
-        onSuccess: (_, { databaseId }) => {
-            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
-            toast.success('View added successfully');
-        },
-        onError: (error: AxiosError<ApiResponse>) => {
-            const message = error.response?.data?.message || 'Failed to add view';
-            toast.error(message);
-        },
-    });
-};
-
 export const useUpdateView = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ 
-            databaseId, 
-            viewId, 
-            data 
-        }: { 
-            databaseId: string; 
-            viewId: string; 
-            data: UpdateViewRequest 
-        }) => databaseApi.updateView(databaseId, viewId, data),
+        mutationFn: ({ databaseId, viewId, data }: { databaseId: string; viewId: string; data: UpdateViewRequest }) =>
+            databaseApi.updateView(databaseId, viewId, data),
         onSuccess: (_, { databaseId }) => {
             queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
             toast.success('View updated successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
-            const message = error.response?.data?.message || 'Failed to update view';
-            toast.error(message);
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to update view';
+            toast.error(errorMessage);
         },
     });
 };
@@ -239,8 +232,43 @@ export const useDeleteView = () => {
             queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
             toast.success('View deleted successfully');
         },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to delete view';
+            toast.error(errorMessage);
+        },
+    });
+};
+
+export const useDuplicateView = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, viewId, data }: { databaseId: string; viewId: string; data: { name: string } }) =>
+            databaseApi.duplicateView(databaseId, viewId, data),
+        onSuccess: (_, { databaseId }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            toast.success('View duplicated successfully');
+        },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to duplicate view';
+            toast.error(errorMessage);
+        },
+    });
+};
+
+// View Mutations
+export const useAddView = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, data }: { databaseId: string; data: CreateViewRequest }) =>
+            databaseApi.addView(databaseId, data),
+        onSuccess: (_, { databaseId }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            toast.success('View added successfully');
+        },
         onError: (error: AxiosError<ApiResponse>) => {
-            const message = error.response?.data?.message || 'Failed to delete view';
+            const message = error.response?.data?.message || 'Failed to add view';
             toast.error(message);
         },
     });
@@ -272,7 +300,11 @@ export const useCreateRecord = () => {
         mutationFn: ({ databaseId, data }: { databaseId: string; data: CreateRecordRequest }) =>
             databaseApi.createRecord(databaseId, data),
         onSuccess: (_, { databaseId }) => {
-            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.records(databaseId) });
+            // Invalidate all records queries for this database
+            queryClient.invalidateQueries({
+                queryKey: DATABASE_KEYS.records(databaseId),
+                exact: false
+            });
             toast.success('Record created successfully');
         },
         onError: (error: AxiosError<ApiResponse>) => {
@@ -297,7 +329,10 @@ export const useUpdateRecord = () => {
         }) => databaseApi.updateRecord(databaseId, recordId, data),
         onSuccess: (_, { databaseId, recordId }) => {
             queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.record(databaseId, recordId) });
-            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.records(databaseId) });
+            queryClient.invalidateQueries({
+                queryKey: DATABASE_KEYS.records(databaseId),
+                exact: false
+            });
             toast.success('Record updated successfully');
         },
         onError: (error: AxiosError<ApiResponse>) => {
@@ -314,7 +349,10 @@ export const useDeleteRecord = () => {
         mutationFn: ({ databaseId, recordId }: { databaseId: string; recordId: string }) =>
             databaseApi.deleteRecord(databaseId, recordId),
         onSuccess: (_, { databaseId }) => {
-            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.records(databaseId) });
+            queryClient.invalidateQueries({
+                queryKey: DATABASE_KEYS.records(databaseId),
+                exact: false
+            });
             toast.success('Record deleted successfully');
         },
         onError: (error: AxiosError<ApiResponse>) => {
@@ -355,6 +393,93 @@ export const useRemoveDatabaseAccess = () => {
         onError: (error: AxiosError<ApiResponse>) => {
             const message = error.response?.data?.message || 'Failed to remove access';
             toast.error(message);
+        },
+    });
+};
+
+// Property Management Mutations
+export const useUpdatePropertyName = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, propertyId, name }: { databaseId: string; propertyId: string; name: string }) =>
+            databaseApi.updatePropertyName(databaseId, propertyId, name),
+        onSuccess: (_, { databaseId }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            toast.success('Property name updated successfully');
+        },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to update property name';
+            toast.error(errorMessage);
+        },
+    });
+};
+
+export const useUpdatePropertyType = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, propertyId, type }: { databaseId: string; propertyId: string; type: string }) =>
+            databaseApi.updatePropertyType(databaseId, propertyId, type),
+        onSuccess: (_, { databaseId }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.records(databaseId) });
+            toast.success('Property type updated successfully');
+        },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to update property type';
+            toast.error(errorMessage);
+        },
+    });
+};
+
+export const useDuplicateProperty = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, propertyId }: { databaseId: string; propertyId: string }) =>
+            databaseApi.duplicateProperty(databaseId, propertyId),
+        onSuccess: (_, { databaseId }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            toast.success('Property duplicated successfully');
+        },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to duplicate property';
+            toast.error(errorMessage);
+        },
+    });
+};
+
+export const useFreezeProperty = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, propertyId, frozen }: { databaseId: string; propertyId: string; frozen: boolean }) =>
+            databaseApi.freezeProperty(databaseId, propertyId, frozen),
+        onSuccess: (_, { databaseId, frozen }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            toast.success(frozen ? 'Property frozen successfully' : 'Property unfrozen successfully');
+        },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to update property freeze state';
+            toast.error(errorMessage);
+        },
+    });
+};
+
+export const useHideProperty = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ databaseId, propertyId, hidden }: { databaseId: string; propertyId: string; hidden: boolean }) =>
+            databaseApi.hideProperty(databaseId, propertyId, hidden),
+        onSuccess: (_, { databaseId, hidden }) => {
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+            toast.success(hidden ? 'Property hidden successfully' : 'Property shown successfully');
+        },
+        onError: (error: AxiosError<ApiResponse<any>>) => {
+            const errorMessage = error.response?.data?.error?.message || 'Failed to update property visibility';
+            toast.error(errorMessage);
         },
     });
 };

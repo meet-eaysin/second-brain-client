@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ProfileDropdown } from '@/components/profile-dropdown';
 import { Search } from '@/components/search';
@@ -6,18 +6,20 @@ import { ThemeSwitch } from '@/components/theme-switch';
 import { Header } from '@/layout/header';
 import { Main } from '@/layout/main';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft } from 'lucide-react';
-import { DatabaseDataTable } from '../components/database-data-table';
+import { ChevronLeft, Lock } from 'lucide-react';
+import { DatabaseViewTabs } from '../components/database-view-tabs';
+import { DatabaseViewRenderer } from '../components/database-view-renderer';
 import { DatabaseDialogs } from '../components/database-dialogs';
 import { DatabasePrimaryButtons } from '../components/database-primary-buttons';
-import { generateDatabaseColumns } from '../components/database-columns';
-import { useDatabase, useRecords } from '../services/databaseQueries';
+import { useDatabase, useRecords, useUpdateRecord } from '../services/databaseQueries';
 import { useDatabaseContext } from '../context/database-context';
 import type { DatabaseRecord } from '@/types/database.types';
 
 export default function DatabaseDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [currentViewId, setCurrentViewId] = useState<string | undefined>();
+
     const {
         setCurrentDatabase,
         setCurrentRecord,
@@ -29,12 +31,13 @@ export default function DatabaseDetailPage() {
     } = useDatabaseContext();
 
     // Fetch database data
-    const { data: database, isLoading: isDatabaseLoading } = useDatabase(id!);
+    const { data: database, isLoading: isDatabaseLoading, refetch: refetchDatabase } = useDatabase(id!);
     const { data: recordsData } = useRecords(id!, {
         search: searchQuery,
         filters: JSON.stringify(filters),
         sorts: JSON.stringify(sorts),
     });
+    const updateRecordMutation = useUpdateRecord();
 
     // Set current database when data loads
     useEffect(() => {
@@ -46,33 +49,70 @@ export default function DatabaseDetailPage() {
                 {}
             );
             setVisibleProperties(initialVisibility);
-        }
-    }, [database, setCurrentDatabase, setVisibleProperties]);
 
-    // Generate columns based on database properties
-    const columns = useMemo(() => {
-        if (!database) return [];
-        
-        return generateDatabaseColumns(
-            database.properties,
-            (record: DatabaseRecord) => {
-                setCurrentRecord(record);
-                setOpen('edit-record');
-            },
-            (recordId: string) => {
-                // Handle delete record
-                console.log('Delete record:', recordId);
+            // Set default view if not already set
+            if (!currentViewId && database.views?.length > 0) {
+                const defaultView = database.views.find(v => v.isDefault) || database.views[0];
+                setCurrentViewId(defaultView.id);
             }
-        );
-    }, [database, setCurrentRecord, setOpen]);
+        }
+    }, [database, setCurrentDatabase, setVisibleProperties, currentViewId]);
+
+    const records = recordsData?.data?.records || recordsData?.records || [];
+
+    // Get frozen state from database
+    const isFrozen = database?.frozen || false;
+
+    // Get current view
+    const currentView = database?.views?.find(v => v.id === currentViewId) ||
+                       database?.views?.find(v => v.isDefault) ||
+                       database?.views?.[0];
 
     const handleBack = () => {
         navigate('/app/databases');
     };
 
+    // Handler functions
     const handleRecordSelect = (record: DatabaseRecord) => {
         setCurrentRecord(record);
+        setOpen('view-record');
+    };
+
+    const handleRecordEdit = (record: DatabaseRecord) => {
+        setCurrentRecord(record);
         setOpen('edit-record');
+    };
+
+    const handleRecordDelete = (recordId: string) => {
+        // Handle record deletion
+        console.log('Delete record:', recordId);
+    };
+
+    const handleRecordCreate = (groupValue?: string) => {
+        // Pre-fill group value if creating from board view
+        if (groupValue) {
+            // Set initial values based on group
+            console.log('Create record with group:', groupValue);
+        }
+        setOpen('create-record');
+    };
+
+    const handleRecordUpdate = async (recordId: string, updates: Record<string, unknown>) => {
+        if (!database?.id) return;
+
+        try {
+            await updateRecordMutation.mutateAsync({
+                databaseId: database.id,
+                recordId,
+                data: { properties: updates }
+            });
+        } catch (error) {
+            console.error('Failed to update record:', error);
+        }
+    };
+
+    const handleViewUpdate = () => {
+        refetchDatabase();
     };
 
     if (isDatabaseLoading) {
@@ -112,30 +152,52 @@ export default function DatabaseDetailPage() {
             </Header>
 
             <Main>
-                <div className="mb-2 flex flex-wrap items-center justify-between space-y-2 gap-x-4">
+                <div className="mb-4 flex flex-wrap items-center justify-between space-y-2 gap-x-4">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight">Records</h2>
+                        <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                            {database.icon} {database.name}
+                            {isFrozen && (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+                                    <Lock className="h-3 w-3" />
+                                    Frozen
+                                </span>
+                            )}
+                        </h2>
                         <p className="text-muted-foreground">
-                            {recordsData?.total || 0} records in this database
+                            {recordsData?.total || 0} records • {database.views?.length || 0} views
                         </p>
                     </div>
                     <DatabasePrimaryButtons />
                 </div>
 
-                <div className="-mx-4 flex-1 overflow-auto px-4 py-1">
-                    <DatabaseDataTable
-                        columns={columns}
-                        data={recordsData?.records || []}
+                {/* View Tabs */}
+                {database.views && database.views.length > 0 && (
+                    <DatabaseViewTabs
+                        views={database.views}
                         properties={database.properties}
-                        onRecordSelect={handleRecordSelect}
-                        onRecordEdit={(record) => {
-                            setCurrentRecord(record);
-                            setOpen('edit-record');
-                        }}
-                        onRecordDelete={(recordId) => {
-                            console.log('Delete record:', recordId);
-                        }}
+                        records={records}
+                        currentViewId={currentViewId}
+                        onViewChange={setCurrentViewId}
+                        onViewUpdate={handleViewUpdate}
                     />
+                )}
+
+                {/* View Content */}
+                <div className="flex-1 overflow-auto py-4">
+                    {currentView && (
+                        <DatabaseViewRenderer
+                            view={currentView}
+                            properties={database.properties}
+                            records={records}
+                            onRecordSelect={handleRecordSelect}
+                            onRecordEdit={handleRecordEdit}
+                            onRecordDelete={handleRecordDelete}
+                            onRecordCreate={handleRecordCreate}
+                            onRecordUpdate={handleRecordUpdate}
+                            databaseId={id}
+                            isFrozen={isFrozen}
+                        />
+                    )}
                 </div>
             </Main>
 

@@ -10,7 +10,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { DataTableFacetedFilter } from '@/components/data-table/data-table-faceted-filter';
-import { DataTableViewOptions } from '@/components/data-table/data-table-view-options';
+import { DatabaseViewOptions } from './database-view-options';
 import {
     Plus,
     Search,
@@ -26,22 +26,26 @@ import {
     X,
     Settings,
 } from 'lucide-react';
-import type { DatabaseRecord, DatabaseProperty } from '@/types/database.types';
+import type { DatabaseRecord, DatabaseProperty, DatabaseView } from '@/types/database.types';
 import { toast } from 'sonner';
 import {useDatabaseContext} from "@/modules/databases";
 
 interface DatabaseTableToolbarProps<TData> {
     table: Table<TData>;
     properties: DatabaseProperty[];
+    currentView: DatabaseView;
     onRecordEdit?: (record: DatabaseRecord) => void;
     onRecordDelete?: (recordId: string) => void;
+    onViewUpdate?: () => void;
 }
 
 export function DatabaseTableToolbar<TData>({
     table,
     properties,
+    currentView,
     onRecordEdit,
     onRecordDelete,
+    onViewUpdate,
 }: DatabaseTableToolbarProps<TData>) {
     const { setOpen, searchQuery, setSearchQuery } = useDatabaseContext();
     const isFiltered = table.getState().columnFilters.length > 0;
@@ -244,7 +248,12 @@ export function DatabaseTableToolbar<TData>({
                 </DropdownMenu>
 
                 {/* View options */}
-                <DataTableViewOptions table={table} />
+                <DatabaseViewOptions
+                    table={table}
+                    properties={properties}
+                    currentView={currentView}
+                    onViewUpdate={onViewUpdate}
+                />
             </div>
         </div>
     );

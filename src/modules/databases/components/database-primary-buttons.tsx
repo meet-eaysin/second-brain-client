@@ -15,11 +15,18 @@ import {
     Share,
     MoreHorizontal,
     Columns,
+    Lock,
+    Unlock,
 } from 'lucide-react';
 import {useDatabaseContext} from "@/modules/databases";
+import { useFreezeDatabase } from '../services/databaseQueries';
 
 export function DatabasePrimaryButtons() {
     const { setOpen, currentDatabase } = useDatabaseContext();
+    const freezeDatabaseMutation = useFreezeDatabase();
+
+    // Get frozen state from the current database
+    const isFrozen = currentDatabase?.frozen || false;
 
     const handleCreateDatabase = () => {
         setOpen('create-database');
@@ -41,6 +48,19 @@ export function DatabasePrimaryButtons() {
 
     const handleDatabaseSettings = () => {
         setOpen('edit-database');
+    };
+
+    const handleFreezeDatabase = () => {
+        if (!currentDatabase?.id) return;
+
+        const newFrozenState = !isFrozen;
+        const reason = newFrozenState ? 'Database frozen by user' : undefined;
+
+        freezeDatabaseMutation.mutate({
+            databaseId: currentDatabase.id,
+            frozen: newFrozenState,
+            reason
+        });
     };
 
     // If we're in a database view, show database-specific actions
@@ -121,6 +141,27 @@ export function DatabasePrimaryButtons() {
                         >
                             <Settings className="mr-2 h-4 w-4" />
                             Database Settings
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                            onClick={() => {
+                                if (currentDatabase?.id) {
+                                    handleFreezeDatabase();
+                                }
+                            }}
+                            disabled={!currentDatabase?.id}
+                        >
+                            {isFrozen ? (
+                                <>
+                                    <Unlock className="mr-2 h-4 w-4" />
+                                    Unfreeze Database
+                                </>
+                            ) : (
+                                <>
+                                    <Lock className="mr-2 h-4 w-4" />
+                                    Freeze Database
+                                </>
+                            )}
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>

@@ -14,7 +14,6 @@ import type {
     ShareDatabaseRequest,
     PaginatedDatabasesResponse,
     PaginatedRecordsResponse,
-    DatabaseQueryParams,
     RecordQueryParams,
 } from '@/types/database.types';
 import type { ApiResponse } from '@/types/api.types';
@@ -54,6 +53,10 @@ export const databaseApi = {
                 visibleProperties: view.visibleProperties || []
             })),
             permissions: db.permissions || [],
+            frozen: db.frozen,
+            frozenAt: db.frozenAt,
+            frozenBy: db.frozenBy,
+            frozenReason: db.frozenReason,
             createdAt: db.createdAt,
             updatedAt: db.updatedAt
         };
@@ -120,6 +123,10 @@ export const databaseApi = {
                     visibleProperties: view.visibleProperties || []
                 })),
                 permissions: db.permissions || [],
+                frozen: db.frozen,
+                frozenAt: db.frozenAt,
+                frozenBy: db.frozenBy,
+                frozenReason: db.frozenReason,
                 createdAt: db.createdAt,
                 updatedAt: db.updatedAt
                 };
@@ -187,6 +194,10 @@ export const databaseApi = {
                 visibleProperties: view.visibleProperties || []
             })),
             permissions: db.permissions || [],
+            frozen: db.frozen,
+            frozenAt: db.frozenAt,
+            frozenBy: db.frozenBy,
+            frozenReason: db.frozenReason,
             createdAt: db.createdAt,
             updatedAt: db.updatedAt
         };
@@ -236,6 +247,32 @@ export const databaseApi = {
     addView: async (databaseId: string, data: CreateViewRequest): Promise<Database> => {
         const response = await apiClient.post<ApiResponse<Database>>(
             API_ENDPOINTS.DATABASES.VIEWS(databaseId),
+            data
+        );
+        return response.data.data;
+    },
+
+    // Update view
+    updateView: async (databaseId: string, viewId: string, viewData: UpdateViewRequest): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            `${API_ENDPOINTS.DATABASES.VIEWS(databaseId)}/${viewId}`,
+            viewData
+        );
+        return response.data.data;
+    },
+
+    // Delete view
+    deleteView: async (databaseId: string, viewId: string): Promise<Database> => {
+        const response = await apiClient.delete<ApiResponse<Database>>(
+            `${API_ENDPOINTS.DATABASES.VIEWS(databaseId)}/${viewId}`
+        );
+        return response.data.data;
+    },
+
+    // Duplicate view
+    duplicateView: async (databaseId: string, viewId: string, data: { name: string }): Promise<Database> => {
+        const response = await apiClient.post<ApiResponse<Database>>(
+            `${API_ENDPOINTS.DATABASES.VIEWS(databaseId)}/${viewId}/duplicate`,
             data
         );
         return response.data.data;
@@ -389,6 +426,71 @@ export const databaseApi = {
         const response = await apiClient.post<ApiResponse<Database>>(
             `${API_ENDPOINTS.DATABASES.BY_ID(databaseId)}/duplicate`,
             data
+        );
+        return response.data.data;
+    },
+
+    // Property Management APIs
+    updatePropertyName: async (databaseId: string, propertyId: string, name: string): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.UPDATE_PROPERTY_NAME(databaseId, propertyId),
+            { name }
+        );
+        return response.data.data;
+    },
+
+    updatePropertyType: async (databaseId: string, propertyId: string, type: string): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.UPDATE_PROPERTY_TYPE(databaseId, propertyId),
+            { type }
+        );
+        return response.data.data;
+    },
+
+    reorderProperty: async (databaseId: string, propertyId: string, newOrder: number): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.REORDER_PROPERTY(databaseId, propertyId),
+            { order: newOrder }
+        );
+        return response.data.data;
+    },
+
+    insertPropertyAt: async (databaseId: string, targetPropertyId: string, position: 'left' | 'right', propertyData: any): Promise<Database> => {
+        const response = await apiClient.post<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.INSERT_PROPERTY(databaseId, targetPropertyId),
+            { position, ...propertyData }
+        );
+        return response.data.data;
+    },
+
+    duplicateProperty: async (databaseId: string, propertyId: string): Promise<Database> => {
+        const response = await apiClient.post<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.DUPLICATE_PROPERTY(databaseId, propertyId)
+        );
+        return response.data.data;
+    },
+
+    freezeProperty: async (databaseId: string, propertyId: string, frozen: boolean): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.FREEZE_PROPERTY(databaseId, propertyId),
+            { frozen }
+        );
+        return response.data.data;
+    },
+
+    hideProperty: async (databaseId: string, propertyId: string, hidden: boolean): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.HIDE_PROPERTY(databaseId, propertyId),
+            { hidden }
+        );
+        return response.data.data;
+    },
+
+    // Database freeze/unfreeze
+    freezeDatabase: async (databaseId: string, frozen: boolean, reason?: string): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.FREEZE(databaseId),
+            { frozen, reason }
         );
         return response.data.data;
     },

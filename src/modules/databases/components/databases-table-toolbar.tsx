@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -77,57 +76,7 @@ export function DatabasesTableToolbar({
                     />
                 </div>
 
-                {/* Filters */}
                 <div className="flex gap-x-2">
-                    {/* Ownership Filter */}
-                    <Select value={filterOwner} onValueChange={onFilterOwnerChange}>
-                        <SelectTrigger className="h-8 w-[140px]">
-                            <SelectValue placeholder="Ownership" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">
-                                <div className="flex items-center">
-                                    All Databases
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="mine">
-                                <div className="flex items-center">
-                                    My Databases
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="shared">
-                                <div className="flex items-center">
-                                    Shared with Me
-                                </div>
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    {/* Visibility Filter */}
-                    <Select value={filterPublic} onValueChange={onFilterPublicChange}>
-                        <SelectTrigger className="h-8 w-[120px]">
-                            <SelectValue placeholder="Visibility" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">
-                                <div className="flex items-center">
-                                    All Types
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="public">
-                                <div className="flex items-center">
-                                    Public
-                                </div>
-                            </SelectItem>
-                            <SelectItem value="private">
-                                <div className="flex items-center">
-                                    Private
-                                </div>
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    {/* Sort Options */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="h-8 w-[140px] justify-between">
