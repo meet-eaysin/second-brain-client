@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import { databaseApi } from '../services/databaseApi';
+import {
+    useAddProperty,
+    useUpdateProperty,
+    useCreateRecord,
+    useUpdateRecord,
+    useAddView
+} from '../services/databaseQueries';
 import { RecordForm } from './record-form';
 import {
     Dialog,
@@ -317,7 +323,12 @@ export function DatabaseDialogs() {
         setCurrentRecord
     } = useDatabaseContext();
 
-    const [isLoading, setIsLoading] = useState(false);
+    // Mutation hooks
+    const addPropertyMutation = useAddProperty();
+    const updatePropertyMutation = useUpdateProperty();
+    const createRecordMutation = useCreateRecord();
+    const updateRecordMutation = useUpdateRecord();
+    const addViewMutation = useAddView();
 
     return (
         <>
@@ -339,8 +350,6 @@ export function DatabaseDialogs() {
                     }
 
                     try {
-                        setIsLoading(true);
-
                         if (open === 'edit-property' && currentProperty?.id) {
                             // Transform data for update API
                             const updateData = {
@@ -350,16 +359,15 @@ export function DatabaseDialogs() {
                                 selectOptions: values.selectOptions
                             };
 
-                            // Update existing property
-                            const updatedDatabase = await databaseApi.updateProperty(
-                                currentDatabase.id,
-                                currentProperty.id,
-                                updateData
-                            );
+                            // Update existing property using mutation hook
+                            const updatedDatabase = await updatePropertyMutation.mutateAsync({
+                                databaseId: currentDatabase.id,
+                                propertyId: currentProperty.id,
+                                data: updateData
+                            });
 
                             // Update the current database in context
                             setCurrentDatabase(updatedDatabase);
-                            toast.success('Property updated successfully');
                         } else {
                             // Transform data for create API
                             const createData = {
@@ -373,33 +381,25 @@ export function DatabaseDialogs() {
                                 }))
                             };
 
-                            // Create new property
-                            const updatedDatabase = await databaseApi.addProperty(
-                                currentDatabase.id,
-                                createData
-                            );
+                            // Create new property using mutation hook
+                            const updatedDatabase = await addPropertyMutation.mutateAsync({
+                                databaseId: currentDatabase.id,
+                                data: createData
+                            });
 
                             // Update the current database in context
                             setCurrentDatabase(updatedDatabase);
-                            toast.success('Property created successfully');
                         }
 
                         setOpen(null);
                         setCurrentProperty(null);
                     } catch (error: any) {
                         console.error('Property operation failed:', error);
-                        const errorMessage = error?.response?.data?.error?.message ||
-                                           error?.message ||
-                                           'An unexpected error occurred';
-                        toast.error(open === 'edit-property' ?
-                                   `Failed to update property: ${errorMessage}` :
-                                   `Failed to create property: ${errorMessage}`);
-                    } finally {
-                        setIsLoading(false);
+                        // Error handling is done by the mutation hooks
                     }
                 }}
                 mode={open === 'edit-property' ? 'edit' : 'create'}
-                isLoading={isLoading}
+                isLoading={addPropertyMutation.isPending || updatePropertyMutation.isPending}
             />
 
             {/* Record Form */}
@@ -415,41 +415,30 @@ export function DatabaseDialogs() {
                     }
 
                     try {
-                        setIsLoading(true);
-
                         if (open === 'edit-record' && currentRecord?.id) {
-                            // Update existing record
-                            await databaseApi.updateRecord(
-                                currentDatabase.id,
-                                currentRecord.id,
-                                { properties: data }
-                            );
-                            toast.success('Record updated successfully');
+                            // Update existing record using mutation hook
+                            await updateRecordMutation.mutateAsync({
+                                databaseId: currentDatabase.id,
+                                recordId: currentRecord.id,
+                                data: { properties: data }
+                            });
                         } else {
-                            // Create new record
-                            await databaseApi.createRecord(
-                                currentDatabase.id,
-                                { properties: data }
-                            );
-                            toast.success('Record created successfully');
+                            // Create new record using mutation hook
+                            await createRecordMutation.mutateAsync({
+                                databaseId: currentDatabase.id,
+                                data: { properties: data }
+                            });
                         }
 
                         setOpen(null);
                         setCurrentRecord(null);
                     } catch (error: any) {
                         console.error('Record operation failed:', error);
-                        const errorMessage = error?.response?.data?.error?.message ||
-                                           error?.message ||
-                                           'An unexpected error occurred';
-                        toast.error(open === 'edit-record' ?
-                                   `Failed to update record: ${errorMessage}` :
-                                   `Failed to create record: ${errorMessage}`);
-                    } finally {
-                        setIsLoading(false);
+                        // Error handling is done by the mutation hooks
                     }
                 }}
                 mode={open === 'edit-record' ? 'edit' : 'create'}
-                isLoading={isLoading}
+                isLoading={createRecordMutation.isPending || updateRecordMutation.isPending}
             />
 
             {/* View Form */}
@@ -464,26 +453,18 @@ export function DatabaseDialogs() {
                     }
 
                     try {
-                        setIsLoading(true);
-
-                        // Create new view
-                        const updatedDatabase = await databaseApi.createView(
-                            currentDatabase.id,
-                            viewData
-                        );
+                        // Create new view using mutation hook
+                        const updatedDatabase = await addViewMutation.mutateAsync({
+                            databaseId: currentDatabase.id,
+                            data: viewData
+                        });
 
                         // Update the current database in context
                         setCurrentDatabase(updatedDatabase);
-                        toast.success('View created successfully');
                         setOpen(null);
                     } catch (error: any) {
                         console.error('View creation failed:', error);
-                        const errorMessage = error?.response?.data?.error?.message ||
-                                           error?.message ||
-                                           'An unexpected error occurred';
-                        toast.error(`Failed to create view: ${errorMessage}`);
-                    } finally {
-                        setIsLoading(false);
+                        // Error handling is done by the mutation hook
                     }
                 }}
             />

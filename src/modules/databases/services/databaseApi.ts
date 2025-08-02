@@ -164,7 +164,7 @@ export const databaseApi = {
 
         // Transform the API response to match our interface
         const transformedDatabase: Database = {
-            id: db._id, // Use _id directly as id
+            id: db._id || db.id, // Try _id first, then fall back to id
             name: db.name,
             description: db.description,
             icon: db.icon,
@@ -177,7 +177,7 @@ export const databaseApi = {
             tags: db.tags || [],
             properties: db.properties || [],
             views: (db.views || []).map((view: any) => ({
-                id: view._id, // Use _id directly as id for views too
+                id: view.id || view._id, // Try id first, then fall back to _id
                 name: view.name,
                 type: view.type?.toUpperCase() || 'TABLE',
                 isDefault: view.isDefault,
