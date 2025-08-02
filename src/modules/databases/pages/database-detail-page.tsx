@@ -24,7 +24,7 @@ export default function DatabaseDetailPage() {
         setCurrentDatabase,
         setCurrentRecord,
         setCurrentView,
-        setOpen,
+        setDialogOpen: setOpen,
         searchQuery,
         filters,
         sorts,

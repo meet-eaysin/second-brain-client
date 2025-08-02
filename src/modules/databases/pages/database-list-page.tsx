@@ -6,7 +6,7 @@ import { DatabaseCard } from '../components/database-card';
 import { DatabaseForm } from '../components/database-form';
 import { useDatabases } from '../hooks/database-hooks';
 import { useDeleteDatabase } from '../services/databaseQueries';
-import { Grid, Plus, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Database } from '@/types/database.types';
 
 export default function DatabaseListPage() {

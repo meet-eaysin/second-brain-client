@@ -22,7 +22,7 @@ import {useDatabaseContext} from "@/modules/databases";
 import { useFreezeDatabase } from '../services/databaseQueries';
 
 export function DatabasePrimaryButtons() {
-    const { setOpen, currentDatabase } = useDatabaseContext();
+    const { setDialogOpen: setOpen, currentDatabase } = useDatabaseContext();
     const freezeDatabaseMutation = useFreezeDatabase();
 
     // Get frozen state from the current database

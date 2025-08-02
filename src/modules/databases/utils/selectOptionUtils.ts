@@ -4,7 +4,7 @@ import type { SelectOption } from '@/types/database.types';
  * Normalizes select option to ensure it has an 'id' field instead of '_id'
  * Handles backward compatibility with server responses that might return '_id'
  */
-export function normalizeSelectOption(option: any): SelectOption {
+export function normalizeSelectOption(option: unknown): SelectOption {
     if (!option) return option;
     
     // If it's already a proper SelectOption with id, return as is
@@ -31,7 +31,7 @@ export function normalizeSelectOption(option: any): SelectOption {
 /**
  * Normalizes an array of select options
  */
-export function normalizeSelectOptions(options: any[]): SelectOption[] {
+export function normalizeSelectOptions(options: unknown[]): SelectOption[] {
     if (!Array.isArray(options)) return [];
     
     return options.map(normalizeSelectOption);
@@ -41,7 +41,7 @@ export function normalizeSelectOptions(options: any[]): SelectOption[] {
  * Normalizes select option value from record properties
  * Handles both single select (object or string) and multi-select (array)
  */
-export function normalizeSelectValue(value: any, isMultiSelect: boolean = false): any {
+export function normalizeSelectValue(value: unknown, isMultiSelect: boolean = false): unknown {
     if (!value) return value;
     
     if (isMultiSelect && Array.isArray(value)) {
@@ -59,7 +59,7 @@ export function normalizeSelectValue(value: any, isMultiSelect: boolean = false)
  * Gets the display value for a select option
  * Handles both normalized objects and string IDs
  */
-export function getSelectOptionDisplay(option: any, fallback: string = 'Unknown'): string {
+export function getSelectOptionDisplay(option: unknown, fallback: string = 'Unknown'): string {
     if (!option) return fallback;
     
     if (typeof option === 'string') return option;
@@ -75,7 +75,7 @@ export function getSelectOptionDisplay(option: any, fallback: string = 'Unknown'
  * Gets the ID value for a select option
  * Handles both normalized objects and string IDs
  */
-export function getSelectOptionId(option: any): string | undefined {
+export function getSelectOptionId(option: unknown): string | undefined {
     if (!option) return undefined;
     
     if (typeof option === 'string') return option;
@@ -91,7 +91,7 @@ export function getSelectOptionId(option: any): string | undefined {
  * Gets the color value for a select option
  * Handles both normalized objects and provides fallback
  */
-export function getSelectOptionColor(option: any, fallback: string = '#6b7280'): string {
+export function getSelectOptionColor(option: unknown, fallback: string = '#6b7280'): string {
     if (!option) return fallback;
     
     if (typeof option === 'object' && option.color) {

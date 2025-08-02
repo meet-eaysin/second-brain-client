@@ -335,14 +335,23 @@ export function DatabaseDialogs() {
             <DatabaseForm
                 database={open === 'edit-database' ? currentDatabase : null}
                 open={open === 'create-database' || open === 'edit-database'}
-                onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                    }
+                }}
                 mode={open === 'edit-database' ? 'edit' : 'create'}
             />
 
             <PropertyForm
                 property={open === 'edit-property' ? currentProperty : null}
                 open={open === 'create-property' || open === 'edit-property'}
-                onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                        setCurrentProperty(null);
+                    }
+                }}
                 onSubmit={async (values) => {
                     if (!currentDatabase?.id) {
                         toast.error('Database is still loading. Please wait a moment and try again.');
@@ -407,7 +416,12 @@ export function DatabaseDialogs() {
                 record={open === 'edit-record' ? currentRecord : null}
                 properties={currentDatabase?.properties || []}
                 open={open === 'create-record' || open === 'edit-record'}
-                onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                        setCurrentRecord(null);
+                    }
+                }}
                 onSubmit={async (data) => {
                     if (!currentDatabase?.id) {
                         toast.error('Database is still loading. Please wait a moment and try again.');
@@ -444,7 +458,11 @@ export function DatabaseDialogs() {
             {/* View Form */}
             <ViewForm
                 open={open === 'create-view'}
-                onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                    }
+                }}
                 properties={currentDatabase?.properties || []}
                 onSubmit={async (viewData) => {
                     if (!currentDatabase?.id) {
@@ -473,14 +491,22 @@ export function DatabaseDialogs() {
             <ShareDatabaseDialog
                 database={currentDatabase}
                 open={open === 'share-database'}
-                onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                    }
+                }}
             />
 
             {/* Delete Database Dialog */}
             <DeleteDatabaseDialog
                 database={currentDatabase}
                 open={open === 'delete-database'}
-                onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                    }
+                }}
             />
         </>
     );

@@ -41,7 +41,7 @@ import { DatabasesDataTable } from '../components/databases-data-table';
 const DatabasesPageComponent: React.FC = () => {
     const navigate = useNavigate();
     const { user: currentUser } = useAuth();
-    const { setCurrentDatabase, setOpen } = useDatabaseContext();
+    const { setCurrentDatabase, setDialogOpen: setOpen } = useDatabaseContext();
 
     // Simplified state management
     const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +99,7 @@ const DatabasesPageComponent: React.FC = () => {
     const deleteDatabaseMutation = useDeleteDatabase();
 
     // Event handlers
-    const handleViewDatabase = (database: any) => {
+    const handleViewDatabase = (database: Database) => {
         console.log('handleViewDatabase called with:', database);
 
         // API response has id field, so use it directly
@@ -144,7 +144,7 @@ const DatabasesPageComponent: React.FC = () => {
     };
 
     // Computed values
-    const databases = databasesData?.databases || [];
+    const databases = useMemo(() => databasesData?.databases || [], [databasesData?.databases]);
     const totalCount = databasesData?.total || 0;
     const isLoadingState = isLoading || isSearching;
 

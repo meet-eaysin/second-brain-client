@@ -58,7 +58,8 @@ export function DatabaseGalleryView({
     ).slice(0, 3); // Show max 3 additional properties
 
     const renderRecordCard = (record: DatabaseRecord) => {
-        const title = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const titleValue = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const title = typeof titleValue === 'object' ? getSelectOptionDisplay(titleValue) : String(titleValue || 'Untitled');
         const imageUrl = imageProperty ? record.properties[imageProperty.id] : null;
 
         return (
@@ -153,7 +154,7 @@ export function DatabaseGalleryView({
                                                 </Badge>
                                             ) : property.type === 'MULTI_SELECT' ? (
                                                 <div className="flex flex-wrap gap-1">
-                                                    {normalizeSelectValue(value, true).map((option: any, index: number) => (
+                                                    {normalizeSelectValue(value, true).map((option: unknown, index: number) => (
                                                         <Badge
                                                             key={getSelectOptionId(option) || index}
                                                             variant="outline"

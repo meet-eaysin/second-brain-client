@@ -25,7 +25,7 @@ interface DatabaseListViewProps {
     onRecordSelect?: (record: DatabaseRecord) => void;
     onRecordEdit?: (record: DatabaseRecord) => void;
     onRecordDelete?: (recordId: string) => void;
-    onRecordUpdate?: (recordId: string, updates: Record<string, any>) => void;
+    onRecordUpdate?: (recordId: string, updates: Record<string, unknown>) => void;
 }
 
 export function DatabaseListView({
@@ -66,7 +66,7 @@ export function DatabaseListView({
         }
     };
 
-    const renderPropertyValue = (property: DatabaseProperty, value: any) => {
+    const renderPropertyValue = (property: DatabaseProperty, value: unknown) => {
         if (!value && value !== false) return null;
 
         switch (property.type) {
@@ -91,7 +91,7 @@ export function DatabaseListView({
                 const normalizedValues = normalizeSelectValue(value, true);
                 return (
                     <div className="flex flex-wrap gap-1">
-                        {normalizedValues.slice(0, 2).map((option: any, index: number) => (
+                        {normalizedValues.slice(0, 2).map((option: unknown, index: number) => (
                             <Badge
                                 key={getSelectOptionId(option) || index}
                                 variant="outline"
@@ -168,7 +168,8 @@ export function DatabaseListView({
     };
 
     const renderRecordItem = (record: DatabaseRecord) => {
-        const title = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const titleValue = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const title = typeof titleValue === 'object' ? getSelectOptionDisplay(titleValue) : String(titleValue || 'Untitled');
         const isChecked = checkboxProperty ? Boolean(record.properties[checkboxProperty.id]) : false;
 
         return (

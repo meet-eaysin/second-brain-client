@@ -93,7 +93,8 @@ export function DatabaseBoardView({
     const renderRecordCard = (record: DatabaseRecord) => {
         // Get the title property (first text property or first property)
         const titleProperty = properties.find(p => p.type === 'TEXT') || properties[0];
-        const title = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const titleValue = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const title = typeof titleValue === 'object' ? getSelectOptionDisplay(titleValue) : String(titleValue || 'Untitled');
 
         // Get other visible properties
         const visibleProperties = properties.filter(p => 
@@ -166,7 +167,7 @@ export function DatabaseBoardView({
                                             </Badge>
                                         ) : property.type === 'MULTI_SELECT' ? (
                                             <div className="flex flex-wrap gap-1">
-                                                {normalizeSelectValue(value, true).map((option: any, index: number) => (
+                                                {normalizeSelectValue(value, true).map((option: unknown, index: number) => (
                                                     <Badge
                                                         key={getSelectOptionId(option) || index}
                                                         variant="outline"

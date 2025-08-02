@@ -89,27 +89,28 @@ export function DatabaseTimelineView({
         return groups;
     }, [sortedRecords, primaryDateProperty]);
 
-    const formatDate = (dateValue: any) => {
+    const formatDate = (dateValue: unknown) => {
         const date = new Date(String(dateValue));
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
         });
     };
 
-    const formatTime = (dateValue: any) => {
+    const formatTime = (dateValue: unknown) => {
         const date = new Date(String(dateValue));
-        return date.toLocaleTimeString('en-US', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+        return date.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit'
         });
     };
 
     const renderRecordItem = (record: DatabaseRecord, isLast: boolean) => {
         if (!primaryDateProperty) return null;
 
-        const title = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const titleValue = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
+        const title = typeof titleValue === 'object' ? getSelectOptionDisplay(titleValue) : String(titleValue || 'Untitled');
         const startDate = record.properties[primaryDateProperty.id];
         const endDate = endDateProperty ? record.properties[endDateProperty.id] : null;
 
@@ -197,7 +198,7 @@ export function DatabaseTimelineView({
                                                         </Badge>
                                                     ) : property.type === 'MULTI_SELECT' ? (
                                                         <div className="flex flex-wrap gap-1">
-                                                            {normalizeSelectValue(value, true).map((option: any, index: number) => (
+                                                            {normalizeSelectValue(value, true).map((option: unknown, index: number) => (
                                                                 <Badge
                                                                     key={getSelectOptionId(option) || index}
                                                                     variant="outline"

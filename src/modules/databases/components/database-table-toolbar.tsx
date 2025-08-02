@@ -310,7 +310,11 @@ export function DatabaseTableToolbar<TData>({
 
                     <FilterManager
                         open={dialogOpen === 'manage-filters'}
-                        onOpenChange={(isOpen) => setDialogOpen(isOpen ? 'manage-filters' : null)}
+                        onOpenChange={(isOpen) => {
+                            if (!isOpen) {
+                                setDialogOpen(null);
+                            }
+                        }}
                         properties={properties}
                         currentView={currentView}
                         onSave={async (filters) => {
