@@ -21,9 +21,17 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DataTablePagination } from '@/components/data-table/data-table-pagination';
 import { DatabaseTableToolbar } from './database-table-toolbar';
 import { ColumnManager, HiddenPropertiesPanel } from './property-visibility';
+import { Plus, ChevronDown } from 'lucide-react';
 import {
     useTogglePropertyVisibility,
     useUpdateViewVisibility,
@@ -41,6 +49,7 @@ interface DatabaseDataTableProps {
     onRecordSelect?: (record: DatabaseRecord) => void;
     onRecordEdit?: (record: DatabaseRecord) => void;
     onRecordDelete?: (recordId: string) => void;
+    onRecordCreate?: () => void;
     databaseId?: string;
     showPropertyVisibility?: boolean;
 }
@@ -52,6 +61,7 @@ export function DatabaseDataTable({
     onRecordSelect,
     onRecordEdit,
     onRecordDelete,
+    onRecordCreate,
     databaseId,
     showPropertyVisibility = true,
 }: DatabaseDataTableProps) {
@@ -61,6 +71,7 @@ export function DatabaseDataTable({
     const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
     const [sorting, setSorting] = React.useState<SortingState>([]);
+    const [columnStats, setColumnStats] = React.useState<Record<string, string>>({});
 
     // Property visibility hooks
     const togglePropertyMutation = useTogglePropertyVisibility();
@@ -99,6 +110,35 @@ export function DatabaseDataTable({
     const handleHideNonRequired = () => {
         if (!dbId || !currentView?.id) return;
         hideNonRequiredMutation.mutate({ databaseId: dbId, viewId: currentView.id });
+    };
+
+    // Calculate statistics for a column
+    const calculateColumnStats = (columnId: string, statType: string) => {
+        const columnData = data.map(row => row.properties[columnId]).filter(val => val !== null && val !== undefined);
+
+        switch (statType) {
+            case 'count-all':
+                return data.length.toString();
+            case 'count-values':
+                return columnData.length.toString();
+            case 'count-unique':
+                return new Set(columnData).size.toString();
+            case 'count-empty':
+                return (data.length - columnData.length).toString();
+            case 'count-not-empty':
+                return columnData.length.toString();
+            case 'percent-empty':
+                return data.length > 0 ? `${Math.round(((data.length - columnData.length) / data.length) * 100)}%` : '0%';
+            case 'percent-not-empty':
+                return data.length > 0 ? `${Math.round((columnData.length / data.length) * 100)}%` : '0%';
+            default:
+                return '';
+        }
+    };
+
+    const handleStatSelection = (columnId: string, statType: string) => {
+        const result = calculateColumnStats(columnId, statType);
+        setColumnStats(prev => ({ ...prev, [columnId]: `${statType}: ${result}` }));
     };
 
     const handleRestoreAllGlobal = () => {
@@ -265,9 +305,120 @@ export function DatabaseDataTable({
                                 </TableCell>
                             </TableRow>
                         )}
+
+                        {/* Add New Record Row - Notion Style */}
+                        {onRecordCreate && (
+                            <TableRow className="hover:bg-muted/50 border-t-2">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="text-center py-2 cursor-pointer text-muted-foreground hover:text-foreground"
+                                    onClick={onRecordCreate}
+                                >
+                                    <div className="flex items-center justify-start gap-2">
+                                        <Plus className="h-4 w-4" />
+                                        <span>New Record</span>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        )}
                     </TableBody>
+
+                    {/* Column Statistics Footer - Notion Style with Hover */}
+                    <tfoot>
+                        <tr>
+                            {table.getHeaderGroups()[0]?.headers.map((header) => (
+                                <td key={header.id} className="border-t p-1 group">
+                                    <div className="relative">
+                                        {/* Show selected stat value if exists */}
+                                        {columnStats[header.id] ? (
+                                            <div className="flex items-center justify-between h-6 px-2 text-xs text-muted-foreground">
+                                                <span>{columnStats[header.id]}</span>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <ChevronDown className="h-3 w-3" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="start" className="w-48">
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-all')}>
+                                                            Count all
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-values')}>
+                                                            Count values
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-unique')}>
+                                                            Count unique values
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-empty')}>
+                                                            Count empty
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-not-empty')}>
+                                                            Count not empty
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'percent-empty')}>
+                                                            Percent empty
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'percent-not-empty')}>
+                                                            Percent not empty
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => setColumnStats(prev => ({ ...prev, [header.id]: '' }))}
+                                                            className="text-destructive"
+                                                        >
+                                                            Clear
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        ) : (
+                                            /* Hidden dropdown that appears on hover */
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 w-full opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground hover:text-foreground"
+                                                    >
+                                                        Count <ChevronDown className="h-3 w-3" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="start" className="w-48">
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-all')}>
+                                                        Count all
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-values')}>
+                                                        Count values
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-unique')}>
+                                                        Count unique values
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-empty')}>
+                                                        Count empty
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'count-not-empty')}>
+                                                        Count not empty
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'percent-empty')}>
+                                                        Percent empty
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleStatSelection(header.id, 'percent-not-empty')}>
+                                                        Percent not empty
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        )}
+                                    </div>
+                                </td>
+                            ))}
+                        </tr>
+                    </tfoot>
                 </Table>
             </div>
+
             <DataTablePagination table={table} />
         </div>
     );

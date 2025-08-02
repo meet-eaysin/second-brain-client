@@ -299,6 +299,7 @@ export default function DataTablePage() {
                 isLoading={isLoadingRecords}
                 onRecordEdit={(record) => setEditingRecord(record)}
                 onRecordDelete={handleDeleteRecord}
+                onRecordCreate={handleCreateRecord}
             />
 
             {/* Database edit dialog */}

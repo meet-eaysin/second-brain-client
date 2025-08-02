@@ -51,7 +51,12 @@ export function DatabaseViewRenderer({
     const renderView = () => {
         switch (view.type) {
             case 'TABLE':
-                return <DatabaseTableView {...commonProps} />;
+                return (
+                    <DatabaseTableView
+                        {...commonProps}
+                        onRecordCreate={onRecordCreate}
+                    />
+                );
 
             case 'BOARD':
                 return (

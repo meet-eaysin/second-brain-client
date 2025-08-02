@@ -12,6 +12,7 @@ interface DatabaseTableViewProps {
     onRecordSelect?: (record: DatabaseRecord) => void;
     onRecordEdit?: (record: DatabaseRecord) => void;
     onRecordDelete?: (recordId: string) => void;
+    onRecordCreate?: () => void;
     databaseId?: string;
     isFrozen?: boolean;
 }
@@ -23,6 +24,7 @@ export function DatabaseTableView({
     onRecordSelect,
     onRecordEdit,
     onRecordDelete,
+    onRecordCreate,
     databaseId,
     isFrozen = false,
 }: DatabaseTableViewProps) {
@@ -136,6 +138,7 @@ export function DatabaseTableView({
                 onRecordSelect={onRecordSelect}
                 onRecordEdit={onRecordEdit}
                 onRecordDelete={onRecordDelete}
+                onRecordCreate={onRecordCreate}
                 databaseId={databaseId}
                 showPropertyVisibility={true}
             />
