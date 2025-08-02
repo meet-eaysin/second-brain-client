@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Save, Settings } from 'lucide-react';
-import type { Workspace } from '../services/workspaceApi';
+import type { Workspace } from '@/types/workspace.types';
 
 const workspaceFormSchema = z.object({
     name: z.string().min(1, 'Workspace name is required').max(100, 'Name must be less than 100 characters'),

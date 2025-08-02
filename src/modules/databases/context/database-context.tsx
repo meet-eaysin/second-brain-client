@@ -1,13 +1,12 @@
 import React, { useState, createContext, useContext } from 'react';
 import type { Database, DatabaseRecord, DatabaseProperty, DatabaseView } from '@/types/database.types';
-import useDialogState from '@/hooks/use-dialog-state';
 
-type DatabaseDialogType = 'create-database' | 'edit-database' | 'create-property' | 'edit-property' | 'create-record' | 'edit-record' | 'view-record' | 'create-view' | 'edit-view' | 'share-database' | 'delete-database';
+type DatabaseDialogType = 'create-database' | 'edit-database' | 'create-property' | 'edit-property' | 'create-record' | 'edit-record' | 'view-record' | 'create-view' | 'edit-view' | 'share-database' | 'delete-database' | 'manage-sorts' | 'manage-filters';
 
 interface DatabaseContextType {
     // Dialog state
-    open: DatabaseDialogType | null;
-    setOpen: (str: DatabaseDialogType | null) => void;
+    dialogOpen: DatabaseDialogType | null;
+    setDialogOpen: (str: DatabaseDialogType | null) => void;
     
     // Current items
     currentDatabase: Database | null;
@@ -41,7 +40,7 @@ interface Props {
 }
 
 export default function DatabaseProvider({ children }: Props) {
-    const [open, setOpen] = useDialogState<DatabaseDialogType>(null);
+    const [dialogOpen, setDialogOpen] = useState<DatabaseDialogType | null>(null);
     
     // Current items
     const [currentDatabase, setCurrentDatabase] = useState<Database | null>(null);
@@ -60,8 +59,8 @@ export default function DatabaseProvider({ children }: Props) {
 
     return (
         <DatabaseContext.Provider value={{
-            open,
-            setOpen,
+            dialogOpen,
+            setDialogOpen,
             currentDatabase,
             setCurrentDatabase,
             currentRecord,

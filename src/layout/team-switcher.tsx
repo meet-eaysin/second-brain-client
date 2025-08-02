@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronsUpDown, Plus, Building2 } from 'lucide-react'
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -36,6 +37,8 @@ export function TeamSwitcher({
     const [activeTeam, setActiveTeam] = React.useState(teams[0])
     const hasWorkspaces = workspaces.length > 0
 
+
+
     const handleCreateWorkspace = async (data: any) => {
         try {
             setIsCreatingWorkspace(true)
@@ -54,10 +57,17 @@ export function TeamSwitcher({
                 <SidebarMenuItem>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <SidebarMenuButton
-                                size='lg'
-                                className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+                            <TooltipWrapper
+                                content={hasWorkspaces && currentWorkspace
+                                    ? `Switch workspaces or create a new one. Current: ${currentWorkspace.name}`
+                                    : "Create your first workspace to get started"
+                                }
+                                side="right"
                             >
+                                <SidebarMenuButton
+                                    size='lg'
+                                    className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
+                                >
                                 {hasWorkspaces && currentWorkspace ? (
                                     <>
                                         <div
@@ -89,7 +99,8 @@ export function TeamSwitcher({
                                     </>
                                 )}
                                 <ChevronsUpDown className='ml-auto' />
-                            </SidebarMenuButton>
+                                </SidebarMenuButton>
+                            </TooltipWrapper>
                         </DropdownMenuTrigger>
                     <DropdownMenuContent
                         className='w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg'

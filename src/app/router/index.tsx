@@ -13,6 +13,10 @@ import {
     getDatabaseTemplatesLink,
     getDatabaseImportLink,
     getDatabaseCategoriesLink,
+    getTagsLink,
+    getFilesLink,
+    getNotificationsLink,
+    getSettingsLink,
 } from "@/app/router/router-link.ts";
 import {
     AuthenticatedLayout,
@@ -24,6 +28,10 @@ import {
     DatabaseImportPage,
     DatabaseCategoriesPage,
     UsersPage,
+    TagsPage,
+    FilesPage,
+    NotificationsPage,
+    SettingsPage,
     HomePage,
     NotFoundPage,
     ProtectedRoute,
@@ -121,7 +129,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'tags',
-                element: <NotesPage />,
+                element: <TagsPage />,
             },
             {
                 path: 'archive',
@@ -160,6 +168,18 @@ const router = createBrowserRouter([
             {
                 path: getUsersLink().replace('/app/', ''),
                 element: <UsersPage/>,
+            },
+            {
+                path: getFilesLink().replace('/app/', ''),
+                element: <FilesPage/>,
+            },
+            {
+                path: getNotificationsLink().replace('/app/', ''),
+                element: <NotificationsPage/>,
+            },
+            {
+                path: getSettingsLink().replace('/app/', ''),
+                element: <SettingsPage/>,
             },
         ],
     },

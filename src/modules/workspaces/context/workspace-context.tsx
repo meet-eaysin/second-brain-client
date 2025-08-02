@@ -1,16 +1,22 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { workspaceApi, type Workspace } from '../services/workspaceApi';
+import { workspaceApi } from '../services/workspaceApi';
+import { WorkspaceSetupWizard } from '../components/WorkspaceSetupWizard';
+import type { Workspace, CreateWorkspaceRequest, UpdateWorkspaceRequest } from '@/types/workspace.types';
 import { toast } from 'sonner';
 
 interface WorkspaceContextType {
     workspaces: Workspace[];
     currentWorkspace: Workspace | null;
     isLoading: boolean;
+    needsSetup: boolean;
+    showSetupWizard: boolean;
     setCurrentWorkspace: (workspace: Workspace | null) => void;
     refreshWorkspaces: () => Promise<void>;
-    createWorkspace: (data: any) => Promise<Workspace>;
-    updateWorkspace: (id: string, data: any) => Promise<Workspace>;
+    createWorkspace: (data: CreateWorkspaceRequest) => Promise<Workspace>;
+    updateWorkspace: (id: string, data: UpdateWorkspaceRequest) => Promise<Workspace>;
     deleteWorkspace: (id: string) => Promise<void>;
+    completeSetup: (workspace: Workspace) => void;
+    skipSetup: () => void;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
@@ -23,6 +29,8 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
     const [currentWorkspace, setCurrentWorkspace] = useState<Workspace | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [needsSetup, setNeedsSetup] = useState(false);
+    const [showSetupWizard, setShowSetupWizard] = useState(false);
 
     // Load workspaces on mount
     useEffect(() => {
@@ -32,14 +40,20 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     const loadWorkspaces = async () => {
         try {
             setIsLoading(true);
-            const data = await workspaceApi.getWorkspaces();
-            setWorkspaces(data);
-            
-            // Set the first workspace as current if none is selected
-            if (data.length > 0 && !currentWorkspace) {
-                // Try to find personal workspace first, otherwise use the first one
-                const personalWorkspace = data.find(w => w.isPersonal);
-                setCurrentWorkspace(personalWorkspace || data[0]);
+            const response = await workspaceApi.getWorkspaces();
+            const workspacesList = response.workspaces || [];
+            setWorkspaces(workspacesList);
+
+            // Check if user needs workspace setup
+            if (workspacesList.length === 0) {
+                setNeedsSetup(true);
+                setShowSetupWizard(true);
+            } else {
+                setNeedsSetup(false);
+                // Set the first workspace as current if none is selected
+                if (!currentWorkspace) {
+                    setCurrentWorkspace(workspacesList[0]);
+                }
             }
         } catch (error) {
             console.error('Failed to load workspaces:', error);
@@ -53,10 +67,12 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
         await loadWorkspaces();
     };
 
-    const createWorkspace = async (data: any): Promise<Workspace> => {
+    const createWorkspace = async (data: CreateWorkspaceRequest): Promise<Workspace> => {
         try {
             const newWorkspace = await workspaceApi.createWorkspace(data);
             setWorkspaces(prev => [...prev, newWorkspace]);
+            setCurrentWorkspace(newWorkspace);
+            setNeedsSetup(false);
             toast.success('Workspace created successfully');
             return newWorkspace;
         } catch (error: any) {
@@ -67,7 +83,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
         }
     };
 
-    const updateWorkspace = async (id: string, data: any): Promise<Workspace> => {
+    const updateWorkspace = async (id: string, data: UpdateWorkspaceRequest): Promise<Workspace> => {
         try {
             const updatedWorkspace = await workspaceApi.updateWorkspace(id, data);
             setWorkspaces(prev => prev.map(w => w.id === id ? updatedWorkspace : w));
@@ -107,20 +123,40 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
         }
     };
 
+    const completeSetup = (workspace: Workspace) => {
+        setCurrentWorkspace(workspace);
+        setShowSetupWizard(false);
+        setNeedsSetup(false);
+    };
+
+    const skipSetup = () => {
+        setShowSetupWizard(false);
+        setNeedsSetup(false);
+    };
+
     const value: WorkspaceContextType = {
         workspaces,
         currentWorkspace,
         isLoading,
+        needsSetup,
+        showSetupWizard,
         setCurrentWorkspace,
         refreshWorkspaces,
         createWorkspace,
         updateWorkspace,
         deleteWorkspace,
+        completeSetup,
+        skipSetup,
     };
 
     return (
         <WorkspaceContext.Provider value={value}>
             {children}
+            <WorkspaceSetupWizard
+                open={showSetupWizard}
+                onComplete={completeSetup}
+                onSkip={skipSetup}
+            />
         </WorkspaceContext.Provider>
     );
 }

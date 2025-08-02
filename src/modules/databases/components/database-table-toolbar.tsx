@@ -9,14 +9,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { DataTableFacetedFilter } from '@/components/data-table/data-table-faceted-filter';
+
 import { DatabaseViewOptions } from './database-view-options';
+import { SortManager, FilterManager } from './sort-filter-management';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
     Plus,
     Search,
     Filter,
     SortAsc,
-    SortDesc,
     MoreHorizontal,
     Edit,
     Trash2,
@@ -47,14 +48,11 @@ export function DatabaseTableToolbar<TData>({
     onRecordDelete,
     onViewUpdate,
 }: DatabaseTableToolbarProps<TData>) {
-    const { setOpen, searchQuery, setSearchQuery } = useDatabaseContext();
+    const { dialogOpen, setDialogOpen, searchQuery, setSearchQuery } = useDatabaseContext();
     const isFiltered = table.getState().columnFilters.length > 0;
     const selectedRows = table.getFilteredSelectedRowModel().rows;
 
-    // Get select and multiselect properties for filtering
-    const selectProperties = properties.filter(
-        (property) => property.type === 'SELECT' || property.type === 'MULTI_SELECT'
-    );
+
 
     const handleBulkEdit = () => {
         if (selectedRows.length > 0 && onRecordEdit) {
@@ -72,23 +70,6 @@ export function DatabaseTableToolbar<TData>({
             navigator.clipboard.writeText(jsonData);
             toast.success(`Copied ${selectedRows.length} record(s) to clipboard`);
         }
-    };
-
-    const handleSort = (direction: 'asc' | 'desc') => {
-        // Get the first visible column for sorting
-        const firstColumn = table.getVisibleLeafColumns()[0];
-        if (firstColumn) {
-            firstColumn.toggleSorting(direction === 'desc');
-        }
-    };
-
-    const toggleFilters = () => {
-        // Toggle column filters visibility
-        const hasFilters = table.getState().columnFilters.length > 0;
-        if (hasFilters) {
-            table.resetColumnFilters();
-        }
-        // Note: Filter visibility toggle would need additional state management
     };
 
     const handleBulkDelete = () => {
@@ -112,118 +93,162 @@ export function DatabaseTableToolbar<TData>({
     };
 
     return (
-        <div className="flex items-center justify-between">
-            <div className="flex flex-1 items-center space-x-2">
-                {/* Search */}
-                <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search records..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-8 h-9 w-[200px] lg:w-[300px]"
-                    />
+        <TooltipProvider>
+            <div className="flex items-center justify-between p-4 border-b">
+                {/* Left side - Search only */}
+                <div className="flex items-center">
+                    <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search records..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-8 h-9 w-[200px] lg:w-[300px]"
+                        />
+                    </div>
                 </div>
 
-                {/* Filters */}
-                {selectProperties.map((property) => (
-                    <DataTableFacetedFilter
-                        key={property.id}
-                        column={table.getColumn(property.id)}
-                        title={property.name}
-                        options={
-                            property.selectOptions?.map((option) => ({
-                                label: option.name,
-                                value: option.id,
-                            })) || []
-                        }
-                    />
-                ))}
+                {/* Right side - All other controls */}
+                <div className="flex items-center space-x-2">
+                    {/* Sort & Filter Management */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDialogOpen('manage-sorts')}
+                                disabled={!currentView}
+                                className="h-8 w-8 p-0"
+                            >
+                                <SortAsc className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Manage sorting rules</p>
+                        </TooltipContent>
+                    </Tooltip>
 
-                {/* Clear filters */}
-                {isFiltered && (
-                    <Button
-                        variant="ghost"
-                        onClick={() => table.resetColumnFilters()}
-                        className="h-8 px-2 lg:px-3"
-                    >
-                        Reset
-                        <X className="ml-2 h-4 w-4" />
-                    </Button>
-                )}
-            </div>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDialogOpen('manage-filters')}
+                                disabled={!currentView}
+                                className="h-8 w-8 p-0"
+                            >
+                                <Filter className="h-4 w-4" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Manage filter rules</p>
+                        </TooltipContent>
+                    </Tooltip>
 
-            <div className="flex items-center space-x-2">
-                {/* Sorting controls */}
-                <div className="flex items-center space-x-1">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSort('asc')}
-                        className="h-8 px-2"
-                    >
-                        <SortAsc className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSort('desc')}
-                        className="h-8 px-2"
-                    >
-                        <SortDesc className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={toggleFilters}
-                        className="h-8 px-2"
-                    >
-                        <Filter className="h-4 w-4" />
-                    </Button>
-                </div>
-
-                {/* Bulk actions for selected rows */}
-                {selectedRows.length > 0 && (
-                    <div className="flex items-center space-x-2 mr-4">
-                        <span className="text-sm text-muted-foreground">
-                            {selectedRows.length} selected
-                        </span>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleBulkEdit}
-                            disabled={!onRecordEdit}
-                        >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleBulkCopy}
-                        >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleBulkDelete}
-                            className="text-destructive hover:text-destructive"
-                        >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                        </Button>
+                    {/* Clear filters */}
+                    {isFiltered && (
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => table.resetColumnFilters()}
+                                    className="h-8 w-8 p-0"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Clear all filters</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                    {/* Bulk actions for selected rows */}
+                    {selectedRows.length > 0 && (
+                        <div className="flex items-center space-x-2 mr-4">
+                            <span className="text-sm text-muted-foreground">
+                                {selectedRows.length} selected
+                            </span>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleBulkEdit}
+                                        disabled={!onRecordEdit}
+                                        className="h-8 w-8 p-0"
+                                    >
+                                        <Edit className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Edit selected records</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleBulkCopy}
+                                        className="h-8 w-8 p-0"
+                                    >
+                                        <Copy className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Copy selected records</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={handleBulkDelete}
+                                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Delete selected records</p>
+                                </TooltipContent>
+                            </Tooltip>
                     </div>
                 )}
 
-                {/* Action buttons */}
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
+                    {/* Add Record Button */}
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => setDialogOpen('create-record')}
+                                className="h-8"
+                            >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Record
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>Create a new record</p>
+                        </TooltipContent>
+                    </Tooltip>
+
+                    {/* Action buttons */}
+                    <DropdownMenu>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>More actions</p>
+                            </TooltipContent>
+                        </Tooltip>
                     <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
@@ -236,11 +261,11 @@ export function DatabaseTableToolbar<TData>({
                             Import data
                         </DropdownMenuCheckboxItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem onClick={() => setOpen('create-property')} className={"px-4"}>
+                        <DropdownMenuCheckboxItem onClick={() => setDialogOpen('create-property')} className={"px-4"}>
                             <Plus className="h-4 w-4 mr-2" />
                             Add property
                         </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem onClick={() => setOpen('create-view')} className={"px-4"}>
+                        <DropdownMenuCheckboxItem onClick={() => setDialogOpen('create-view')} className={"px-4"}>
                             <Settings className="h-4 w-4 mr-2" />
                             Manage views
                         </DropdownMenuCheckboxItem>
@@ -255,6 +280,61 @@ export function DatabaseTableToolbar<TData>({
                     onViewUpdate={onViewUpdate}
                 />
             </div>
-        </div>
+
+            {/* Sort & Filter Management Dialogs */}
+            {/* Sort & Filter Management Dialogs */}
+            {currentView && (
+                <>
+                    <SortManager
+                        open={dialogOpen === 'manage-sorts'}
+                        onOpenChange={(isOpen) => setDialogOpen(isOpen ? 'manage-sorts' : null)}
+                        properties={properties}
+                        currentView={currentView}
+                        onSave={async (sorts) => {
+                            try {
+                                if (currentView && onViewUpdate) {
+                                    const updatedView = {
+                                        ...currentView,
+                                        sorts: sorts
+                                    };
+                                    await onViewUpdate(updatedView);
+                                    toast.success('Sorting updated');
+                                }
+                            } catch (error) {
+                                console.error('Failed to update sorting:', error);
+                                toast.error('Failed to update sorting');
+                                throw error; // Re-throw to keep dialog open
+                            }
+                        }}
+                    />
+
+                    <FilterManager
+                        open={dialogOpen === 'manage-filters'}
+                        onOpenChange={(isOpen) => setDialogOpen(isOpen ? 'manage-filters' : null)}
+                        properties={properties}
+                        currentView={currentView}
+                        onSave={async (filters) => {
+                            try {
+                                if (currentView && onViewUpdate) {
+                                    const updatedView = {
+                                        ...currentView,
+                                        filters: filters
+                                    };
+                                    await onViewUpdate(updatedView);
+                                    toast.success('Filters updated');
+                                }
+                            } catch (error) {
+                                console.error('Failed to update filters:', error);
+                                toast.error('Failed to update filters');
+                                throw error; // Re-throw to keep dialog open
+                            }
+                        }}
+                    />
+                </>
+            )}
+
+
+            </div>
+        </TooltipProvider>
     );
 }

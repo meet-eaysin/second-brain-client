@@ -30,8 +30,8 @@ export function DatabaseTableView({
     // Filter properties based on view's visible properties
     const visibleProperties = properties.filter(property => {
         if (property.hidden) return false;
-        if (view.visibleProperties && view.visibleProperties.length > 0) {
-            return view.visibleProperties.includes(property.id);
+        if (view?.visibleProperties && view.visibleProperties.length > 0) {
+            return view.visibleProperties?.includes(property.id) || false;
         }
         return property.isVisible !== false;
     });
@@ -132,7 +132,7 @@ export function DatabaseTableView({
             <DatabaseDataTable
                 columns={columns}
                 data={filteredRecords}
-                properties={visibleProperties}
+                properties={properties} // Pass all properties, not just visible ones
                 onRecordSelect={onRecordSelect}
                 onRecordEdit={onRecordEdit}
                 onRecordDelete={onRecordDelete}

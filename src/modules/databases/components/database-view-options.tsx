@@ -22,6 +22,8 @@ import {
     Calendar,
     List,
     Tags,
+    Eye,
+    EyeOff,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useDatabaseContext } from '../context/database-context';
@@ -54,9 +56,9 @@ export function DatabaseViewOptions<TData>({
     currentView,
     onViewUpdate,
 }: DatabaseViewOptionsProps<TData>) {
-    const { currentDatabase, setCurrentDatabase } = useDatabaseContext();
+    const { currentDatabase, currentView: contextCurrentView, setCurrentDatabase } = useDatabaseContext();
 
-    console.log("properties", properties);
+
     
     // Mutation hooks
     const updateViewMutation = useUpdateView();
@@ -72,8 +74,8 @@ export function DatabaseViewOptions<TData>({
         if (property.hidden) return false;
 
         // Check if property is visible in current view
-        if (currentView.visibleProperties && currentView.visibleProperties.length > 0) {
-            return currentView.visibleProperties.includes(propertyId);
+        if (currentView?.visibleProperties && currentView.visibleProperties.length > 0) {
+            return currentView.visibleProperties?.includes(propertyId) || false;
         }
 
         // Default to property's isVisible setting
@@ -90,26 +92,26 @@ export function DatabaseViewOptions<TData>({
 
     // Handle property visibility toggle
     const handlePropertyVisibilityToggle = async (propertyId: string, visible: boolean) => {
-        if (!currentDatabase?.id) {
-            toast.error('Database not found');
+        const activeView = currentView || contextCurrentView;
+        if (!currentDatabase?.id || !activeView?.id) {
+            console.error('Missing database or view for property visibility toggle');
+            toast.error('Database or view not found');
             return;
         }
 
         try {
             // Update view's visible properties
-            const currentVisibleProperties = currentView.visibleProperties || [];
+            const currentVisibleProperties = activeView?.visibleProperties || [];
             const updatedVisibleProperties = visible
                 ? [...currentVisibleProperties.filter(id => id !== propertyId), propertyId] // Remove duplicates and add
                 : currentVisibleProperties.filter(id => id !== propertyId); // Remove from list
 
-
-
             // Call API to update view using mutation hook
             const updatedDatabase = await updateViewMutation.mutateAsync({
                 databaseId: currentDatabase.id,
-                viewId: currentView.id,
+                viewId: activeView.id,
                 data: {
-                    ...currentView,
+                    ...activeView,
                     visibleProperties: updatedVisibleProperties
                 }
             });
@@ -182,20 +184,17 @@ export function DatabaseViewOptions<TData>({
     };
 
     // Separate properties into visible and hidden
-    const visibleProperties: DatabaseProperty[] = [];
-    const hiddenProperties: DatabaseProperty[] = [];
+    // Sort properties: visible first, then hidden, but keep all in one list
+    const sortedProperties = [...properties].sort((a, b) => {
+        const aVisible = getPropertyVisibility(a.id);
+        const bVisible = getPropertyVisibility(b.id);
 
-    properties.forEach(property => {
-        if (isGloballyHidden(property.id)) {
-            // Globally hidden properties go to hidden section
-            hiddenProperties.push(property);
-        } else if (getPropertyVisibility(property.id)) {
-            // Properties visible in current view go to visible section
-            visibleProperties.push(property);
-        } else {
-            // Properties hidden in current view (but not globally) go to hidden section
-            hiddenProperties.push(property);
-        }
+        // Visible properties first
+        if (aVisible && !bVisible) return -1;
+        if (!aVisible && bVisible) return 1;
+
+        // Within same visibility, sort by name
+        return a.name.localeCompare(b.name);
     });
 
     return (
@@ -209,7 +208,7 @@ export function DatabaseViewOptions<TData>({
                     <Settings2 className="mr-2 h-4 w-4" />
                     View Options
                     <Badge variant="secondary" className="ml-2 text-xs">
-                        {visibleProperties.length}
+                        {sortedProperties.filter(p => getPropertyVisibility(p.id)).length}
                     </Badge>
                 </Button>
             </DropdownMenuTrigger>
@@ -217,123 +216,65 @@ export function DatabaseViewOptions<TData>({
                 <DropdownMenuLabel className="flex items-center justify-between">
                     <span>Column Visibility</span>
                     <Badge variant="outline" className="text-xs">
-                        {visibleProperties.length} of {properties.length} visible
+                        {sortedProperties.filter(p => getPropertyVisibility(p.id)).length} of {properties.length} visible
                     </Badge>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
 
-                {/* Visible Properties */}
-                {visibleProperties.length > 0 && (
-                    <>
-                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                            Visible Properties
-                        </DropdownMenuLabel>
-                        {visibleProperties.map((property) => {
-                            const TypeIcon = PROPERTY_TYPE_ICONS[property.type] || Type;
-                            const isVisible = getPropertyVisibility(property.id);
-                            
-                            return (
-                                <DropdownMenuCheckboxItem
-                                    key={property.id}
-                                    checked={isVisible}
-                                    onCheckedChange={(checked) => 
-                                        handlePropertyVisibilityToggle(property.id, !!checked)
-                                    }
-                                    className="flex items-center gap-2"
-                                >
-                                    <TypeIcon className="h-3 w-3 text-muted-foreground" />
-                                    <span className="flex-1 truncate">{property.name}</span>
-                                    <div className="flex items-center gap-1">
-                                        {property.required && (
-                                            <Badge variant="secondary" className="text-xs px-1">
-                                                Required
-                                            </Badge>
-                                        )}
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 w-5 p-0"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handlePropertyFreezeToggle(property.id, !property.frozen);
-                                            }}
-                                            title={property.frozen ? 'Unfreeze property' : 'Freeze property'}
-                                        >
-                                            {property.frozen ? (
-                                                <Lock className="h-3 w-3 text-blue-500" />
-                                            ) : (
-                                                <Unlock className="h-3 w-3 text-muted-foreground hover:text-blue-500" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </DropdownMenuCheckboxItem>
-                            );
-                        })}
-                        <DropdownMenuSeparator />
-                    </>
-                )}
+                {/* All Properties */}
+                {sortedProperties.map((property) => {
+                    const TypeIcon = PROPERTY_TYPE_ICONS[property.type] || Type;
+                    const isVisible = getPropertyVisibility(property.id);
+                    const isGloballyHiddenProp = isGloballyHidden(property.id);
+                    const VisibilityIcon = isVisible ? Eye : EyeOff;
 
-                {/* Hidden Properties */}
-                {hiddenProperties.length > 0 && (
-                    <>
-                        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-                            Hidden Properties
-                        </DropdownMenuLabel>
-                        {hiddenProperties.map((property) => {
-                            const TypeIcon = PROPERTY_TYPE_ICONS[property.type] || Type;
-                            const isPropertyGloballyHidden = isGloballyHidden(property.id);
-
-                            return (
-                                <DropdownMenuCheckboxItem
-                                    key={property.id}
-                                    checked={false}
-                                    onCheckedChange={(checked) => {
-                                        if (isPropertyGloballyHidden) {
-                                            // If globally hidden, unhide globally
-                                            handleGlobalPropertyToggle(property.id, false);
-                                        } else {
-                                            // If only hidden in view, show in view
-                                            handlePropertyVisibilityToggle(property.id, !!checked);
-                                        }
-                                    }}
-                                    className="flex items-center gap-2 opacity-60"
-                                >
-                                    <TypeIcon className="h-3 w-3 text-muted-foreground" />
-                                    <span className="flex-1 truncate">{property.name}</span>
-                                    <div className="flex items-center gap-1">
-                                        {isPropertyGloballyHidden ? (
-                                            <Badge variant="destructive" className="text-xs px-1">
-                                                Hidden
-                                            </Badge>
+                    return (
+                        <DropdownMenuCheckboxItem
+                            key={property.id}
+                            checked={isVisible}
+                            onCheckedChange={(checked) =>
+                                handlePropertyVisibilityToggle(property.id, !!checked)
+                            }
+                            className="flex items-center gap-2"
+                            disabled={isGloballyHiddenProp}
+                        >
+                            <div className="flex items-center gap-2 flex-1">
+                                <TypeIcon className="h-3 w-3 text-muted-foreground" />
+                                <span className="flex-1 truncate">{property.name}</span>
+                                <div className="flex items-center gap-1">
+                                    <VisibilityIcon className={`h-3 w-3 ${isVisible ? 'text-green-600' : 'text-gray-400'}`} />
+                                    {property.required && (
+                                        <Badge variant="secondary" className="text-xs px-1">
+                                            Required
+                                        </Badge>
+                                    )}
+                                    {isGloballyHiddenProp && (
+                                        <Badge variant="destructive" className="text-xs px-1">
+                                            Hidden
+                                        </Badge>
+                                    )}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-5 w-5 p-0"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handlePropertyFreezeToggle(property.id, !property.frozen);
+                                        }}
+                                        title={property.frozen ? 'Unfreeze property' : 'Freeze property'}
+                                    >
+                                        {property.frozen ? (
+                                            <Lock className="h-3 w-3 text-blue-500" />
                                         ) : (
-                                            <Badge variant="outline" className="text-xs px-1">
-                                                View Hidden
-                                            </Badge>
+                                            <Unlock className="h-3 w-3 text-muted-foreground hover:text-blue-500" />
                                         )}
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-5 w-5 p-0"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                handlePropertyFreezeToggle(property.id, !property.frozen);
-                                            }}
-                                            title={property.frozen ? 'Unfreeze property' : 'Freeze property'}
-                                        >
-                                            {property.frozen ? (
-                                                <Lock className="h-3 w-3 text-blue-500" />
-                                            ) : (
-                                                <Unlock className="h-3 w-3 text-muted-foreground hover:text-blue-500" />
-                                            )}
-                                        </Button>
-                                    </div>
-                                </DropdownMenuCheckboxItem>
-                            );
-                        })}
-                    </>
-                )}
+                                    </Button>
+                                </div>
+                            </div>
+                        </DropdownMenuCheckboxItem>
+                    );
+                })}
 
                 {properties.length === 0 && (
                     <div className="p-4 text-center text-sm text-muted-foreground">

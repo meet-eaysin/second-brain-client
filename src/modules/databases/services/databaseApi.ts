@@ -82,25 +82,9 @@ export const databaseApi = {
 
             // Transform each database to match our interface
             const transformedDatabases: Database[] = databases.map((db: any) => {
-                console.log('🔄 Transforming database:', {
-                    _id: db._id,
-                    id: db.id,
-                    name: db.name,
-                    userId: db.userId,
-                    createdBy: db.createdBy,
-                    allKeys: Object.keys(db)
-                });
-
-                // The API response shows id field exists, so use it directly
-                const actualId = db.id || db._id || db.databaseId;
-                console.log('🆔 ID resolution:', {
-                    actualId,
-                    using: actualId === db.id ? 'id' : actualId === db._id ? '_id' : 'databaseId',
-                    originalId: db.id
-                });
 
                 return {
-                    id: actualId, // Use the resolved ID
+                    id: db.id, // Use the resolved ID
                 name: db.name,
                 description: db.description,
                 icon: db.icon,
@@ -113,7 +97,7 @@ export const databaseApi = {
                 tags: db.tags || [],
                 properties: db.properties || [],
                 views: (db.views || []).map((view: any) => ({
-                    id: view._id, // Use _id directly as id for views too
+                    id: view.id,
                     name: view.name,
                     type: view.type?.toUpperCase() || 'TABLE',
                     isDefault: view.isDefault,
@@ -171,7 +155,7 @@ export const databaseApi = {
 
         // Transform the API response to match our interface
         const transformedDatabase: Database = {
-            id: db._id || db.id, // Try _id first, then fall back to id
+            id: db.id,
             name: db.name,
             description: db.description,
             icon: db.icon,
@@ -184,7 +168,7 @@ export const databaseApi = {
             tags: db.tags || [],
             properties: db.properties || [],
             views: (db.views || []).map((view: any) => ({
-                id: view.id || view._id, // Try id first, then fall back to _id
+                id: view.id,
                 name: view.name,
                 type: view.type?.toUpperCase() || 'TABLE',
                 isDefault: view.isDefault,

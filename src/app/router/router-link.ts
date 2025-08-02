@@ -27,6 +27,12 @@ export const getDataTablesLink = () => "/app/data-tables";
 export const getUsersLink = () => "/app/users";
 export const getUserLink = (id: string) => `/app/users/${id}`;
 
+// Content Management routes
+export const getTagsLink = () => "/app/tags";
+export const getFilesLink = () => "/app/files";
+export const getNotificationsLink = () => "/app/notifications";
+export const getSettingsLink = () => "/app/settings";
+
 // Database routes
 export const getDatabasesLink = () => "/app/databases";
 export const getDatabaseLink = (id: string) => `/app/databases/${id}`;

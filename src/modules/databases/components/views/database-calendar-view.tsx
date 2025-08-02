@@ -22,7 +22,7 @@ export function DatabaseCalendarView({
     onRecordEdit,
     onRecordDelete,
 }: DatabaseCalendarViewProps) {
-    const { setOpen } = useDatabaseContext();
+    const { setDialogOpen } = useDatabaseContext();
     const [currentDate, setCurrentDate] = React.useState(new Date());
 
     // Find date properties for calendar display
@@ -97,7 +97,7 @@ export function DatabaseCalendarView({
                     <p className="text-muted-foreground mb-2">
                         Calendar view requires a DATE property
                     </p>
-                    <Button variant="outline" onClick={() => setOpen('create-property')}>
+                    <Button variant="outline" onClick={() => setDialogOpen('create-property')}>
                         Add DATE Property
                     </Button>
                 </div>
@@ -170,7 +170,7 @@ export function DatabaseCalendarView({
                                                 <div
                                                     key={record.id}
                                                     className="text-xs p-1 bg-primary/10 text-primary rounded cursor-pointer hover:bg-primary/20 truncate"
-                                                    onClick={() => onRecordSelect?.(record)}
+                                                    onClick={() => onRecordEdit?.(record)}
                                                     title={String(title)}
                                                 >
                                                     {String(title) || 'Untitled'}

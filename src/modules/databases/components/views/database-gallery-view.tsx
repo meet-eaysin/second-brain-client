@@ -10,6 +10,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Image } from 'lucide-react';
 import type { DatabaseView, DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import {
+    normalizeSelectValue,
+    getSelectOptionDisplay,
+    getSelectOptionId,
+    getSelectOptionColor
+} from '@/modules/databases/utils/selectOptionUtils';
 
 interface DatabaseGalleryViewProps {
     view: DatabaseView;
@@ -28,10 +34,10 @@ export function DatabaseGalleryView({
     onRecordEdit,
     onRecordDelete,
 }: DatabaseGalleryViewProps) {
-    // Filter properties based on view's visible properties
+    // Filter properties based on view's visible properties for display
     const visibleProperties = properties.filter(property => {
         if (property.hidden) return false;
-        if (view.visibleProperties && view.visibleProperties.length > 0) {
+        if (view?.visibleProperties && view.visibleProperties.length > 0) {
             return view.visibleProperties.includes(property.id);
         }
         return property.isVisible !== false;
@@ -56,10 +62,10 @@ export function DatabaseGalleryView({
         const imageUrl = imageProperty ? record.properties[imageProperty.id] : null;
 
         return (
-            <Card 
-                key={record.id} 
+            <Card
+                key={record.id}
                 className="group cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden"
-                onClick={() => onRecordSelect?.(record)}
+                onClick={() => onRecordEdit?.(record)}
             >
                 {/* Image Section */}
                 <div className="relative aspect-video bg-muted flex items-center justify-center overflow-hidden">
@@ -138,9 +144,26 @@ export function DatabaseGalleryView({
                                         </span>
                                         <div className="text-xs">
                                             {property.type === 'SELECT' ? (
-                                                <Badge variant="outline" className="text-xs">
-                                                    {property.selectOptions?.find(opt => opt.id === value)?.name || value}
+                                                <Badge
+                                                    variant="outline"
+                                                    className="text-xs text-white border-0"
+                                                    style={{ backgroundColor: getSelectOptionColor(normalizeSelectValue(value, false)) }}
+                                                >
+                                                    {getSelectOptionDisplay(normalizeSelectValue(value, false))}
                                                 </Badge>
+                                            ) : property.type === 'MULTI_SELECT' ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {normalizeSelectValue(value, true).map((option: any, index: number) => (
+                                                        <Badge
+                                                            key={getSelectOptionId(option) || index}
+                                                            variant="outline"
+                                                            className="text-xs text-white border-0"
+                                                            style={{ backgroundColor: getSelectOptionColor(option) }}
+                                                        >
+                                                            {getSelectOptionDisplay(option)}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
                                             ) : property.type === 'CHECKBOX' ? (
                                                 <Badge variant={value ? 'default' : 'secondary'} className="text-xs">
                                                     {value ? 'Yes' : 'No'}

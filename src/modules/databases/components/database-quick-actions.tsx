@@ -42,11 +42,11 @@ export const DatabaseQuickActions: React.FC<DatabaseQuickActionsProps> = ({
     className,
     variant = 'default'
 }) => {
-    const { setOpen } = useDatabaseContext();
+    const { setDialogOpen } = useDatabaseContext();
     const navigate = useNavigate();
 
     const handleCreateDatabase = () => {
-        setOpen('create-database');
+        setDialogOpen('create-database');
     };
 
     const handleCreateFromTemplate = () => {

@@ -14,7 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PropertyForm } from './property-form';
 import { DatabaseForm } from './database-form';
 import { DatabaseViewRenderer } from './database-view-renderer';
-import { useDatabase } from '../hooks/database-hooks';
+import { useDatabaseById } from '../hooks/database-hooks';
 import { useCreateRecord, useDeleteRecord, useRecords, useUpdateRecord } from '../hooks/record-hooks';
 import type { DatabaseProperty, DatabaseRecord, DatabaseView } from '@/types/database.types';
 import {
@@ -36,7 +36,7 @@ import { toast } from 'sonner';
 
 export default function DataTablePage() {
     const { databaseId } = useParams<{ databaseId: string }>();
-    const { data: database, isLoading: isLoadingDatabase } = useDatabase(databaseId!);
+    const { data: database, isLoading: isLoadingDatabase } = useDatabaseById(databaseId!);
     const { data: recordsData, isLoading: isLoadingRecords } = useRecords(databaseId!);
     const createRecordMutation = useCreateRecord();
     const updateRecordMutation = useUpdateRecord();
@@ -210,7 +210,7 @@ export default function DataTablePage() {
         if (!view || !view.visibleProperties || view.visibleProperties.length === 0) {
             return database.properties;
         }
-        return database.properties.filter(p => view.visibleProperties.includes(p.id));
+        return database.properties.filter(p => view.visibleProperties?.includes(p.id));
     };
 
     const viewTypeIcons: Record<string, React.ReactNode> = {

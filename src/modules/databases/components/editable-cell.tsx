@@ -20,6 +20,12 @@ import { CalendarIcon, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import type { DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import {
+    normalizeSelectValue,
+    getSelectOptionDisplay,
+    getSelectOptionId,
+    getSelectOptionColor
+} from '@/modules/databases/utils/selectOptionUtils';
 
 interface EditableCellProps {
     property: DatabaseProperty;
@@ -115,40 +121,34 @@ export function EditableCell({
                 return <span>{value ? format(new Date(value), 'MMM dd, yyyy') : '-'}</span>;
 
             case 'SELECT': {
-                if (typeof value === 'object' && value !== null && 'name' in value && 'color' in value) {
-                    const option = value as { id: string; name: string; color: string };
+                const normalizedValue = normalizeSelectValue(value, false);
+                if (typeof normalizedValue === 'object' && normalizedValue !== null) {
                     return (
-                        <Badge 
-                            className="text-white border-0" 
-                            style={{ backgroundColor: option.color }}
+                        <Badge
+                            className="text-white border-0"
+                            style={{ backgroundColor: getSelectOptionColor(normalizedValue) }}
                         >
-                            {option.name}
+                            {getSelectOptionDisplay(normalizedValue)}
                         </Badge>
                     );
                 }
-                return <Badge>{value}</Badge>;
+                return <Badge>{getSelectOptionDisplay(normalizedValue, String(value))}</Badge>;
             }
 
             case 'MULTI_SELECT': {
                 if (!Array.isArray(value)) return <span className="text-muted-foreground">-</span>;
+                const normalizedValues = normalizeSelectValue(value, true);
                 return (
                     <div className="flex flex-wrap gap-1">
-                        {value.map((option, index) => {
-                            if (typeof option === 'object' && option !== null && 'name' in option && 'color' in option) {
-                                const optionObj = option as { id: string; name: string; color: string };
-                                return (
-                                    <Badge
-                                        key={optionObj.id || index}
-                                        className="text-white border-0"
-                                        style={{ backgroundColor: optionObj.color }}
-                                    >
-                                        {optionObj.name}
-                                    </Badge>
-                                );
-                            }
+                        {normalizedValues.map((option: any, index: number) => {
+                            const optionId = getSelectOptionId(option) || index;
                             return (
-                                <Badge key={index} className="bg-blue-100 text-blue-800">
-                                    {option}
+                                <Badge
+                                    key={optionId}
+                                    className="text-white border-0"
+                                    style={{ backgroundColor: getSelectOptionColor(option) }}
+                                >
+                                    {getSelectOptionDisplay(option, String(option))}
                                 </Badge>
                             );
                         })}
@@ -259,13 +259,14 @@ export function EditableCell({
                 return (
                     <div className="flex items-center gap-1">
                         <Select
-                            value={typeof editValue === 'object' ? editValue?.id : editValue}
+                            value={getSelectOptionId(editValue) || ''}
                             onValueChange={(newValue) => {
                                 const selectedOption = property.selectOptions?.find(opt => opt.id === newValue);
                                 if (selectedOption) {
-                                    setEditValue(selectedOption);
+                                    const normalizedOption = normalizeSelectValue(selectedOption, false);
+                                    setEditValue(normalizedOption);
                                     setTimeout(() => {
-                                        onSave(record.id, property.id, selectedOption);
+                                        onSave(record.id, property.id, normalizedOption);
                                         setIsEditing(false);
                                     }, 100);
                                 }

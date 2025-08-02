@@ -228,7 +228,22 @@ export function DatabaseDataTable({
                                     key={row.id}
                                     data-state={row.getIsSelected() && 'selected'}
                                     className="cursor-pointer hover:bg-muted/50"
-                                    onClick={() => onRecordSelect?.(row.original)}
+                                    onClick={(e) => {
+                                        // Don't trigger row click if clicking on interactive elements
+                                        const target = e.target as HTMLElement;
+                                        if (
+                                            target.closest('button') ||
+                                            target.closest('[role="checkbox"]') ||
+                                            target.closest('[role="menuitem"]') ||
+                                            target.closest('[data-radix-collection-item]') ||
+                                            target.closest('[data-radix-dropdown-menu-trigger]') ||
+                                            target.closest('[data-radix-dropdown-menu-content]')
+                                        ) {
+                                            return;
+                                        }
+                                        // Click to edit - open edit dialog instead of view dialog
+                                        onRecordEdit?.(row.original);
+                                    }}
                                 >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>

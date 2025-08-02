@@ -35,6 +35,7 @@ import { CalendarIcon, Save, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type { DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import { normalizeSelectValue, getSelectOptionId } from '@/modules/databases/utils/selectOptionUtils';
 
 // Define proper types for form data
 type PropertyValue = string | number | boolean | Date | string[] | null | undefined;
@@ -116,6 +117,14 @@ export function RecordForm({
                 if (value !== undefined) {
                     if (property.type === 'DATE' && typeof value === 'string') {
                         formData[property.id] = new Date(value);
+                    } else if (property.type === 'SELECT') {
+                        // Normalize SELECT values and extract ID for form
+                        const normalizedValue = normalizeSelectValue(value, false);
+                        formData[property.id] = getSelectOptionId(normalizedValue) || '';
+                    } else if (property.type === 'MULTI_SELECT') {
+                        // Normalize MULTI_SELECT values and extract IDs for form
+                        const normalizedValues = normalizeSelectValue(value, true);
+                        formData[property.id] = normalizedValues.map((v: any) => getSelectOptionId(v)).filter(Boolean);
                     } else {
                         formData[property.id] = value;
                     }

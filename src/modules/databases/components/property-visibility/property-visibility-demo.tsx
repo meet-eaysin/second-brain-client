@@ -156,12 +156,12 @@ export function PropertyVisibilityDemo() {
         }));
     };
 
-    const visibleInView = properties.filter(p => 
-        p.isVisible !== false && currentView.visibleProperties.includes(p.id)
+    const visibleInView = properties.filter(p =>
+        p.isVisible !== false && currentView?.visibleProperties?.includes(p.id)
     );
     const globallyHidden = properties.filter(p => p.isVisible === false);
-    const viewHidden = properties.filter(p => 
-        p.isVisible !== false && !currentView.visibleProperties.includes(p.id)
+    const viewHidden = properties.filter(p =>
+        p.isVisible !== false && !currentView?.visibleProperties?.includes(p.id)
     );
 
     return (
@@ -273,9 +273,9 @@ export function PropertyVisibilityDemo() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                     {properties.map((property) => {
-                        const isVisible = property.isVisible !== false && currentView.visibleProperties.includes(property.id);
+                        const isVisible = property.isVisible !== false && currentView?.visibleProperties?.includes(property.id);
                         const isGloballyHidden = property.isVisible === false;
-                        const isViewHidden = !isGloballyHidden && !currentView.visibleProperties.includes(property.id);
+                        const isViewHidden = !isGloballyHidden && !currentView?.visibleProperties?.includes(property.id);
 
                         return (
                             <PropertyToggle

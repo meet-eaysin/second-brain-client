@@ -11,6 +11,12 @@ import {
 import { MoreHorizontal, Plus, Edit, Trash2 } from 'lucide-react';
 import { useDatabaseContext } from '../../context/database-context';
 import type { DatabaseView, DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import {
+    normalizeSelectValue,
+    getSelectOptionDisplay,
+    getSelectOptionId,
+    getSelectOptionColor
+} from '@/modules/databases/utils/selectOptionUtils';
 
 interface DatabaseBoardViewProps {
     view: DatabaseView;
@@ -31,7 +37,7 @@ export function DatabaseBoardView({
     onRecordDelete,
     onRecordCreate,
 }: DatabaseBoardViewProps) {
-    const { setOpen } = useDatabaseContext();
+    const { setDialogOpen } = useDatabaseContext();
     // Find the grouping property (usually a SELECT property)
     const groupingProperty = properties.find(p => 
         p.type === 'SELECT' && view.visibleProperties?.includes(p.id)
@@ -97,10 +103,10 @@ export function DatabaseBoardView({
         ).slice(0, 3); // Show max 3 additional properties
 
         return (
-            <Card 
-                key={record.id} 
+            <Card
+                key={record.id}
                 className="mb-3 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => onRecordSelect?.(record)}
+                onClick={() => onRecordEdit?.(record)}
             >
                 <CardHeader className="pb-2">
                     <div className="flex items-start justify-between">
@@ -151,9 +157,26 @@ export function DatabaseBoardView({
                                     <div key={property.id} className="text-xs text-muted-foreground">
                                         <span className="font-medium">{property.name}:</span>{' '}
                                         {property.type === 'SELECT' ? (
-                                            <Badge variant="outline" className="text-xs">
-                                                {property.selectOptions?.find(opt => opt.id === value)?.name || value}
+                                            <Badge
+                                                variant="outline"
+                                                className="text-xs text-white border-0"
+                                                style={{ backgroundColor: getSelectOptionColor(normalizeSelectValue(value, false)) }}
+                                            >
+                                                {getSelectOptionDisplay(normalizeSelectValue(value, false))}
                                             </Badge>
+                                        ) : property.type === 'MULTI_SELECT' ? (
+                                            <div className="flex flex-wrap gap-1">
+                                                {normalizeSelectValue(value, true).map((option: any, index: number) => (
+                                                    <Badge
+                                                        key={getSelectOptionId(option) || index}
+                                                        variant="outline"
+                                                        className="text-xs text-white border-0"
+                                                        style={{ backgroundColor: getSelectOptionColor(option) }}
+                                                    >
+                                                        {getSelectOptionDisplay(option)}
+                                                    </Badge>
+                                                ))}
+                                            </div>
                                         ) : (
                                             <span>{String(value)}</span>
                                         )}
@@ -174,7 +197,7 @@ export function DatabaseBoardView({
                     <p className="text-muted-foreground mb-2">
                         Board view requires a SELECT property for grouping
                     </p>
-                    <Button variant="outline" onClick={() => setOpen('create-property')}>
+                    <Button variant="outline" onClick={() => setDialogOpen('create-property')}>
                         Add SELECT Property
                     </Button>
                 </div>

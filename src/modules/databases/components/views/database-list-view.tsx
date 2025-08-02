@@ -11,6 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreHorizontal, Edit, Trash2, Circle, CheckCircle } from 'lucide-react';
 import type { DatabaseView, DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import {
+    normalizeSelectValue,
+    getSelectOptionDisplay,
+    getSelectOptionId,
+    getSelectOptionColor
+} from '@/modules/databases/utils/selectOptionUtils';
 
 interface DatabaseListViewProps {
     view: DatabaseView;
@@ -31,10 +37,10 @@ export function DatabaseListView({
     onRecordDelete,
     onRecordUpdate,
 }: DatabaseListViewProps) {
-    // Filter properties based on view's visible properties
+    // Filter properties based on view's visible properties for display
     const visibleProperties = properties.filter(property => {
         if (property.hidden) return false;
-        if (view.visibleProperties && view.visibleProperties.length > 0) {
+        if (view?.visibleProperties && view.visibleProperties.length > 0) {
             return view.visibleProperties.includes(property.id);
         }
         return property.isVisible !== false;
@@ -65,38 +71,43 @@ export function DatabaseListView({
 
         switch (property.type) {
             case 'SELECT':
-                const option = property.selectOptions?.find(opt => opt.id === value);
-                return option ? (
-                    <Badge variant="outline" className="text-xs">
-                        <div 
+                const normalizedValue = normalizeSelectValue(value, false);
+                return (
+                    <Badge
+                        variant="outline"
+                        className="text-xs text-white border-0"
+                        style={{ backgroundColor: getSelectOptionColor(normalizedValue) }}
+                    >
+                        <div
                             className="w-2 h-2 rounded-full mr-1"
-                            style={{ backgroundColor: option.color }}
+                            style={{ backgroundColor: getSelectOptionColor(normalizedValue) }}
                         />
-                        {option.name}
+                        {getSelectOptionDisplay(normalizedValue)}
                     </Badge>
-                ) : (
-                    <Badge variant="outline" className="text-xs">{value}</Badge>
                 );
-            
+
             case 'MULTI_SELECT':
                 if (!Array.isArray(value)) return null;
+                const normalizedValues = normalizeSelectValue(value, true);
                 return (
                     <div className="flex flex-wrap gap-1">
-                        {value.slice(0, 2).map((id, index) => {
-                            const option = property.selectOptions?.find(opt => opt.id === id);
-                            return option ? (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                    <div 
-                                        className="w-2 h-2 rounded-full mr-1"
-                                        style={{ backgroundColor: option.color }}
-                                    />
-                                    {option.name}
-                                </Badge>
-                            ) : null;
-                        })}
-                        {value.length > 2 && (
+                        {normalizedValues.slice(0, 2).map((option: any, index: number) => (
+                            <Badge
+                                key={getSelectOptionId(option) || index}
+                                variant="outline"
+                                className="text-xs text-white border-0"
+                                style={{ backgroundColor: getSelectOptionColor(option) }}
+                            >
+                                <div
+                                    className="w-2 h-2 rounded-full mr-1"
+                                    style={{ backgroundColor: getSelectOptionColor(option) }}
+                                />
+                                {getSelectOptionDisplay(option)}
+                            </Badge>
+                        ))}
+                        {normalizedValues.length > 2 && (
                             <Badge variant="secondary" className="text-xs">
-                                +{value.length - 2}
+                                +{normalizedValues.length - 2}
                             </Badge>
                         )}
                     </div>
@@ -161,10 +172,10 @@ export function DatabaseListView({
         const isChecked = checkboxProperty ? Boolean(record.properties[checkboxProperty.id]) : false;
 
         return (
-            <Card 
-                key={record.id} 
+            <Card
+                key={record.id}
                 className="group cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-transparent hover:border-l-primary"
-                onClick={() => onRecordSelect?.(record)}
+                onClick={() => onRecordEdit?.(record)}
             >
                 <CardContent className="p-4">
                     <div className="flex items-center gap-3">

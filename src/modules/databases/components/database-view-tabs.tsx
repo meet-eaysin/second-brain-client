@@ -67,7 +67,7 @@ export function DatabaseViewTabs({
     onViewChange,
     onViewUpdate,
 }: DatabaseViewTabsProps) {
-    const { currentDatabase, setOpen, setCurrentView } = useDatabaseContext();
+    const { currentDatabase, setDialogOpen, setCurrentView } = useDatabaseContext();
     const deleteViewMutation = useDeleteView();
     const duplicateViewMutation = useDuplicateView();
 
@@ -80,12 +80,12 @@ export function DatabaseViewTabs({
     };
 
     const handleAddView = () => {
-        setOpen('create-view');
+        setDialogOpen('create-view');
     };
 
     const handleEditView = (view: DatabaseView) => {
         setCurrentView(view);
-        setOpen('edit-view');
+        setDialogOpen('edit-view');
     };
 
     const handleDuplicateView = async (view: DatabaseView) => {

@@ -313,8 +313,8 @@ function DeleteDatabaseDialog({ database, open, onOpenChange }: DeleteDatabaseDi
 
 export function DatabaseDialogs() {
     const {
-        open,
-        setOpen,
+        dialogOpen: open,
+        setDialogOpen: setOpen,
         currentDatabase,
         currentRecord,
         currentProperty,

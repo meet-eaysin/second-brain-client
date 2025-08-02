@@ -11,6 +11,12 @@ import {
 import { Clock, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { useDatabaseContext } from '../../context/database-context';
 import type { DatabaseView, DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import {
+    normalizeSelectValue,
+    getSelectOptionDisplay,
+    getSelectOptionId,
+    getSelectOptionColor
+} from '@/modules/databases/utils/selectOptionUtils';
 
 interface DatabaseTimelineViewProps {
     view: DatabaseView;
@@ -29,7 +35,7 @@ export function DatabaseTimelineView({
     onRecordEdit,
     onRecordDelete,
 }: DatabaseTimelineViewProps) {
-    const { setOpen } = useDatabaseContext();
+    const { setDialogOpen } = useDatabaseContext();
     // Find date properties for timeline display
     const dateProperties = properties.filter(p => p.type === 'DATE');
     const primaryDateProperty = dateProperties[0]; // Use first date property
@@ -61,12 +67,19 @@ export function DatabaseTimelineView({
 
     // Group records by month/year for better organization
     const groupedRecords = React.useMemo(() => {
+        if (!primaryDateProperty) return {};
+
         const groups: Record<string, DatabaseRecord[]> = {};
 
         sortedRecords.forEach(record => {
-            const date = new Date(String(record.properties[primaryDateProperty!.id]));
+            const dateValue = record.properties[primaryDateProperty.id];
+            if (!dateValue) return; // Skip records without date value
+
+            const date = new Date(String(dateValue));
+            if (isNaN(date.getTime())) return; // Skip invalid dates
+
             const groupKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
-            
+
             if (!groups[groupKey]) {
                 groups[groupKey] = [];
             }
@@ -94,8 +107,10 @@ export function DatabaseTimelineView({
     };
 
     const renderRecordItem = (record: DatabaseRecord, isLast: boolean) => {
+        if (!primaryDateProperty) return null;
+
         const title = titleProperty ? record.properties[titleProperty.id] : 'Untitled';
-        const startDate = record.properties[primaryDateProperty!.id];
+        const startDate = record.properties[primaryDateProperty.id];
         const endDate = endDateProperty ? record.properties[endDateProperty.id] : null;
 
         return (
@@ -114,7 +129,7 @@ export function DatabaseTimelineView({
                                 <div>
                                     <CardTitle 
                                         className="text-base font-medium cursor-pointer"
-                                        onClick={() => onRecordSelect?.(record)}
+                                        onClick={() => onRecordEdit?.(record)}
                                     >
                                         {title || 'Untitled'}
                                     </CardTitle>
@@ -173,9 +188,26 @@ export function DatabaseTimelineView({
                                                 </span>
                                                 <div className="text-sm">
                                                     {property.type === 'SELECT' ? (
-                                                        <Badge variant="outline" className="text-xs">
-                                                            {property.selectOptions?.find(opt => opt.id === value)?.name || value}
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="text-xs text-white border-0"
+                                                            style={{ backgroundColor: getSelectOptionColor(normalizeSelectValue(value, false)) }}
+                                                        >
+                                                            {getSelectOptionDisplay(normalizeSelectValue(value, false))}
                                                         </Badge>
+                                                    ) : property.type === 'MULTI_SELECT' ? (
+                                                        <div className="flex flex-wrap gap-1">
+                                                            {normalizeSelectValue(value, true).map((option: any, index: number) => (
+                                                                <Badge
+                                                                    key={getSelectOptionId(option) || index}
+                                                                    variant="outline"
+                                                                    className="text-xs text-white border-0"
+                                                                    style={{ backgroundColor: getSelectOptionColor(option) }}
+                                                                >
+                                                                    {getSelectOptionDisplay(option)}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
                                                     ) : property.type === 'CHECKBOX' ? (
                                                         <Badge variant={value ? 'default' : 'secondary'} className="text-xs">
                                                             {value ? 'Yes' : 'No'}
@@ -204,7 +236,7 @@ export function DatabaseTimelineView({
                     <p className="text-muted-foreground mb-2">
                         Timeline view requires a DATE property
                     </p>
-                    <Button variant="outline" onClick={() => setOpen('create-property')}>
+                    <Button variant="outline" onClick={() => setDialogOpen('create-property')}>
                         Add DATE Property
                     </Button>
                 </div>
@@ -247,12 +279,14 @@ export function DatabaseTimelineView({
             ))}
 
             {/* Legend */}
-            <div className="text-sm text-muted-foreground border-t pt-4">
-                Showing records based on <strong>{primaryDateProperty.name}</strong> property
-                {endDateProperty && (
-                    <span> with duration from <strong>{endDateProperty.name}</strong></span>
-                )}
-            </div>
+            {primaryDateProperty && (
+                <div className="text-sm text-muted-foreground border-t pt-4">
+                    Showing records based on <strong>{primaryDateProperty.name}</strong> property
+                    {endDateProperty && (
+                        <span> with duration from <strong>{endDateProperty.name}</strong></span>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

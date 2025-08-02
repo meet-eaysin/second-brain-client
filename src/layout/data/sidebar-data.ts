@@ -8,7 +8,8 @@ import {
     LucidePackage, LucideServer, LucideToolCase,
     LucideUserCog, Database as DatabaseIcon, Users, Shield, Brain,
     BookOpen, Search, Calendar, Archive, Tags,
-    Network, FileText, Bookmark
+    Network, FileText, Bookmark, File, Bell, Settings,
+    User, CreditCard, Palette, Monitor, Building2
 } from 'lucide-react'
 
 export const sidebarData = {
@@ -42,6 +43,7 @@ export const sidebarData = {
                     title: 'Dashboard',
                     url: '/app/dashboard',
                     icon: LucideLayoutDashboard,
+                    tooltip: 'View your workspace overview and analytics',
                 },
                 {
                     title: 'Databases',
@@ -53,6 +55,13 @@ export const sidebarData = {
                     title: 'Users',
                     url: '/app/users',
                     icon: Users,
+                    tooltip: 'Manage workspace members and user accounts',
+                },
+                {
+                    title: 'Notifications',
+                    url: '/app/notifications',
+                    icon: Bell,
+                    tooltip: 'View and manage your notifications',
                 }
             ],
         },
@@ -63,6 +72,7 @@ export const sidebarData = {
                     title: 'Knowledge Graph',
                     url: '/app/knowledge-graph',
                     icon: Network,
+                    tooltip: 'Visualize connections between your ideas and data',
                 },
                 {
                     title: 'Notes & Ideas',
@@ -104,17 +114,20 @@ export const sidebarData = {
                     title: 'Smart Search',
                     url: '/app/search',
                     icon: Search,
+                    tooltip: 'Search across all your databases and content',
                 },
                 {
                     title: 'AI Assistant',
                     url: '/app/ai-assistant',
                     icon: Brain,
                     badge: 'Upcoming',
+                    tooltip: 'Get AI-powered insights and assistance (coming soon)',
                 },
                 {
                     title: 'Templates',
                     url: '/app/templates',
                     icon: FileText,
+                    tooltip: 'Use pre-built database templates to get started quickly',
                 },
                 {
                     title: 'Calendar View',
@@ -125,11 +138,19 @@ export const sidebarData = {
                     title: 'Tags',
                     url: '/app/tags',
                     icon: Tags,
+                    tooltip: 'Create and manage tags to organize your content',
+                },
+                {
+                    title: 'Files',
+                    url: '/app/files',
+                    icon: File,
+                    tooltip: 'Upload and manage files and attachments',
                 },
                 {
                     title: 'Archive',
                     url: '/app/archive',
                     icon: Archive,
+                    tooltip: 'View archived databases and content',
                 },
             ],
         },
@@ -153,37 +174,37 @@ export const sidebarData = {
             items: [
                 {
                     title: 'Settings',
-                    icon: LucideServer,
+                    icon: Settings,
                     items: [
                         {
                             title: 'Profile',
-                            url: '/settings',
-                            icon: LucideUserCog,
+                            url: '/app/settings?tab=profile',
+                            icon: User,
                         },
                         {
                             title: 'Account',
-                            url: '/settings/account',
-                            icon: LucideToolCase,
+                            url: '/app/settings?tab=security',
+                            icon: Shield,
                         },
                         {
                             title: 'Appearance',
-                            url: '/settings/appearance',
-                            icon: LucidePackage,
+                            url: '/app/settings?tab=appearance',
+                            icon: Palette,
                         },
                         {
                             title: 'Notifications',
-                            url: '/settings/notifications',
-                            icon: LucideNavigation,
+                            url: '/app/settings?tab=notifications',
+                            icon: Bell,
                         },
                         {
                             title: 'Display',
-                            url: '/settings/display',
-                            icon: LucideDiameter,
+                            url: '/app/settings?tab=appearance',
+                            icon: Monitor,
                         },
                         {
-                            title: 'Data Tables',
-                            url: '/app/data-tables',
-                            icon: LucideCheckLine,
+                            title: 'Workspace',
+                            url: '/app/settings?tab=workspace',
+                            icon: Building2,
                         },
                     ],
                 },

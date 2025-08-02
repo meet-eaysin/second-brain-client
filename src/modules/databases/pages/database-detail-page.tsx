@@ -23,6 +23,7 @@ export default function DatabaseDetailPage() {
     const {
         setCurrentDatabase,
         setCurrentRecord,
+        setCurrentView,
         setOpen,
         searchQuery,
         filters,
@@ -57,6 +58,16 @@ export default function DatabaseDetailPage() {
             }
         }
     }, [database, setCurrentDatabase, setVisibleProperties, currentViewId]);
+
+    // Update current view in context when view changes
+    useEffect(() => {
+        if (database?.views && currentViewId) {
+            const view = database.views.find(v => v.id === currentViewId);
+            if (view) {
+                setCurrentView(view);
+            }
+        }
+    }, [database?.views, currentViewId, setCurrentView]);
 
     const records = recordsData?.data?.records || recordsData?.records || [];
 

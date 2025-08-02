@@ -150,10 +150,10 @@ export const usePropertyVisibilityState = (
         if (!currentView?.visibleProperties) {
             return properties.filter(prop => prop.isVisible !== false);
         }
-        
-        return properties.filter(prop => 
-            prop.isVisible !== false && 
-            currentView.visibleProperties.includes(prop.id)
+
+        return properties.filter(prop =>
+            prop.isVisible !== false &&
+            currentView?.visibleProperties?.includes(prop.id)
         );
     };
 
@@ -168,19 +168,19 @@ export const usePropertyVisibilityState = (
 
     const getViewHiddenProperties = () => {
         if (!currentView?.visibleProperties) return [];
-        
-        return properties.filter(prop => 
-            prop.isVisible !== false && 
-            !currentView.visibleProperties.includes(prop.id)
+
+        return properties.filter(prop =>
+            prop.isVisible !== false &&
+            !currentView?.visibleProperties?.includes(prop.id)
         );
     };
 
     const isPropertyVisible = (propertyId: string) => {
         const property = properties.find(p => p.id === propertyId);
         if (!property || property.isVisible === false) return false;
-        
+
         if (!currentView?.visibleProperties) return true;
-        return currentView.visibleProperties.includes(propertyId);
+        return currentView?.visibleProperties?.includes(propertyId) || false;
     };
 
     const isPropertyGloballyHidden = (propertyId: string) => {
@@ -191,9 +191,9 @@ export const usePropertyVisibilityState = (
     const isPropertyViewHidden = (propertyId: string) => {
         const property = properties.find(p => p.id === propertyId);
         if (!property || property.isVisible === false) return false;
-        
+
         if (!currentView?.visibleProperties) return false;
-        return !currentView.visibleProperties.includes(propertyId);
+        return !currentView?.visibleProperties?.includes(propertyId);
     };
 
     return {

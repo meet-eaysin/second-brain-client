@@ -48,6 +48,18 @@ export const DatabaseCategoriesPage = withLazyLoading(() =>
 export const UsersPage = withLazyLoading(() =>
     import('@/modules/users/pages/users-page')
 )
+export const TagsPage = withLazyLoading(() =>
+    import('@/modules/tags/pages/tags-page')
+)
+export const FilesPage = withLazyLoading(() =>
+    import('@/modules/files/pages/files-page')
+)
+export const NotificationsPage = withLazyLoading(() =>
+    import('@/modules/notifications/pages/notifications-page')
+)
+export const SettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/SettingsPage')
+)
 export const HomePage = withLazyLoading(() =>
     import('@/modules/home')
 )

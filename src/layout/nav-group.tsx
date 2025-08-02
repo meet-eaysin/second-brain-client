@@ -5,6 +5,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLocation, Link } from 'react-router-dom'
+import { TooltipWrapper } from '@/components/ui/tooltip-wrapper'
 
 interface NavItem {
     title: string
@@ -13,6 +14,7 @@ interface NavItem {
     badge?: string
     isDynamic?: boolean
     items?: NavItem[]
+    tooltip?: string
 }
 
 interface NavGroupProps {
@@ -42,24 +44,32 @@ const NavItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => {
     const hasChildren = item.items && item.items.length > 0
     
     if (hasChildren) {
+        const triggerContent = (
+            <Button
+                variant="ghost"
+                className={cn(
+                    "w-full justify-start gap-2 h-8 px-2 min-w-0",
+                    level > 0 && "ml-4"
+                )}
+            >
+                {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+                <span className="flex-1 text-left truncate">{item.title}</span>
+                {item.badge && <NavBadge>{item.badge}</NavBadge>}
+                <ChevronRight className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    isOpen && "rotate-90"
+                )} />
+            </Button>
+        );
+
         return (
             <Collapsible open={isOpen} onOpenChange={setIsOpen}>
                 <CollapsibleTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        className={cn(
-                            "w-full justify-start gap-2 h-8 px-2",
-                            level > 0 && "ml-4"
-                        )}
-                    >
-                        {item.icon && <item.icon className="h-4 w-4" />}
-                        <span className="flex-1 text-left">{item.title}</span>
-                        {item.badge && <NavBadge>{item.badge}</NavBadge>}
-                        <ChevronRight className={cn(
-                            "h-4 w-4 transition-transform",
-                            isOpen && "rotate-90"
-                        )} />
-                    </Button>
+                    {item.tooltip ? (
+                        <TooltipWrapper content={item.tooltip} side="right">
+                            {triggerContent}
+                        </TooltipWrapper>
+                    ) : triggerContent}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="space-y-1">
                     {item.items?.map((subItem, index) => (
@@ -70,22 +80,28 @@ const NavItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => {
         )
     }
     
-    return (
+    const buttonContent = (
         <Button
             variant={isActive ? "secondary" : "ghost"}
             className={cn(
-                "w-full justify-start gap-2 h-8 px-2",
+                "w-full justify-start gap-2 h-8 px-2 min-w-0",
                 level > 0 && "ml-4"
             )}
             asChild
         >
-            <Link to={item.url || '#'}>
-                {item.icon && <item.icon className="h-4 w-4" />}
-                <span className="flex-1 text-left">{item.title}</span>
+            <Link to={item.url || '#'} className="flex items-center gap-2 min-w-0">
+                {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+                <span className="flex-1 text-left truncate">{item.title}</span>
                 {item.badge && <NavBadge>{item.badge}</NavBadge>}
             </Link>
         </Button>
-    )
+    );
+
+    return item.tooltip ? (
+        <TooltipWrapper content={item.tooltip} side="right">
+            {buttonContent}
+        </TooltipWrapper>
+    ) : buttonContent;
 }
 
 export const NavGroup = ({ title, items }: NavGroupProps) => {
