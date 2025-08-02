@@ -9,7 +9,10 @@ import {
     LucideUserCog, Database as DatabaseIcon, Users, Shield, Brain,
     BookOpen, Search, Calendar, Archive, Tags,
     Network, FileText, Bookmark, File, Bell, Settings,
-    User, CreditCard, Palette, Monitor, Building2
+    User, CreditCard, Palette, Monitor, Building2,
+    CheckSquare, Target, Lightbulb, Heart, DollarSign,
+    TrendingUp, Zap, PenTool, Video, Smile, Plus,
+    Clock, Filter, BarChart3, Repeat, Star, Folder
 } from 'lucide-react'
 
 export const sidebarData = {
@@ -69,88 +72,152 @@ export const sidebarData = {
             title: 'Second Brain',
             items: [
                 {
-                    title: 'Knowledge Graph',
-                    url: '/app/knowledge-graph',
-                    icon: Network,
-                    tooltip: 'Visualize connections between your ideas and data',
+                    title: 'Dashboard',
+                    url: '/app/second-brain',
+                    icon: Brain,
+                    tooltip: 'Your Second Brain overview and today\'s focus',
                 },
                 {
-                    title: 'Notes & Ideas',
+                    title: 'Quick Capture',
+                    url: '/app/second-brain/capture',
+                    icon: Plus,
+                    tooltip: 'Quickly capture tasks, notes, and ideas',
+                },
+                {
+                    title: 'My Day',
+                    url: '/app/second-brain/my-day',
+                    icon: Clock,
+                    tooltip: 'Today\'s tasks, habits, and focus',
+                },
+                {
+                    title: 'Tasks',
+                    icon: CheckSquare,
+                    items: [
+                        {
+                            title: 'All Tasks',
+                            url: '/app/second-brain/tasks',
+                        },
+                        {
+                            title: 'Today',
+                            url: '/app/second-brain/tasks?view=today',
+                        },
+                        {
+                            title: 'Next Actions',
+                            url: '/app/second-brain/tasks?view=next-actions',
+                        },
+                        {
+                            title: 'Waiting',
+                            url: '/app/second-brain/tasks?view=waiting',
+                        },
+                        {
+                            title: 'Someday',
+                            url: '/app/second-brain/tasks?view=someday',
+                        },
+                    ],
+                },
+                {
+                    title: 'Projects',
+                    url: '/app/second-brain/projects',
+                    icon: Target,
+                    tooltip: 'Goal-oriented containers for tasks and notes',
+                },
+                {
+                    title: 'Notes',
                     icon: BookOpen,
                     items: [
                         {
                             title: 'All Notes',
-                            url: '/app/notes',
+                            url: '/app/second-brain/notes',
                         },
                         {
-                            title: 'Ideas',
-                            url: '/app/ideas',
+                            title: 'Meeting Notes',
+                            url: '/app/second-brain/notes?type=meeting',
                         },
                         {
-                            title: 'Quick Capture',
-                            url: '/app/capture',
+                            title: 'Research',
+                            url: '/app/second-brain/notes?type=research',
+                        },
+                        {
+                            title: 'Templates',
+                            url: '/app/second-brain/notes?type=template',
                         },
                     ],
                 },
                 {
-                    title: 'Collections',
-                    icon: Bookmark,
+                    title: 'People (CRM)',
+                    url: '/app/second-brain/people',
+                    icon: Users,
+                    tooltip: 'Personal and professional relationship manager',
+                },
+                {
+                    title: 'Goals',
+                    url: '/app/second-brain/goals',
+                    icon: Target,
+                    tooltip: 'Annual, quarterly, and monthly goals',
+                },
+                {
+                    title: 'Habits',
+                    url: '/app/second-brain/habits',
+                    icon: Repeat,
+                    tooltip: 'Daily and weekly habit tracking',
+                },
+                {
+                    title: 'Journal',
+                    url: '/app/second-brain/journal',
+                    icon: PenTool,
+                    tooltip: 'Daily reflections and thought tracking',
+                },
+                {
+                    title: 'Book Log',
+                    url: '/app/second-brain/books',
+                    icon: BookOpen,
+                    tooltip: 'Track reading, notes, and highlights',
+                },
+                {
+                    title: 'Content Hub',
+                    url: '/app/second-brain/content',
+                    icon: Video,
+                    tooltip: 'Plan, create, and publish content',
+                },
+                {
+                    title: 'Finances',
+                    url: '/app/second-brain/finances',
+                    icon: DollarSign,
+                    tooltip: 'Income, expenses, and invoices',
+                },
+                {
+                    title: 'Mood Tracker',
+                    url: '/app/second-brain/mood',
+                    icon: Smile,
+                    tooltip: 'Energy and mood monitoring',
+                },
+                {
+                    title: 'PARA System',
+                    icon: Folder,
                     items: [
                         {
-                            title: 'All Collections',
-                            url: '/app/collections',
+                            title: 'Projects',
+                            url: '/app/second-brain/para/projects',
                         },
                         {
-                            title: 'Favorites',
-                            url: '/app/favorites',
+                            title: 'Areas',
+                            url: '/app/second-brain/para/areas',
                         },
                         {
-                            title: 'Recent',
-                            url: '/app/recent',
+                            title: 'Resources',
+                            url: '/app/second-brain/para/resources',
+                        },
+                        {
+                            title: 'Archive',
+                            url: '/app/second-brain/para/archive',
                         },
                     ],
                 },
                 {
-                    title: 'Smart Search',
-                    url: '/app/search',
+                    title: 'Search',
+                    url: '/app/second-brain/search',
                     icon: Search,
-                    tooltip: 'Search across all your databases and content',
-                },
-                {
-                    title: 'AI Assistant',
-                    url: '/app/ai-assistant',
-                    icon: Brain,
-                    badge: 'Upcoming',
-                    tooltip: 'Get AI-powered insights and assistance (coming soon)',
-                },
-                {
-                    title: 'Templates',
-                    url: '/app/templates',
-                    icon: FileText,
-                    tooltip: 'Use pre-built database templates to get started quickly',
-                },
-                {
-                    title: 'Calendar View',
-                    url: '/app/calendar',
-                    icon: Calendar,
-                },
-                {
-                    title: 'Tags',
-                    url: '/app/tags',
-                    icon: Tags,
-                    tooltip: 'Create and manage tags to organize your content',
-                },
-                {
-                    title: 'Files',
-                    url: '/app/files',
-                    icon: File,
-                    tooltip: 'Upload and manage files and attachments',
-                },
-                {
-                    title: 'Archive',
-                    url: '/app/archive',
-                    icon: Archive,
-                    tooltip: 'View archived databases and content',
+                    tooltip: 'Search across all Second Brain modules',
                 },
             ],
         },
