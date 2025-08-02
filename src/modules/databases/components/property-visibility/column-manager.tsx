@@ -20,12 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
+// Tooltip imports removed - causing infinite loop with nested asChild
 import { PropertyToggle } from './property-toggle';
 import { usePropertyVisibilityState } from '../../hooks/usePropertyVisibility';
 import type { DatabaseProperty, DatabaseView } from '@/types/database.types';
@@ -65,13 +60,14 @@ export function ColumnManager({
         totalProperties,
     } = usePropertyVisibilityState(properties, currentView);
 
-    // Initialize selected properties when dialog opens
+    // Initialize selected properties only when dialog opens (not when visibleProperties change)
     React.useEffect(() => {
         if (isOpen) {
             const currentlyVisible = new Set(visibleProperties.map(p => p.id));
             setSelectedProperties(currentlyVisible);
         }
-    }, [isOpen, visibleProperties]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]); // Intentionally excluding visibleProperties to prevent infinite loop
 
     const handlePropertyToggle = (propertyId: string, checked: boolean) => {
         const newSelected = new Set(selectedProperties);
@@ -108,39 +104,31 @@ export function ColumnManager({
         setIsOpen(false);
     };
 
+    // Calculate hasChanges without causing infinite loops
     const hasChanges = useMemo(() => {
+        if (!isOpen) return false; // Don't calculate when dialog is closed
+
         const currentVisible = new Set(visibleProperties.map(p => p.id));
         if (currentVisible.size !== selectedProperties.size) return true;
-        
+
         for (const id of selectedProperties) {
             if (!currentVisible.has(id)) return true;
         }
         return false;
-    }, [visibleProperties, selectedProperties]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedProperties, isOpen]); // Only depend on selectedProperties and isOpen
 
     const renderTrigger = () => {
         if (trigger) return trigger;
 
         return (
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <Columns className="h-4 w-4" />
-                            <span className="hidden sm:inline">Columns</span>
-                            <Badge variant="secondary" className="ml-1">
-                                {visibleCount}/{totalProperties}
-                            </Badge>
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>Manage column visibility</p>
-                        <p className="text-xs text-muted-foreground">
-                            {visibleCount} of {totalProperties} columns visible
-                        </p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <Button variant="outline" size="sm" className="gap-2">
+                <Columns className="h-4 w-4" />
+                <span className="hidden sm:inline">Columns</span>
+                <Badge variant="secondary" className="ml-1">
+                    {visibleCount}/{totalProperties}
+                </Badge>
+            </Button>
         );
     };
 

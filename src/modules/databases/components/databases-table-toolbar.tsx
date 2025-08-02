@@ -146,7 +146,6 @@ export function DatabasesTableToolbar({
                 {/* Column visibility */}
                 <DataTableViewOptions table={table} />
 
-                {/* Create Database Button */}
                 <Button onClick={onCreateDatabase} size="sm" className="h-8">
                     <Plus className="mr-2 h-4 w-4" />
                     New Database

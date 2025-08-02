@@ -4,7 +4,8 @@ import {
     useUpdateProperty,
     useCreateRecord,
     useUpdateRecord,
-    useAddView
+    useAddView,
+    useUpdateView
 } from '../services/databaseQueries';
 import { RecordForm } from './record-form';
 import {
@@ -318,9 +319,11 @@ export function DatabaseDialogs() {
         currentDatabase,
         currentRecord,
         currentProperty,
+        currentView,
         setCurrentDatabase,
         setCurrentProperty,
-        setCurrentRecord
+        setCurrentRecord,
+        setCurrentView
     } = useDatabaseContext();
 
     // Mutation hooks
@@ -329,6 +332,7 @@ export function DatabaseDialogs() {
     const createRecordMutation = useCreateRecord();
     const updateRecordMutation = useUpdateRecord();
     const addViewMutation = useAddView();
+    const updateViewMutation = useUpdateView();
 
     return (
         <>
@@ -455,7 +459,7 @@ export function DatabaseDialogs() {
                 isLoading={createRecordMutation.isPending || updateRecordMutation.isPending}
             />
 
-            {/* View Form */}
+            {/* Create View Form */}
             <ViewForm
                 open={open === 'create-view'}
                 onOpenChange={(isOpen) => {
@@ -464,6 +468,7 @@ export function DatabaseDialogs() {
                     }
                 }}
                 properties={currentDatabase?.properties || []}
+                mode="create"
                 onSubmit={async (viewData) => {
                     if (!currentDatabase?.id) {
                         toast.error('Database is still loading. Please wait a moment and try again.');
@@ -482,6 +487,41 @@ export function DatabaseDialogs() {
                         setOpen(null);
                     } catch (error: any) {
                         console.error('View creation failed:', error);
+                        // Error handling is done by the mutation hook
+                    }
+                }}
+            />
+
+            {/* Edit View Form */}
+            <ViewForm
+                open={open === 'edit-view'}
+                onOpenChange={(isOpen) => {
+                    if (!isOpen) {
+                        setOpen(null);
+                        setCurrentView(null);
+                    }
+                }}
+                properties={currentDatabase?.properties || []}
+                view={currentView}
+                mode="edit"
+                onSubmit={async (viewData) => {
+                    if (!currentDatabase?.id || !currentView?.id) {
+                        toast.error('Database or view is still loading. Please wait a moment and try again.');
+                        return;
+                    }
+
+                    try {
+                        // Update view using mutation hook
+                        await updateViewMutation.mutateAsync({
+                            databaseId: currentDatabase.id,
+                            viewId: currentView.id,
+                            data: viewData
+                        });
+
+                        setOpen(null);
+                        setCurrentView(null);
+                    } catch (error: any) {
+                        console.error('View update failed:', error);
                         // Error handling is done by the mutation hook
                     }
                 }}

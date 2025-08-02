@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ interface ViewFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     properties: DatabaseProperty[];
+    view?: DatabaseView | null; // For edit mode
+    mode?: 'create' | 'edit';
     onSubmit?: (viewData: CreateViewRequest) => Promise<void>;
 }
 
@@ -56,15 +58,42 @@ const viewTypes: { value: ViewType; label: string; icon: React.ReactNode; descri
     },
 ];
 
-export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormProps) {
+export function ViewForm({ open, onOpenChange, properties, view, mode = 'create', onSubmit }: ViewFormProps) {
     const [formData, setFormData] = useState<CreateViewRequest>({
-        name: '',
+        name: 'Table', // Auto-fill with default view type
         type: 'TABLE',
         isDefault: false,
         visibleProperties: properties.map(p => p.id),
         filters: [],
         sorts: []
     });
+
+    // Reset form when dialog opens or view changes
+    useEffect(() => {
+        if (open) {
+            if (mode === 'edit' && view) {
+                // Pre-fill form with existing view data
+                setFormData({
+                    name: view.name,
+                    type: view.type,
+                    isDefault: view.isDefault,
+                    visibleProperties: view.visibleProperties || properties.map(p => p.id),
+                    filters: view.filters || [],
+                    sorts: view.sorts || []
+                });
+            } else {
+                // Reset to default for create mode
+                setFormData({
+                    name: 'Table',
+                    type: 'TABLE',
+                    isDefault: false,
+                    visibleProperties: properties.map(p => p.id),
+                    filters: [],
+                    sorts: []
+                });
+            }
+        }
+    }, [open, properties, view, mode]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -89,9 +118,9 @@ export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormP
             // Only close and reset form if submission was successful
             onOpenChange(false);
 
-            // Reset form
+            // Reset form with default view type name
             setFormData({
-                name: '',
+                name: 'Table', // Auto-fill with default view type
                 type: 'TABLE',
                 isDefault: false,
                 visibleProperties: properties.map(p => p.id),
@@ -113,13 +142,38 @@ export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormP
         }));
     };
 
+    const handleViewTypeChange = (newViewType: ViewType) => {
+        const viewTypeLabel = viewTypes.find(vt => vt.value === newViewType)?.label || newViewType;
+
+        setFormData(prev => {
+            // Auto-fill name if it's empty or contains a previous view type name
+            const shouldAutoFillName = !prev.name.trim() ||
+                viewTypes.some(vt =>
+                    prev.name.toLowerCase() === vt.label.toLowerCase() ||
+                    prev.name.toLowerCase() === `${vt.label.toLowerCase()} view` ||
+                    prev.name.toLowerCase() === `my ${vt.label.toLowerCase()}` ||
+                    prev.name.toLowerCase() === `new ${vt.label.toLowerCase()}`
+                );
+
+            return {
+                ...prev,
+                type: newViewType,
+                // Use just the label (e.g., "Timeline", "Board") for cleaner names
+                name: shouldAutoFillName ? viewTypeLabel : prev.name
+            };
+        });
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Create New View</DialogTitle>
+                    <DialogTitle>{mode === 'edit' ? 'Edit View' : 'Create New View'}</DialogTitle>
                     <DialogDescription>
-                        Create a new view to organize and display your data in different ways.
+                        {mode === 'edit'
+                            ? 'Modify the view settings to change how your data is displayed.'
+                            : 'Create a new view to organize and display your data in different ways.'
+                        }
                     </DialogDescription>
                 </DialogHeader>
 
@@ -148,7 +202,7 @@ export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormP
                                             ? 'border-primary bg-primary/5'
                                             : 'hover:border-muted-foreground/50'
                                     }`}
-                                    onClick={() => setFormData(prev => ({ ...prev, type: viewType.value }))}
+                                    onClick={() => handleViewTypeChange(viewType.value)}
                                 >
                                     <CardContent className="p-4">
                                         <div className="flex items-center gap-3">
@@ -280,7 +334,7 @@ export function ViewForm({ open, onOpenChange, properties, onSubmit }: ViewFormP
                             type="submit"
                             disabled={properties.length === 0 || (formData.visibleProperties || []).length === 0}
                         >
-                            Create View
+                            {mode === 'edit' ? 'Update View' : 'Create View'}
                         </Button>
                     </DialogFooter>
                 </form>

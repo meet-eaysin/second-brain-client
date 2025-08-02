@@ -167,7 +167,7 @@ export function DatabaseDataTable({
                 />
 
                 {/* Column Manager */}
-                {showPropertyVisibility && dbId && (
+                {/* {showPropertyVisibility && dbId && (
                     <ColumnManager
                         properties={properties}
                         currentView={currentView}
@@ -183,7 +183,7 @@ export function DatabaseDataTable({
                             hideNonRequiredMutation.isPending
                         }
                     />
-                )}
+                )} */}
             </div>
 
             {/* Hidden Properties Panel */}

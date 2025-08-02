@@ -15,6 +15,7 @@ import {
     Hash,
     Calendar,
     CheckSquare,
+    ArrowDownUp,
     List,
     Tags
 } from 'lucide-react';
@@ -129,10 +130,10 @@ export function SortManager({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-6xl w-[95vw] max-h-[85vh] overflow-y-auto overflow-x-hidden">
+            <DialogContent className="max-w-6xl w-[95vw] max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <SortAsc className="h-5 w-5" />
+                        <ArrowDownUp className="h-5 w-5" />
                         Manage Sorting
                     </DialogTitle>
                     <DialogDescription>
@@ -145,24 +146,20 @@ export function SortManager({
                         <div className="space-y-3">
                             {sorts.map((sort, index) => {
                                 const property = properties.find(p => p.id === sort.propertyId);
-                                const IconComponent = getPropertyIcon(sort.propertyId);
                                 return (
                                     <Card key={index} className="p-3">
-                                        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-                                            <div className="flex items-center gap-2 shrink-0">
+                                        <div className="flex flex-row gap-3 xl:flex-row xl:items-center">
+                                            <div className="flex items-center gap-1 shrink-0">
                                                 <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                                                <Badge variant="outline" className="text-xs">
-                                                    {index + 1}
-                                                </Badge>
                                             </div>
 
-                                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                <IconComponent className="h-4 w-4 text-muted-foreground shrink-0" />
+                                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                                                {/* <IconComponent className="h-4 w-4 text-muted-foreground shrink-0" /> */}
                                                 <Select
                                                     value={sort.propertyId}
                                                     onValueChange={(value) => updateSort(index, 'propertyId', value)}
                                                 >
-                                                    <SelectTrigger className="w-full min-w-0">
+                                                    <SelectTrigger className="">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -184,32 +181,32 @@ export function SortManager({
                                                 </Select>
                                             </div>
 
-                                            <div className="w-full xl:w-auto xl:min-w-[140px]">
+                                            <div className="xl:w-auto xl:min-w-[140px]">
                                                 <Select
                                                     value={sort.direction}
                                                     onValueChange={(value) => updateSort(index, 'direction', value as 'asc' | 'desc')}
                                                 >
-                                                    <SelectTrigger className="w-full">
+                                                    <SelectTrigger className="">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="asc">
                                                             <div className="flex items-center gap-2">
                                                                 <ArrowUp className="h-4 w-4" />
-                                                                Ascending
+                                                                Asc
                                                             </div>
                                                         </SelectItem>
                                                         <SelectItem value="desc">
                                                             <div className="flex items-center gap-2">
                                                                 <ArrowDown className="h-4 w-4" />
-                                                                Descending
+                                                                Desc
                                                             </div>
                                                         </SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </div>
 
-                                            <div className="flex items-center gap-1 shrink-0">
+                                            <div className="flex items-center shrink-0">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"

@@ -262,17 +262,7 @@ export const databaseApi = {
         return response.data.data;
     },
 
-    updateView: async (
-        databaseId: string,
-        viewId: string,
-        data: UpdateViewRequest
-    ): Promise<Database> => {
-        const response = await apiClient.put<ApiResponse<Database>>(
-            API_ENDPOINTS.DATABASES.VIEW(databaseId, viewId),
-            data
-        );
-        return response.data.data;
-    },
+
 
     deleteView: async (databaseId: string, viewId: string): Promise<Database> => {
         const response = await apiClient.delete<ApiResponse<Database>>(

@@ -6,12 +6,13 @@ import { ThemeSwitch } from '@/components/theme-switch';
 import { Header } from '@/layout/header';
 import { Main } from '@/layout/main';
 import { Button } from '@/components/ui/button';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { ChevronLeft, Lock } from 'lucide-react';
 import { DatabaseViewTabs } from '../components/database-view-tabs';
 import { DatabaseViewRenderer } from '../components/database-view-renderer';
 import { DatabaseDialogs } from '../components/database-dialogs';
 import { DatabasePrimaryButtons } from '../components/database-primary-buttons';
-import { useDatabase, useRecords, useUpdateRecord } from '../services/databaseQueries';
+import { useDatabase, useRecords, useUpdateRecord, useDeleteRecord } from '../services/databaseQueries';
 import { useDatabaseContext } from '../context/database-context';
 import type { DatabaseRecord } from '@/types/database.types';
 
@@ -19,6 +20,10 @@ export default function DatabaseDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const [currentViewId, setCurrentViewId] = useState<string | undefined>();
+
+    // Confirmation dialog state
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [recordToDelete, setRecordToDelete] = useState<string | null>(null);
 
     const {
         setCurrentDatabase,
@@ -39,6 +44,7 @@ export default function DatabaseDetailPage() {
         sorts: JSON.stringify(sorts),
     });
     const updateRecordMutation = useUpdateRecord();
+    const deleteRecordMutation = useDeleteRecord();
 
     // Set current database when data loads
     useEffect(() => {
@@ -95,8 +101,23 @@ export default function DatabaseDetailPage() {
     };
 
     const handleRecordDelete = (recordId: string) => {
-        // Handle record deletion
-        console.log('Delete record:', recordId);
+        setRecordToDelete(recordId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteRecord = async () => {
+        if (!id || !recordToDelete) return;
+
+        try {
+            await deleteRecordMutation.mutateAsync({
+                databaseId: id,
+                recordId: recordToDelete,
+            });
+        } catch (error) {
+            console.error('Failed to delete record:', error);
+        } finally {
+            setRecordToDelete(null);
+        }
     };
 
     const handleRecordCreate = (groupValue?: string) => {
@@ -213,6 +234,17 @@ export default function DatabaseDetailPage() {
             </Main>
 
             <DatabaseDialogs />
+
+            {/* Delete Record Confirmation Dialog */}
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                onOpenChange={setDeleteConfirmOpen}
+                title="Delete Record"
+                desc="Are you sure you want to delete this record? This action cannot be undone."
+                confirmText="Delete"
+                destructive={true}
+                handleConfirm={confirmDeleteRecord}
+            />
         </>
     );
 }

@@ -71,7 +71,15 @@ export const useDeleteProperty = () => {
             return propertyApi.deleteProperty(databaseId, propertyId);
         },
         onSuccess: (_, { databaseId }) => {
+            // Invalidate database detail to update properties list
             queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.detail(databaseId) });
+
+            // Invalidate database lists to update any cached database info
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
+
+            // Invalidate records list since table structure changed
+            queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.recordsList(databaseId, {}) });
+
             toast.success('Property deleted successfully');
         },
         onError: (error: AxiosError<ApiResponse>) => {

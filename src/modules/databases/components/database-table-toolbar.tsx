@@ -16,8 +16,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
     Plus,
     Search,
-    Filter,
-    SortAsc,
+    ArrowDownUp,
+    ListFilter,
     MoreHorizontal,
     Edit,
     Trash2,
@@ -94,23 +94,31 @@ export function DatabaseTableToolbar<TData>({
 
     return (
         <TooltipProvider>
-            <div className="flex items-center justify-between p-4 border-b">
-                {/* Left side - Search only */}
-                <div className="flex items-center">
-                    <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search records..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-8 h-9 w-[200px] lg:w-[300px]"
-                        />
-                    </div>
+            <div className="flex items-center justify-between py-4 pe-2 border-b bg-background w-full">
+                {/* Left side - Search bar ONLY */}
+                <div className="relative flex-shrink-0">
+                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Search records..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8 h-9 w-[200px] lg:w-[300px]"
+                    />
+                    {searchQuery && (
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-1 top-1 h-7 w-7 p-0 hover:bg-muted"
+                        >
+                            <X className="h-3 w-3" />
+                        </Button>
+                    )}
                 </div>
 
-                {/* Right side - All other controls */}
-                <div className="flex items-center space-x-2">
-                    {/* Sort & Filter Management */}
+                {/* Right side - ALL other controls (Sort, Filter, Actions, View Options) */}
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                    {/* Sort & Filter Controls */}
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <Button
@@ -120,7 +128,7 @@ export function DatabaseTableToolbar<TData>({
                                 disabled={!currentView}
                                 className="h-8 w-8 p-0"
                             >
-                                <SortAsc className="h-4 w-4" />
+                                <ArrowDownUp className="h-4 w-4" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -137,7 +145,7 @@ export function DatabaseTableToolbar<TData>({
                                 disabled={!currentView}
                                 className="h-8 w-8 p-0"
                             >
-                                <Filter className="h-4 w-4" />
+                                <ListFilter className="h-4 w-4" />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -164,8 +172,8 @@ export function DatabaseTableToolbar<TData>({
                     )}
                     {/* Bulk actions for selected rows */}
                     {selectedRows.length > 0 && (
-                        <div className="flex items-center space-x-2 mr-4">
-                            <span className="text-sm text-muted-foreground">
+                        <>
+                            <span className="text-sm text-muted-foreground font-medium">
                                 {selectedRows.length} selected
                             </span>
                             <Tooltip>
@@ -214,26 +222,8 @@ export function DatabaseTableToolbar<TData>({
                                     <p>Delete selected records</p>
                                 </TooltipContent>
                             </Tooltip>
-                    </div>
-                )}
-
-                    {/* Add Record Button */}
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => setDialogOpen('create-record')}
-                                className="h-8"
-                            >
-                                <Plus className="h-4 w-4 mr-2" />
-                                Add Record
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>Create a new record</p>
-                        </TooltipContent>
-                    </Tooltip>
+                        </>
+                    )}
 
                     {/* Action buttons */}
                     <DropdownMenu>
@@ -249,39 +239,38 @@ export function DatabaseTableToolbar<TData>({
                                 <p>More actions</p>
                             </TooltipContent>
                         </Tooltip>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem onClick={handleExport} className={"px-4"}>
-                            <Download className="h-4 w-4 mr-2" />
-                            Export data
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem onClick={handleImport} className={"px-4"}>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Import data
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuCheckboxItem onClick={() => setDialogOpen('create-property')} className={"px-4"}>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add property
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem onClick={() => setDialogOpen('create-view')} className={"px-4"}>
-                            <Settings className="h-4 w-4 mr-2" />
-                            Manage views
-                        </DropdownMenuCheckboxItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuCheckboxItem onClick={handleExport} className={"px-4"}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Export data
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem onClick={handleImport} className={"px-4"}>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Import data
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuCheckboxItem onClick={() => setDialogOpen('create-property')} className={"px-4"}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add property
+                            </DropdownMenuCheckboxItem>
+                            <DropdownMenuCheckboxItem onClick={() => setDialogOpen('create-view')} className={"px-4"}>
+                                <Settings className="h-4 w-4 mr-2" />
+                                Manage views
+                            </DropdownMenuCheckboxItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
-                {/* View options */}
-                <DatabaseViewOptions
-                    table={table}
-                    properties={properties}
-                    currentView={currentView}
-                    onViewUpdate={onViewUpdate}
-                />
-            </div>
+                    {/* DatabaseViewOptions - part of the right side group */}
+                    <DatabaseViewOptions
+                        table={table}
+                        properties={properties}
+                        currentView={currentView}
+                        onViewUpdate={onViewUpdate}
+                    />
+                </div>
 
-            {/* Sort & Filter Management Dialogs */}
             {/* Sort & Filter Management Dialogs */}
             {currentView && (
                 <>

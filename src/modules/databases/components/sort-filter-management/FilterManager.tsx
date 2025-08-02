@@ -14,6 +14,7 @@ import {
     Hash,
     Calendar,
     CheckSquare,
+    ListFilter,
     List,
     Tags,
     Mail,
@@ -204,7 +205,7 @@ export function FilterManager({
                         value={filter.value}
                         onValueChange={(value) => updateFilter(index, 'value', value)}
                     >
-                        <SelectTrigger className="w-48">
+                        <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select option..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -248,7 +249,7 @@ export function FilterManager({
                         value={filter.value}
                         onChange={(e) => updateFilter(index, 'value', e.target.value)}
                         placeholder="Enter number..."
-                        className="w-48"
+                        className="w-full"
                     />
                 );
 
@@ -258,7 +259,7 @@ export function FilterManager({
                         type="date"
                         value={filter.value}
                         onChange={(e) => updateFilter(index, 'value', e.target.value)}
-                        className="w-48"
+                        className="w-full"
                     />
                 );
 
@@ -268,7 +269,7 @@ export function FilterManager({
                         value={filter.value}
                         onChange={(e) => updateFilter(index, 'value', e.target.value)}
                         placeholder="Enter value..."
-                        className="w-48"
+                        className="w-full"
                     />
                 );
         }
@@ -276,10 +277,10 @@ export function FilterManager({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl w-[95vw] max-h-[80vh] overflow-y-auto overflow-x-hidden">
+            <DialogContent className="max-w-6xl w-[95vw] max-h-[85vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Filter className="h-5 w-5" />
+                        <ListFilter className="h-5 w-5" />
                         Manage Filters
                     </DialogTitle>
                     <DialogDescription>
@@ -299,7 +300,7 @@ export function FilterManager({
 
                                 return (
                                     <Card key={index} className="p-4">
-                                        <div className="flex items-start gap-3 flex-wrap xl:flex-nowrap">
+                                        <div className="flex items-center gap-4">
                                             <div className="flex items-center gap-2">
                                                 <Badge variant="outline" className="text-xs">
                                                     {index + 1}
@@ -307,12 +308,12 @@ export function FilterManager({
                                                 <IconComponent className="h-4 w-4 text-muted-foreground" />
                                             </div>
 
-                                            <div className="flex items-center gap-2 flex-wrap xl:flex-nowrap min-w-0 flex-1">
+                                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 flex-1 min-w-0">
                                                 <Select
                                                     value={filter.propertyId}
                                                     onValueChange={(value) => updateFilter(index, 'propertyId', value)}
                                                 >
-                                                    <SelectTrigger className="w-full min-w-[180px] max-w-[250px]">
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -334,7 +335,7 @@ export function FilterManager({
                                                     value={filter.operator}
                                                     onValueChange={(value) => updateFilter(index, 'operator', value)}
                                                 >
-                                                    <SelectTrigger className="w-48">
+                                                    <SelectTrigger className="w-full">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>

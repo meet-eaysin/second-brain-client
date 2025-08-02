@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,6 +14,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import {
     Table,
     Kanban,
@@ -71,6 +72,10 @@ export function DatabaseViewTabs({
     const deleteViewMutation = useDeleteView();
     const duplicateViewMutation = useDuplicateView();
 
+    // Confirmation dialog state
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [viewToDelete, setViewToDelete] = useState<DatabaseView | null>(null);
+
     // Get current view or default to first view
     const activeViewId = currentViewId || views.find(v => v.isDefault)?.id || views[0]?.id;
     const activeView = views.find(v => v.id === activeViewId) || views[0];
@@ -105,7 +110,7 @@ export function DatabaseViewTabs({
         }
     };
 
-    const handleDeleteView = async (view: DatabaseView) => {
+    const handleDeleteView = (view: DatabaseView) => {
         if (!currentDatabase?.id) return;
         if (views.length <= 1) {
             toast.error('Cannot delete the last view');
@@ -116,22 +121,32 @@ export function DatabaseViewTabs({
             return;
         }
 
+        // Show confirmation dialog
+        setViewToDelete(view);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteView = async () => {
+        if (!currentDatabase?.id || !viewToDelete) return;
+
         try {
             await deleteViewMutation.mutateAsync({
                 databaseId: currentDatabase.id,
-                viewId: view.id,
+                viewId: viewToDelete.id,
             });
             onViewUpdate?.();
-            
+
             // Switch to default view if current view was deleted
-            if (view.id === activeViewId) {
+            if (viewToDelete.id === activeViewId) {
                 const defaultView = views.find(v => v.isDefault) || views[0];
-                if (defaultView && defaultView.id !== view.id) {
+                if (defaultView && defaultView.id !== viewToDelete.id) {
                     handleViewChange(defaultView.id);
                 }
             }
         } catch (error) {
             console.error('Failed to delete view:', error);
+        } finally {
+            setViewToDelete(null);
         }
     };
 
@@ -150,9 +165,10 @@ export function DatabaseViewTabs({
     }
 
     return (
-        <div className="border-b">
-            <div className="flex items-center justify-between">
-                <Tabs value={activeViewId} onValueChange={handleViewChange} className="flex-1">
+        <>
+            <div className="border-b">
+                <div className="flex items-center justify-between">
+                    <Tabs value={activeViewId} onValueChange={handleViewChange} className="flex-1">
                     <div className="flex items-center justify-between py-2">
                         <TabsList className="h-9">
                             {views.map((view) => {
@@ -216,7 +232,19 @@ export function DatabaseViewTabs({
                         </div>
                     </div>
                 </Tabs>
+                </div>
             </div>
-        </div>
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                open={deleteConfirmOpen}
+                onOpenChange={setDeleteConfirmOpen}
+                title="Delete View"
+                desc={`Are you sure you want to delete the view "${viewToDelete?.name}"? This action cannot be undone.`}
+                confirmText="Delete"
+                destructive={true}
+                handleConfirm={confirmDeleteView}
+            />
+        </>
     );
 }

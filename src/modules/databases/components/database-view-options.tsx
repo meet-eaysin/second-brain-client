@@ -242,7 +242,6 @@ export function DatabaseViewOptions<TData>({
                                 <TypeIcon className="h-3 w-3 text-muted-foreground" />
                                 <span className="flex-1 truncate">{property.name}</span>
                                 <div className="flex items-center gap-1">
-                                    <VisibilityIcon className={`h-3 w-3 ${isVisible ? 'text-green-600' : 'text-gray-400'}`} />
                                     {property.required && (
                                         <Badge variant="secondary" className="text-xs px-1">
                                             Required
