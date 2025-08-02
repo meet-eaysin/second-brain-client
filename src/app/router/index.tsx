@@ -12,6 +12,7 @@ import {
     getUsersLink,
     getDatabaseTemplatesLink,
     getDatabaseImportLink,
+    getDatabaseCategoriesLink,
 } from "@/app/router/router-link.ts";
 import {
     AuthenticatedLayout,
@@ -21,6 +22,7 @@ import {
     DatabaseDetailPage,
     DatabaseTemplatesPage,
     DatabaseImportPage,
+    DatabaseCategoriesPage,
     UsersPage,
     HomePage,
     NotFoundPage,
@@ -150,6 +152,10 @@ const router = createBrowserRouter([
             {
                 path: getDatabaseImportLink().replace('/app/', ''),
                 element: <DatabaseImportPage/>,
+            },
+            {
+                path: getDatabaseCategoriesLink().replace('/app/', ''),
+                element: <DatabaseCategoriesPage/>,
             },
             {
                 path: getUsersLink().replace('/app/', ''),

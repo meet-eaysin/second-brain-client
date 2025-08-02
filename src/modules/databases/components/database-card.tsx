@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,20 +8,28 @@ import {
     DropdownMenuItem,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-    MoreHorizontal, 
-    Database as DatabaseIcon, 
-    Eye, 
-    Edit, 
-    Share, 
+import {
+    MoreHorizontal,
+    Database as DatabaseIcon,
+    Eye,
+    Edit,
+    Share,
     Trash2,
     Lock,
     Globe,
     Clock,
-    FileText
+    FileText,
+    Heart,
+    FolderOpen,
+    Tag,
+    Copy
 } from 'lucide-react';
-import type { Database } from '@/types/database.types';
+import type { Database, DatabaseCategory } from '@/types/database.types';
+import { useToggleFavorite, useMoveToCategory, useCategories, useTrackAccess } from '../hooks/enhanced-features-hooks';
 
 interface DatabaseCardProps {
     database: Database;
@@ -29,6 +37,7 @@ interface DatabaseCardProps {
     onEdit?: (database: Database) => void;
     onShare?: (database: Database) => void;
     onDelete?: (databaseId: string) => void;
+    onDuplicate?: (database: Database) => void;
     currentUserId?: string;
 }
 
@@ -38,8 +47,17 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
     onEdit,
     onShare,
     onDelete,
+    onDuplicate,
     currentUserId,
 }) => {
+    const [categories, setCategories] = useState<DatabaseCategory[]>([]);
+    const [setIsLoadingCategories] = useState(false);
+
+    const toggleFavoriteMutation = useToggleFavorite();
+    const moveToCategoryMutation = useMoveToCategory();
+    const trackAccessMutation = useTrackAccess();
+    const { getCategories } = useCategories();
+
     const isOwner = database.ownerId === currentUserId;
     const permissions = database.permissions || [];
     const canEdit = isOwner || permissions.some(
@@ -49,18 +67,63 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
         p => p.userId === currentUserId && p.permission === 'admin'
     );
 
+    // Load categories when component mounts
+    useEffect(() => {
+        const loadCategories = async () => {
+            setIsLoadingCategories(true);
+            try {
+                const categoriesData = await getCategories();
+                setCategories(categoriesData);
+            } catch (error) {
+                console.error('Failed to load categories:', error);
+            } finally {
+                setIsLoadingCategories(false);
+            }
+        };
+
+        loadCategories();
+    }, [getCategories]);
+
     const formatRelativeTime = (dateString: string) => {
         const date = new Date(dateString);
         const now = new Date();
         const diffInMs = now.getTime() - date.getTime();
         const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-        
+
         if (diffInDays === 0) return 'Today';
         if (diffInDays === 1) return 'Yesterday';
         if (diffInDays < 7) return `${diffInDays}d ago`;
         if (diffInDays < 30) return `${Math.floor(diffInDays / 7)}w ago`;
         if (diffInDays < 365) return `${Math.floor(diffInDays / 30)}mo ago`;
         return `${Math.floor(diffInDays / 365)}y ago`;
+    };
+
+    const handleToggleFavorite = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        toggleFavoriteMutation.mutate(database.id);
+    };
+
+    const handleMoveToCategory = (categoryId: string | null) => {
+        moveToCategoryMutation.mutate({ databaseId: database.id, categoryId });
+    };
+
+    const handleView = () => {
+        trackAccessMutation.mutate({ databaseId: database.id, action: 'view' });
+        onView?.(database);
+    };
+
+    const handleEdit = () => {
+        trackAccessMutation.mutate({ databaseId: database.id, action: 'edit' });
+        onEdit?.(database);
+    };
+
+    const handleShare = () => {
+        trackAccessMutation.mutate({ databaseId: database.id, action: 'share' });
+        onShare?.(database);
+    };
+
+    const handleDuplicate = () => {
+        onDuplicate?.(database);
     };
 
     const getVisibilityInfo = () => {
@@ -107,13 +170,18 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
                         
                         {/* Title and Description */}
                         <div className="flex-1 min-w-0">
-                            <h3 
-                                className="font-semibold text-base truncate mb-1 cursor-pointer hover:text-primary transition-colors"
-                                onClick={() => onView?.(database)}
-                                title={database.name}
-                            >
-                                {database.name}
-                            </h3>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h3
+                                    className="font-semibold text-base truncate cursor-pointer hover:text-primary transition-colors"
+                                    onClick={handleView}
+                                    title={database.name}
+                                >
+                                    {database.name}
+                                </h3>
+                                {database.isFavorite && (
+                                    <Heart className="h-4 w-4 fill-current text-red-500 flex-shrink-0" />
+                                )}
+                            </div>
                             {database.description && (
                                 <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                                     {database.description}
@@ -122,7 +190,19 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
                         </div>
                     </div>
 
-                    {/* Actions Menu */}
+                    {/* Quick Actions and Menu */}
+                    <div className="flex items-center gap-1">
+                        {/* Quick Favorite Button */}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={handleToggleFavorite}
+                        >
+                            <Heart className={`h-4 w-4 ${database.isFavorite ? 'fill-current text-red-500' : ''}`} />
+                        </Button>
+
+                        {/* Actions Menu */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button 
@@ -134,26 +214,78 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem onClick={() => onView?.(database)}>
+                            <DropdownMenuItem onClick={handleView}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 Open Database
                             </DropdownMenuItem>
                             {canEdit && (
-                                <DropdownMenuItem onClick={() => onEdit?.(database)}>
+                                <DropdownMenuItem onClick={handleEdit}>
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit
                                 </DropdownMenuItem>
                             )}
                             {(isOwner || canEdit) && (
-                                <DropdownMenuItem onClick={() => onShare?.(database)}>
+                                <DropdownMenuItem onClick={handleShare}>
                                     <Share className="mr-2 h-4 w-4" />
                                     Share
                                 </DropdownMenuItem>
                             )}
+
+                            <DropdownMenuSeparator />
+
+                            {/* Favorite Toggle */}
+                            <DropdownMenuItem onClick={handleToggleFavorite}>
+                                {database.isFavorite ? (
+                                    <>
+                                        <Heart className="mr-2 h-4 w-4 fill-current text-red-500" />
+                                        Remove from Favorites
+                                    </>
+                                ) : (
+                                    <>
+                                        <Heart className="mr-2 h-4 w-4" />
+                                        Add to Favorites
+                                    </>
+                                )}
+                            </DropdownMenuItem>
+
+                            {/* Category Selection */}
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <Tag className="mr-2 h-4 w-4" />
+                                    Move to Category
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleMoveToCategory(null)}>
+                                        <FolderOpen className="mr-2 h-4 w-4" />
+                                        No Category
+                                    </DropdownMenuItem>
+                                    {categories.map((category) => (
+                                        <DropdownMenuItem
+                                            key={category.id}
+                                            onClick={() => handleMoveToCategory(category.id)}
+                                        >
+                                            <span
+                                                className="mr-2 text-sm"
+                                                style={{ color: category.color }}
+                                            >
+                                                {category.icon || '📁'}
+                                            </span>
+                                            {category.name}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+
+                            {/* Duplicate Database */}
+                            <DropdownMenuItem onClick={handleDuplicate}>
+                                <Copy className="mr-2 h-4 w-4" />
+                                Duplicate
+                            </DropdownMenuItem>
+
                             {canDelete && (
                                 <>
                                     <DropdownMenuSeparator />
-                                    <DropdownMenuItem 
+                                    <DropdownMenuItem
                                         onClick={() => onDelete?.(database.id)}
                                         className="text-destructive focus:text-destructive"
                                     >
@@ -164,6 +296,7 @@ export const DatabaseCard: React.FC<DatabaseCardProps> = ({
                             )}
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    </div>
                 </div>
 
                 {/* Stats */}

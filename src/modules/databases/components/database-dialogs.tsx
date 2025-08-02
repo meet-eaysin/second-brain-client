@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { databaseApi } from '../services/databaseApi';
+import { RecordForm } from './record-form';
 import {
     Dialog,
     DialogContent,
@@ -34,7 +36,6 @@ import { toast } from 'sonner';
 import type { Database, PermissionLevel } from '@/types/database.types';
 import { DatabaseForm } from "./database-form";
 import { PropertyForm } from "./property-form";
-import { RecordForm } from "./record-form";
 import { ViewForm } from "./view-form";
 import {useDatabaseContext} from "@/modules/databases";
 
@@ -55,14 +56,22 @@ function ShareDatabaseDialog({ database, open, onOpenChange }: ShareDatabaseDial
 
         setIsLoading(true);
         try {
-            // TODO: Implement share database API call
-            // await shareDatabase(database.id, { email, permission });
+            // First, we need to get the user ID from the email
+            // For now, we'll use the email as userId (this should be improved to lookup user by email)
+            await databaseApi.shareDatabase(database.id, {
+                userId: email, // This should be the actual user ID, not email
+                permission
+            });
             toast.success(`Database shared with ${email}`);
             setEmail('');
             setPermission('read');
             onOpenChange(false);
-        } catch {
-            toast.error('Failed to share database');
+        } catch (error: any) {
+            console.error('Share database failed:', error);
+            const errorMessage = error?.response?.data?.error?.message ||
+                               error?.message ||
+                               'Failed to share database';
+            toast.error(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -171,10 +180,28 @@ function ShareDatabaseDialog({ database, open, onOpenChange }: ShareDatabaseDial
                                         </div>
                                         <span className="text-sm">{perm.userId}</span>
                                     </div>
-                                    <Badge className={getPermissionColor(perm.permission)}>
-                                        {getPermissionIcon(perm.permission)}
-                                        <span className="ml-1 capitalize">{perm.permission}</span>
-                                    </Badge>
+                                    <div className="flex items-center space-x-2">
+                                        <Badge className={getPermissionColor(perm.permission)}>
+                                            {getPermissionIcon(perm.permission)}
+                                            <span className="ml-1 capitalize">{perm.permission}</span>
+                                        </Badge>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6"
+                                            onClick={async () => {
+                                                try {
+                                                    await databaseApi.removeDatabaseAccess(database.id, perm.userId);
+                                                    toast.success('Access removed');
+                                                    // TODO: Refresh the database data
+                                                } catch (error: any) {
+                                                    toast.error('Failed to remove access');
+                                                }
+                                            }}
+                                        >
+                                            <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                    </div>
                                 </div>
                             )) || (
                                 <p className="text-sm text-muted-foreground">No additional permissions set</p>
@@ -279,13 +306,18 @@ function DeleteDatabaseDialog({ database, open, onOpenChange }: DeleteDatabaseDi
 }
 
 export function DatabaseDialogs() {
-    const { 
-        open, 
-        setOpen, 
-        currentDatabase, 
-        currentRecord, 
-        currentProperty 
+    const {
+        open,
+        setOpen,
+        currentDatabase,
+        currentRecord,
+        currentProperty,
+        setCurrentDatabase,
+        setCurrentProperty,
+        setCurrentRecord
     } = useDatabaseContext();
+
+    const [isLoading, setIsLoading] = useState(false);
 
     return (
         <>
@@ -301,17 +333,73 @@ export function DatabaseDialogs() {
                 open={open === 'create-property' || open === 'edit-property'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
                 onSubmit={async (values) => {
+                    if (!currentDatabase?.id) {
+                        toast.error('Database is still loading. Please wait a moment and try again.');
+                        return;
+                    }
+
                     try {
-                        // TODO: Implement property creation/update API call
-                        console.log('Property data:', values);
-                        toast.success(open === 'edit-property' ? 'Property updated successfully' : 'Property created successfully');
+                        setIsLoading(true);
+
+                        if (open === 'edit-property' && currentProperty?.id) {
+                            // Transform data for update API
+                            const updateData = {
+                                name: values.name,
+                                description: values.description,
+                                required: values.required,
+                                selectOptions: values.selectOptions
+                            };
+
+                            // Update existing property
+                            const updatedDatabase = await databaseApi.updateProperty(
+                                currentDatabase.id,
+                                currentProperty.id,
+                                updateData
+                            );
+
+                            // Update the current database in context
+                            setCurrentDatabase(updatedDatabase);
+                            toast.success('Property updated successfully');
+                        } else {
+                            // Transform data for create API
+                            const createData = {
+                                name: values.name!,
+                                type: values.type!,
+                                description: values.description,
+                                required: values.required || false,
+                                selectOptions: values.selectOptions?.map(option => ({
+                                    name: option.name,
+                                    color: option.color
+                                }))
+                            };
+
+                            // Create new property
+                            const updatedDatabase = await databaseApi.addProperty(
+                                currentDatabase.id,
+                                createData
+                            );
+
+                            // Update the current database in context
+                            setCurrentDatabase(updatedDatabase);
+                            toast.success('Property created successfully');
+                        }
+
                         setOpen(null);
-                    } catch {
-                        toast.error(open === 'edit-property' ? 'Failed to update property' : 'Failed to create property');
+                        setCurrentProperty(null);
+                    } catch (error: any) {
+                        console.error('Property operation failed:', error);
+                        const errorMessage = error?.response?.data?.error?.message ||
+                                           error?.message ||
+                                           'An unexpected error occurred';
+                        toast.error(open === 'edit-property' ?
+                                   `Failed to update property: ${errorMessage}` :
+                                   `Failed to create property: ${errorMessage}`);
+                    } finally {
+                        setIsLoading(false);
                     }
                 }}
                 mode={open === 'edit-property' ? 'edit' : 'create'}
-                isLoading={false}
+                isLoading={isLoading}
             />
 
             {/* Record Form */}
@@ -321,16 +409,47 @@ export function DatabaseDialogs() {
                 open={open === 'create-record' || open === 'edit-record'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
                 onSubmit={async (data) => {
+                    if (!currentDatabase?.id) {
+                        toast.error('Database is still loading. Please wait a moment and try again.');
+                        return;
+                    }
+
                     try {
-                        // TODO: Implement record creation/update API call
-                        console.log('Record data:', data);
-                        toast.success(open === 'edit-record' ? 'Record updated successfully' : 'Record created successfully');
+                        setIsLoading(true);
+
+                        if (open === 'edit-record' && currentRecord?.id) {
+                            // Update existing record
+                            await databaseApi.updateRecord(
+                                currentDatabase.id,
+                                currentRecord.id,
+                                { properties: data }
+                            );
+                            toast.success('Record updated successfully');
+                        } else {
+                            // Create new record
+                            await databaseApi.createRecord(
+                                currentDatabase.id,
+                                { properties: data }
+                            );
+                            toast.success('Record created successfully');
+                        }
+
                         setOpen(null);
-                    } catch {
-                        toast.error(open === 'edit-record' ? 'Failed to update record' : 'Failed to create record');
+                        setCurrentRecord(null);
+                    } catch (error: any) {
+                        console.error('Record operation failed:', error);
+                        const errorMessage = error?.response?.data?.error?.message ||
+                                           error?.message ||
+                                           'An unexpected error occurred';
+                        toast.error(open === 'edit-record' ?
+                                   `Failed to update record: ${errorMessage}` :
+                                   `Failed to create record: ${errorMessage}`);
+                    } finally {
+                        setIsLoading(false);
                     }
                 }}
                 mode={open === 'edit-record' ? 'edit' : 'create'}
+                isLoading={isLoading}
             />
 
             {/* View Form */}
@@ -338,6 +457,35 @@ export function DatabaseDialogs() {
                 open={open === 'create-view'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? open : null)}
                 properties={currentDatabase?.properties || []}
+                onSubmit={async (viewData) => {
+                    if (!currentDatabase?.id) {
+                        toast.error('Database is still loading. Please wait a moment and try again.');
+                        return;
+                    }
+
+                    try {
+                        setIsLoading(true);
+
+                        // Create new view
+                        const updatedDatabase = await databaseApi.createView(
+                            currentDatabase.id,
+                            viewData
+                        );
+
+                        // Update the current database in context
+                        setCurrentDatabase(updatedDatabase);
+                        toast.success('View created successfully');
+                        setOpen(null);
+                    } catch (error: any) {
+                        console.error('View creation failed:', error);
+                        const errorMessage = error?.response?.data?.error?.message ||
+                                           error?.message ||
+                                           'An unexpected error occurred';
+                        toast.error(`Failed to create view: ${errorMessage}`);
+                    } finally {
+                        setIsLoading(false);
+                    }
+                }}
             />
 
             {/* Share Database Dialog */}

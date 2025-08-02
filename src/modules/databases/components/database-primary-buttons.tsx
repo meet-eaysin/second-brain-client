@@ -47,12 +47,27 @@ export function DatabasePrimaryButtons() {
     if (currentDatabase) {
         return (
             <div className="flex items-center gap-2">
-                <Button onClick={() => setOpen('create-record')}>
+                <Button
+                    onClick={() => {
+                        if (currentDatabase?.id) {
+                            setOpen('create-record');
+                        }
+                    }}
+                    disabled={!currentDatabase?.id}
+                >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Record
                 </Button>
 
-                <Button variant="outline" onClick={() => setOpen('create-property')}>
+                <Button
+                    variant="outline"
+                    onClick={() => {
+                        if (currentDatabase?.id) {
+                            setOpen('create-property');
+                        }
+                    }}
+                    disabled={!currentDatabase?.id}
+                >
                     <Columns className="mr-2 h-4 w-4" />
                     Add Property
                 </Button>
@@ -64,7 +79,14 @@ export function DatabasePrimaryButtons() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setOpen('create-view')}>
+                        <DropdownMenuItem
+                            onClick={() => {
+                                if (currentDatabase?.id) {
+                                    setOpen('create-view');
+                                }
+                            }}
+                            disabled={!currentDatabase?.id}
+                        >
                             <Plus className="mr-2 h-4 w-4" />
                             Add View
                         </DropdownMenuItem>
@@ -78,11 +100,25 @@ export function DatabasePrimaryButtons() {
                             Export Data
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={handleShareDatabase}>
+                        <DropdownMenuItem
+                            onClick={() => {
+                                if (currentDatabase?.id) {
+                                    handleShareDatabase();
+                                }
+                            }}
+                            disabled={!currentDatabase?.id}
+                        >
                             <Share className="mr-2 h-4 w-4" />
                             Share Database
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={handleDatabaseSettings}>
+                        <DropdownMenuItem
+                            onClick={() => {
+                                if (currentDatabase?.id) {
+                                    handleDatabaseSettings();
+                                }
+                            }}
+                            disabled={!currentDatabase?.id}
+                        >
                             <Settings className="mr-2 h-4 w-4" />
                             Database Settings
                         </DropdownMenuItem>

@@ -1,6 +1,7 @@
+import { apiClient } from '@/services/api-client.ts';
+import { API_ENDPOINTS } from '@/constants/api-endpoints';
 import type { ApiResponse } from '@/types/api.types';
 import type { DatabaseCategory } from '@/types/database.types';
-import apiClient from "@/services/api-client.ts";
 
 export interface CreateCategoryRequest {
     name: string;
@@ -15,26 +16,45 @@ export interface UpdateCategoryRequest extends Partial<CreateCategoryRequest> {
 
 export const categoryApi = {
     getCategories: async (): Promise<DatabaseCategory[]> => {
-        const response = await apiClient.get<ApiResponse<DatabaseCategory[]>>('/categories');
-        return response.data.data || [];
+        const response = await apiClient.get<ApiResponse<{ categories: DatabaseCategory[] }>>(
+            API_ENDPOINTS.CATEGORIES.LIST
+        );
+        return response.data.data.categories || [];
     },
 
     createCategory: async (data: CreateCategoryRequest): Promise<DatabaseCategory> => {
-        const response = await apiClient.post<ApiResponse<DatabaseCategory>>('/categories', data);
+        const response = await apiClient.post<ApiResponse<DatabaseCategory>>(
+            API_ENDPOINTS.CATEGORIES.CREATE,
+            data
+        );
+        return response.data.data;
+    },
+
+    getCategoryById: async (id: string): Promise<DatabaseCategory> => {
+        const response = await apiClient.get<ApiResponse<DatabaseCategory>>(
+            API_ENDPOINTS.CATEGORIES.BY_ID(id)
+        );
         return response.data.data;
     },
 
     updateCategory: async (data: UpdateCategoryRequest): Promise<DatabaseCategory> => {
         const { id, ...updateData } = data;
-        const response = await apiClient.put<ApiResponse<DatabaseCategory>>(`/categories/${id}`, updateData);
+        const response = await apiClient.put<ApiResponse<DatabaseCategory>>(
+            API_ENDPOINTS.CATEGORIES.UPDATE(id),
+            updateData
+        );
         return response.data.data;
     },
 
     deleteCategory: async (categoryId: string): Promise<void> => {
-        await apiClient.delete(`/categories/${categoryId}`);
+        await apiClient.delete(API_ENDPOINTS.CATEGORIES.DELETE(categoryId));
     },
 
-    reorderCategories: async (categoryIds: string[]): Promise<void> => {
-        await apiClient.put('/categories/reorder', { categoryIds });
+    reorderCategories: async (categoryIds: string[]): Promise<DatabaseCategory[]> => {
+        const response = await apiClient.patch<ApiResponse<{ categories: DatabaseCategory[] }>>(
+            API_ENDPOINTS.CATEGORIES.REORDER,
+            { categoryIds }
+        );
+        return response.data.data.categories;
     },
 };

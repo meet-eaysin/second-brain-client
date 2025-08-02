@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Main } from '@/layout/main';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,17 +7,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-    Upload, 
+import { Progress } from '@/components/ui/progress';
+import {
+    Upload,
     Database,
     CheckCircle,
     AlertCircle,
     FileSpreadsheet,
     FileJson,
-    Globe
+    Globe,
+    Loader2,
+    ArrowLeft
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getDatabasesLink } from '@/app/router/router-link';
+import { databaseApi } from '../services/databaseApi';
+import { toast } from 'sonner';
 
 interface ImportFormat {
     id: string;
@@ -79,9 +84,13 @@ const importFormats: ImportFormat[] = [
 
 export default function DatabaseImportPage() {
     const navigate = useNavigate();
-    const [selectedFormat, setSelectedFormat] = React.useState<string | null>(null);
-    const [dragActive, setDragActive] = React.useState(false);
-    const [uploadedFile, setUploadedFile] = React.useState<File | null>(null);
+    const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
+    const [dragActive, setDragActive] = useState(false);
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const [importProgress, setImportProgress] = useState(0);
+    const [importResult, setImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
+    const [databaseName, setDatabaseName] = useState('');
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
@@ -97,23 +106,73 @@ export default function DatabaseImportPage() {
         e.preventDefault();
         e.stopPropagation();
         setDragActive(false);
-        
+
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            setUploadedFile(e.dataTransfer.files[0]);
+            const file = e.dataTransfer.files[0];
+            setUploadedFile(file);
+            // Set default database name from filename
+            if (!databaseName) {
+                setDatabaseName(file.name.replace(/\.[^/.]+$/, ""));
+            }
         }
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setUploadedFile(e.target.files[0]);
+            const file = e.target.files[0];
+            setUploadedFile(file);
+            // Set default database name from filename
+            if (!databaseName) {
+                setDatabaseName(file.name.replace(/\.[^/.]+$/, ""));
+            }
         }
     };
 
-    const handleImport = () => {
-        if (uploadedFile && selectedFormat) {
-            // TODO: Implement actual import logic
-            console.log('Importing file:', uploadedFile.name, 'as format:', selectedFormat);
-            navigate(getDatabasesLink());
+    const handleImport = async () => {
+        if (!uploadedFile || !selectedFormat || !databaseName.trim()) {
+            toast.error('Please provide a database name, select a format, and upload a file');
+            return;
+        }
+
+        try {
+            setIsImporting(true);
+            setImportProgress(10);
+
+            // First create a new database
+            const newDatabase = await databaseApi.createDatabase({
+                name: databaseName,
+                description: `Imported from ${uploadedFile.name}`,
+                icon: '📊',
+                isPublic: false,
+            });
+
+            setImportProgress(30);
+
+            // Then import the data into the database
+            const result = await databaseApi.importDatabase(newDatabase.id, uploadedFile, {
+                skipFirstRow: selectedFormat === 'csv', // Skip header row for CSV
+            });
+
+            setImportProgress(100);
+            setImportResult(result);
+
+            toast.success(`Successfully imported ${result.imported} records`);
+
+            if (result.errors.length > 0) {
+                toast.warning(`${result.errors.length} errors occurred during import`);
+            }
+
+            // Navigate to the new database after a short delay
+            setTimeout(() => {
+                navigate(`/app/databases/${newDatabase.id}`);
+            }, 2000);
+
+        } catch (error: any) {
+            console.error('Failed to import database:', error);
+            const errorMessage = error?.response?.data?.error?.message || 'Failed to import database';
+            toast.error(errorMessage);
+        } finally {
+            setIsImporting(false);
         }
     };
 
@@ -267,7 +326,8 @@ export default function DatabaseImportPage() {
                                                     <Input
                                                         id="database-name"
                                                         placeholder="Enter database name"
-                                                        defaultValue={uploadedFile.name.replace(/\.[^/.]+$/, "")}
+                                                        value={databaseName}
+                                                        onChange={(e) => setDatabaseName(e.target.value)}
                                                     />
                                                 </div>
                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -279,21 +339,74 @@ export default function DatabaseImportPage() {
                                     </div>
                                 )}
 
+                                {/* Import Progress */}
+                                {isImporting && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span>Importing database...</span>
+                                            <span>{importProgress}%</span>
+                                        </div>
+                                        <Progress value={importProgress} className="w-full" />
+                                    </div>
+                                )}
+
+                                {/* Import Result */}
+                                {importResult && (
+                                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                                        <div className="flex items-center gap-2 text-green-800">
+                                            <CheckCircle className="h-5 w-5" />
+                                            <span className="font-medium">Import Successful!</span>
+                                        </div>
+                                        <p className="text-sm text-green-700 mt-1">
+                                            Imported {importResult.imported} records
+                                            {importResult.errors.length > 0 && (
+                                                <span> with {importResult.errors.length} errors</span>
+                                            )}
+                                        </p>
+                                        {importResult.errors.length > 0 && (
+                                            <details className="mt-2">
+                                                <summary className="text-sm text-green-700 cursor-pointer">
+                                                    View errors
+                                                </summary>
+                                                <ul className="text-xs text-green-600 mt-1 space-y-1">
+                                                    {importResult.errors.slice(0, 5).map((error, index) => (
+                                                        <li key={index}>• {error}</li>
+                                                    ))}
+                                                    {importResult.errors.length > 5 && (
+                                                        <li>• ... and {importResult.errors.length - 5} more</li>
+                                                    )}
+                                                </ul>
+                                            </details>
+                                        )}
+                                    </div>
+                                )}
+
                                 {/* Import Button */}
                                 <div className="flex justify-end gap-3">
                                     <Button
                                         variant="outline"
                                         onClick={() => navigate(getDatabasesLink())}
+                                        disabled={isImporting}
                                     >
-                                        Cancel
+                                        <ArrowLeft className="h-4 w-4 mr-2" />
+                                        Back to Databases
                                     </Button>
                                     <Button
                                         onClick={handleImport}
-                                        disabled={!uploadedFile || !selectedFormat}
+                                        disabled={!uploadedFile || !selectedFormat || !databaseName.trim() || isImporting}
                                         className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                                     >
-                                        <Database className="h-4 w-4 mr-2" />
-                                        Import Database
+                                        {isImporting ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                                Importing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Database className="h-4 w-4 mr-2" />
+                                                Import Database
+                                            </>
+                                        )}
                                     </Button>
                                 </div>
                             </CardContent>

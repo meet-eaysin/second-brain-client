@@ -102,13 +102,7 @@ export default function DatabaseDetailPage() {
                     <Button variant="ghost" size="sm" onClick={handleBack}>
                         <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="flex items-center gap-3">
-                        <div className="text-2xl">{database.icon}</div>
-                        <div>
-                            <h1 className="text-xl font-semibold">{database.name}</h1>
-                            <p className="text-sm text-muted-foreground">{database.description}</p>
-                        </div>
-                    </div>
+                    <h1 className="text-lg font-semibold">{database.name}</h1>
                 </div>
                 <div className="ml-auto flex items-center space-x-4">
                     <Search />

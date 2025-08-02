@@ -1,36 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Main } from '@/layout/main';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-    Layout, 
-    Database, 
+import {
+    Layout,
+    Database,
     Users,
-    Calendar, 
+    Calendar,
     ShoppingCart,
     BookOpen,
     Briefcase,
     Heart,
     Star,
-    Zap
+    Zap,
+    Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getDatabasesLink } from '@/app/router/router-link';
+import { templateApi, type DatabaseTemplate } from '../services/templateApi';
+import { toast } from 'sonner';
 
-interface DatabaseTemplate {
-    id: string;
-    name: string;
-    description: string;
-    icon: React.ElementType;
-    category: string;
-    properties: number;
-    popular: boolean;
-    preview: string[];
-}
+// Icon mapping for templates
+const iconMap: Record<string, React.ElementType> = {
+    'briefcase': Briefcase,
+    'calendar': Calendar,
+    'users': Users,
+    'shopping-cart': ShoppingCart,
+    'book-open': BookOpen,
+    'heart': Heart,
+    'database': Database,
+    'layout': Layout,
+    'star': Star,
+    'zap': Zap,
+};
 
-const templates: DatabaseTemplate[] = [
+// Fallback templates for development
+const fallbackTemplates: DatabaseTemplate[] = [
     {
         id: 'project-management',
         name: 'Project Management',
@@ -93,20 +100,56 @@ const templates: DatabaseTemplate[] = [
     }
 ];
 
-const categories = ['All', 'Productivity', 'Marketing', 'Personal', 'Business'];
-
 export default function DatabaseTemplatesPage() {
     const navigate = useNavigate();
-    const [selectedCategory, setSelectedCategory] = React.useState('All');
+    const [selectedCategory, setSelectedCategory] = useState('All');
+    const [templates, setTemplates] = useState<DatabaseTemplate[]>([]);
+    const [categories, setCategories] = useState<string[]>(['All']);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const filteredTemplates = selectedCategory === 'All' 
-        ? templates 
+    // Load templates on mount
+    useEffect(() => {
+        loadTemplates();
+    }, []);
+
+    const loadTemplates = async () => {
+        try {
+            setIsLoading(true);
+            const data = await templateApi.getTemplates();
+            setTemplates(data);
+
+            // Extract categories
+            const templateCategories = [...new Set(data.map(t => t.category))];
+            setCategories(['All', ...templateCategories]);
+        } catch (error) {
+            console.error('Failed to load templates:', error);
+            toast.error('Failed to load templates, using fallback data');
+            // Use fallback templates
+            setTemplates(fallbackTemplates);
+            setCategories(['All', 'Productivity', 'Marketing', 'Personal', 'Business']);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const filteredTemplates = selectedCategory === 'All'
+        ? templates
         : templates.filter(template => template.category === selectedCategory);
 
-    const handleUseTemplate = (template: DatabaseTemplate) => {
-        // TODO: Implement template usage
-        console.log('Using template:', template.id);
-        navigate(getDatabasesLink());
+    const handleUseTemplate = async (template: DatabaseTemplate) => {
+        try {
+            const database = await templateApi.createDatabaseFromTemplate(template.id, {
+                name: `${template.name} Database`,
+                description: `Created from ${template.name} template`,
+                includeSampleData: true
+            });
+
+            toast.success(`Database created from ${template.name} template`);
+            navigate(`/app/databases/${database.id}`);
+        } catch (error: any) {
+            console.error('Failed to create database from template:', error);
+            toast.error(error?.response?.data?.error?.message || 'Failed to create database from template');
+        }
     };
 
     return (
@@ -140,16 +183,29 @@ export default function DatabaseTemplatesPage() {
                     ))}
                 </div>
 
-                {/* Templates Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredTemplates.map((template) => (
-                        <Card key={template.id} className="hover:shadow-lg transition-shadow">
-                            <CardHeader>
-                                <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100">
-                                            <template.icon className="h-5 w-5 text-purple-600" />
-                                        </div>
+                {/* Loading State */}
+                {isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                        <span className="ml-2 text-muted-foreground">Loading templates...</span>
+                    </div>
+                ) : (
+                    /* Templates Grid */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredTemplates.map((template) => {
+                            // Get icon component - handle both API and fallback data
+                            const IconComponent = typeof template.icon === 'string'
+                                ? iconMap[template.icon] || Database
+                                : template.icon || Database;
+
+                            return (
+                                <Card key={template.id} className="hover:shadow-lg transition-shadow">
+                                    <CardHeader>
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-purple-100 to-blue-100">
+                                                    <IconComponent className="h-5 w-5 text-purple-600" />
+                                                </div>
                                         <div>
                                             <CardTitle className="text-lg flex items-center gap-2">
                                                 {template.name}
@@ -176,14 +232,15 @@ export default function DatabaseTemplatesPage() {
                                 <div className="space-y-2">
                                     <h4 className="text-sm font-medium">Includes:</h4>
                                     <div className="flex flex-wrap gap-1">
-                                        {template.preview.slice(0, 3).map((property, index) => (
+                                        {/* Handle both API preview structure and fallback preview array */}
+                                        {(template.preview?.properties || template.preview || []).slice(0, 3).map((property: any, index: number) => (
                                             <Badge key={index} variant="outline" className="text-xs">
-                                                {property}
+                                                {typeof property === 'string' ? property : property.name}
                                             </Badge>
                                         ))}
-                                        {template.preview.length > 3 && (
+                                        {(template.preview?.properties || template.preview || []).length > 3 && (
                                             <Badge variant="outline" className="text-xs">
-                                                +{template.preview.length - 3} more
+                                                +{(template.preview?.properties || template.preview || []).length - 3} more
                                             </Badge>
                                         )}
                                     </div>
@@ -191,7 +248,11 @@ export default function DatabaseTemplatesPage() {
 
                                 {/* Stats */}
                                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                    <span>{template.properties} properties</span>
+                                    <span>
+                                        {template.preview?.properties?.length ||
+                                         template.properties ||
+                                         (Array.isArray(template.preview) ? template.preview.length : 0)} properties
+                                    </span>
                                     <div className="flex items-center gap-1">
                                         <Database className="h-4 w-4" />
                                         <span>Template</span>
@@ -214,11 +275,13 @@ export default function DatabaseTemplatesPage() {
                                 </div>
                             </CardContent>
                         </Card>
-                    ))}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {/* Empty State */}
-                {filteredTemplates.length === 0 && (
+                {!isLoading && filteredTemplates.length === 0 && (
                     <div className="text-center py-12">
                         <Layout className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">No templates found</h3>

@@ -1,4 +1,4 @@
-import apiClient from "@/services/api-client.ts";
+import { apiClient } from "@/services/api-client.ts";
 import type {
     ApiResponse,
     AuthResponse,
@@ -287,14 +287,7 @@ export const authApi = {
         }
     },
 
-    initiateGoogleAuth: async (): Promise<void> => {
-        try {
-            window.location.href = `${apiClient.defaults.baseURL}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}`;
-        } catch (error) {
-            console.error('Failed to initiate Google OAuth redirect:', error);
-            throw new Error('Failed to initiate Google authentication');
-        }
-    },
+
 
     // Handle Google OAuth callback with authorization code
     handleGoogleCallback: async (code: string): Promise<AuthResponse> => {

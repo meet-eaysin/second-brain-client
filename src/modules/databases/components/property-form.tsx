@@ -1,179 +1,331 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetFooter,
+} from '@/components/ui/sheet';
 import {
     Form,
     FormControl,
+    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
-import { X, Plus } from 'lucide-react';
-import type {PropertyType} from "@/types/database.types.ts";
-
-const propertyFormSchema = z.object({
-    name: z.string().min(1, 'Property name is required'),
-    type: z.string() as z.ZodType<PropertyType>,
-    description: z.string().optional(),
-    required: z.boolean(),
-    selectOptions: z.array(
-        z.object({
-            name: z.string(),
-            color: z.string(),
-        })
-    ).optional(),
-});
-
-type PropertyFormValues = z.infer<typeof propertyFormSchema>;
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import {
+    Type,
+    Hash,
+    Calendar,
+    CheckSquare,
+    Link,
+    Mail,
+    Phone,
+    List,
+    Tags,
+    Plus,
+    X,
+    Settings,
+    Save
+} from 'lucide-react';
+import type { DatabaseProperty, PropertyType, SelectOption } from '@/types/database.types';
 
 interface PropertyFormProps {
+    property?: DatabaseProperty | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSubmit: (values: PropertyFormValues) => void;
-    propertyId?: string;
-    initialData?: Partial<PropertyFormValues>;
-    databaseId: string;
+    onSubmit: (data: Partial<DatabaseProperty>) => Promise<void>;
+    mode?: 'create' | 'edit';
+    isLoading?: boolean;
 }
 
-const propertyTypes: { label: string; value: PropertyType; description: string }[] = [
-    { label: 'Text', value: 'TEXT', description: 'Plain text, paragraph text, etc.' },
-    { label: 'Number', value: 'NUMBER', description: 'Numbers, including decimals' },
-    { label: 'Select', value: 'SELECT', description: 'Select one option from a list' },
-    { label: 'Multi-select', value: 'MULTI_SELECT', description: 'Select multiple options from a list' },
-    { label: 'Date', value: 'DATE', description: 'Date and time values' },
-    { label: 'Checkbox', value: 'CHECKBOX', description: 'Yes/no values' },
-    { label: 'URL', value: 'URL', description: 'Web links' },
-    { label: 'Email', value: 'EMAIL', description: 'Email addresses' },
-    { label: 'Phone', value: 'PHONE', description: 'Phone numbers' },
-    { label: 'Created time', value: 'CREATED_TIME', description: 'When this entry was created' },
-    { label: 'Created by', value: 'CREATED_BY', description: 'Who created this entry' },
-    { label: 'Last edited time', value: 'LAST_EDITED_TIME', description: 'When this entry was last modified' },
-    { label: 'Last edited by', value: 'LAST_EDITED_BY', description: 'Who last modified this entry' },
+// Property form schema
+const propertyFormSchema = z.object({
+    name: z.string().min(1, 'Property name is required'),
+    type: z.enum(['TEXT', 'NUMBER', 'EMAIL', 'URL', 'PHONE', 'CHECKBOX', 'DATE', 'SELECT', 'MULTI_SELECT']),
+    description: z.string().optional(),
+    required: z.boolean().default(false),
+    isVisible: z.boolean().default(true),
+    selectOptions: z.array(z.object({
+        id: z.string(),
+        name: z.string(),
+        color: z.string()
+    })).optional()
+});
+
+type PropertyFormData = z.infer<typeof propertyFormSchema>;
+
+// Property type options with icons and descriptions
+const PROPERTY_TYPES = [
+    {
+        value: 'TEXT' as PropertyType,
+        label: 'Text',
+        icon: Type,
+        description: 'Plain text content'
+    },
+    {
+        value: 'NUMBER' as PropertyType,
+        label: 'Number',
+        icon: Hash,
+        description: 'Numeric values'
+    },
+    {
+        value: 'EMAIL' as PropertyType,
+        label: 'Email',
+        icon: Mail,
+        description: 'Email addresses'
+    },
+    {
+        value: 'URL' as PropertyType,
+        label: 'URL',
+        icon: Link,
+        description: 'Web links'
+    },
+    {
+        value: 'PHONE' as PropertyType,
+        label: 'Phone',
+        icon: Phone,
+        description: 'Phone numbers'
+    },
+    {
+        value: 'CHECKBOX' as PropertyType,
+        label: 'Checkbox',
+        icon: CheckSquare,
+        description: 'True/false values'
+    },
+    {
+        value: 'DATE' as PropertyType,
+        label: 'Date',
+        icon: Calendar,
+        description: 'Date values'
+    },
+    {
+        value: 'SELECT' as PropertyType,
+        label: 'Select',
+        icon: List,
+        description: 'Single choice from options'
+    },
+    {
+        value: 'MULTI_SELECT' as PropertyType,
+        label: 'Multi-select',
+        icon: Tags,
+        description: 'Multiple choices from options'
+    }
 ];
 
-const defaultColors = [
-    '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3',
-    '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a',
-    '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722',
+// Predefined colors for select options
+const OPTION_COLORS = [
+    '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
+    '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9',
+    '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
+    '#ec4899', '#f43f5e', '#64748b', '#6b7280', '#374151'
 ];
 
-export function PropertyForm({ 
-    open, 
-    onOpenChange, 
-    onSubmit, 
-    propertyId, 
-    initialData,
+// Property name suggestions based on type
+const PROPERTY_SUGGESTIONS = {
+    TEXT: ['Title', 'Description', 'Notes', 'Summary', 'Content', 'Comments'],
+    NUMBER: ['Price', 'Quantity', 'Score', 'Rating', 'Count', 'Amount'],
+    EMAIL: ['Email', 'Contact Email', 'Work Email', 'Personal Email'],
+    URL: ['Website', 'Link', 'Reference', 'Source', 'Documentation'],
+    PHONE: ['Phone', 'Mobile', 'Work Phone', 'Contact Number'],
+    CHECKBOX: ['Completed', 'Active', 'Published', 'Verified', 'Approved'],
+    DATE: ['Due Date', 'Created Date', 'Start Date', 'End Date', 'Deadline'],
+    SELECT: ['Status', 'Priority', 'Category', 'Type', 'Stage'],
+    MULTI_SELECT: ['Tags', 'Labels', 'Categories', 'Skills', 'Technologies']
+};
+
+
+
+export function PropertyForm({
+    property,
+    open,
+    onOpenChange,
+    onSubmit,
+    mode = 'create',
+    isLoading = false
 }: PropertyFormProps) {
-    const form = useForm<PropertyFormValues>({
+    const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
+    const [newOptionName, setNewOptionName] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+
+    const form = useForm<PropertyFormData>({
         resolver: zodResolver(propertyFormSchema),
         defaultValues: {
             name: '',
-            type: 'TEXT' as PropertyType,
+            type: 'TEXT',
             description: '',
             required: false,
-            selectOptions: [],
+            isVisible: true,
+            selectOptions: []
         },
     });
 
-    const watchedType = form.watch('type');
-    const watchedSelectOptions = form.watch('selectOptions') || [];
-
-    const handleSubmit = (values: PropertyFormValues) => {
-        onSubmit(values);
-        onOpenChange(false);
-        form.reset();
-    };
-
-    React.useEffect(() => {
-        if (open && initialData) {
+    useEffect(() => {
+        if (property && mode === 'edit') {
             form.reset({
-                name: initialData.name || '',
-                type: initialData.type || 'TEXT',
-                description: initialData.description || '',
-                required: initialData.required || false,
-                selectOptions: initialData.selectOptions || [],
+                name: property.name,
+                type: property.type,
+                description: property.description || '',
+                required: property.required || false,
+                isVisible: property.isVisible !== false,
+                selectOptions: property.selectOptions || []
             });
-        } else if (open) {
+            setSelectOptions(property.selectOptions || []);
+        } else if (mode === 'create') {
             form.reset({
                 name: '',
-                type: 'TEXT' as PropertyType,
+                type: 'TEXT',
                 description: '',
                 required: false,
-                selectOptions: [],
+                isVisible: true,
+                selectOptions: []
             });
+            setSelectOptions([]);
         }
-    }, [open, initialData, form]);
+    }, [property, mode, form]);
 
-    const addSelectOption = () => {
-        const currentOptions = form.getValues('selectOptions') || [];
-        const color = defaultColors[currentOptions.length % defaultColors.length];
-        form.setValue('selectOptions', [
-            ...currentOptions,
-            { name: `Option ${currentOptions.length + 1}`, color },
-        ]);
+    const selectedType = form.watch('type');
+
+    const handleSubmit = async (data: PropertyFormData) => {
+        try {
+            const propertyData: Partial<DatabaseProperty> = {
+                name: data.name,
+                type: data.type,
+                description: data.description,
+                required: data.required,
+                isVisible: data.isVisible,
+                selectOptions: ['SELECT', 'MULTI_SELECT'].includes(data.type) ? selectOptions : undefined
+            };
+
+            await onSubmit(propertyData);
+            onOpenChange(false);
+        } catch (error) {
+            console.error('Failed to submit property:', error);
+        }
     };
 
-    const removeSelectOption = (index: number) => {
-        const currentOptions = form.getValues('selectOptions') || [];
-        form.setValue(
-            'selectOptions',
-            currentOptions.filter((_, i) => i !== index)
+    const addSelectOption = () => {
+        if (newOptionName.trim()) {
+            const newOption: SelectOption = {
+                id: `option_${Date.now()}`,
+                name: newOptionName.trim(),
+                color: OPTION_COLORS[selectOptions.length % OPTION_COLORS.length]
+            };
+            setSelectOptions(prev => [...prev, newOption]);
+            setNewOptionName('');
+        }
+    };
+
+    const removeSelectOption = (optionId: string) => {
+        setSelectOptions(prev => prev.filter(option => option.id !== optionId));
+    };
+
+    const updateOptionColor = (optionId: string, color: string) => {
+        setSelectOptions(prev =>
+            prev.map(option =>
+                option.id === optionId ? { ...option, color } : option
+            )
         );
     };
 
-    const updateOptionName = (index: number, name: string) => {
-        const currentOptions = [...(form.getValues('selectOptions') || [])];
-        currentOptions[index] = { ...currentOptions[index], name };
-        form.setValue('selectOptions', currentOptions);
-    };
+    const renderSelectOptionsEditor = () => {
+        if (!['SELECT', 'MULTI_SELECT'].includes(selectedType)) return null;
 
-    const updateOptionColor = (index: number, color: string) => {
-        const currentOptions = [...(form.getValues('selectOptions') || [])];
-        currentOptions[index] = { ...currentOptions[index], color };
-        form.setValue('selectOptions', currentOptions);
-    };
+        return (
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Options</label>
+                    <Badge variant="outline" className="text-xs">
+                        {selectOptions.length} option{selectOptions.length !== 1 ? 's' : ''}
+                    </Badge>
+                </div>
+                <div className="flex gap-2">
+                    <Input
+                        placeholder="Add option..."
+                        value={newOptionName}
+                        onChange={(e) => setNewOptionName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                addSelectOption();
+                            }
+                        }}
+                        className="flex-1"
+                    />
+                    <Button
+                        type="button"
+                        onClick={addSelectOption}
+                        disabled={!newOptionName.trim()}
+                        size="sm"
+                    >
+                        <Plus className="h-4 w-4" />
+                    </Button>
+                </div>
 
-    const isSelectType = watchedType === 'SELECT' || watchedType === 'MULTI_SELECT';
+                {selectOptions.length > 0 && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                        {selectOptions.map((option) => (
+                            <div key={option.id} className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                                <div className="flex items-center gap-2 flex-1">
+                                    <div
+                                        className="w-4 h-4 rounded-full border cursor-pointer"
+                                        style={{ backgroundColor: option.color }}
+                                        onClick={() => {
+                                            const newColor = OPTION_COLORS[Math.floor(Math.random() * OPTION_COLORS.length)];
+                                            updateOptionColor(option.id, newColor);
+                                        }}
+                                    />
+                                    <span className="text-sm font-medium">{option.name}</span>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeSelectOption(option.id)}
+                                    className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                                >
+                                    <X className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-lg">
-                <DialogHeader>
-                    <DialogTitle>
-                        {propertyId ? 'Edit Property' : 'Add New Property'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {propertyId
-                            ? 'Update this property configuration.'
-                            : 'Configure a new property for your database.'}
-                    </DialogDescription>
-                </DialogHeader>
+        <Sheet open={open} onOpenChange={onOpenChange}>
+            <SheetContent className="overflow-y-auto w-[500px] sm:w-[700px] lg:w-[800px] px-6">
+                <SheetHeader className="space-y-4 pb-3 px-2">
+                        <div>
+                            <SheetTitle className="text-xl">
+                                {mode === 'create' ? 'Create Property' : 'Edit Property'}
+                            </SheetTitle>
+                            <SheetDescription className="text-muted-foreground">
+                                {mode === 'create'
+                                    ? 'Add a new property to structure your database.'
+                                    : 'Modify the property configuration.'
+                                }
+                            </SheetDescription>
+                    </div>
+                </SheetHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+                    <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pb-6 px-1">
+                        {/* Property Name */}
                         <FormField
                             control={form.control}
                             name="name"
@@ -181,44 +333,75 @@ export function PropertyForm({
                                 <FormItem>
                                     <FormLabel>Property Name</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            placeholder="Enter property name..."
-                                            {...field}
-                                        />
+                                        <div className="space-y-3">
+                                            <Input
+                                                placeholder="Enter property name..."
+                                                {...field}
+                                                onFocus={() => setShowSuggestions(true)}
+                                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                            />
+                                            {showSuggestions && selectedType && PROPERTY_SUGGESTIONS[selectedType] && (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {PROPERTY_SUGGESTIONS[selectedType].map((suggestion) => (
+                                                        <Button
+                                                            key={suggestion}
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 text-xs"
+                                                            onClick={() => {
+                                                                field.onChange(suggestion);
+                                                                setShowSuggestions(false);
+                                                            }}
+                                                        >
+                                                            {suggestion}
+                                                        </Button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-
                         <FormField
                             control={form.control}
                             name="type"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Property Type</FormLabel>
-                                    <Select
-                                        onValueChange={field.onChange}
-                                        defaultValue={field.value}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select property type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {propertyTypes.map((type) => (
-                                                <SelectItem key={type.value} value={type.value}>
-                                                    <div className="flex flex-col">
-                                                        <span>{type.label}</span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {type.description}
-                                                        </span>
+                                    <FormControl>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                            {PROPERTY_TYPES.map((type) => {
+                                                const Icon = type.icon;
+                                                const isSelected = field.value === type.value;
+                                                return (
+                                                    <div
+                                                        key={type.value}
+                                                        className={`
+                                                            relative cursor-pointer rounded-md border p-2 transition-all hover:border-primary/50
+                                                            ${isSelected
+                                                                ? 'border-primary bg-primary/5 shadow-sm'
+                                                                : 'border-muted hover:bg-muted/50'
+                                                            }
+                                                        `}
+                                                        onClick={() => field.onChange(type.value)}
+                                                    >
+                                                        <div className="flex flex-col items-center text-center space-y-1">
+                                                            <Icon className={`h-4 w-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                                                            <div className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                                                                {type.label}
+                                                            </div>
+                                                        </div>
+                                                        {isSelected && (
+                                                            <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
+                                                        )}
                                                     </div>
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                                );
+                                            })}
+                                        </div>
+                                    </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -232,7 +415,9 @@ export function PropertyForm({
                                     <FormLabel>Description (Optional)</FormLabel>
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Enter property description..."
+                                            placeholder="Describe what this property is for..."
+                                            className="resize-none"
+                                            rows={3}
                                             {...field}
                                         />
                                     </FormControl>
@@ -240,96 +425,82 @@ export function PropertyForm({
                                 </FormItem>
                             )}
                         />
-
-                        <FormField
-                            control={form.control}
-                            name="required"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                                    <div className="space-y-0.5">
-                                        <FormLabel>Required Field</FormLabel>
-                                        <p className="text-sm text-muted-foreground">
-                                            Make this property mandatory for all records
-                                        </p>
-                                    </div>
-                                    <FormControl>
-                                        <Switch
-                                            checked={field.value}
-                                            onCheckedChange={field.onChange}
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {isSelectType && (
-                            <div className="space-y-3">
-                                <div className="flex justify-between items-center">
-                                    <h3 className="text-sm font-medium">Select Options</h3>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={addSelectOption}
-                                    >
-                                        <Plus className="h-4 w-4 mr-1" />
-                                        Add Option
-                                    </Button>
-                                </div>
-
-                                {watchedSelectOptions.length === 0 ? (
-                                    <Card className="p-4 text-center text-sm text-muted-foreground">
-                                        No options defined. Click "Add Option" to create some.
-                                    </Card>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {watchedSelectOptions.map((option, index) => (
-                                            <div
-                                                key={index}
-                                                className="flex items-center gap-2 border rounded-md p-2"
-                                            >
-                                                <div
-                                                    className="h-4 w-4 rounded-full"
-                                                    style={{ backgroundColor: option.color }}
-                                                />
-                                                <Input
-                                                    value={option.name}
-                                                    onChange={(e) => updateOptionName(index, e.target.value)}
-                                                    className="flex-1"
-                                                    placeholder="Option name"
-                                                />
-                                                <Input
-                                                    type="color"
-                                                    value={option.color}
-                                                    onChange={(e) => updateOptionColor(index, e.target.value)}
-                                                    className="w-12 p-1 h-8"
-                                                />
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removeSelectOption(index)}
-                                                >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        ))}
-                                    </div>
+                        <div className="flex gap-4">
+                            <FormField
+                                control={form.control}
+                                name="required"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>Required</FormLabel>
+                                            <FormDescription>
+                                                This property must have a value
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
                                 )}
-                            </div>
-                        )}
+                            />
 
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                            <FormField
+                                control={form.control}
+                                name="isVisible"
+                                render={({ field }) => (
+                                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                        <FormControl>
+                                            <Checkbox
+                                                checked={field.value}
+                                                onCheckedChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <div className="space-y-1 leading-none">
+                                            <FormLabel>Visible</FormLabel>
+                                            <FormDescription>
+                                                Show this property in forms
+                                            </FormDescription>
+                                        </div>
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        {renderSelectOptionsEditor()}
+                        <SheetFooter className="flex gap-3 pt-6 border-t px-1">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => onOpenChange(false)}
+                                disabled={isLoading}
+                                className="flex-1"
+                            >
                                 Cancel
                             </Button>
-                            <Button type="submit">
-                                {propertyId ? 'Update Property' : 'Add Property'}
+                            <Button
+                                type="submit"
+                                disabled={isLoading}
+                                className="flex-1"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Settings className="mr-2 h-4 w-4 animate-spin" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save className="mr-2 h-4 w-4" />
+                                        {mode === 'create' ? 'Create Property' : 'Update Property'}
+                                    </>
+                                )}
                             </Button>
-                        </DialogFooter>
+                        </SheetFooter>
                     </form>
                 </Form>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     );
 }

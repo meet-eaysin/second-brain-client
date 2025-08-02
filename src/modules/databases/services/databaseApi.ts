@@ -316,4 +316,80 @@ export const databaseApi = {
         );
         return response.data.data;
     },
+
+    // Enhanced database features
+    toggleFavorite: async (databaseId: string): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.TOGGLE_FAVORITE(databaseId)
+        );
+        return response.data.data;
+    },
+
+    moveToCategory: async (databaseId: string, categoryId: string | null): Promise<Database> => {
+        const response = await apiClient.patch<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.MOVE_TO_CATEGORY(databaseId),
+            { categoryId }
+        );
+        return response.data.data;
+    },
+
+    duplicateDatabase: async (databaseId: string, name?: string): Promise<Database> => {
+        const response = await apiClient.post<ApiResponse<Database>>(
+            API_ENDPOINTS.DATABASES.DUPLICATE(databaseId),
+            { name }
+        );
+        return response.data.data;
+    },
+
+    exportDatabase: async (databaseId: string, format: 'json' | 'csv' | 'excel' = 'json'): Promise<Blob> => {
+        const response = await apiClient.get(
+            API_ENDPOINTS.DATABASES.EXPORT(databaseId),
+            {
+                params: { format },
+                responseType: 'blob'
+            }
+        );
+        return response.data;
+    },
+
+    importDatabase: async (databaseId: string, file: File, options?: {
+        mapping?: Record<string, string>;
+        skipFirstRow?: boolean;
+    }): Promise<{ imported: number; errors: string[] }> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (options?.mapping) {
+            formData.append('mapping', JSON.stringify(options.mapping));
+        }
+        if (options?.skipFirstRow) {
+            formData.append('skipFirstRow', 'true');
+        }
+
+        const response = await apiClient.post<ApiResponse<{ imported: number; errors: string[] }>>(
+            API_ENDPOINTS.DATABASES.IMPORT(databaseId),
+            formData,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+        return response.data.data;
+    },
+
+    // Duplicate database
+    duplicateDatabase: async (databaseId: string, data?: {
+        name?: string;
+        description?: string;
+        includeRecords?: boolean;
+        includeViews?: boolean;
+        workspaceId?: string;
+        categoryId?: string;
+    }): Promise<Database> => {
+        const response = await apiClient.post<ApiResponse<Database>>(
+            `${API_ENDPOINTS.DATABASES.BY_ID(databaseId)}/duplicate`,
+            data
+        );
+        return response.data.data;
+    },
 };

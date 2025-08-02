@@ -42,6 +42,9 @@ export const DatabaseTemplatesPage = withLazyLoading(() =>
 export const DatabaseImportPage = withLazyLoading(() =>
     import('@/modules/databases/pages/database-import-page')
 )
+export const DatabaseCategoriesPage = withLazyLoading(() =>
+    import('@/modules/databases/pages/database-categories-page')
+)
 export const UsersPage = withLazyLoading(() =>
     import('@/modules/users/pages/users-page')
 )

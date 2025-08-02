@@ -37,6 +37,7 @@ const databaseFormSchema = z.object({
     cover: z.string().optional(),
     isPublic: z.boolean(),
     workspaceId: z.string().optional(),
+    categoryId: z.string().optional(),
 });
 
 type DatabaseFormValues = z.infer<typeof databaseFormSchema>;
@@ -66,6 +67,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
             cover: '',
             isPublic: false,
             workspaceId: undefined,
+            categoryId: undefined,
         },
     });
 
@@ -82,6 +84,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                     cover: database.cover || '',
                     isPublic: database.isPublic,
                     workspaceId: database.workspaceId,
+                    categoryId: database.categoryId,
                 };
                 form.reset(formData);
                 setCoverPreview(database.cover || null);
@@ -93,6 +96,7 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                     cover: '',
                     isPublic: false,
                     workspaceId: undefined,
+                    categoryId: undefined,
                 };
                 form.reset(defaultData);
                 setCoverPreview(null);
