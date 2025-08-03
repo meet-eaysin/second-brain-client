@@ -8,18 +8,18 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, LucideIcon } from 'lucide-react';
+import { MoreHorizontal, type LucideIcon } from 'lucide-react';
 import type { DatabaseRecord } from '@/types/database.types';
 
-export interface ActionConfig {
+export interface ActionConfig<T = DatabaseRecord> {
     id: string;
     label: string;
     icon?: LucideIcon;
     variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
     size?: 'default' | 'sm' | 'lg' | 'icon';
-    onClick: (record: DatabaseRecord) => void | Promise<void>;
-    isVisible?: (record: DatabaseRecord) => boolean;
-    isDisabled?: (record: DatabaseRecord) => boolean;
+    onClick: (record: T) => void | Promise<void>;
+    isVisible?: (record: T) => boolean;
+    isDisabled?: (record: T) => boolean;
     isDestructive?: boolean;
     requiresConfirmation?: boolean;
     confirmationMessage?: string;
@@ -31,16 +31,16 @@ export interface ActionConfig {
     group?: string; // For grouping actions in dropdown
 }
 
-export interface ToolbarActionConfig {
+export interface ToolbarActionConfig<T = DatabaseRecord> {
     id: string;
     label: string;
     icon?: LucideIcon;
     variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
     size?: 'default' | 'sm' | 'lg' | 'icon';
-    onClick: (records: DatabaseRecord[]) => void | Promise<void>;
+    onClick: (records: T[]) => void | Promise<void>;
     requiresSelection?: boolean;
-    isVisible?: (records: DatabaseRecord[]) => boolean;
-    isDisabled?: (records: DatabaseRecord[]) => boolean;
+    isVisible?: (records: T[]) => boolean;
+    isDisabled?: (records: T[]) => boolean;
     isDestructive?: boolean;
     requiresConfirmation?: boolean;
     confirmationMessage?: string;
@@ -52,19 +52,19 @@ export interface ToolbarActionConfig {
     position?: 'left' | 'right'; // Position in toolbar
 }
 
-interface ActionRendererProps {
-    actions: ActionConfig[];
-    record: DatabaseRecord;
+interface ActionRendererProps<T = DatabaseRecord> {
+    actions: ActionConfig<T>[];
+    record: T;
     maxVisibleActions?: number;
-    onActionClick?: (actionId: string, record: DatabaseRecord) => void;
+    onActionClick?: (actionId: string, record: T) => void;
 }
 
-export function ActionRenderer({
+export function ActionRenderer<T = DatabaseRecord>({
     actions,
     record,
     maxVisibleActions = 2,
     onActionClick,
-}: ActionRendererProps) {
+}: ActionRendererProps<T>) {
     // Filter visible actions
     const visibleActions = actions.filter(action => 
         !action.isVisible || action.isVisible(record)
@@ -78,7 +78,7 @@ export function ActionRenderer({
     const primaryActions = visibleActions.slice(0, maxVisibleActions);
     const secondaryActions = visibleActions.slice(maxVisibleActions);
 
-    const handleActionClick = async (action: ActionConfig) => {
+    const handleActionClick = async (action: ActionConfig<T>) => {
         try {
             if (action.requiresConfirmation) {
                 const confirmed = window.confirm(
@@ -153,10 +153,10 @@ export function ActionRenderer({
     );
 }
 
-function renderDropdownActions(
-    actions: ActionConfig[], 
-    record: DatabaseRecord, 
-    handleActionClick: (action: ActionConfig) => void
+function renderDropdownActions<T = DatabaseRecord>(
+    actions: ActionConfig<T>[],
+    record: T,
+    handleActionClick: (action: ActionConfig<T>) => void
 ) {
     // Group actions if they have groups
     const groupedActions = actions.reduce((groups, action) => {
@@ -166,7 +166,7 @@ function renderDropdownActions(
         }
         groups[group].push(action);
         return groups;
-    }, {} as Record<string, ActionConfig[]>);
+    }, {} as Record<string, ActionConfig<T>[]>);
 
     const groupNames = Object.keys(groupedActions);
     
@@ -201,17 +201,17 @@ function renderDropdownActions(
     ));
 }
 
-interface ToolbarActionRendererProps {
-    actions: ToolbarActionConfig[];
-    selectedRecords: DatabaseRecord[];
-    onActionClick?: (actionId: string, records: DatabaseRecord[]) => void;
+interface ToolbarActionRendererProps<T = DatabaseRecord> {
+    actions: ToolbarActionConfig<T>[];
+    selectedRecords: T[];
+    onActionClick?: (actionId: string, records: T[]) => void;
 }
 
-export function ToolbarActionRenderer({
+export function ToolbarActionRenderer<T = DatabaseRecord>({
     actions,
     selectedRecords,
     onActionClick,
-}: ToolbarActionRendererProps) {
+}: ToolbarActionRendererProps<T>) {
     // Filter visible actions
     const visibleActions = actions.filter(action => 
         !action.isVisible || action.isVisible(selectedRecords)
@@ -221,7 +221,7 @@ export function ToolbarActionRenderer({
     const leftActions = visibleActions.filter(action => action.position !== 'right');
     const rightActions = visibleActions.filter(action => action.position === 'right');
 
-    const handleActionClick = async (action: ToolbarActionConfig) => {
+    const handleActionClick = async (action: ToolbarActionConfig<T>) => {
         try {
             if (action.requiresSelection && selectedRecords.length === 0) {
                 return;
@@ -244,7 +244,7 @@ export function ToolbarActionRenderer({
         }
     };
 
-    const renderAction = (action: ToolbarActionConfig) => {
+    const renderAction = (action: ToolbarActionConfig<T>) => {
         const Icon = action.icon;
         const isDisabled = action.isDisabled?.(selectedRecords) || 
                           (action.requiresSelection && selectedRecords.length === 0);

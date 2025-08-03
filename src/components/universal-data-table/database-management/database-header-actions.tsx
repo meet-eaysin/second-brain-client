@@ -343,7 +343,7 @@ export function ImportExportDialog({ mode, open, onOpenChange }: ImportExportDia
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label>Format</Label>
-                        <Select value={format} onValueChange={(value: any) => setFormat(value)}>
+                        <Select value={format} onValueChange={(value: string) => setFormat(value)}>
                             <SelectTrigger>
                                 <SelectValue />
                             </SelectTrigger>

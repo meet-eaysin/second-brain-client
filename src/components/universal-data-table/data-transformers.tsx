@@ -8,25 +8,26 @@ export function transformDataToRecords<T = Record<string, unknown>>(
     data: T[],
     idField: string = 'id'
 ): DatabaseRecord[] {
-    return data.map((item: Record<string, unknown>) => {
-        const id = item[idField] || item.id || generateId();
+    return data.map((item) => {
+        const itemRecord = item as Record<string, unknown>;
+        const id = itemRecord[idField] || itemRecord.id || generateId();
         
         // Extract properties from the item
         const properties: Record<string, unknown> = {};
         
-        Object.keys(item).forEach(key => {
+        Object.keys(itemRecord).forEach(key => {
             if (key !== idField && key !== 'id') {
-                properties[key] = item[key];
+                properties[key] = itemRecord[key];
             }
         });
         
         return {
             id,
+            databaseId: itemRecord.databaseId || 'default',
             properties,
-            createdAt: item.createdAt || new Date().toISOString(),
-            updatedAt: item.updatedAt || new Date().toISOString(),
-            createdBy: item.createdBy || 'system',
-            lastEditedBy: item.lastEditedBy || 'system',
+            createdAt: itemRecord.createdAt || new Date().toISOString(),
+            updatedAt: itemRecord.updatedAt || new Date().toISOString(),
+            createdBy: itemRecord.createdBy || 'system',
         } as DatabaseRecord;
     });
 }
@@ -40,7 +41,7 @@ export function transformColumnsToProperties<T = Record<string, unknown>>(
     return columns
         .filter(col => col.id !== 'select' && col.id !== 'actions')
         .map((column, index) => {
-            const id = column.id || String(column.accessorKey) || `col_${index}`;
+            const id = column.id || ('accessorKey' in column && column.accessorKey ? String(column.accessorKey) : `col_${index}`);
             const name = getColumnName(column);
             const type = inferPropertyType(column);
             
@@ -72,7 +73,7 @@ function getColumnName<T>(column: ColumnDef<T>): string {
         return formatFieldName(column.id);
     }
     
-    if (column.accessorKey) {
+    if ('accessorKey' in column && column.accessorKey) {
         return formatFieldName(String(column.accessorKey));
     }
     
@@ -116,7 +117,7 @@ function inferPropertyType<T>(column: ColumnDef<T>): string {
     }
     
     // Infer from column id/accessor
-    const fieldName = column.id || String(column.accessorKey) || '';
+    const fieldName = column.id || ('accessorKey' in column && column.accessorKey ? String(column.accessorKey) : '');
     const lowerFieldName = fieldName.toLowerCase();
     
     // Date fields
@@ -205,7 +206,7 @@ function generateId(): string {
 /**
  * Transform DatabaseRecord back to original format
  */
-export function transformRecordToData<T = any>(
+export function transformRecordToData<T = Record<string, unknown>>(
     record: DatabaseRecord,
     originalFormat?: Partial<T>
 ): T {
@@ -215,7 +216,6 @@ export function transformRecordToData<T = any>(
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         createdBy: record.createdBy,
-        lastEditedBy: record.lastEditedBy,
     };
     
     // If original format is provided, merge with it
@@ -229,7 +229,7 @@ export function transformRecordToData<T = any>(
 /**
  * Transform multiple DatabaseRecords back to original format
  */
-export function transformRecordsToData<T = any>(
+export function transformRecordsToData<T = Record<string, unknown>>(
     records: DatabaseRecord[],
     originalFormat?: Partial<T>
 ): T[] {
@@ -240,11 +240,11 @@ export function transformRecordsToData<T = any>(
  * Transform Second Brain specific data formats
  */
 export function transformSecondBrainData(
-    data: any[],
+    data: Record<string, unknown>[],
     type: 'tasks' | 'projects' | 'goals' | 'notes' | 'people' | 'habits' | 'journal' | 'books' | 'content' | 'finances' | 'mood'
 ): DatabaseRecord[] {
     return data.map(item => {
-        const properties: Record<string, any> = {};
+        const properties: Record<string, unknown> = {};
 
         // Common transformations based on type
         switch (type) {
@@ -335,11 +335,11 @@ export function transformSecondBrainData(
 
         return {
             id: item.id || generateId(),
+            databaseId: item.databaseId || 'default',
             properties,
             createdAt: item.createdAt || item.created_at || new Date().toISOString(),
             updatedAt: item.updatedAt || item.updated_at || new Date().toISOString(),
             createdBy: item.createdBy || item.created_by || 'system',
-            lastEditedBy: item.lastEditedBy || item.updated_by || 'system',
         } as DatabaseRecord;
     });
 }
@@ -348,34 +348,34 @@ export function transformSecondBrainData(
  * Transform API response data to DatabaseRecord format
  */
 export function transformApiResponseToRecords(
-    response: any,
+    response: Record<string, unknown>,
     dataPath?: string
 ): DatabaseRecord[] {
     let data = response;
 
     // Extract data from common API response structures
     if (dataPath) {
-        data = dataPath.split('.').reduce((obj, key) => obj?.[key], response);
+        data = dataPath.split('.').reduce((obj: Record<string, unknown>, key) => obj?.[key] as Record<string, unknown>, response) as Record<string, unknown>;
     } else if (response.data) {
-        data = response.data;
+        data = response.data as Record<string, unknown>;
     } else if (response.items) {
-        data = response.items;
+        data = response.items as Record<string, unknown>;
     } else if (response.results) {
-        data = response.results;
+        data = response.results as Record<string, unknown>;
     }
 
     if (!Array.isArray(data)) {
-        data = [data];
+        return transformDataToRecords([data as Record<string, unknown>]);
     }
 
-    return transformDataToRecords(data);
+    return transformDataToRecords(data as Record<string, unknown>[]);
 }
 
 /**
  * Create property definitions from sample data
  */
 export function createPropertiesFromSample(
-    sampleData: any[],
+    sampleData: Record<string, unknown>[],
     excludeFields: string[] = ['id', 'createdAt', 'updatedAt', 'createdBy', 'lastEditedBy']
 ): DatabaseProperty[] {
     if (sampleData.length === 0) return [];
@@ -407,11 +407,11 @@ export function createPropertiesFromSample(
                 fieldTypes[field].add('number');
             } else if (type === 'string') {
                 // Try to detect date strings
-                if (isDateString(value)) {
+                if (isDateString(value as string)) {
                     fieldTypes[field].add('date');
-                } else if (isEmailString(value)) {
+                } else if (isEmailString(value as string)) {
                     fieldTypes[field].add('email');
-                } else if (isUrlString(value)) {
+                } else if (isUrlString(value as string)) {
                     fieldTypes[field].add('url');
                 } else {
                     fieldTypes[field].add('string');

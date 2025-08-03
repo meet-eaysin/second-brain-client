@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     type ColumnDef,
     type ColumnFiltersState,
@@ -13,6 +13,10 @@ import {
     useReactTable,
     type VisibilityState,
 } from '@tanstack/react-table';
+import { DatabaseDataTable } from '@/modules/databases/components/database-data-table';
+import { createUniversalDataHooks, type UniversalDataType } from '@/services/universal-data-service';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
     Table,
     TableBody,
@@ -35,15 +39,15 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { DataTablePagination } from '@/components/data-table/data-table-pagination';
-import { 
-    Search, X, Plus, ArrowDownUp, ListFilter, MoreHorizontal, 
-    Eye, EyeOff, Settings, Table as TableIcon, Kanban, 
+import {
+    Search, X, Plus, ArrowDownUp, ListFilter, MoreHorizontal,
+    Eye, EyeOff, Settings, Table as TableIcon, Kanban,
     Grid3X3, List, Calendar, Clock, Lock, ChevronDown,
-    Edit, Trash2, Copy, Download, Upload, Filter
+    Edit, Trash2, Copy, Download, Upload, Filter, SortAsc, SortDesc
 } from 'lucide-react';
 import { DatabaseProvider, useDatabaseManagement } from './database-context';
 import { DatabaseHeaderActions } from './database-header-actions';
-import { ViewManagement, AddViewDialog } from './view-management';
+import { ViewManagement, AddViewDialog, EditViewDialog } from './view-management';
 import { PropertyManagement, AddPropertyDialog } from './property-management';
 import { EditableTableCell } from './inline-editing';
 import { ActionRenderer, ToolbarActionRenderer } from '../action-system';
@@ -79,9 +83,13 @@ interface CompleteDatabaseTableProps<T = unknown> {
     databaseId?: string;
     
     // Configuration
-    tableType?: 'tasks' | 'projects' | 'goals' | 'notes' | 'people' | 'habits' | 'journal' | 'books' | 'content' | 'finances' | 'mood' | 'custom';
+    tableType?: UniversalDataType;
     context?: 'database' | 'second-brain' | 'general';
-    
+
+    // Server integration
+    useServerData?: boolean; // If true, use server data instead of initialData
+    serverQueryParams?: Record<string, unknown>; // Additional query parameters for server requests
+
     // Event handlers
     onRecordSelect?: (record: T) => void;
     onRecordEdit?: (record: T) => void;
@@ -138,12 +146,17 @@ function DatabaseTableContent<T = unknown>({
         updateRecord,
         deleteRecord,
         deleteRecords,
+        addView,
+        deleteView,
     } = useDatabaseManagement();
 
     const [sorting, setSorting] = useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
+    const [editingView, setEditingView] = useState<DatabaseView | null>(null);
+    const [sortDialogOpen, setSortDialogOpen] = useState(false);
+    const [filterDialogOpen, setFilterDialogOpen] = useState(false);
 
     // Get current view
     const currentView = useMemo(() => {
@@ -392,14 +405,61 @@ function DatabaseTableContent<T = unknown>({
                                         );
                                     })}
                                 </TabsList>
-                                
-                                <AddViewDialog 
-                                    trigger={
-                                        <Button variant="ghost" size="sm">
-                                            <Plus className="h-4 w-4" />
-                                        </Button>
-                                    }
-                                />
+
+                                <div className="flex items-center gap-2">
+                                    {/* View Actions */}
+                                    {currentView && (
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => setEditingView(currentView)}>
+                                                    <Edit className="h-4 w-4 mr-2" />
+                                                    Edit View
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => {
+                                                    // Duplicate view logic
+                                                    const newView = {
+                                                        ...currentView,
+                                                        name: `${currentView.name} (Copy)`,
+                                                        isDefault: false,
+                                                    };
+                                                    addView(newView);
+                                                    toast.success('View duplicated successfully');
+                                                }}>
+                                                    <Copy className="h-4 w-4 mr-2" />
+                                                    Duplicate View
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem
+                                                    onClick={() => {
+                                                        if (confirm(`Are you sure you want to delete the "${currentView.name}" view?`)) {
+                                                            deleteView(currentView.id);
+                                                            toast.success('View deleted');
+                                                        }
+                                                    }}
+                                                    disabled={currentView.isDefault || views.length <= 1}
+                                                    className="text-destructive focus:text-destructive"
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    Delete View
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    )}
+
+                                    {/* Add View Button */}
+                                    <AddViewDialog
+                                        trigger={
+                                            <Button variant="ghost" size="sm">
+                                                <Plus className="h-4 w-4" />
+                                            </Button>
+                                        }
+                                    />
+                                </div>
                             </div>
                         </Tabs>
                     </div>
@@ -431,10 +491,42 @@ function DatabaseTableContent<T = unknown>({
 
                 {/* Right side - Actions */}
                 <div className="flex items-center gap-2">
+                    {/* Filter Button */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFilterDialogOpen(true)}
+                        className="hover:bg-muted transition-colors"
+                    >
+                        <Filter className="mr-2 h-4 w-4" />
+                        Filter
+                        {currentView?.filters && currentView.filters.length > 0 && (
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                                {currentView.filters.length}
+                            </Badge>
+                        )}
+                    </Button>
+
+                    {/* Sort Button */}
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSortDialogOpen(true)}
+                        className="hover:bg-muted transition-colors"
+                    >
+                        <SortAsc className="mr-2 h-4 w-4" />
+                        Sort
+                        {currentView?.sorts && currentView.sorts.length > 0 && (
+                            <Badge variant="secondary" className="ml-2 text-xs">
+                                {currentView.sorts.length}
+                            </Badge>
+                        )}
+                    </Button>
+
                     {/* Column visibility toggle */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm">
+                            <Button variant="outline" size="sm" className="hover:bg-muted transition-colors">
                                 <Eye className="mr-2 h-4 w-4" />
                                 Columns
                             </Button>
@@ -464,120 +556,38 @@ function DatabaseTableContent<T = unknown>({
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* Toolbar Actions */}
-                    {toolbarActions.length > 0 && (
-                        <ToolbarActionRenderer
-                            actions={toolbarActions}
-                            selectedRecords={selectedTableRecords}
-                            onActionClick={(actionId, records) => {
-                                if (onToolbarAction) {
-                                    onToolbarAction(actionId, records as T[]);
-                                }
-                            }}
-                        />
-                    )}
-                    
-                    {/* Add Record Button */}
-                    <Button onClick={handleAddRecord} size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Record
-                    </Button>
+
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id} style={{ width: header.getSize() }}>
-                                            {header.isPlaceholder ? null : (
-                                                <div
-                                                    className={
-                                                        header.column.getCanSort()
-                                                            ? 'cursor-pointer select-none flex items-center space-x-2'
-                                                            : ''
-                                                    }
-                                                    onClick={header.column.getToggleSortingHandler()}
-                                                >
-                                                    {flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                                    {header.column.getCanSort() && (
-                                                        <ArrowDownUp className="ml-2 h-4 w-4" />
-                                                    )}
-                                                </div>
-                                            )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-                    <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
-                                <TableRow
-                                    key={row.id}
-                                    data-state={row.getIsSelected() && 'selected'}
-                                    className={onRecordSelect ? 'cursor-pointer' : ''}
-                                    onClick={() => {
-                                        if (onRecordSelect && !row.getIsSelected()) {
-                                            onRecordSelect(row.original as T);
-                                        }
-                                    }}
-                                >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </TableCell>
-                                    ))}
-                                </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={tableColumns.length}
-                                    className="h-24 text-center"
-                                >
-                                    <div className="flex flex-col items-center gap-2">
-                                        <p>No records found.</p>
-                                        <Button onClick={handleAddRecord} size="sm">
-                                            <Plus className="h-4 w-4 mr-2" />
-                                            Add your first record
-                                        </Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            {/* Enhanced Table with DatabaseDataTable */}
+            <DatabaseDataTable
+                columns={tableColumns}
+                data={filteredRecords}
+                properties={properties}
+                onRecordSelect={onRecordSelect}
+                onRecordEdit={onRecordEdit}
+                onRecordDelete={onRecordDelete}
+                onRecordCreate={handleAddRecord}
+                databaseId={databaseId}
+                showPropertyVisibility={true}
+                customActions={customActions}
+                toolbarActions={toolbarActions}
+                enableRowSelection={true}
+                enableBulkActions={toolbarActions.length > 0}
+                context="second-brain"
+                secondBrainType={tableType as 'tasks' | 'projects' | 'goals' | 'notes' | 'people' | 'habits' | 'journal' | 'books' | 'content' | 'finances' | 'mood'}
+            />
 
-            {/* Bottom Bar */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{filteredRecords.length} records</span>
-                    {selectedTableRecords.length > 0 && (
-                        <span>{selectedTableRecords.length} selected</span>
-                    )}
-                </div>
-                
-                <div className="flex items-center gap-2">
-                    <Button onClick={handleAddRecord} variant="outline" size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        New
-                    </Button>
-                    <DataTablePagination table={table} />
-                </div>
-            </div>
+            {/* Edit View Dialog */}
+            {editingView && (
+                <EditViewDialog
+                    view={editingView}
+                    open={!!editingView}
+                    onOpenChange={(open) => !open && setEditingView(null)}
+                    onViewUpdated={() => setEditingView(null)}
+                />
+            )}
         </div>
     );
 }
@@ -603,7 +613,7 @@ export function CompleteDatabaseTable<T = unknown>(props: CompleteDatabaseTableP
             return dataTransformer(initialData);
         }
         
-        return initialData.map((item: any) => ({
+        return initialData.map((item: Record<string, unknown>) => ({
             id: item[idField] || item._id || `record-${Date.now()}-${Math.random()}`,
             properties: Object.fromEntries(
                 Object.entries(item).filter(([key]) => key !== idField && key !== '_id')

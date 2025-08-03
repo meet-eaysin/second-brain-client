@@ -30,8 +30,8 @@ export interface UniversalDataTableProps<T = unknown> {
     onRecordUpdate?: (recordId: string, propertyId: string, newValue: unknown) => void;
 
     // Custom actions
-    customActions?: ActionConfig[];
-    toolbarActions?: ToolbarActionConfig[];
+    customActions?: ActionConfig<T>[];
+    toolbarActions?: ToolbarActionConfig<T>[];
     onCustomAction?: (actionId: string, record: T) => void;
     onToolbarAction?: (actionId: string, records: T[]) => void;
     
@@ -130,31 +130,99 @@ export function UniversalDataTable<T = unknown>({
         );
     }, [transformedProperties, onRecordEdit, onRecordDelete, onRecordUpdate]);
     
+    // Convert custom actions to work with DatabaseRecord
+    const convertedCustomActions = useMemo(() => {
+        if (!providedCustomActions) return [];
+        
+        return providedCustomActions.map(action => ({
+            ...action,
+            onClick: (record: DatabaseRecord) => {
+                // Convert DatabaseRecord back to original type T
+                const originalRecord = {
+                    id: record.id,
+                    ...record.properties
+                } as T;
+                action.onClick(originalRecord);
+            },
+            isVisible: action.isVisible ? (record: DatabaseRecord) => {
+                const originalRecord = {
+                    id: record.id,
+                    ...record.properties
+                } as T;
+                return action.isVisible!(originalRecord);
+            } : undefined,
+            isDisabled: action.isDisabled ? (record: DatabaseRecord) => {
+                const originalRecord = {
+                    id: record.id,
+                    ...record.properties
+                } as T;
+                return action.isDisabled!(originalRecord);
+            } : undefined,
+        })) as ActionConfig<DatabaseRecord>[];
+    }, [providedCustomActions]);
+
+    // Convert toolbar actions to work with DatabaseRecord
+    const convertedToolbarActions = useMemo(() => {
+        if (!providedToolbarActions) return [];
+        
+        return providedToolbarActions.map(action => ({
+            ...action,
+            onClick: (records: DatabaseRecord[]) => {
+                // Convert DatabaseRecords back to original type T
+                const originalRecords = records.map(record => ({
+                    id: record.id,
+                    ...record.properties
+                }) as T);
+                action.onClick(originalRecords);
+            },
+            isVisible: action.isVisible ? (records: DatabaseRecord[]) => {
+                const originalRecords = records.map(record => ({
+                    id: record.id,
+                    ...record.properties
+                }) as T);
+                return action.isVisible!(originalRecords);
+            } : undefined,
+            isDisabled: action.isDisabled ? (records: DatabaseRecord[]) => {
+                const originalRecords = records.map(record => ({
+                    id: record.id,
+                    ...record.properties
+                }) as T);
+                return action.isDisabled!(originalRecords);
+            } : undefined,
+        })) as ToolbarActionConfig<DatabaseRecord>[];
+    }, [providedToolbarActions]);
+    
     // Merge custom actions with table configuration actions
     const mergedCustomActions = useMemo(() => {
         const configActions = tableConfig.customActions || [];
-        const providedActions = providedCustomActions || [];
-        return [...configActions, ...providedActions];
-    }, [tableConfig.customActions, providedCustomActions]);
+        return [...configActions, ...convertedCustomActions];
+    }, [tableConfig.customActions, convertedCustomActions]);
     
     // Merge toolbar actions with table configuration actions
     const mergedToolbarActions = useMemo(() => {
         const configActions = tableConfig.toolbarActions || [];
-        const providedActions = providedToolbarActions || [];
-        return [...configActions, ...providedActions];
-    }, [tableConfig.toolbarActions, providedToolbarActions]);
+        return [...configActions, ...convertedToolbarActions];
+    }, [tableConfig.toolbarActions, convertedToolbarActions]);
     
     // Handle custom action clicks
     const handleCustomAction = (actionId: string, record: DatabaseRecord) => {
         if (onCustomAction) {
-            onCustomAction(actionId, record as T);
+            const originalRecord = {
+                id: record.id,
+                ...record.properties
+            } as T;
+            onCustomAction(actionId, originalRecord);
         }
     };
     
     // Handle toolbar action clicks
     const handleToolbarAction = (actionId: string, records: DatabaseRecord[]) => {
         if (onToolbarAction) {
-            onToolbarAction(actionId, records as T[]);
+            const originalRecords = records.map(record => ({
+                id: record.id,
+                ...record.properties
+            }) as T);
+            onToolbarAction(actionId, originalRecords);
         }
     };
     

@@ -1,15 +1,16 @@
-import type { DatabaseProperty, CustomAction, ToolbarAction } from '@/types/database.types';
-import { 
-    Edit, Trash2, Eye, Star, Archive, Copy, Share, 
-    CheckSquare, Clock, AlertTriangle, Target, User,
-    BookOpen, Heart, DollarSign, Calendar, Tag,
-    Plus, Download, Upload, Filter, MoreHorizontal
+import type { DatabaseProperty } from '@/types/database.types';
+import type { ActionConfig, ToolbarActionConfig } from './action-system';
+import {
+    Edit, Trash2, Eye, Star, Archive, Share,
+    CheckSquare, Target, User,
+    BookOpen, Heart,
+    Plus, Download, Upload
 } from 'lucide-react';
 
 export interface TableConfiguration {
     defaultProperties: DatabaseProperty[];
-    customActions: CustomAction[];
-    toolbarActions: ToolbarAction[];
+    customActions: ActionConfig[];
+    toolbarActions: ToolbarActionConfig[];
     features: {
         enableRowSelection: boolean;
         enableBulkActions: boolean;
@@ -156,7 +157,7 @@ function getTasksConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'New Task',
                 icon: Plus,
-                onClick: (records) => console.log('Create new task'),
+                onClick: () => console.log('Create new task'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -284,7 +285,7 @@ function getProjectsConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'New Project',
                 icon: Plus,
-                onClick: (records) => console.log('Create new project'),
+                onClick: () => console.log('Create new project'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -357,7 +358,7 @@ function getDefaultConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'Create New',
                 icon: Plus,
-                onClick: (records) => console.log('Create new'),
+                onClick: () => console.log('Create new'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -450,7 +451,7 @@ function getGoalsConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'New Goal',
                 icon: Plus,
-                onClick: (records) => console.log('Create new goal'),
+                onClick: () => console.log('Create new goal'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -550,7 +551,7 @@ function getNotesConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'New Note',
                 icon: Plus,
-                onClick: (records) => console.log('Create new note'),
+                onClick: () => console.log('Create new note'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -558,7 +559,7 @@ function getNotesConfiguration(): TableConfiguration {
                 id: 'import',
                 label: 'Import',
                 icon: Upload,
-                onClick: (records) => console.log('Import notes'),
+                onClick: () => console.log('Import notes'),
                 variant: 'outline',
                 requiresSelection: false,
             },
@@ -651,7 +652,7 @@ function getPeopleConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'Add Person',
                 icon: Plus,
-                onClick: (records) => console.log('Add new person'),
+                onClick: () => console.log('Add new person'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -742,7 +743,7 @@ function getHabitsConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'New Habit',
                 icon: Plus,
-                onClick: (records) => console.log('Create new habit'),
+                onClick: () => console.log('Create new habit'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -835,7 +836,7 @@ function getJournalConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'New Entry',
                 icon: Plus,
-                onClick: (records) => console.log('Create new journal entry'),
+                onClick: () => console.log('Create new journal entry'),
                 variant: 'default',
                 requiresSelection: false,
             },
@@ -928,7 +929,7 @@ function getBooksConfiguration(): TableConfiguration {
                 id: 'create',
                 label: 'Add Book',
                 icon: Plus,
-                onClick: (records) => console.log('Add new book'),
+                onClick: () => console.log('Add new book'),
                 variant: 'default',
                 requiresSelection: false,
             },

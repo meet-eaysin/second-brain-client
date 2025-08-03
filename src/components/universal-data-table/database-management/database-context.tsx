@@ -102,9 +102,9 @@ export interface DatabaseActions {
     // Database operations
     freezeDatabase: () => void;
     unfreezeDatabase: () => void;
-    shareDatabase: (permissions: any) => void;
+    shareDatabase: (permissions: Record<string, unknown>) => void;
     exportDatabase: (format: 'csv' | 'json' | 'excel') => void;
-    importDatabase: (data: any, format: 'csv' | 'json' | 'excel') => void;
+    importDatabase: (data: Record<string, unknown>, format: 'csv' | 'json' | 'excel') => void;
     
     // UI state
     setLoading: (loading: boolean) => void;
@@ -452,7 +452,7 @@ export function DatabaseProvider({
         updateState({ isFrozen: false });
     }, [updateState]);
 
-    const shareDatabase = useCallback((permissions: any) => {
+    const shareDatabase = useCallback((permissions: Record<string, unknown>) => {
         updateState({ 
             isShared: true,
             permissions: { ...state.permissions, ...permissions },
@@ -464,7 +464,7 @@ export function DatabaseProvider({
         console.log('Exporting database in format:', format);
     }, []);
 
-    const importDatabase = useCallback((data: any, format: 'csv' | 'json' | 'excel') => {
+    const importDatabase = useCallback((data: Record<string, unknown>, format: 'csv' | 'json' | 'excel') => {
         // Implementation for import
         console.log('Importing database from format:', format, data);
     }, []);

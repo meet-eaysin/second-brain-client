@@ -1,4 +1,5 @@
-import { api } from '@/lib/api';
+import { apiClient } from '@/services/api-client.ts';
+import type { ApiResponse } from '@/types/api.types';
 
 // Types
 export interface QuickCaptureData {
@@ -117,7 +118,8 @@ const apiCallWithFallback = async (apiCall: () => Promise<any>, fallbackData: an
         return response;
     } catch (error) {
         if (import.meta.env.DEV) {
-            console.warn('API call failed, using mock data:', error);
+            console.warn('🔄 Second-brain API call failed, using mock data:', error);
+            console.warn('📍 This suggests the server endpoint may not be implemented yet');
             return { data: fallbackData };
         }
         throw error;
@@ -129,7 +131,7 @@ export const secondBrainApi = {
     // Quick Capture
     quickCapture: async (data: QuickCaptureData) => {
         return apiCallWithFallback(
-            () => api.post('/second-brain/quick-capture', data),
+            () => apiClient.post<ApiResponse<{ message: string }>>('/second-brain/quick-capture', data),
             { message: 'Item captured successfully' }
         );
     },
@@ -137,7 +139,7 @@ export const secondBrainApi = {
     // Dashboard
     getDashboard: async (): Promise<{ data: DashboardData }> => {
         return apiCallWithFallback(
-            () => api.get('/second-brain/dashboard'),
+            () => apiClient.get<ApiResponse<DashboardData>>('/second-brain/dashboard').then(res => ({ data: res.data.data })),
             mockData.dashboard
         );
     },
@@ -145,7 +147,7 @@ export const secondBrainApi = {
     // My Day
     getMyDay: async (): Promise<{ data: MyDayData }> => {
         return apiCallWithFallback(
-            () => api.get('/second-brain/my-day'),
+            () => apiClient.get<ApiResponse<MyDayData>>('/second-brain/my-day').then(res => ({ data: res.data.data })),
             {
                 date: new Date(),
                 plannedTasks: mockData.tasks.slice(0, 3),
@@ -164,7 +166,7 @@ export const secondBrainApi = {
         if (limit) params.append('limit', limit.toString());
 
         return apiCallWithFallback(
-            () => api.get(`/second-brain/search?${params}`),
+            () => apiClient.get<ApiResponse<SearchResults>>(`/second-brain/search?${params}`).then(res => ({ data: res.data.data })),
             {
                 tasks: mockData.tasks.filter(t => t.title.toLowerCase().includes(query.toLowerCase())),
                 notes: mockData.notes.filter(n => n.title.toLowerCase().includes(query.toLowerCase())),
@@ -178,42 +180,42 @@ export const secondBrainApi = {
     tasks: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/tasks', { params }),
+                () => apiClient.get<ApiResponse<{ tasks: any[] }>>('/second-brain/tasks', { params }).then(res => ({ data: res.data.data })),
                 { tasks: mockData.tasks }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/tasks/${id}`),
+                () => apiClient.get<ApiResponse<any>>(`/second-brain/tasks/${id}`).then(res => res.data.data),
                 mockData.tasks.find(t => t._id === id) || mockData.tasks[0]
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/tasks', data),
+                () => apiClient.post<ApiResponse<any>>('/second-brain/tasks', data).then(res => res.data.data),
                 { ...data, _id: Date.now().toString(), status: 'todo', createdAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/tasks/${id}`, data),
+                () => apiClient.patch<ApiResponse<any>>(`/second-brain/tasks/${id}`, data).then(res => res.data.data),
                 { ...mockData.tasks.find(t => t._id === id), ...data }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/tasks/${id}`),
+                () => apiClient.delete<ApiResponse<{ message: string }>>(`/second-brain/tasks/${id}`).then(res => res.data.data),
                 { message: 'Task deleted successfully' }
             );
         },
 
         bulkUpdate: async (taskIds: string[], updates: any) => {
             return apiCallWithFallback(
-                () => api.patch('/second-brain/tasks/bulk', { taskIds, updates }),
+                () => apiClient.patch<ApiResponse<{ message: string; updatedCount: number }>>('/second-brain/tasks/bulk', { taskIds, updates }).then(res => res.data.data),
                 { message: 'Tasks updated successfully', updatedCount: taskIds.length }
             );
         },
@@ -223,35 +225,35 @@ export const secondBrainApi = {
     projects: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/projects', { params }),
+                () => apiClient.get('/second-brain/projects', { params }),
                 { projects: mockData.projects }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/projects/${id}`),
+                () => apiClient.get(`/second-brain/projects/${id}`),
                 mockData.projects.find(p => p._id === id) || mockData.projects[0]
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/projects', data),
+                () => apiClient.post('/second-brain/projects', data),
                 { ...data, _id: Date.now().toString(), status: 'planning', completionPercentage: 0, createdAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/projects/${id}`, data),
+                () => apiClient.patch(`/second-brain/projects/${id}`, data),
                 { ...mockData.projects.find(p => p._id === id), ...data }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/projects/${id}`),
+                () => apiClient.delete(`/second-brain/projects/${id}`),
                 { message: 'Project deleted successfully' }
             );
         },
@@ -261,35 +263,35 @@ export const secondBrainApi = {
     notes: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/notes', { params }),
+                () => apiClient.get('/second-brain/notes', { params }),
                 { notes: mockData.notes }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/notes/${id}`),
+                () => apiClient.get(`/second-brain/notes/${id}`),
                 mockData.notes.find(n => n._id === id) || mockData.notes[0]
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/notes', data),
+                () => apiClient.post('/second-brain/notes', data),
                 { ...data, _id: Date.now().toString(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/notes/${id}`, data),
+                () => apiClient.patch(`/second-brain/notes/${id}`, data),
                 { ...mockData.notes.find(n => n._id === id), ...data, updatedAt: new Date().toISOString() }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/notes/${id}`),
+                () => apiClient.delete(`/second-brain/notes/${id}`),
                 { message: 'Note deleted successfully' }
             );
         },
@@ -299,35 +301,35 @@ export const secondBrainApi = {
     people: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/people', { params }),
+                () => apiClient.get('/second-brain/people', { params }),
                 { people: mockData.people }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/people/${id}`),
+                () => apiClient.get(`/second-brain/people/${id}`),
                 mockData.people.find(p => p._id === id) || mockData.people[0]
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/people', data),
+                () => apiClient.post('/second-brain/people', data),
                 { ...data, _id: Date.now().toString(), createdAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/people/${id}`, data),
+                () => apiClient.patch(`/second-brain/people/${id}`, data),
                 { ...mockData.people.find(p => p._id === id), ...data }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/people/${id}`),
+                () => apiClient.delete(`/second-brain/people/${id}`),
                 { message: 'Person deleted successfully' }
             );
         },
@@ -337,35 +339,35 @@ export const secondBrainApi = {
     goals: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/goals', { params }),
+                () => apiClient.get('/second-brain/goals', { params }),
                 { goals: mockData.goals }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/goals/${id}`),
+                () => apiClient.get(`/second-brain/goals/${id}`),
                 mockData.goals.find(g => g._id === id) || mockData.goals[0]
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/goals', data),
+                () => apiClient.post('/second-brain/goals', data),
                 { ...data, _id: Date.now().toString(), progress: 0, status: 'active', createdAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/goals/${id}`, data),
+                () => apiClient.patch(`/second-brain/goals/${id}`, data),
                 { ...mockData.goals.find(g => g._id === id), ...data }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/goals/${id}`),
+                () => apiClient.delete(`/second-brain/goals/${id}`),
                 { message: 'Goal deleted successfully' }
             );
         },
@@ -375,42 +377,42 @@ export const secondBrainApi = {
     habits: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/habits', { params }),
+                () => apiClient.get('/second-brain/habits', { params }),
                 { habits: mockData.habits }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/habits/${id}`),
+                () => apiClient.get(`/second-brain/habits/${id}`),
                 mockData.habits.find(h => h._id === id) || mockData.habits[0]
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/habits', data),
+                () => apiClient.post('/second-brain/habits', data),
                 { ...data, _id: Date.now().toString(), streak: 0, isActive: true, completedToday: false, createdAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/habits/${id}`, data),
+                () => apiClient.patch(`/second-brain/habits/${id}`, data),
                 { ...mockData.habits.find(h => h._id === id), ...data }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/habits/${id}`),
+                () => apiClient.delete(`/second-brain/habits/${id}`),
                 { message: 'Habit deleted successfully' }
             );
         },
 
         trackEntry: async (id: string, entry: any) => {
             return apiCallWithFallback(
-                () => api.post(`/second-brain/habits/${id}/entries`, entry),
+                () => apiClient.post(`/second-brain/habits/${id}/entries`, entry),
                 { message: 'Habit entry tracked successfully', streak: Math.floor(Math.random() * 30) + 1 }
             );
         },
@@ -420,35 +422,35 @@ export const secondBrainApi = {
     journal: {
         getAll: async (params?: any) => {
             return apiCallWithFallback(
-                () => api.get('/second-brain/journal', { params }),
+                () => apiClient.get('/second-brain/journal', { params }),
                 { entries: [] }
             );
         },
 
         getById: async (id: string) => {
             return apiCallWithFallback(
-                () => api.get(`/second-brain/journal/${id}`),
+                () => apiClient.get(`/second-brain/journal/${id}`),
                 { _id: id, content: 'Sample journal entry...', date: new Date().toISOString(), mood: 'good' }
             );
         },
 
         create: async (data: any) => {
             return apiCallWithFallback(
-                () => api.post('/second-brain/journal', data),
+                () => apiClient.post('/second-brain/journal', data),
                 { ...data, _id: Date.now().toString(), createdAt: new Date().toISOString() }
             );
         },
 
         update: async (id: string, data: any) => {
             return apiCallWithFallback(
-                () => api.patch(`/second-brain/journal/${id}`, data),
+                () => apiClient.patch(`/second-brain/journal/${id}`, data),
                 { _id: id, ...data, updatedAt: new Date().toISOString() }
             );
         },
 
         delete: async (id: string) => {
             return apiCallWithFallback(
-                () => api.delete(`/second-brain/journal/${id}`),
+                () => apiClient.delete(`/second-brain/journal/${id}`),
                 { message: 'Journal entry deleted successfully' }
             );
         },
@@ -457,32 +459,32 @@ export const secondBrainApi = {
     // Books
     books: {
         getAll: async (params?: any) => {
-            const response = await api.get('/second-brain/books', { params });
+            const response = await apiClient.get('/second-brain/books', { params });
             return response.data;
         },
 
         getById: async (id: string) => {
-            const response = await api.get(`/second-brain/books/${id}`);
+            const response = await apiClient.get(`/second-brain/books/${id}`);
             return response.data;
         },
 
         create: async (data: any) => {
-            const response = await api.post('/second-brain/books', data);
+            const response = await apiClient.post('/second-brain/books', data);
             return response.data;
         },
 
         update: async (id: string, data: any) => {
-            const response = await api.patch(`/second-brain/books/${id}`, data);
+            const response = await apiClient.patch(`/second-brain/books/${id}`, data);
             return response.data;
         },
 
         delete: async (id: string) => {
-            const response = await api.delete(`/second-brain/books/${id}`);
+            const response = await apiClient.delete(`/second-brain/books/${id}`);
             return response.data;
         },
 
         addNote: async (id: string, note: any) => {
-            const response = await api.post(`/second-brain/books/${id}/notes`, note);
+            const response = await apiClient.post(`/second-brain/books/${id}/notes`, note);
             return response.data;
         },
     },
@@ -490,27 +492,27 @@ export const secondBrainApi = {
     // Content
     content: {
         getAll: async (params?: any) => {
-            const response = await api.get('/second-brain/content', { params });
+            const response = await apiClient.get('/second-brain/content', { params });
             return response.data;
         },
 
         getById: async (id: string) => {
-            const response = await api.get(`/second-brain/content/${id}`);
+            const response = await apiClient.get(`/second-brain/content/${id}`);
             return response.data;
         },
 
         create: async (data: any) => {
-            const response = await api.post('/second-brain/content', data);
+            const response = await apiClient.post('/second-brain/content', data);
             return response.data;
         },
 
         update: async (id: string, data: any) => {
-            const response = await api.patch(`/second-brain/content/${id}`, data);
+            const response = await apiClient.patch(`/second-brain/content/${id}`, data);
             return response.data;
         },
 
         delete: async (id: string) => {
-            const response = await api.delete(`/second-brain/content/${id}`);
+            const response = await apiClient.delete(`/second-brain/content/${id}`);
             return response.data;
         },
     },
@@ -518,27 +520,27 @@ export const secondBrainApi = {
     // Finances
     finances: {
         getAll: async (params?: any) => {
-            const response = await api.get('/second-brain/finances', { params });
+            const response = await apiClient.get('/second-brain/finances', { params });
             return response.data;
         },
 
         getById: async (id: string) => {
-            const response = await api.get(`/second-brain/finances/${id}`);
+            const response = await apiClient.get(`/second-brain/finances/${id}`);
             return response.data;
         },
 
         create: async (data: any) => {
-            const response = await api.post('/second-brain/finances', data);
+            const response = await apiClient.post('/second-brain/finances', data);
             return response.data;
         },
 
         update: async (id: string, data: any) => {
-            const response = await api.patch(`/second-brain/finances/${id}`, data);
+            const response = await apiClient.patch(`/second-brain/finances/${id}`, data);
             return response.data;
         },
 
         delete: async (id: string) => {
-            const response = await api.delete(`/second-brain/finances/${id}`);
+            const response = await apiClient.delete(`/second-brain/finances/${id}`);
             return response.data;
         },
     },
@@ -546,27 +548,27 @@ export const secondBrainApi = {
     // Mood
     mood: {
         getAll: async (params?: any) => {
-            const response = await api.get('/second-brain/mood', { params });
+            const response = await apiClient.get('/second-brain/mood', { params });
             return response.data;
         },
 
         getById: async (id: string) => {
-            const response = await api.get(`/second-brain/mood/${id}`);
+            const response = await apiClient.get(`/second-brain/mood/${id}`);
             return response.data;
         },
 
         create: async (data: any) => {
-            const response = await api.post('/second-brain/mood', data);
+            const response = await apiClient.post('/second-brain/mood', data);
             return response.data;
         },
 
         update: async (id: string, data: any) => {
-            const response = await api.patch(`/second-brain/mood/${id}`, data);
+            const response = await apiClient.patch(`/second-brain/mood/${id}`, data);
             return response.data;
         },
 
         delete: async (id: string) => {
-            const response = await api.delete(`/second-brain/mood/${id}`);
+            const response = await apiClient.delete(`/second-brain/mood/${id}`);
             return response.data;
         },
     },

@@ -1,25 +1,11 @@
 import React from 'react';
+import { UniversalDataTable } from '@/components/universal-data-table';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MoreHorizontal, Shield, ShieldCheck, User as UserIcon } from 'lucide-react';
+import { Shield, ShieldCheck, User as UserIcon, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
 import type { User, UserRole } from '@/types/user.types';
+import type { ColumnDef } from '@tanstack/react-table';
+import type { ActionConfig, ToolbarActionConfig } from '@/components/universal-data-table/action-system';
 
 interface UserTableProps {
     users: User[];
@@ -42,7 +28,7 @@ const getRoleIcon = (role: UserRole) => {
     }
 };
 
-const getRoleColor = (role: UserRole) => {
+const getRoleColor = (role: UserRole): "default" | "secondary" | "destructive" | "outline" => {
     switch (role) {
         case 'ADMIN':
             return 'destructive';
@@ -88,163 +74,249 @@ export const UserTable: React.FC<UserTableProps> = ({
         return 'U';
     };
 
+    // Define columns for the universal data table
+    const columns: ColumnDef<User>[] = [
+        {
+            id: 'user',
+            header: 'User',
+            accessorKey: 'email',
+            cell: ({ row }) => {
+                const user = row.original;
+                return (
+                    <div className="flex items-center space-x-3">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src={user.profilePicture} />
+                            <AvatarFallback>
+                                {getInitials(user.firstName, user.lastName, user.username)}
+                            </AvatarFallback>
+                        </Avatar>
+                        <div>
+                            <div className="font-medium">
+                                {user.firstName && user.lastName
+                                    ? `${user.firstName} ${user.lastName}`
+                                    : user.username}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                                {user.email}
+                            </div>
+                        </div>
+                    </div>
+                );
+            },
+        },
+        {
+            id: 'role',
+            header: 'Role',
+            accessorKey: 'role',
+            cell: ({ row }) => {
+                const role = row.original.role;
+                return (
+                    <Badge variant={getRoleColor(role)} className="gap-1">
+                        {getRoleIcon(role)}
+                        {role}
+                    </Badge>
+                );
+            },
+        },
+        {
+            id: 'provider',
+            header: 'Provider',
+            accessorKey: 'authProvider',
+            cell: ({ row }) => getProviderBadge(row.original.authProvider),
+        },
+        {
+            id: 'status',
+            header: 'Status',
+            accessorKey: 'isActive',
+            cell: ({ row }) => (
+                <Badge variant={row.original.isActive ? 'default' : 'secondary'}>
+                    {row.original.isActive ? 'Active' : 'Inactive'}
+                </Badge>
+            ),
+        },
+        {
+            id: 'created',
+            header: 'Created',
+            accessorKey: 'createdAt',
+            cell: ({ row }) => (
+                <div className="text-sm">
+                    {formatDate(row.original.createdAt)}
+                </div>
+            ),
+        },
+        {
+            id: 'lastLogin',
+            header: 'Last Login',
+            accessorKey: 'lastLoginAt',
+            cell: ({ row }) => (
+                <div className="text-sm">
+                    {row.original.lastLoginAt ? formatDate(row.original.lastLoginAt) : 'Never'}
+                </div>
+            ),
+        },
+    ];
+
+    // Define custom actions
+    const customActions: ActionConfig<User>[] = [
+        {
+            id: 'edit',
+            label: 'Edit User',
+            icon: Edit,
+            onClick: (record) => {
+                if (onEditUser) {
+                    onEditUser(record);
+                }
+            },
+            variant: 'ghost',
+        },
+        {
+            id: 'toggle-status',
+            label: 'Toggle Status',
+            icon: UserCheck,
+            onClick: (record) => {
+                if (onToggleStatus) {
+                    onToggleStatus(record.id);
+                }
+            },
+            variant: 'ghost',
+        },
+        {
+            id: 'make-user',
+            label: 'Make User',
+            icon: UserIcon,
+            onClick: (record) => {
+                if (onUpdateRole) {
+                    onUpdateRole(record.id, 'USER');
+                }
+            },
+            variant: 'ghost',
+            isVisible: (record) => record.role !== 'USER',
+        },
+        {
+            id: 'make-moderator',
+            label: 'Make Moderator',
+            icon: Shield,
+            onClick: (record) => {
+                if (onUpdateRole) {
+                    onUpdateRole(record.id, 'MODERATOR');
+                }
+            },
+            variant: 'ghost',
+            isVisible: (record) => record.role !== 'MODERATOR',
+        },
+        {
+            id: 'make-admin',
+            label: 'Make Admin',
+            icon: ShieldCheck,
+            onClick: (record) => {
+                if (onUpdateRole) {
+                    onUpdateRole(record.id, 'ADMIN');
+                }
+            },
+            variant: 'ghost',
+            isVisible: (record) => record.role !== 'ADMIN',
+        },
+        {
+            id: 'delete',
+            label: 'Delete User',
+            icon: Trash2,
+            onClick: (record) => {
+                if (onDeleteUser) {
+                    onDeleteUser(record.id);
+                }
+            },
+            variant: 'ghost',
+            isDestructive: true,
+            requiresConfirmation: true,
+            confirmationMessage: 'Are you sure you want to delete this user? This action cannot be undone.',
+            isVisible: (record) => record.id !== currentUserId,
+        },
+    ];
+
+    // Define toolbar actions
+    const toolbarActions: ToolbarActionConfig<User>[] = [
+        {
+            id: 'bulk-activate',
+            label: 'Activate Selected',
+            icon: UserCheck,
+            onClick: (records) => {
+                if (onToggleStatus) {
+                    records.forEach(record => {
+                        if (!record.isActive) {
+                            onToggleStatus(record.id);
+                        }
+                    });
+                }
+            },
+            variant: 'outline',
+            requiresSelection: true,
+        },
+        {
+            id: 'bulk-deactivate',
+            label: 'Deactivate Selected',
+            icon: UserX,
+            onClick: (records) => {
+                if (onToggleStatus) {
+                    records.forEach(record => {
+                        if (record.isActive) {
+                            onToggleStatus(record.id);
+                        }
+                    });
+                }
+            },
+            variant: 'outline',
+            requiresSelection: true,
+        },
+        {
+            id: 'bulk-delete',
+            label: 'Delete Selected',
+            icon: Trash2,
+            onClick: (records) => {
+                if (onDeleteUser) {
+                    records.forEach(record => {
+                        if (record.id !== currentUserId) {
+                            onDeleteUser(record.id);
+                        }
+                    });
+                }
+            },
+            variant: 'outline',
+            requiresSelection: true,
+            isDestructive: true,
+            requiresConfirmation: true,
+            confirmationMessage: 'Are you sure you want to delete the selected users? This action cannot be undone.',
+        },
+    ];
+
     if (isLoading) {
         return (
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>User</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Provider</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Created</TableHead>
-                            <TableHead>Last Login</TableHead>
-                            <TableHead className="w-[70px]"></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {[...Array(5)].map((_, i) => (
-                            <TableRow key={i}>
-                                <TableCell>
-                                    <div className="flex items-center space-x-3">
-                                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-                                        <div className="space-y-1">
-                                            <div className="h-4 w-32 bg-muted animate-pulse rounded" />
-                                            <div className="h-3 w-24 bg-muted animate-pulse rounded" />
-                                        </div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="h-6 w-16 bg-muted animate-pulse rounded" />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="h-6 w-12 bg-muted animate-pulse rounded" />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="h-6 w-16 bg-muted animate-pulse rounded" />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="h-4 w-20 bg-muted animate-pulse rounded" />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="h-4 w-20 bg-muted animate-pulse rounded" />
-                                </TableCell>
-                                <TableCell>
-                                    <div className="h-8 w-8 bg-muted animate-pulse rounded" />
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+            <UniversalDataTable<User>
+                data={[]}
+                columns={columns}
+                customActions={customActions}
+                toolbarActions={toolbarActions}
+                enableRowSelection={true}
+                enableBulkActions={true}
+                enableColumnVisibility={true}
+                enableSorting={true}
+                enableFiltering={true}
+                enablePagination={true}
+            />
         );
     }
 
     return (
-        <div className="rounded-md border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Provider</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Last Login</TableHead>
-                        <TableHead className="w-[70px]"></TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {users.map((user) => (
-                        <TableRow key={user.id}>
-                            <TableCell>
-                                <div className="flex items-center space-x-3">
-                                    <Avatar className="h-8 w-8">
-                                        <AvatarImage src={user.profilePicture} />
-                                        <AvatarFallback>
-                                            {getInitials(user.firstName, user.lastName, user.username)}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                        <div className="font-medium">
-                                            {user.firstName && user.lastName
-                                                ? `${user.firstName} ${user.lastName}`
-                                                : user.username}
-                                        </div>
-                                        <div className="text-sm text-muted-foreground">
-                                            {user.email}
-                                        </div>
-                                    </div>
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <Badge variant={getRoleColor(user.role)} className="gap-1">
-                                    {getRoleIcon(user.role)}
-                                    {user.role}
-                                </Badge>
-                            </TableCell>
-                            <TableCell>{getProviderBadge(user.authProvider)}</TableCell>
-                            <TableCell>
-                                <Badge variant={user.isActive ? 'default' : 'secondary'}>
-                                    {user.isActive ? 'Active' : 'Inactive'}
-                                </Badge>
-                            </TableCell>
-                            <TableCell className="text-sm">
-                                {formatDate(user.createdAt)}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                                {user.lastLoginAt ? formatDate(user.lastLoginAt) : 'Never'}
-                            </TableCell>
-                            <TableCell>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => onEditUser?.(user)}>
-                                            Edit User
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => onToggleStatus?.(user.id)}>
-                                            {user.isActive ? 'Deactivate' : 'Activate'}
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            onClick={() => onUpdateRole?.(user.id, 'USER')}
-                                            disabled={user.role === 'USER'}
-                                        >
-                                            Make User
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => onUpdateRole?.(user.id, 'MODERATOR')}
-                                            disabled={user.role === 'MODERATOR'}
-                                        >
-                                            Make Moderator
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            onClick={() => onUpdateRole?.(user.id, 'ADMIN')}
-                                            disabled={user.role === 'ADMIN'}
-                                        >
-                                            Make Admin
-                                        </DropdownMenuItem>
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                            onClick={() => onDeleteUser?.(user.id)}
-                                            disabled={user.id === currentUserId}
-                                            className="text-destructive"
-                                        >
-                                            Delete User
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
+        <UniversalDataTable<User>
+            data={users}
+            columns={columns}
+            customActions={customActions}
+            toolbarActions={toolbarActions}
+            enableRowSelection={true}
+            enableBulkActions={true}
+            enableColumnVisibility={true}
+            enableSorting={true}
+            enableFiltering={true}
+            enablePagination={true}
+        />
     );
 };
