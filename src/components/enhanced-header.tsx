@@ -1,126 +1,142 @@
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     Search,
     Plus,
     Command,
     Bell,
     Sparkles,
-     TriangleDashed
+    MoreHorizontal,
+    Sun,
+    Moon,
+    User,
+    Settings,
+    LogOut,
+    Zap
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { ThemeSwitch } from '@/components/theme-switch';
+import { ProfileDropdown } from '@/components/profile-dropdown';
 
 interface EnhancedHeaderProps {
     className?: string;
-    showDatabaseActions?: boolean;
+    showSearch?: boolean;
+    contextActions?: React.ReactNode;
 }
 
-export function EnhancedHeader({ className, showDatabaseActions = false }: EnhancedHeaderProps) {
+export function EnhancedHeader({
+    className,
+    showSearch = true,
+    contextActions
+}: EnhancedHeaderProps) {
     const location = useLocation();
-    
-    const getBreadcrumbs = () => {
+
+    const getPageTitle = () => {
         const path = location.pathname;
         const segments = path.split('/').filter(Boolean);
-        
-        const segmentMap: Record<string, string> = {
-            'app': 'App',
+        const lastSegment = segments[segments.length - 1];
+
+        const titleMap: Record<string, string> = {
             'dashboard': 'Dashboard',
-            'databases': 'Databases',
-            'notes': 'Notes',
-            'ideas': 'Ideas',
-            'search': 'Smart Search',
-            'settings': 'Settings',
-            'favorites': 'Favorites',
-            'tags': 'Tags',
-            'collections': 'Collections',
-            'calendar': 'Calendar View',
-            'recent': 'Recent',
-            'templates': 'Templates',
-            'archive': 'Archive',
+            'users': 'Users',
+            'notifications': 'Notifications',
             'capture': 'Quick Capture',
-            'knowledge-graph': 'Knowledge Graph',
-            'ai-assistant': 'AI Assistant',
+            'my-day': 'My Day',
+            'projects': 'Projects',
+            'notes': 'Notes',
+            'people': 'People',
+            'goals': 'Goals',
+            'habits': 'Habits',
+            'journal': 'Journal',
+            'mood-tracker': 'Mood Tracker',
+            'search': 'Search',
+            'finances': 'Finances',
+            'content-hub': 'Content Hub',
+            'books': 'Book Log',
+            'para': 'PARA System',
+            'areas': 'Areas',
+            'resources': 'Resources',
+            'archive': 'Archive',
         };
-        
-        return segments.map(segment => segmentMap[segment] || segment);
+
+        return titleMap[lastSegment] || 'Second Brain';
     };
-    
-    const breadcrumbs = getBreadcrumbs();
 
     return (
-        <header className={cn("flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4", className)}>
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            
-            {/* Breadcrumbs */}
-            <Breadcrumb>
-                <BreadcrumbList>
-                    <BreadcrumbItem className="hidden md:block">
-                        <BreadcrumbLink href="/app/dashboard" className="flex items-center gap-2">
-                            <TriangleDashed className="h-4 w-4" />
-                            {/*<TriangleDashed />*/}
-                            Second Brain
-                        </BreadcrumbLink>
-                    </BreadcrumbItem>
-                    {breadcrumbs.map((crumb, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                            <BreadcrumbSeparator className="hidden md:block" />
-                            <BreadcrumbItem>
-                                {index === breadcrumbs.length - 1 ? (
-                                    <BreadcrumbPage>{crumb}</BreadcrumbPage>
-                                ) : (
-                                    <BreadcrumbLink href={`/${breadcrumbs.slice(0, index + 1).join('/').toLowerCase()}`}>
-                                        {crumb}
-                                    </BreadcrumbLink>
-                                )}
-                            </BreadcrumbItem>
-                        </div>
-                    ))}
-                </BreadcrumbList>
-            </Breadcrumb>
+        <header className={cn("flex h-12 shrink-0 items-center gap-3 border-b bg-background px-4", className)}>
+            {/* Left: Sidebar trigger and page title */}
+            <div className="flex items-center gap-3">
+                <SidebarTrigger className="-ml-1" />
+                <Separator orientation="vertical" className="h-4" />
+                <span className="text-xs font-medium text-muted-foreground">{getPageTitle()}</span>
+            </div>
 
-            {/* Center Search */}
-            <div className="flex-1 flex justify-center max-w-md mx-auto">
-                <div className="relative w-full">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search your second brain..."
-                        className="pl-10 pr-20 bg-muted/50 border-0 focus:bg-background transition-colors"
-                    />
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                        <Badge variant="outline" className="h-5 px-1.5 text-xs font-mono">
-                            <Command className="h-3 w-3 mr-1" />K
+            {/* Center: Compact search (when enabled) */}
+            {showSearch && (
+                <div className="flex-1 max-w-sm mx-auto">
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                            placeholder="Search..."
+                            className="pl-8 pr-12 h-8 bg-muted/50 border-0 focus:bg-background transition-colors text-sm"
+                        />
+                        <Badge variant="outline" className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 px-1 text-xs font-mono">
+                            <Command className="h-2.5 w-2.5 mr-0.5" />K
                         </Badge>
                     </div>
                 </div>
-            </div>
+            )}
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                    <Bell className="h-4 w-4" />
-                </Button>
-                
-                {/* Default Quick Add button when not on database pages */}
-                {!showDatabaseActions && (
-                    <Button size="sm" className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white border-0">
-                        <Plus className="h-4 w-4 mr-1" />
-                        <span className="hidden sm:inline">Quick Add</span>
-                    </Button>
-                )}
-                
-                <Button variant="outline" size="sm" className="hidden md:flex items-center gap-1">
-                    <Sparkles className="h-4 w-4" />
-                    AI Assistant
-                    <Badge variant="secondary" className="ml-1 text-xs px-1.5 py-0.5 bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400">
-                        Upcoming
-                    </Badge>
-                </Button>
+            {/* Right: Context actions and utilities */}
+            <div className="flex items-center gap-1">
+                {/* Context-specific actions */}
+                {contextActions}
+
+                {/* Utility dropdown for all essential functions */}
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem className="gap-2">
+                            <Plus className="h-4 w-4" />
+                            Quick Add
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2">
+                            <Bell className="h-4 w-4" />
+                            Notifications
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="gap-2">
+                            <Zap className="h-4 w-4" />
+                            AI Assistant
+                            <Badge variant="secondary" className="ml-auto text-xs">Soon</Badge>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="gap-2">
+                            <Settings className="h-4 w-4" />
+                            Settings
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* Theme toggle */}
+                <ThemeSwitch />
+
+                {/* Profile dropdown */}
+                <ProfileDropdown />
             </div>
         </header>
     );

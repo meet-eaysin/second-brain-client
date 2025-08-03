@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
     BookOpen, Plus, Search, Filter, Star,
     Calendar, Clock, TrendingUp, Target,
     Edit, Trash2, Eye, Play, Pause,
@@ -182,23 +184,25 @@ export function BooksPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <BookOpen className="h-8 w-8" />
-                        Book Log
-                    </h1>
-                    <p className="text-muted-foreground">Track your reading journey and build your personal library</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Add Book
-                        </Button>
-                    </DialogTrigger>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">Book Log</h1>
+                        <p className="text-muted-foreground">
+                            Track your reading journey and build your personal library
+                        </p>
+                    </div>
+                    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add Book
+                            </Button>
+                        </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>Add New Book</DialogTitle>
@@ -519,6 +523,7 @@ export function BooksPage() {
                     )}
                 </TabsContent>
             </Tabs>
-        </div>
+            </Main>
+        </>
     );
 }

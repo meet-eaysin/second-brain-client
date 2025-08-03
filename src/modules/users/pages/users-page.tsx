@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -86,20 +88,23 @@ export const UsersPage: React.FC = () => {
     } : null;
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+        <>
+            <EnhancedHeader
+                contextActions={
+                    <Button size="sm" className="h-8 gap-2">
+                        <UserPlus className="h-4 w-4" />
+                        Invite User
+                    </Button>
+                }
+            />
+
+            <Main className="space-y-8">
+                {/* Page Description */}
+                <div className="space-y-2">
                     <p className="text-muted-foreground">
                         Manage users, roles, and permissions
                     </p>
                 </div>
-                <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Invite User
-                </Button>
-            </div>
 
             {/* Stats Cards */}
             {stats && (
@@ -234,7 +239,8 @@ export const UsersPage: React.FC = () => {
                     )}
                 </CardContent>
             </Card>
-        </div>
+            </Main>
+        </>
     );
 };
 

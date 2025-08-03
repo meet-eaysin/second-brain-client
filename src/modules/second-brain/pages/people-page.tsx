@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,13 +10,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { 
-    Users, Plus, Search, Mail, Phone, Building, 
+import {
+    Users, Plus, Search, Mail, Phone, Building,
     Calendar, MessageSquare, Star, Edit, Trash2,
     MapPin, Globe, Linkedin, Twitter, Clock,
-    TrendingUp, UserPlus, Filter
+    TrendingUp, UserPlus, Filter, Briefcase
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
+import { SecondBrainTable, createSecondBrainColumns } from '../../databases/components/second-brain-table';
+import { getSecondBrainConfig } from '../../databases/utils/second-brain-configs';
 import { toast } from 'sonner';
 
 interface Person {
@@ -94,7 +98,68 @@ export function PeoplePage() {
         },
     });
 
-    const people = peopleData?.data?.people || [];
+    // Mock data for demonstration
+    const mockPeople = [
+        {
+            _id: '1',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john.doe@example.com',
+            phone: '+1-555-0123',
+            company: 'Tech Corp',
+            role: 'Software Engineer',
+            relationship: 'colleague',
+            priority: 'high',
+            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
+            lastContact: '2024-01-10',
+            nextFollowUp: '2024-02-10',
+            tags: ['tech', 'frontend'],
+            notes: 'Great developer, works on React projects',
+            status: 'active',
+            createdAt: '2024-01-01',
+            updatedAt: '2024-01-10'
+        },
+        {
+            _id: '2',
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane.smith@design.com',
+            phone: '+1-555-0456',
+            company: 'Design Studio',
+            role: 'UX Designer',
+            relationship: 'client',
+            priority: 'medium',
+            avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face',
+            lastContact: '2024-01-08',
+            nextFollowUp: '2024-02-08',
+            tags: ['design', 'ux'],
+            notes: 'Excellent designer, very detail-oriented',
+            status: 'active',
+            createdAt: '2024-01-02',
+            updatedAt: '2024-01-08'
+        },
+        {
+            _id: '3',
+            firstName: 'Mike',
+            lastName: 'Johnson',
+            email: 'mike.j@startup.io',
+            phone: '+1-555-0789',
+            company: 'Startup Inc',
+            role: 'Product Manager',
+            relationship: 'friend',
+            priority: 'high',
+            avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face',
+            lastContact: '2024-01-12',
+            nextFollowUp: '2024-02-12',
+            tags: ['product', 'startup'],
+            notes: 'Former colleague, now at a startup',
+            status: 'active',
+            createdAt: '2024-01-03',
+            updatedAt: '2024-01-12'
+        }
+    ];
+
+    const people = peopleData?.data?.people || mockPeople;
 
     const filteredPeople = people.filter((person: Person) => {
         const matchesSearch = searchQuery === '' || 
@@ -111,6 +176,85 @@ export function PeoplePage() {
 
         return matchesSearch && matchesView;
     });
+
+    // Transform people to database records format
+    const peopleRecords = filteredPeople.map((person: Person) => ({
+        id: person._id,
+        properties: {
+            name: `${person.firstName} ${person.lastName}`,
+            firstName: person.firstName,
+            lastName: person.lastName,
+            email: person.email,
+            phone: person.phone,
+            company: person.company,
+            relationship: person.relationship,
+            priority: person.priority,
+            avatar: person.avatar,
+            lastContact: person.lastContact,
+            nextFollowUp: person.nextFollowUp,
+            tags: person.tags,
+            notes: person.notes,
+            status: person.status,
+            createdAt: person.createdAt,
+            updatedAt: person.updatedAt
+        }
+    }));
+
+    // Get configuration and create columns
+    const config = getSecondBrainConfig('people');
+    const columns = createSecondBrainColumns('people', config.defaultProperties);
+
+    // Handle custom actions
+    const handleCustomAction = (actionId: string, record: any) => {
+        switch (actionId) {
+            case 'call':
+                if (record.properties.phone) {
+                    window.open(`tel:${record.properties.phone}`);
+                }
+                break;
+            case 'email':
+                if (record.properties.email) {
+                    window.open(`mailto:${record.properties.email}`);
+                }
+                break;
+            case 'schedule':
+                // Handle scheduling
+                console.log('Schedule meeting with:', record);
+                break;
+            case 'edit':
+                // Handle edit action
+                const person = people.find((p: Person) => p._id === record.id);
+                if (person) {
+                    setSelectedPerson(person);
+                }
+                break;
+            case 'delete':
+                deletePersonMutation.mutate(record.id);
+                break;
+        }
+    };
+
+    // Handle toolbar actions
+    const handleToolbarAction = (actionId: string, records: any[]) => {
+        switch (actionId) {
+            case 'bulk-email':
+                const emails = records
+                    .map(r => r.properties.email)
+                    .filter(Boolean)
+                    .join(',');
+                if (emails) {
+                    window.open(`mailto:${emails}`);
+                }
+                break;
+            case 'export-contacts':
+                // Handle export
+                console.log('Export contacts:', records);
+                break;
+            case 'bulk-delete':
+                records.forEach(record => deletePersonMutation.mutate(record.id));
+                break;
+        }
+    };
 
     const handleCreatePerson = () => {
         if (!newPerson.firstName || !newPerson.lastName) {
@@ -159,23 +303,25 @@ export function PeoplePage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Users className="h-8 w-8" />
-                        People & CRM
-                    </h1>
-                    <p className="text-muted-foreground">Manage your professional and personal network</p>
-                </div>
-                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Add Person
-                        </Button>
-                    </DialogTrigger>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">People & CRM</h1>
+                        <p className="text-muted-foreground">
+                            Manage your professional and personal network
+                        </p>
+                    </div>
+                    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add Person
+                            </Button>
+                        </DialogTrigger>
                     <DialogContent className="max-w-2xl">
                         <DialogHeader>
                             <DialogTitle>Add New Person</DialogTitle>
@@ -289,140 +435,100 @@ export function PeoplePage() {
                         </div>
                     </DialogContent>
                 </Dialog>
-            </div>
-
-            {/* Search and Filters */}
-            <div className="flex items-center gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search people..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                    />
                 </div>
-                <Button variant="outline" className="gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                </Button>
-            </div>
 
-            {/* View Tabs */}
-            <Tabs value={selectedView} onValueChange={setSelectedView}>
-                <TabsList className="grid w-full grid-cols-6">
-                    {views.map((view) => (
-                        <TabsTrigger key={view.id} value={view.id} className="text-xs">
-                            {view.label} ({view.count})
-                        </TabsTrigger>
-                    ))}
-                </TabsList>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Total People</p>
+                                    <p className="text-2xl font-bold text-foreground">{people.length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Users className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Clients</p>
+                                    <p className="text-2xl font-bold text-foreground">{people.filter((p: Person) => p.relationship === 'client').length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Briefcase className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">High Priority</p>
+                                    <p className="text-2xl font-bold text-foreground">{people.filter((p: Person) => p.priority === 'high').length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Star className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Recent Contacts</p>
+                                    <p className="text-2xl font-bold text-foreground">{people.filter((p: Person) => {
+                                        if (!p.lastContact) return false;
+                                        const lastContact = new Date(p.lastContact);
+                                        const weekAgo = new Date();
+                                        weekAgo.setDate(weekAgo.getDate() - 7);
+                                        return lastContact >= weekAgo;
+                                    }).length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Clock className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
-                <TabsContent value={selectedView} className="space-y-4">
-                    {filteredPeople.length === 0 ? (
-                        <Card>
-                            <CardContent className="flex flex-col items-center justify-center py-12">
-                                <Users className="h-12 w-12 text-muted-foreground mb-4" />
-                                <h3 className="text-lg font-medium mb-2">No people found</h3>
-                                <p className="text-muted-foreground text-center mb-4">
-                                    {searchQuery ? 'No people match your search criteria.' : 'Start building your network by adding people.'}
-                                </p>
-                                <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
-                                    <UserPlus className="h-4 w-4" />
-                                    Add First Person
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredPeople.map((person: Person) => (
-                                <Card key={person._id} className="hover:shadow-md transition-shadow">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-full ${getRelationshipColor(person.relationship)} flex items-center justify-center text-white font-medium`}>
-                                                    {person.firstName[0]}{person.lastName[0]}
-                                                </div>
-                                                <div>
-                                                    <CardTitle className="text-lg">
-                                                        {person.firstName} {person.lastName}
-                                                    </CardTitle>
-                                                    <CardDescription>
-                                                        {person.role} {person.company && `at ${person.company}`}
-                                                    </CardDescription>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <Star className={`h-4 w-4 ${person.priority === 'high' ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
-                                                <Button variant="ghost" size="sm">
-                                                    <Edit className="h-3 w-3" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-3">
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant="outline" className={getRelationshipColor(person.relationship) + ' text-white'}>
-                                                {person.relationship}
-                                            </Badge>
-                                            <Badge variant="outline" className={getPriorityColor(person.priority)}>
-                                                {person.priority} priority
-                                            </Badge>
-                                        </div>
-
-                                        {person.email && (
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <Mail className="h-3 w-3" />
-                                                {person.email}
-                                            </div>
-                                        )}
-
-                                        {person.phone && (
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <Phone className="h-3 w-3" />
-                                                {person.phone}
-                                            </div>
-                                        )}
-
-                                        {person.lastContact && (
-                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                <Clock className="h-3 w-3" />
-                                                Last contact: {new Date(person.lastContact).toLocaleDateString()}
-                                            </div>
-                                        )}
-
-                                        {person.tags.length > 0 && (
-                                            <div className="flex flex-wrap gap-1">
-                                                {person.tags.slice(0, 3).map((tag) => (
-                                                    <Badge key={tag} variant="secondary" className="text-xs">
-                                                        {tag}
-                                                    </Badge>
-                                                ))}
-                                                {person.tags.length > 3 && (
-                                                    <Badge variant="secondary" className="text-xs">
-                                                        +{person.tags.length - 3}
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div className="flex items-center gap-2 pt-2">
-                                            <Button size="sm" variant="outline" className="flex-1 gap-2">
-                                                <MessageSquare className="h-3 w-3" />
-                                                Contact
-                                            </Button>
-                                            <Button size="sm" variant="outline" className="flex-1 gap-2">
-                                                <Calendar className="h-3 w-3" />
-                                                Schedule
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                    )}
-                </TabsContent>
-            </Tabs>
-        </div>
+                {/* People Table */}
+                {peopleRecords.length === 0 ? (
+                    <Card>
+                        <CardContent className="flex flex-col items-center justify-center py-16">
+                            <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                <Users className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <h3 className="text-xl font-semibold mb-2">No people found</h3>
+                            <p className="text-muted-foreground text-center max-w-md mb-6">
+                                {searchQuery ? 'No people match your search criteria.' : 'Start building your network by adding people.'}
+                            </p>
+                            <Button onClick={() => setIsCreateDialogOpen(true)} size="lg" className="gap-2">
+                                <UserPlus className="h-4 w-4" />
+                                Add First Person
+                            </Button>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <SecondBrainTable
+                        type="people"
+                        data={peopleRecords}
+                        columns={columns}
+                        properties={config.defaultProperties}
+                        onCustomAction={handleCustomAction}
+                        onToolbarAction={handleToolbarAction}
+                        enableRowSelection={true}
+                        enableBulkActions={true}
+                    />
+                )}
+            </Main>
+        </>
     );
 }

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,21 +56,23 @@ export function PARAAreasPage() {
     );
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Circle className="h-8 w-8" />
-                        PARA Areas
-                    </h1>
-                    <p className="text-muted-foreground">Ongoing areas of responsibility to maintain</p>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">PARA Areas</h1>
+                        <p className="text-muted-foreground">
+                            Ongoing areas of responsibility to maintain
+                        </p>
+                    </div>
+                    <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        New Area
+                    </Button>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Area
-                </Button>
-            </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -212,6 +216,7 @@ export function PARAAreasPage() {
                     ))}
                 </div>
             )}
-        </div>
+            </Main>
+        </>
     );
 }

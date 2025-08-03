@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
-import { 
+import {
     DollarSign, Plus, Search, Filter, TrendingUp,
     TrendingDown, ArrowUpRight, ArrowDownRight,
     CreditCard, PiggyBank, Target, BarChart3,
@@ -223,24 +225,26 @@ export function FinancesPage() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <DollarSign className="h-8 w-8" />
-                        Finances
-                    </h1>
-                    <p className="text-muted-foreground">Track your income, expenses, budgets, and financial goals</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="outline" className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Transaction
-                            </Button>
-                        </DialogTrigger>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">Finances</h1>
+                        <p className="text-muted-foreground">
+                            Track your income, expenses, budgets, and financial goals
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Dialog open={isTransactionDialogOpen} onOpenChange={setIsTransactionDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="gap-2">
+                                    <Plus className="h-4 w-4" />
+                                    Transaction
+                                </Button>
+                            </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
                                 <DialogTitle>Add Transaction</DialogTitle>
@@ -582,6 +586,7 @@ export function FinancesPage() {
                     </Card>
                 </TabsContent>
             </Tabs>
-        </div>
+            </Main>
+        </>
     );
 }

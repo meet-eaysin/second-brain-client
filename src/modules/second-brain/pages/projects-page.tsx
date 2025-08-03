@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,10 +9,10 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-    Target, Plus, Search, Calendar, Users, 
+import {
+    Target, Plus, Search, Calendar, Users,
     CheckSquare, BookOpen, TrendingUp, Clock,
-    MoreHorizontal, Edit, Trash2, Eye
+    MoreHorizontal, Edit, Trash2, Eye, BarChart3
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
 import { toast } from 'sonner';
@@ -84,23 +86,29 @@ export function ProjectsPage() {
     }
 
     return (
-        <div className="space-y-6 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Target className="h-8 w-8 text-primary" />
-                        Projects
-                    </h1>
+        <>
+            <EnhancedHeader
+                contextActions={
+                    <>
+                        <Button size="sm" variant="outline" className="h-8 gap-2">
+                            <BarChart3 className="h-4 w-4" />
+                            Analytics
+                        </Button>
+                        <Button size="sm" className="h-8 gap-2">
+                            <Plus className="h-4 w-4" />
+                            New Project
+                        </Button>
+                    </>
+                }
+            />
+
+            <Main className="space-y-8">
+                {/* Page Description */}
+                <div className="space-y-2">
                     <p className="text-muted-foreground">
                         Goal-oriented containers for tasks and notes
                     </p>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Project
-                </Button>
-            </div>
 
             {/* Filters */}
             <Card>
@@ -362,6 +370,7 @@ export function ProjectsPage() {
                     </div>
                 </TabsContent>
             </Tabs>
-        </div>
+            </Main>
+        </>
     );
 }

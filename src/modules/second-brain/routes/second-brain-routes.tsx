@@ -19,13 +19,26 @@ import { FinancesPage } from '../pages/finances-page';
 import { MoodTrackerPage } from '../pages/mood-tracker-page';
 import SearchPage from '../pages/search-page';
 import { QuickCapture } from '../components/quick-capture';
-
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
+import { Plus } from 'lucide-react';
 
 const QuickCapturePage = () => (
-    <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Quick Capture</h1>
-        <QuickCapture />
-    </div>
+    <>
+        <EnhancedHeader />
+
+        <Main className="space-y-8">
+            {/* Clean Header */}
+            <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tight">Quick Capture</h1>
+                <p className="text-muted-foreground">
+                    Quickly capture tasks, notes, and ideas
+                </p>
+            </div>
+
+            <QuickCapture />
+        </Main>
+    </>
 );
 
 

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-    Clock, CheckSquare, Target, Zap, Smile, 
+import {
+    Clock, CheckSquare, Target, Zap, Smile,
     Plus, Calendar, TrendingUp, BookOpen,
     Sun, Moon, Coffee, Star
 } from 'lucide-react';
@@ -125,34 +127,37 @@ export function MyDayPage() {
     const GreetingIcon = greetingIcon;
 
     return (
-        <div className="space-y-6 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <GreetingIcon className="h-8 w-8 text-primary" />
-                        {greeting}!
-                    </h1>
-                    <p className="text-muted-foreground">
-                        {today.toLocaleDateString('en-US', { 
-                            weekday: 'long', 
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                        })}
-                    </p>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+                            <GreetingIcon className="h-8 w-8 text-primary" />
+                            {greeting}!
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {today.toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })}
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="gap-1">
+                            <CheckSquare className="h-3 w-3" />
+                            {completedTasks.length}/{allTodayTasks.length} tasks
+                        </Badge>
+                        <Badge variant="outline" className="gap-1">
+                            <TrendingUp className="h-3 w-3" />
+                            {Math.round(completionRate)}% complete
+                        </Badge>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="gap-1">
-                        <CheckSquare className="h-3 w-3" />
-                        {completedTasks.length}/{allTodayTasks.length} tasks
-                    </Badge>
-                    <Badge variant="outline" className="gap-1">
-                        <TrendingUp className="h-3 w-3" />
-                        {Math.round(completionRate)}% complete
-                    </Badge>
-                </div>
-            </div>
 
             {/* Progress Overview */}
             <Card>
@@ -405,6 +410,7 @@ export function MyDayPage() {
                     </CardContent>
                 </Card>
             </div>
-        </div>
+            </Main>
+        </>
     );
 }

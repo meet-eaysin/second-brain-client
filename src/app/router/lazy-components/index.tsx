@@ -60,6 +60,24 @@ export const NotificationsPage = withLazyLoading(() =>
 export const SettingsPage = withLazyLoading(() =>
     import('@/modules/settings/pages/SettingsPage')
 )
+export const ProfileSettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/ProfileSettingsPage')
+)
+export const SecuritySettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/SecuritySettingsPage')
+)
+export const BillingSettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/BillingSettingsPage')
+)
+export const AppearanceSettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/AppearanceSettingsPage')
+)
+export const NotificationSettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/NotificationSettingsPage')
+)
+export const WorkspaceSettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/WorkspaceSettingsPage')
+)
 export const HomePage = withLazyLoading(() =>
     import('@/modules/home')
 )

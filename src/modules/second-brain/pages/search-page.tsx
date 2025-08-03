@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,14 +10,17 @@ export function SearchPage() {
     const [query, setQuery] = useState('');
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <Search className="h-8 w-8" />
-                    Search
-                </h1>
-                <p className="text-muted-foreground">Find anything across your Second Brain</p>
-            </div>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">Search</h1>
+                    <p className="text-muted-foreground">
+                        Find anything across your Second Brain
+                    </p>
+                </div>
 
             <Card>
                 <CardContent className="p-6">
@@ -65,7 +70,8 @@ export function SearchPage() {
                     </CardContent>
                 </Card>
             )}
-        </div>
+            </Main>
+        </>
     );
 }
 

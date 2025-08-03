@@ -32,6 +32,12 @@ import {
     FilesPage,
     NotificationsPage,
     SettingsPage,
+    ProfileSettingsPage,
+    SecuritySettingsPage,
+    BillingSettingsPage,
+    AppearanceSettingsPage,
+    NotificationSettingsPage,
+    WorkspaceSettingsPage,
     HomePage,
     NotFoundPage,
     ProtectedRoute,
@@ -183,8 +189,37 @@ const router = createBrowserRouter([
                 element: <NotificationsPage/>,
             },
             {
-                path: getSettingsLink().replace('/app/', ''),
-                element: <SettingsPage/>,
+                path: 'settings',
+                children: [
+                    {
+                        index: true,
+                        element: <SettingsPage/>,
+                    },
+                    {
+                        path: 'profile',
+                        element: <ProfileSettingsPage/>,
+                    },
+                    {
+                        path: 'security',
+                        element: <SecuritySettingsPage/>,
+                    },
+                    {
+                        path: 'billing',
+                        element: <BillingSettingsPage/>,
+                    },
+                    {
+                        path: 'appearance',
+                        element: <AppearanceSettingsPage/>,
+                    },
+                    {
+                        path: 'notifications',
+                        element: <NotificationSettingsPage/>,
+                    },
+                    {
+                        path: 'workspace',
+                        element: <WorkspaceSettingsPage/>,
+                    },
+                ],
             },
         ],
     },

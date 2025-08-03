@@ -47,19 +47,19 @@ export function ProfileDropdown() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>
-                        <Link to='/settings'>
+                        <Link to='/app/settings/profile'>
                             Profile
                             <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link to='/settings'>
+                        <Link to='/app/settings/billing'>
                             Billing
                             <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link to='/settings'>
+                        <Link to='/app/settings'>
                             Settings
                             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
                         </Link>

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -89,21 +91,23 @@ export function PARAResourcesPage() {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Database className="h-8 w-8" />
-                        PARA Resources
-                    </h1>
-                    <p className="text-muted-foreground">Reference materials for future use</p>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">PARA Resources</h1>
+                        <p className="text-muted-foreground">
+                            Reference materials for future use
+                        </p>
+                    </div>
+                    <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        Add Resource
+                    </Button>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Resource
-                </Button>
-            </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -276,6 +280,7 @@ export function PARAResourcesPage() {
                     })}
                 </div>
             )}
-        </div>
+            </Main>
+        </>
     );
 }

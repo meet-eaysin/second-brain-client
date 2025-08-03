@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -111,23 +113,23 @@ export function PARAOverviewPage() {
     );
 
     return (
-        <div className="space-y-6 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Folder className="h-8 w-8 text-primary" />
-                        PARA System
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Projects, Areas, Resources, and Archives - Your organizational framework
-                    </p>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">PARA System</h1>
+                        <p className="text-muted-foreground">
+                            Projects, Areas, Resources, and Archives - Your organizational framework
+                        </p>
+                    </div>
+                    <Button className="gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        View Analytics
+                    </Button>
                 </div>
-                <Button className="gap-2">
-                    <BarChart3 className="h-4 w-4" />
-                    View Analytics
-                </Button>
-            </div>
 
             {/* PARA Overview Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -386,6 +388,7 @@ export function PARAOverviewPage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+            </Main>
+        </>
     );
 }

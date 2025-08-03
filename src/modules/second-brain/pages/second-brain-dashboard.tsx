@@ -10,6 +10,8 @@ import {
     ArrowRight, Star, Lightbulb
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 
 export function SecondBrainDashboard() {
     const { data: dashboardData, isLoading } = useQuery({
@@ -37,26 +39,20 @@ export function SecondBrainDashboard() {
     } = dashboardData?.data || {};
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Brain className="h-8 w-8 text-primary" />
-                        Second Brain
-                    </h1>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                     <p className="text-muted-foreground">
                         Your personal productivity and knowledge management system
                     </p>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Quick Capture
-                </Button>
-            </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Quick Stats */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card>
                     <CardContent className="p-4">
                         <div className="flex items-center gap-2">
@@ -101,10 +97,10 @@ export function SecondBrainDashboard() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
+                </div>
 
-            {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Main Dashboard Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Today's Tasks */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -257,7 +253,8 @@ export function SecondBrainDashboard() {
                         )}
                     </CardContent>
                 </Card>
-            </div>
-        </div>
+                </div>
+            </Main>
+        </>
     );
 }

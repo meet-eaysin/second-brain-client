@@ -7,36 +7,33 @@ import {
     CardTitle,
 } from '@/components/ui/card.tsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx'
-import {Header} from "@/layout/header.tsx";
-import {TopNav} from "@/layout/top-nav.tsx";
-import {Search} from "@/components/search.tsx";
-import {ThemeSwitch} from "@/components/theme-switch.tsx";
-import {ProfileDropdown} from "@/components/profile-dropdown.tsx";
-import {Main} from "@/layout/main.tsx";
-import {Overview} from "@/modules/dashboard/components/overview.tsx";
-import {RecentSales} from "@/modules/dashboard/components/recent-sales.tsx";
+import { Main } from "@/layout/main.tsx";
+import { EnhancedHeader } from '@/components/enhanced-header';
+import { Overview } from "@/modules/dashboard/components/overview.tsx";
+import { RecentSales } from "@/modules/dashboard/components/recent-sales.tsx";
+import { Download } from 'lucide-react';
 
 const Dashboard = () => {
     return (
         <>
-            {/* ===== Top Heading ===== */}
-        <Header>
-        <TopNav links={topNav} />
-    <div className='ml-auto flex items-center space-x-4'>
-        <Search />
-        <ThemeSwitch />
-        <ProfileDropdown />
-        </div>
-        </Header>
+            <EnhancedHeader
+                showSearch={false}
+                contextActions={
+                    <Button size="sm" variant="outline" className="h-8 gap-2">
+                        <Download className="h-4 w-4" />
+                        Download
+                    </Button>
+                }
+            />
 
-    {/* ===== Main ===== */}
-    <Main>
-        <div className='mb-2 flex items-center justify-between space-y-2'>
-    <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
-        <div className='flex items-center space-x-2'>
-        <Button>Download</Button>
-        </div>
-        </div>
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+                    <p className="text-muted-foreground">
+                        Overview of your workspace and analytics
+                    </p>
+                </div>
         <Tabs
     orientation='vertical'
     defaultValue='overview'
@@ -183,9 +180,9 @@ const Dashboard = () => {
     </div>
     </TabsContent>
     </Tabs>
-    </Main>
-    </>
-)
+            </Main>
+        </>
+    )
 }
 
 export default Dashboard;

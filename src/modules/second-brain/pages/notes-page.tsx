@@ -1,23 +1,27 @@
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookOpen, Plus, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const NotesPage = () => {
     return (
-        <div className="container mx-auto p-6">
-            <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <BookOpen className="h-8 w-8 text-primary" />
-                        <div>
-                            <h1 className="text-3xl font-bold">All Notes</h1>
-                            <p className="text-muted-foreground">Manage your personal knowledge base</p>
-                        </div>
-                    </div>
-                    <Button>
-                        <Plus className="h-4 w-4 mr-2" />
+        <>
+            <EnhancedHeader
+                contextActions={
+                    <Button size="sm" className="h-8 gap-2">
+                        <Plus className="h-4 w-4" />
                         New Note
                     </Button>
+                }
+            />
+
+            <Main className="space-y-8">
+                {/* Page Description */}
+                <div className="space-y-2">
+                    <p className="text-muted-foreground">
+                        Manage your personal knowledge base
+                    </p>
                 </div>
 
                 <Card>
@@ -39,8 +43,8 @@ const NotesPage = () => {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-        </div>
+            </Main>
+        </>
     )
 }
 

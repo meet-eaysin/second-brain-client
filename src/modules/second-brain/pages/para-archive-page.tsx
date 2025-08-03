@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -106,27 +108,29 @@ export function PARAArchivePage() {
     };
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Archive className="h-8 w-8" />
-                        PARA Archive
-                    </h1>
-                    <p className="text-muted-foreground">Inactive items from all PARA categories</p>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">PARA Archive</h1>
+                        <p className="text-muted-foreground">
+                            Inactive items from all PARA categories
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" className="gap-2">
+                            <Download className="h-4 w-4" />
+                            Export Archive
+                        </Button>
+                        <Button variant="outline" className="gap-2">
+                            <Trash2 className="h-4 w-4" />
+                            Cleanup
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" className="gap-2">
-                        <Download className="h-4 w-4" />
-                        Export Archive
-                    </Button>
-                    <Button variant="outline" className="gap-2">
-                        <Trash2 className="h-4 w-4" />
-                        Cleanup
-                    </Button>
-                </div>
-            </div>
 
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -314,6 +318,7 @@ export function PARAArchivePage() {
                     })}
                 </div>
             )}
-        </div>
+            </Main>
+        </>
     );
 }

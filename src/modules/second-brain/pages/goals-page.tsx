@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Main } from '@/layout/main';
+import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +9,8 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-    Target, Plus, Search, Calendar, TrendingUp, 
+import {
+    Target, Plus, Search, Calendar, TrendingUp,
     CheckSquare, Clock, AlertCircle, Trophy,
     MoreHorizontal, Edit, Trash2, Eye, BarChart3
 } from 'lucide-react';
@@ -96,23 +98,23 @@ export function GoalsPage() {
     }
 
     return (
-        <div className="space-y-6 p-6">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold flex items-center gap-2">
-                        <Target className="h-8 w-8 text-primary" />
-                        Goals
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Track your objectives and measure progress
-                    </p>
+        <>
+            <EnhancedHeader />
+
+            <Main className="space-y-8">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">Goals</h1>
+                        <p className="text-muted-foreground">
+                            Track your objectives and measure progress
+                        </p>
+                    </div>
+                    <Button className="gap-2">
+                        <Plus className="h-4 w-4" />
+                        New Goal
+                    </Button>
                 </div>
-                <Button className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    New Goal
-                </Button>
-            </div>
 
             {/* Insights Overview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -458,6 +460,7 @@ export function GoalsPage() {
                     </div>
                 </TabsContent>
             </Tabs>
-        </div>
+            </Main>
+        </>
     );
 }
