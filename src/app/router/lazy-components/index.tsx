@@ -63,6 +63,9 @@ export const SettingsPage = withLazyLoading(() =>
 export const ProfileSettingsPage = withLazyLoading(() =>
     import('@/modules/settings/pages/ProfileSettingsPage')
 )
+export const AccountSettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/AccountSettingsPage')
+)
 export const SecuritySettingsPage = withLazyLoading(() =>
     import('@/modules/settings/pages/SecuritySettingsPage')
 )
@@ -71,6 +74,9 @@ export const BillingSettingsPage = withLazyLoading(() =>
 )
 export const AppearanceSettingsPage = withLazyLoading(() =>
     import('@/modules/settings/pages/AppearanceSettingsPage')
+)
+export const DisplaySettingsPage = withLazyLoading(() =>
+    import('@/modules/settings/pages/DisplaySettingsPage')
 )
 export const NotificationSettingsPage = withLazyLoading(() =>
     import('@/modules/settings/pages/NotificationSettingsPage')

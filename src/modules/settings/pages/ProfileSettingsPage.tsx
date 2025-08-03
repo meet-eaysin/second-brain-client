@@ -10,9 +10,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-    ArrowLeft, User, Camera, Mail, Phone, MapPin, 
-    Calendar, Globe, Save, Upload
+import {
+    ArrowLeft, User, Camera, Mail, Phone, MapPin,
+    Calendar, Globe, Save, Upload, Github, Linkedin,
+    Twitter, Instagram, Plus, X, Tag
 } from 'lucide-react';
 
 export const ProfileSettingsPage: React.FC = () => {
@@ -182,6 +183,117 @@ export const ProfileSettingsPage: React.FC = () => {
                         <div className="space-y-2">
                             <Label htmlFor="website">Website</Label>
                             <Input id="website" type="url" placeholder="https://example.com" />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Social Links */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Globe className="h-4 w-4" />
+                            Social Links
+                        </CardTitle>
+                        <CardDescription>
+                            Connect your social media profiles and professional networks
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="github" className="flex items-center gap-2">
+                                    <Github className="h-4 w-4" />
+                                    GitHub
+                                </Label>
+                                <Input id="github" placeholder="https://github.com/username" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="linkedin" className="flex items-center gap-2">
+                                    <Linkedin className="h-4 w-4" />
+                                    LinkedIn
+                                </Label>
+                                <Input id="linkedin" placeholder="https://linkedin.com/in/username" />
+                            </div>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="twitter" className="flex items-center gap-2">
+                                    <Twitter className="h-4 w-4" />
+                                    Twitter
+                                </Label>
+                                <Input id="twitter" placeholder="https://twitter.com/username" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="instagram" className="flex items-center gap-2">
+                                    <Instagram className="h-4 w-4" />
+                                    Instagram
+                                </Label>
+                                <Input id="instagram" placeholder="https://instagram.com/username" />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Skills & Interests */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Tag className="h-4 w-4" />
+                            Skills & Interests
+                        </CardTitle>
+                        <CardDescription>
+                            Add your skills, expertise, and interests to help others discover you
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Skills</Label>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                    JavaScript
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                    React
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                    TypeScript
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                                <Badge variant="secondary" className="flex items-center gap-1">
+                                    Node.js
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                            </div>
+                            <Button variant="outline" size="sm" className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add Skill
+                            </Button>
+                        </div>
+
+                        <Separator />
+
+                        <div className="space-y-2">
+                            <Label>Interests</Label>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                    Machine Learning
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                    Design Systems
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                    Open Source
+                                    <X className="h-3 w-3 cursor-pointer" />
+                                </Badge>
+                            </div>
+                            <Button variant="outline" size="sm" className="gap-2">
+                                <Plus className="h-4 w-4" />
+                                Add Interest
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>

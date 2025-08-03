@@ -6,7 +6,7 @@ import {
     LucideCheckLine, LucideDiameter, LucideHelpCircle,
     LucideLayoutDashboard, LucideNavigation,
     LucidePackage, LucideServer, LucideToolCase,
-    LucideUserCog, Database as DatabaseIcon, Users, Shield, Brain,
+    LucideUserCog, Database as DatabaseIcon, Users, Shield, LucideShield, Brain,
     BookOpen, Search, Calendar, Archive, Tags,
     Network, FileText, Bookmark, File, Bell, Settings,
     User, CreditCard, Palette, Monitor, Building2,
@@ -245,32 +245,42 @@ export const sidebarData = {
                     items: [
                         {
                             title: 'Profile',
-                            url: '/app/settings?tab=profile',
+                            url: '/app/settings/profile',
                             icon: User,
                         },
                         {
                             title: 'Account',
-                            url: '/app/settings?tab=security',
+                            url: '/app/settings/account',
                             icon: Shield,
                         },
                         {
+                            title: 'Security',
+                            url: '/app/settings/security',
+                            icon: LucideShield,
+                        },
+                        {
+                            title: 'Billing',
+                            url: '/app/settings/billing',
+                            icon: CreditCard,
+                        },
+                        {
                             title: 'Appearance',
-                            url: '/app/settings?tab=appearance',
+                            url: '/app/settings/appearance',
                             icon: Palette,
                         },
                         {
-                            title: 'Notifications',
-                            url: '/app/settings?tab=notifications',
-                            icon: Bell,
-                        },
-                        {
                             title: 'Display',
-                            url: '/app/settings?tab=appearance',
+                            url: '/app/settings/display',
                             icon: Monitor,
                         },
                         {
+                            title: 'Notifications',
+                            url: '/app/settings/notifications',
+                            icon: Bell,
+                        },
+                        {
                             title: 'Workspace',
-                            url: '/app/settings?tab=workspace',
+                            url: '/app/settings/workspace',
                             icon: Building2,
                         },
                     ],

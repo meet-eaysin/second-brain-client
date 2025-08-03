@@ -8,13 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     CheckSquare, Plus, Search, Filter,
-    Clock, CheckCircle2, AlertTriangle
+    Clock, CheckCircle2, AlertTriangle, Pause
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
 import { QuickCapture } from '../components/quick-capture';
-import { SecondBrainTable, createSecondBrainColumns } from '../../databases/components/second-brain-table';
-import { getSecondBrainConfig } from '../../databases/utils/second-brain-configs';
+import { CompleteDatabaseTable } from '@/components/universal-data-table/database-management/complete-database-table';
 import { toast } from 'sonner';
+import type { Task } from '@/types/second-brain.types';
 
 export function TasksPage() {
     const [view, setView] = useState('all');
@@ -34,13 +34,13 @@ export function TasksPage() {
     });
 
     const updateTaskMutation = useMutation({
-        mutationFn: ({ id, data }: { id: string; data: any }) => 
+        mutationFn: ({ id, data }: { id: string; data: Partial<Task> }) =>
             secondBrainApi.tasks.update(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['second-brain', 'tasks'] });
             toast.success('Task updated successfully');
         },
-        onError: (error: any) => {
+        onError: (error: { response?: { data?: { message?: string } } }) => {
             toast.error(error.response?.data?.message || 'Failed to update task');
         },
     });
@@ -93,7 +93,7 @@ export function TasksPage() {
 
     const tasks = tasksData?.data?.tasks || mockTasks;
 
-    const filteredTasks = tasks.filter((task: any) =>
+    const filteredTasks = tasks.filter((task: Task) =>
         task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         task.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -124,34 +124,20 @@ export function TasksPage() {
         }
     };
 
-    // Transform tasks to database records format
-    const taskRecords = filteredTasks.map((task: any) => ({
-        id: task._id,
-        properties: {
-            title: task.title,
-            status: task.status,
-            priority: task.priority,
-            dueDate: task.dueDate,
-            assignee: task.assignee,
-            project: task.project,
-            area: task.area,
-            tags: task.tags,
-            description: task.description,
-            createdAt: task.createdAt,
-            updatedAt: task.updatedAt
-        }
+    // Prepare tasks data with proper ID field
+    const tasksWithId = filteredTasks.map((task: Task) => ({
+        ...task,
+        id: task._id || task.id, // Ensure we have an id field
     }));
 
-    // Get configuration and create columns
-    const config = getSecondBrainConfig('tasks');
-    const columns = createSecondBrainColumns('tasks', config.defaultProperties);
-
     // Handle custom actions
-    const handleCustomAction = (actionId: string, record: any) => {
+    const handleCustomAction = (actionId: string, record: Task) => {
         switch (actionId) {
-            case 'complete':
-                handleStatusChange(record.id, record.properties.status === 'completed' ? 'todo' : 'completed');
+            case 'complete': {
+                const newStatus = record.status === 'completed' ? 'todo' : 'completed';
+                handleStatusChange(record.id, newStatus);
                 break;
+            }
             case 'edit':
                 // Handle edit action
                 console.log('Edit task:', record);
@@ -164,11 +150,14 @@ export function TasksPage() {
     };
 
     // Handle toolbar actions
-    const handleToolbarAction = (actionId: string, records: any[]) => {
+    const handleToolbarAction = (actionId: string, records: Task[]) => {
         switch (actionId) {
-            case 'bulk-complete':
+            case 'create':
+                console.log('Create new task');
+                break;
+            case 'bulk_complete':
                 records.forEach(record => {
-                    if (record.properties.status !== 'completed') {
+                    if (record.status !== 'completed') {
                         handleStatusChange(record.id, 'completed');
                     }
                 });
@@ -233,7 +222,7 @@ export function TasksPage() {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-2">
                                     <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                                    <p className="text-2xl font-bold text-foreground">{tasks.filter((t: any) => t.status === 'completed').length}</p>
+                                    <p className="text-2xl font-bold text-foreground">{tasks.filter((t: Task) => t.status === 'completed').length}</p>
                                 </div>
                                 <div className="p-3 bg-primary/10 rounded-lg">
                                     <CheckCircle2 className="h-6 w-6 text-primary" />
@@ -246,7 +235,7 @@ export function TasksPage() {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-2">
                                     <p className="text-sm font-medium text-muted-foreground">In Progress</p>
-                                    <p className="text-2xl font-bold text-foreground">{tasks.filter((t: any) => t.status === 'in-progress').length}</p>
+                                    <p className="text-2xl font-bold text-foreground">{tasks.filter((t: Task) => t.status === 'in-progress').length}</p>
                                 </div>
                                 <div className="p-3 bg-primary/10 rounded-lg">
                                     <Clock className="h-6 w-6 text-primary" />
@@ -259,7 +248,7 @@ export function TasksPage() {
                             <div className="flex items-center justify-between">
                                 <div className="space-y-2">
                                     <p className="text-sm font-medium text-muted-foreground">High Priority</p>
-                                    <p className="text-2xl font-bold text-foreground">{tasks.filter((t: any) => t.priority === 'high').length}</p>
+                                    <p className="text-2xl font-bold text-foreground">{tasks.filter((t: Task) => t.priority === 'high').length}</p>
                                 </div>
                                 <div className="p-3 bg-primary/10 rounded-lg">
                                     <AlertTriangle className="h-6 w-6 text-primary" />
@@ -322,7 +311,7 @@ export function TasksPage() {
                 </div>
 
                 {/* Tasks Table */}
-                {taskRecords.length === 0 ? (
+                {tasksWithId.length === 0 ? (
                     <Card>
                         <CardContent className="flex flex-col items-center justify-center py-16">
                             <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -348,15 +337,149 @@ export function TasksPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <SecondBrainTable
-                        type="tasks"
-                        data={taskRecords}
-                        columns={columns}
-                        properties={config.defaultProperties}
+                    <CompleteDatabaseTable<Task>
+                        tableType="tasks"
+                        initialData={tasksWithId}
+                        databaseName="Tasks"
+                        databaseIcon="✅"
+                        databaseDescription="Manage your tasks and to-dos"
+                        initialProperties={[
+                            { id: 'title', name: 'Title', type: 'TITLE', required: true, isVisible: true, order: 0 },
+                            { id: 'description', name: 'Description', type: 'TEXT', required: false, isVisible: true, order: 1 },
+                            {
+                                id: 'status',
+                                name: 'Status',
+                                type: 'SELECT',
+                                required: true,
+                                isVisible: true,
+                                order: 2,
+                                selectOptions: [
+                                    { id: 'todo', name: 'To Do', color: '#6b7280' },
+                                    { id: 'in-progress', name: 'In Progress', color: '#3b82f6' },
+                                    { id: 'completed', name: 'Completed', color: '#10b981' },
+                                    { id: 'cancelled', name: 'Cancelled', color: '#ef4444' }
+                                ]
+                            },
+                            {
+                                id: 'priority',
+                                name: 'Priority',
+                                type: 'SELECT',
+                                required: true,
+                                isVisible: true,
+                                order: 3,
+                                selectOptions: [
+                                    { id: 'low', name: 'Low', color: '#6b7280' },
+                                    { id: 'medium', name: 'Medium', color: '#f59e0b' },
+                                    { id: 'high', name: 'High', color: '#ef4444' },
+                                    { id: 'urgent', name: 'Urgent', color: '#dc2626' }
+                                ]
+                            },
+                            { id: 'dueDate', name: 'Due Date', type: 'DATE', required: false, isVisible: true, order: 4 },
+                            { id: 'estimatedTime', name: 'Estimated Time', type: 'NUMBER', required: false, isVisible: true, order: 5 },
+                            { id: 'actualTime', name: 'Actual Time', type: 'NUMBER', required: false, isVisible: true, order: 6 },
+                            { id: 'assignedTo', name: 'Assigned To', type: 'PERSON', required: false, isVisible: true, order: 7 },
+                            {
+                                id: 'tags',
+                                name: 'Tags',
+                                type: 'MULTI_SELECT',
+                                required: false,
+                                isVisible: true,
+                                order: 8,
+                                selectOptions: [
+                                    { id: 'work', name: 'Work', color: '#3b82f6' },
+                                    { id: 'personal', name: 'Personal', color: '#10b981' },
+                                    { id: 'urgent', name: 'Urgent', color: '#ef4444' },
+                                    { id: 'meeting', name: 'Meeting', color: '#8b5cf6' },
+                                    { id: 'research', name: 'Research', color: '#06b6d4' }
+                                ]
+                            },
+                            { id: 'createdAt', name: 'Created', type: 'DATE', required: false, isVisible: false, order: 9 },
+                            { id: 'updatedAt', name: 'Updated', type: 'DATE', required: false, isVisible: false, order: 10 }
+                        ]}
+                        initialViews={[
+                            {
+                                id: 'all-tasks',
+                                name: 'All Tasks',
+                                type: 'TABLE',
+                                isDefault: true,
+                                filters: [],
+                                sorts: [{ propertyId: 'dueDate', direction: 'asc' }],
+                                visibleProperties: ['title', 'status', 'priority', 'dueDate', 'assignedTo', 'tags']
+                            },
+                            {
+                                id: 'kanban-board',
+                                name: 'Kanban Board',
+                                type: 'BOARD',
+                                isDefault: false,
+                                filters: [],
+                                sorts: [{ propertyId: 'priority', direction: 'desc' }],
+                                visibleProperties: ['title', 'status', 'priority', 'description', 'assignedTo']
+                            },
+                            {
+                                id: 'my-tasks',
+                                name: 'My Tasks',
+                                type: 'LIST',
+                                isDefault: false,
+                                filters: [{ propertyId: 'assignedTo', operator: 'equals', value: 'current-user' }],
+                                sorts: [{ propertyId: 'priority', direction: 'desc' }],
+                                visibleProperties: ['title', 'status', 'priority', 'dueDate']
+                            },
+                            {
+                                id: 'completed',
+                                name: 'Completed',
+                                type: 'GALLERY',
+                                isDefault: false,
+                                filters: [{ propertyId: 'status', operator: 'equals', value: 'completed' }],
+                                sorts: [{ propertyId: 'updatedAt', direction: 'desc' }],
+                                visibleProperties: ['title', 'status', 'actualTime', 'updatedAt']
+                            }
+                        ]}
+                        customActions={[
+                            {
+                                id: 'complete',
+                                label: 'Toggle Complete',
+                                icon: 'Check',
+                                variant: 'default',
+                                condition: (record) => record.status !== 'completed'
+                            },
+                            {
+                                id: 'edit',
+                                label: 'Edit',
+                                icon: 'Edit',
+                                variant: 'outline'
+                            },
+                            {
+                                id: 'delete',
+                                label: 'Delete',
+                                icon: 'Trash2',
+                                variant: 'destructive'
+                            }
+                        ]}
+                        toolbarActions={[
+                            {
+                                id: 'bulk_complete',
+                                label: 'Mark Complete',
+                                icon: 'Check',
+                                variant: 'default',
+                                requiresSelection: true
+                            },
+                            {
+                                id: 'bulk_delete',
+                                label: 'Delete Selected',
+                                icon: 'Trash2',
+                                variant: 'destructive',
+                                requiresSelection: true
+                            }
+                        ]}
                         onCustomAction={handleCustomAction}
                         onToolbarAction={handleToolbarAction}
-                        enableRowSelection={true}
-                        enableBulkActions={true}
+                        onRecordUpdate={(recordId, propertyId, newValue) => {
+                            // Handle record updates
+                            console.log('Record updated:', recordId, propertyId, newValue);
+                            // You can call your API here to update the task
+                        }}
+                        context="second-brain"
+                        idField="id"
                     />
                 )}
             </Main>

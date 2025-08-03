@@ -33,9 +33,11 @@ import {
     NotificationsPage,
     SettingsPage,
     ProfileSettingsPage,
+    AccountSettingsPage,
     SecuritySettingsPage,
     BillingSettingsPage,
     AppearanceSettingsPage,
+    DisplaySettingsPage,
     NotificationSettingsPage,
     WorkspaceSettingsPage,
     HomePage,
@@ -200,6 +202,10 @@ const router = createBrowserRouter([
                         element: <ProfileSettingsPage/>,
                     },
                     {
+                        path: 'account',
+                        element: <AccountSettingsPage/>,
+                    },
+                    {
                         path: 'security',
                         element: <SecuritySettingsPage/>,
                     },
@@ -210,6 +216,10 @@ const router = createBrowserRouter([
                     {
                         path: 'appearance',
                         element: <AppearanceSettingsPage/>,
+                    },
+                    {
+                        path: 'display',
+                        element: <DisplaySettingsPage/>,
                     },
                     {
                         path: 'notifications',
