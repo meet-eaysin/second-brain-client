@@ -13,10 +13,6 @@ import type {
     ImportBooksResponse,
     ExportBooksOptions
 } from '../types/books.types';
-import type {
-    BooksApiResponse,
-    BookStatsApiResponse
-} from '../types/books-api.types';
 
 const BOOKS_BASE_URL = '/second-brain/books';
 
