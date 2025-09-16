@@ -31,3 +31,18 @@ export interface SidebarData {
     teams: SidebarTeam[]
     navGroups: SidebarNavGroup[]
 }
+
+// Additional types for dynamic nav group
+export interface NavGroup {
+    title: string;
+    items: NavItem[];
+}
+
+export interface NavItem {
+    title: string;
+    url?: string;
+    icon?: LucideIcon;
+    badge?: string;
+    isDynamic?: boolean;
+    items?: NavItem[];
+}

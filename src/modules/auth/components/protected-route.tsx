@@ -9,10 +9,11 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-    const { isAuthenticated, isLoading, hasToken } = useAuth();
+    const { isAuthenticated, isLoading, hasToken, isInitialized } = useAuth();
     const location = useLocation();
 
-    if (isLoading && hasToken) {
+    // Show loading while initializing auth or while loading with token
+    if (!isInitialized || (isLoading && hasToken)) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <LoadingSpinner size="lg" />
@@ -20,9 +21,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
         );
     }
 
+    // If not authenticated after initialization, redirect to login
     if (!isAuthenticated) {
         localStorage.setItem('intendedPath', location.pathname);
-        return <Navigate to={getSignInLink()} />;
+        return <Navigate to={getSignInLink()} replace />;
     }
 
     return <>{children}</>;

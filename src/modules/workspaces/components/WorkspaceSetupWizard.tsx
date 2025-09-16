@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useCreateWorkspace } from '../services/workspaceQueries';
@@ -18,8 +17,8 @@ const workspaceSetupSchema = z.object({
     description: z.string().max(500, 'Description must be less than 500 characters').optional(),
     icon: z.string().optional(),
     color: z.string().optional(),
-    isPublic: z.boolean().default(false),
-    allowMemberInvites: z.boolean().default(true),
+    isPublic: z.boolean(),
+    allowMemberInvites: z.boolean(),
 });
 
 type WorkspaceSetupFormValues = z.infer<typeof workspaceSetupSchema>;
@@ -237,7 +236,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
 
     return (
         <Dialog open={open} onOpenChange={() => {}}>
-            <DialogContent className="sm:max-w-2xl" hideCloseButton>
+            <DialogContent className="sm:max-w-2xl" showCloseButton={false}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center space-x-2">
                         <currentStepData.icon className="w-5 h-5" />

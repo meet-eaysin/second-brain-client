@@ -6,7 +6,7 @@ import type {
     PaginatedRecordsResponse,
     UpdateRecordRequest,
     RecordQueryParams
-} from "@/types/database.types.ts";
+} from "@/types/document.types.ts";
 import type { ApiResponse } from "@/types/api.types";
 
 

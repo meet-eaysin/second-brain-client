@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -23,18 +23,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { Save, Settings } from 'lucide-react';
-import type { Workspace } from '@/types/workspace.types';
+import type { Workspace, CreateWorkspaceRequest, UpdateWorkspaceRequest } from '@/types/workspace.types';
 
 const workspaceFormSchema = z.object({
     name: z.string().min(1, 'Workspace name is required').max(100, 'Name must be less than 100 characters'),
     description: z.string().max(500, 'Description must be less than 500 characters').optional(),
     icon: z.string().max(10, 'Icon must be less than 10 characters').optional(),
     color: z.string().optional(),
-    allowMemberInvites: z.boolean().default(true),
-    requireApprovalForJoining: z.boolean().default(false),
-    allowPublicDatabases: z.boolean().default(true),
+    isPublic: z.boolean(),
+    allowMemberInvites: z.boolean(),
 });
 
 type WorkspaceFormValues = z.infer<typeof workspaceFormSchema>;
@@ -43,7 +41,7 @@ interface WorkspaceFormProps {
     workspace?: Workspace | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onSubmit: (data: WorkspaceFormValues) => Promise<void>;
+    onSubmit: (data: CreateWorkspaceRequest | UpdateWorkspaceRequest) => Promise<void>;
     mode?: 'create' | 'edit';
     isLoading?: boolean;
 }
@@ -76,9 +74,8 @@ export function WorkspaceForm({
             description: '',
             icon: '🏢',
             color: '#3b82f6',
+            isPublic: false,
             allowMemberInvites: true,
-            requireApprovalForJoining: false,
-            allowPublicDatabases: true,
         },
     });
 
@@ -91,9 +88,8 @@ export function WorkspaceForm({
                     description: workspace.description || '',
                     icon: workspace.icon || '🏢',
                     color: workspace.color || '#3b82f6',
-                    allowMemberInvites: workspace.settings?.allowMemberInvites ?? true,
-                    requireApprovalForJoining: workspace.settings?.requireApprovalForJoining ?? false,
-                    allowPublicDatabases: workspace.settings?.allowPublicDatabases ?? true,
+                    isPublic: workspace.isPublic ?? false,
+                    allowMemberInvites: workspace.allowMemberInvites ?? true,
                 };
                 form.reset(formData);
             } else {
@@ -102,9 +98,8 @@ export function WorkspaceForm({
                     description: '',
                     icon: '🏢',
                     color: '#3b82f6',
+                    isPublic: false,
                     allowMemberInvites: true,
-                    requireApprovalForJoining: false,
-                    allowPublicDatabases: true,
                 };
                 form.reset(defaultData);
             }
@@ -113,20 +108,7 @@ export function WorkspaceForm({
 
     const handleSubmit = async (data: WorkspaceFormValues) => {
         try {
-            const submitData = {
-                name: data.name,
-                description: data.description,
-                icon: data.icon,
-                color: data.color,
-                settings: {
-                    allowMemberInvites: data.allowMemberInvites,
-                    requireApprovalForJoining: data.requireApprovalForJoining,
-                    allowPublicDatabases: data.allowPublicDatabases,
-                    defaultPermissions: ['read'], // Default permissions
-                }
-            };
-
-            await onSubmit(submitData);
+            await onSubmit(data);
             onOpenChange(false);
         } catch (error) {
             console.error('Failed to submit workspace:', error);
@@ -270,34 +252,13 @@ export function WorkspaceForm({
 
                             <FormField
                                 control={form.control}
-                                name="requireApprovalForJoining"
+                                name="isPublic"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
                                         <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Require Approval</FormLabel>
+                                            <FormLabel className="text-base">Public Workspace</FormLabel>
                                             <FormDescription>
-                                                New members need approval before joining
-                                            </FormDescription>
-                                        </div>
-                                        <FormControl>
-                                            <Switch
-                                                checked={field.value}
-                                                onCheckedChange={field.onChange}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-
-                            <FormField
-                                control={form.control}
-                                name="allowPublicDatabases"
-                                render={({ field }) => (
-                                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3">
-                                        <div className="space-y-0.5">
-                                            <FormLabel className="text-base">Public Databases</FormLabel>
-                                            <FormDescription>
-                                                Allow members to create public databases
+                                                Make this workspace visible to everyone
                                             </FormDescription>
                                         </div>
                                         <FormControl>

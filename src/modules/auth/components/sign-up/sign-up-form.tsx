@@ -1,5 +1,5 @@
 import {type HTMLAttributes} from 'react'
-import { IconBrandGoogle } from '@tabler/icons-react'
+import { Chrome } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -148,7 +148,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
                     onClick={handleGoogleSignUp}
                     className="w-full"
                 >
-                    <IconBrandGoogle className='h-4 w-4 mr-2' />
+                    <Chrome className='h-4 w-4 mr-2' />
                     {googleLoading ? 'Authenticating...' : 'Continue with Google'}
                 </Button>
             </form>

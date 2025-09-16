@@ -15,7 +15,7 @@ import type {
     CreateRecordRequest,
     UpdateRecordRequest,
     ShareDatabaseRequest,
-} from '@/types/database.types';
+} from '@/types/document.types.ts';
 
 export const DATABASE_KEYS = {
     all: ['databases'] as const,

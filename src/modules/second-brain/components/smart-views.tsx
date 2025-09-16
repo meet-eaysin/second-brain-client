@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-    Eye, Clock, AlertTriangle, CheckSquare, 
-    Target, Users, Calendar, TrendingUp,
-    Filter, BarChart3, Zap, BookOpen,
+    Clock, AlertTriangle, CheckSquare, 
+    Target, Users, Calendar, TrendingUp, Zap, BookOpen,
     ArrowRight, Star, Pin
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
@@ -15,6 +14,36 @@ import { secondBrainApi } from '../services/second-brain-api';
 interface SmartViewsProps {
     module?: 'tasks' | 'projects' | 'notes' | 'all';
     onItemClick?: (item: any, type: string) => void;
+}
+
+// Basic entity interfaces for type safety
+interface BaseEntity {
+    _id: string;
+    title?: string;
+    firstName?: string;
+    lastName?: string;
+    status?: string;
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    dueDate?: string;
+    deadline?: string;
+    updatedAt: string;
+    createdAt: string;
+    isPinned?: boolean;
+    isFavorite?: boolean;
+    area?: string;
+    completionPercentage?: number;
+    frequency?: string;
+    customFrequency?: {
+        daysOfWeek?: number[];
+    };
+}
+
+interface SmartViewData {
+    tasks: BaseEntity[];
+    projects: BaseEntity[];
+    notes: BaseEntity[];
+    people: BaseEntity[];
+    habits: BaseEntity[];
 }
 
 export function SmartViews({ module = 'all', onItemClick }: SmartViewsProps) {
@@ -42,7 +71,13 @@ export function SmartViews({ module = 'all', onItemClick }: SmartViewsProps) {
         }
     });
 
-    const data = smartViewData?.data || {};
+    const data: SmartViewData = smartViewData || {
+        tasks: [],
+        projects: [],
+        notes: [],
+        people: [],
+        habits: []
+    };
 
     // Smart view configurations
     const smartViews = [
@@ -188,17 +223,17 @@ export function SmartViews({ module = 'all', onItemClick }: SmartViewsProps) {
         const result: Record<string, any[]> = {};
 
         if (module === 'all' || module === 'tasks') {
-            result.tasks = currentView.filter(data.tasks?.data?.tasks || [], 'tasks');
+            result.tasks = currentView.filter(data.tasks || [], 'tasks');
         }
         if (module === 'all' || module === 'projects') {
-            result.projects = currentView.filter(data.projects?.data?.projects || [], 'projects');
+            result.projects = currentView.filter(data.projects || [], 'projects');
         }
         if (module === 'all' || module === 'notes') {
-            result.notes = currentView.filter(data.notes?.data?.notes || [], 'notes');
+            result.notes = currentView.filter(data.notes || [], 'notes');
         }
         if (module === 'all') {
-            result.people = currentView.filter(data.people?.data?.people || [], 'people');
-            result.habits = currentView.filter(data.habits?.data?.habits || [], 'habits');
+            result.people = currentView.filter(data.people || [], 'people');
+            result.habits = currentView.filter(data.habits || [], 'habits');
         }
 
         return result;

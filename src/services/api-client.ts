@@ -7,6 +7,7 @@ import {
     getToken,
     removeTokens,
     setToken,
+    setRefreshToken,
     getRefreshToken
 } from "@/modules/auth/utils/tokenUtils.ts";
 import {useAuthStore} from "@/modules/auth/store/authStore.ts";
@@ -80,8 +81,11 @@ apiClient.interceptors.response.use(
                         refreshToken
                     });
 
-                    const { accessToken } = response.data.data;
+                    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
                     setToken(accessToken);
+                    if (newRefreshToken) {
+                        setRefreshToken(newRefreshToken);
+                    }
 
                     // Retry the original request with new token
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
@@ -98,7 +102,10 @@ apiClient.interceptors.response.use(
                     // Only redirect if not already on auth pages
                     const currentPath = window.location.pathname;
                     if (!currentPath.startsWith('/auth')) {
-                        window.location.href = '/auth/sign-in';
+                        // Use a small delay to ensure state is cleared
+                        setTimeout(() => {
+                            window.location.href = '/auth/sign-in';
+                        }, 100);
                     }
 
                     return Promise.reject(refreshError);

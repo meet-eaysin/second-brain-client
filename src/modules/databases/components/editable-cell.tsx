@@ -19,13 +19,13 @@ import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import type { DatabaseProperty, DatabaseRecord } from '@/types/database.types';
+import type { DatabaseProperty, DatabaseRecord } from '@/types/document.types.ts';
 import {
     normalizeSelectValue,
     getSelectOptionDisplay,
     getSelectOptionId,
     getSelectOptionColor
-} from '@/modules/databases/utils/selectOptionUtils';
+} from '@/modules/document-view/utils/select-option-utils';
 
 interface EditableCellProps {
     property: DatabaseProperty;

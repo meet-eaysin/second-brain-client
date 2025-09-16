@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useGetTags, useDeleteTag } from '../services/tagsQueries';
 import { CreateTagDialog } from './CreateTagDialog';
 import { EditTagDialog } from './EditTagDialog';

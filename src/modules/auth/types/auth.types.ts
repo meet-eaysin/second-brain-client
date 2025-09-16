@@ -19,6 +19,7 @@ export interface AuthResponse {
 
 export interface RefreshTokenResponse {
     accessToken: string
+    refreshToken: string
 }
 
 export interface LoginCredentials {

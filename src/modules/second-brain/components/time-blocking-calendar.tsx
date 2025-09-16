@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
     Calendar, Clock, Plus, ChevronLeft, ChevronRight,
-    CheckSquare, Target, Zap, Users, Edit, Trash2,
-    MoreHorizontal, Play, Pause, Square
+    CheckSquare, Target, Zap, Users,
+    Play, Pause, Square
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
 import { toast } from 'sonner';
@@ -36,7 +36,6 @@ export function TimeBlockingCalendar({
     onBlockClick 
 }: TimeBlockingCalendarProps) {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [selectedBlock, setSelectedBlock] = useState<TimeBlock | null>(null);
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [newBlock, setNewBlock] = useState<Partial<TimeBlock>>({
         type: 'focus',
@@ -91,16 +90,16 @@ export function TimeBlockingCalendar({
         }
     });
 
-    const updateTimeBlockMutation = useMutation({
-        mutationFn: async ({ id, updates }: { id: string; updates: Partial<TimeBlock> }) => {
-            // In a real app, this would update a time block via API
-            return Promise.resolve({ data: { id, ...updates } });
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['second-brain', 'time-blocks'] });
-            toast.success('Time block updated successfully');
-        }
-    });
+    // const updateTimeBlockMutation = useMutation({
+    //     mutationFn: async ({ id, updates }: { id: string; updates: Partial<TimeBlock> }) => {
+    //         // In a real app, this would update a time block via API
+    //         return Promise.resolve({ data: { id, ...updates } });
+    //     },
+    //     onSuccess: () => {
+    //         queryClient.invalidateQueries({ queryKey: ['second-brain', 'time-blocks'] });
+    //         toast.success('Time block updated successfully');
+    //     }
+    // });
 
     const navigateDate = (direction: 'prev' | 'next') => {
         const newDate = new Date(currentDate);
@@ -163,17 +162,17 @@ export function TimeBlockingCalendar({
         }
     }, [draggedTask, createTimeBlockMutation]);
 
-    const getBlockColor = (type: string) => {
-        switch (type) {
-            case 'task': return 'bg-blue-500';
-            case 'project': return 'bg-green-500';
-            case 'habit': return 'bg-purple-500';
-            case 'meeting': return 'bg-orange-500';
-            case 'focus': return 'bg-indigo-500';
-            case 'break': return 'bg-gray-500';
-            default: return 'bg-blue-500';
-        }
-    };
+    // const getBlockColor = (type: string) => {
+    //     switch (type) {
+    //         case 'task': return 'bg-blue-500';
+    //         case 'project': return 'bg-green-500';
+    //         case 'habit': return 'bg-purple-500';
+    //         case 'meeting': return 'bg-orange-500';
+    //         case 'focus': return 'bg-indigo-500';
+    //         case 'break': return 'bg-gray-500';
+    //         default: return 'bg-blue-500';
+    //     }
+    // };
 
     const startPomodoro = (blockId?: string) => {
         setPomodoroTimer({
@@ -203,7 +202,7 @@ export function TimeBlockingCalendar({
 
     const timeSlots = getTimeSlots();
     const daysToShow = getDaysToShow();
-    const data = calendarData?.data || {};
+    const data = calendarData || { tasks: [], projects: [], habits: [], timeBlocks: [] };
 
     if (isLoading) {
         return (
@@ -327,7 +326,7 @@ export function TimeBlockingCalendar({
                             <CardTitle className="text-base">Available Tasks</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            {data.tasks?.data?.tasks?.slice(0, 5).map((task: any) => (
+                            {data.tasks?.slice(0, 5).map((task: any) => (
                                 <div
                                     key={task._id}
                                     className="flex items-center gap-2 p-2 border rounded cursor-move hover:bg-muted/50"
@@ -350,7 +349,7 @@ export function TimeBlockingCalendar({
                             <CardTitle className="text-base">Today's Habits</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2">
-                            {data.habits?.data?.habits?.slice(0, 3).map((habit: any) => (
+                            {data.habits?.slice(0, 3).map((habit: any) => (
                                 <div
                                     key={habit._id}
                                     className="flex items-center gap-2 p-2 border rounded cursor-move hover:bg-muted/50"

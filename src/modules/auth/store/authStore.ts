@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'auth-storage',
       partialize: (state) => ({
-        isAuthenticated: state.isAuthenticated,
+        // Only persist intendedPath, not auth state or user data
         intendedPath: state.intendedPath
       }),
     }

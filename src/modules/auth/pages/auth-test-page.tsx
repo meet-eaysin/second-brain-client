@@ -114,7 +114,7 @@ export default function AuthTestPage() {
                                 <div><strong>Email:</strong> {user.email}</div>
                                 <div><strong>Name:</strong> {user.firstName} {user.lastName}</div>
                                 <div><strong>Role:</strong> {user.role}</div>
-                                <div><strong>Status:</strong> {user.isActive ? 'Active' : 'Inactive'}</div>
+                                <div><strong>Status:</strong> {user.role ? 'Active' : 'Inactive'}</div>
                             </div>
                         </div>
                     )}

@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api-client.ts';
 import { API_ENDPOINTS } from '@/constants/api-endpoints';
 import type { ApiResponse } from '@/types/api.types';
-import type { DatabaseCategory } from '@/types/database.types';
+import type { DatabaseCategory } from '@/types/document.types.ts';
 
 export interface CreateCategoryRequest {
     name: string;

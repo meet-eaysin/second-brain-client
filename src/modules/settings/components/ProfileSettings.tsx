@@ -15,7 +15,7 @@ export const ProfileSettings: React.FC = () => {
     const [email, setEmail] = useState('john.doe@example.com');
     const [username, setUsername] = useState('johndoe');
     const [bio, setBio] = useState('');
-    const [profilePicture, setProfilePicture] = useState('');
+    const [profilePicture] = useState('');
 
     const handleSaveProfile = () => {
         // TODO: Implement profile update API call

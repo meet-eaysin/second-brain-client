@@ -23,7 +23,7 @@ export function ProfileDropdown() {
             <DropdownMenuTrigger asChild>
                 <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
                     <Avatar className='h-8 w-8'>
-                        <AvatarImage src={user?.profilePicture || '/avatars/01.png'} alt={user?.username || 'User'} />
+                        <AvatarImage src={user?.avatar || '/avatars/01.png'} alt={user?.username || 'User'} />
                         <AvatarFallback>
                             {user?.firstName?.[0]?.toUpperCase() || user?.username?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>

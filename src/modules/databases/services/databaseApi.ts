@@ -15,7 +15,7 @@ import type {
     PaginatedDatabasesResponse,
     PaginatedRecordsResponse,
     RecordQueryParams,
-} from '@/types/database.types';
+} from '@/types/document.types.ts';
 import type { ApiResponse } from '@/types/api.types';
 
 // No more mock data - using real API responses

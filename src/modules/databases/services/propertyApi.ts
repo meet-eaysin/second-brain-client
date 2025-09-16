@@ -1,6 +1,6 @@
-import type {CreatePropertyRequest, DatabaseProperty, UpdatePropertyRequest} from "@/types/database.types.ts";
+import type {CreatePropertyRequest, DatabaseProperty, UpdatePropertyRequest} from "@/types/document.types.ts";
 import type {ApiResponse} from "@/types/api.types.ts";
-import apiClient from "@/services/api-client.ts";
+import { apiClient } from "@/services/api-client.ts";
 import {API_ENDPOINTS} from "@/constants/api-endpoints.ts";
 
 

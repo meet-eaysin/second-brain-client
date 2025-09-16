@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { categoryApi, type CreateCategoryRequest, type UpdateCategoryRequest } from '../services/categoryApi';
-import type { DatabaseCategory } from '@/types/database.types';
+import type { DatabaseCategory } from '@/types/document.types.ts';
 import { getDatabasesLink } from '@/app/router/router-link';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Main } from '@/components/main';

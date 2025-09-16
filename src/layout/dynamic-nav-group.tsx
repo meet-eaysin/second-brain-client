@@ -16,7 +16,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar'
 import { Link, useLocation } from "react-router-dom";
-import type { NavGroup, NavItem } from "@/layout/types.ts";
+import type { NavGroup, NavItem } from "@/layout/types";
 import { Badge } from "@/components/ui/badge.tsx";
 import { useDatabaseSidebar } from '@/modules/databases/hooks/useDatabaseSidebar';
 

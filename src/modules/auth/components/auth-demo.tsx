@@ -190,7 +190,7 @@ export const AuthDemo: React.FC = () => {
                             </div>
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Auth Provider</p>
-                                <Badge variant={user.authProvider === 'GOOGLE' ? 'default' : 'secondary'}>
+                                <Badge variant={user.authProvider === 'google' ? 'default' : 'secondary'}>
                                     {user.authProvider}
                                 </Badge>
                             </div>
@@ -211,7 +211,7 @@ export const AuthDemo: React.FC = () => {
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Last Login</p>
                                 <p className="text-sm">
-                                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}
+                                    {user.updatedAt ? new Date(user.updatedAt).toLocaleString() : 'Never'}
                                 </p>
                             </div>
                         </div>

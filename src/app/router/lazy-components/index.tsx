@@ -51,8 +51,8 @@ export const UsersPage = withLazyLoading(() =>
 export const TagsPage = withLazyLoading(() =>
     import('@/modules/tags/pages/tags-page')
 )
-export const FilesPage = withLazyLoading(() =>
-    import('@/modules/files/pages/files-page')
+export const CalendarPage = withLazyLoading(() =>
+    import('@/modules/calendar/pages/calendar-page').then(module => ({ default: module.default }))
 )
 export const NotificationsPage = withLazyLoading(() =>
     import('@/modules/notifications/pages/notifications-page')

@@ -18,7 +18,6 @@ import {
     Crown, 
     UserPlus,
     Globe,
-    Lock,
     Edit3
 } from 'lucide-react';
 import { toast } from 'sonner';

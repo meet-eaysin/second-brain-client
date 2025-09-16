@@ -117,7 +117,7 @@ export const useLoginMutation = (options?: LoginMutationOptions) => {
 
             if (options?.onSuccess) options.onSuccess(data);
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             setLoading(false);
 
             // Handle different types of errors
@@ -174,7 +174,7 @@ export const useRegisterMutation = () => {
             setIntendedPath(null); // Clear intended path
             navigate(targetPath, { replace: true });
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             setLoading(false);
 
             // Handle different types of registration errors
@@ -233,7 +233,7 @@ export const useGoogleLoginMutation = () => {
             setIntendedPath(null); // Clear intended path
             navigate(targetPath, { replace: true });
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             setLoading(false);
             const message = error.response?.data?.message || 'Google login failed';
             toast.error(message);
@@ -275,7 +275,7 @@ export const useGoogleTokenMutation = () => {
             setIntendedPath(null); // Clear intended path
             navigate(targetPath, { replace: true });
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             setLoading(false);
             // Clear any stored tokens on error
             removeTokens();
@@ -308,15 +308,22 @@ export const useLogoutMutation = () => {
             setLoading(false);
             toast.success('Logged out successfully');
             console.log('🔄 Redirecting to sign in page...');
-            window.location.href = getSignInLink();
+            // Use navigate instead of window.location to avoid full page reload
+            setTimeout(() => {
+                window.location.href = getSignInLink();
+            }, 100);
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             console.error('❌ Logout failed, but cleaning up locally:', error);
             // Even on error, clear local data for security
             removeTokens();
             clearUser();
             queryClient.clear();
             setLoading(false);
+            // Redirect to login even on error
+            setTimeout(() => {
+                window.location.href = getSignInLink();
+            }, 100);
 
             const message = error.response?.data?.error?.message ||
                           error.response?.data?.message ||
@@ -351,7 +358,7 @@ export const useLogoutAllMutation = () => {
             toast.success('Logged out from all devices successfully');
             navigate(getSignInLink());
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             // Even on error, clear local data for security
             removeTokens();
             clearUser();
@@ -371,7 +378,7 @@ export const useChangePasswordMutation = () => {
         onSuccess: () => {
             toast.success('Password changed successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Password change failed';
             toast.error(message);
         },
@@ -384,7 +391,7 @@ export const useForgotPasswordMutation = () => {
         onSuccess: () => {
             toast.success('Password reset email sent successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to send reset email';
             toast.error(message);
         },
@@ -400,7 +407,7 @@ export const useResetPasswordMutation = () => {
             toast.success('Password reset successfully');
             navigate(getSignOutLink());
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Password reset failed';
             toast.error(message);
         },

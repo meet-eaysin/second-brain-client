@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import {fonts} from "@/config.ts";
+import {fonts} from "@/app/config";
 
 type Font = (typeof fonts)[number]
 
@@ -14,24 +14,27 @@ export const FontProvider: React.FC<{ children: React.ReactNode }> = ({
                                                                           children,
                                                                       }) => {
     const [font, _setFont] = useState<Font>(() => {
-        const savedFont = localStorage.getItem('font')
-        return fonts.includes(savedFont as Font) ? (savedFont as Font) : fonts[0]
+        const savedFontValue = localStorage.getItem('font')
+        const savedFont = fonts.find(f => f.value === savedFontValue)
+        return savedFont || fonts[0]
     })
 
     useEffect(() => {
-        const applyFont = (font: string) => {
+        const applyFont = (fontObj: Font) => {
             const root = document.documentElement
+            // Remove existing font classes
             root.classList.forEach((cls) => {
                 if (cls.startsWith('font-')) root.classList.remove(cls)
             })
-            root.classList.add(`font-${font}`)
+            // Add the new font class
+            root.classList.add(fontObj.class)
         }
 
         applyFont(font)
     }, [font])
 
     const setFont = (font: Font) => {
-        localStorage.setItem('font', font)
+        localStorage.setItem('font', font.value)
         _setFont(font)
     }
 

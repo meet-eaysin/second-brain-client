@@ -108,7 +108,9 @@ export function FloatingQuickCapture({
             }
         },
         onSuccess: (data, variables) => {
+            // Invalidate all relevant queries
             queryClient.invalidateQueries({ queryKey: ['second-brain'] });
+            queryClient.invalidateQueries({ queryKey: ['tasks'] }); // Add tasks query invalidation
             toast.success(`${variables.type.charAt(0).toUpperCase() + variables.type.slice(1)} created successfully`);
             handleClose();
         },

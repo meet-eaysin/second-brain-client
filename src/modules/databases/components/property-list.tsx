@@ -19,7 +19,7 @@ import { PropertyForm } from './property-form';
 import { useCreateProperty, useUpdateProperty, useDeleteProperty, useReorderProperties } from '../hooks/property-hooks';
 import { toast } from 'sonner';
 import { Edit, Trash2, GripVertical, MoreHorizontal, Plus } from 'lucide-react';
-import type {DatabaseProperty, PropertyType, UpdatePropertyRequest} from "@/types/database.types.ts";
+import type {DatabaseProperty, PropertyType, UpdatePropertyRequest} from "@/types/document.types.ts";
 
 interface PropertyListProps {
     databaseId: string;

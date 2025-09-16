@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
-    ArrowLeft, User, Camera, Mail, Phone, MapPin,
+    ArrowLeft, User, Camera, MapPin,
     Calendar, Globe, Save, Upload, Github, Linkedin,
     Twitter, Instagram, Plus, X, Tag
 } from 'lucide-react';

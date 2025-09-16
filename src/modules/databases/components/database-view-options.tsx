@@ -29,7 +29,7 @@ import { toast } from 'sonner';
 import { useDatabaseContext } from '../context/database-context';
 import { useUpdateView, useHideProperty, useFreezeProperty } from '../services/databaseQueries';
 import type { Table } from '@tanstack/react-table';
-import type { DatabaseProperty, DatabaseView } from '@/types/database.types';
+import type { DatabaseProperty, DatabaseView } from '@/types/document.types.ts';
 
 interface DatabaseViewOptionsProps<TData> {
     table: Table<TData>;

@@ -1,11 +1,10 @@
 import React from 'react';
-import { UniversalDataTable } from '@/components/universal-data-table';
+import { DocumentDataTable } from '@/modules/document-view';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Shield, ShieldCheck, User as UserIcon, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
 import type { User, UserRole } from '@/types/user.types';
 import type { ColumnDef } from '@tanstack/react-table';
-import type { ActionConfig, ToolbarActionConfig } from '@/components/universal-data-table/action-system';
 
 interface UserTableProps {
     users: User[];
@@ -74,7 +73,6 @@ export const UserTable: React.FC<UserTableProps> = ({
         return 'U';
     };
 
-    // Define columns for the universal data table
     const columns: ColumnDef<User>[] = [
         {
             id: 'user',
@@ -157,12 +155,12 @@ export const UserTable: React.FC<UserTableProps> = ({
     ];
 
     // Define custom actions
-    const customActions: ActionConfig<User>[] = [
+    const customActions = [
         {
             id: 'edit',
             label: 'Edit User',
             icon: Edit,
-            onClick: (record) => {
+            onClick: (record: User) => {
                 if (onEditUser) {
                     onEditUser(record);
                 }
@@ -173,7 +171,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             id: 'toggle-status',
             label: 'Toggle Status',
             icon: UserCheck,
-            onClick: (record) => {
+            onClick: (record: User) => {
                 if (onToggleStatus) {
                     onToggleStatus(record.id);
                 }
@@ -184,43 +182,43 @@ export const UserTable: React.FC<UserTableProps> = ({
             id: 'make-user',
             label: 'Make User',
             icon: UserIcon,
-            onClick: (record) => {
+            onClick: (record: User) => {
                 if (onUpdateRole) {
                     onUpdateRole(record.id, 'USER');
                 }
             },
             variant: 'ghost',
-            isVisible: (record) => record.role !== 'USER',
+            isVisible: (record: User) => record.role !== 'USER',
         },
         {
             id: 'make-moderator',
             label: 'Make Moderator',
             icon: Shield,
-            onClick: (record) => {
+            onClick: (record: User) => {
                 if (onUpdateRole) {
                     onUpdateRole(record.id, 'MODERATOR');
                 }
             },
             variant: 'ghost',
-            isVisible: (record) => record.role !== 'MODERATOR',
+            isVisible: (record: User) => record.role !== 'MODERATOR',
         },
         {
             id: 'make-admin',
             label: 'Make Admin',
             icon: ShieldCheck,
-            onClick: (record) => {
+            onClick: (record: User) => {
                 if (onUpdateRole) {
                     onUpdateRole(record.id, 'ADMIN');
                 }
             },
             variant: 'ghost',
-            isVisible: (record) => record.role !== 'ADMIN',
+            isVisible: (record: User) => record.role !== 'ADMIN',
         },
         {
             id: 'delete',
             label: 'Delete User',
             icon: Trash2,
-            onClick: (record) => {
+            onClick: (record: User) => {
                 if (onDeleteUser) {
                     onDeleteUser(record.id);
                 }
@@ -229,19 +227,19 @@ export const UserTable: React.FC<UserTableProps> = ({
             isDestructive: true,
             requiresConfirmation: true,
             confirmationMessage: 'Are you sure you want to delete this user? This action cannot be undone.',
-            isVisible: (record) => record.id !== currentUserId,
+            isVisible: (record: User) => record.id !== currentUserId,
         },
     ];
 
     // Define toolbar actions
-    const toolbarActions: ToolbarActionConfig<User>[] = [
+    const toolbarActions = [
         {
             id: 'bulk-activate',
             label: 'Activate Selected',
             icon: UserCheck,
-            onClick: (records) => {
+            onClick: (records: User[]) => {
                 if (onToggleStatus) {
-                    records.forEach(record => {
+                    records.forEach((record: User) => {
                         if (!record.isActive) {
                             onToggleStatus(record.id);
                         }
@@ -255,9 +253,9 @@ export const UserTable: React.FC<UserTableProps> = ({
             id: 'bulk-deactivate',
             label: 'Deactivate Selected',
             icon: UserX,
-            onClick: (records) => {
+            onClick: (records: User[]) => {
                 if (onToggleStatus) {
-                    records.forEach(record => {
+                    records.forEach((record: User) => {
                         if (record.isActive) {
                             onToggleStatus(record.id);
                         }
@@ -271,9 +269,9 @@ export const UserTable: React.FC<UserTableProps> = ({
             id: 'bulk-delete',
             label: 'Delete Selected',
             icon: Trash2,
-            onClick: (records) => {
+            onClick: (records: User[]) => {
                 if (onDeleteUser) {
-                    records.forEach(record => {
+                    records.forEach((record: User) => {
                         if (record.id !== currentUserId) {
                             onDeleteUser(record.id);
                         }
@@ -290,33 +288,17 @@ export const UserTable: React.FC<UserTableProps> = ({
 
     if (isLoading) {
         return (
-            <UniversalDataTable<User>
+            <DocumentDataTable
                 data={[]}
                 columns={columns}
-                customActions={customActions}
-                toolbarActions={toolbarActions}
-                enableRowSelection={true}
-                enableBulkActions={true}
-                enableColumnVisibility={true}
-                enableSorting={true}
-                enableFiltering={true}
-                enablePagination={true}
             />
         );
     }
 
     return (
-        <UniversalDataTable<User>
+        <DocumentDataTable
             data={users}
             columns={columns}
-            customActions={customActions}
-            toolbarActions={toolbarActions}
-            enableRowSelection={true}
-            enableBulkActions={true}
-            enableColumnVisibility={true}
-            enableSorting={true}
-            enableFiltering={true}
-            enablePagination={true}
         />
     );
 };

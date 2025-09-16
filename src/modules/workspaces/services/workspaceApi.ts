@@ -18,7 +18,6 @@ import type {
     WorkspaceStatsResponse,
     WorkspacePermissions,
     WorkspaceActivity,
-    WorkspaceSettings,
 } from '@/types/workspace.types';
 
 export const workspaceApi = {
@@ -152,9 +151,5 @@ export const workspaceApi = {
             API_ENDPOINTS.WORKSPACES.BULK_MEMBER_OPERATION(workspaceId),
             data
         );
-    },
-
-    leaveWorkspace: async (workspaceId: string): Promise<void> => {
-        await apiClient.post(API_ENDPOINTS.WORKSPACES.LEAVE(workspaceId));
     },
 };

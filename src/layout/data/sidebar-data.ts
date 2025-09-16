@@ -90,6 +90,12 @@ export const sidebarData = {
                     tooltip: 'Today\'s tasks, habits, and focus',
                 },
                 {
+                    title: 'Calendar',
+                    url: '/app/calendar',
+                    icon: Calendar,
+                    tooltip: 'Manage your events, meetings, and schedule',
+                },
+                {
                     title: 'Tasks',
                     icon: CheckSquare,
                     items: [

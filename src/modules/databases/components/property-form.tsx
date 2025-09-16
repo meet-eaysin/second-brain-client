@@ -47,7 +47,7 @@ import {
     Check,
     Shuffle
 } from 'lucide-react';
-import type { DatabaseProperty, PropertyType, SelectOption } from '@/types/database.types';
+import type { DatabaseProperty, PropertyType, SelectOption } from '@/types/document.types.ts';
 
 interface PropertyFormProps {
     property?: DatabaseProperty | null;

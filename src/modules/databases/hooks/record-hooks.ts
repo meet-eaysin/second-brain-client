@@ -4,7 +4,7 @@ import { DATABASE_KEYS } from '../services/queryKeys';
 import { toast } from 'sonner';
 import { AxiosError } from 'axios';
 import { ApiResponse } from '@/types/api.types';
-import { CreateRecordRequest, UpdateRecordRequest } from '@/types/database.types';
+import { CreateRecordRequest, UpdateRecordRequest } from '@/types/document.types.ts';
 
 interface CreateRecordParams {
     databaseId: string;

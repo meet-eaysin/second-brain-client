@@ -53,7 +53,7 @@ export function CommandMenu() {
                                         </CommandItem>
                                     )
 
-                                return navItem.items?.filter(subItem => subItem.url).map((subItem, i) => (
+                                return (navItem as any).items?.filter((subItem: any) => subItem.url).map((subItem: any, i: number) => (
                                     <CommandItem
                                         key={`${navItem.title}-${subItem.url}-${i}`}
                                         value={`${navItem.title}-${subItem.url}`}

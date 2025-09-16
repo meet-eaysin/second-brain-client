@@ -11,14 +11,85 @@ export interface QuickCaptureData {
     priority?: 'low' | 'medium' | 'high' | 'urgent';
 }
 
+// Import types from the server-side dashboard types
+export interface DashboardTask {
+    _id: string;
+    title: string;
+    status: 'todo' | 'in-progress' | 'completed' | 'cancelled';
+    priority?: 'low' | 'medium' | 'high' | 'urgent';
+    dueDate?: string;
+    project?: string;
+    assignedTo?: string;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardProject {
+    _id: string;
+    title: string;
+    status: 'planning' | 'active' | 'on-hold' | 'completed' | 'cancelled';
+    description?: string;
+    startDate?: string;
+    endDate?: string;
+    progress: number;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardNote {
+    _id: string;
+    title: string;
+    content?: string;
+    tags: string[];
+    project?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardGoal {
+    _id: string;
+    title: string;
+    type: 'outcome' | 'process' | 'learning';
+    status: 'active' | 'completed' | 'paused' | 'cancelled';
+    targetDate?: string;
+    progressPercentage: number;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardHabit {
+    _id: string;
+    name: string;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    status: 'active' | 'paused' | 'completed';
+    streak: number;
+    completedToday: boolean;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardMoodEntry {
+    _id: string;
+    mood: number;
+    energy: number;
+    notes?: string;
+    tags: string[];
+    date: string;
+    createdAt: string;
+}
+
 export interface DashboardData {
-    todayTasks: any[];
-    upcomingDeadlines: any[];
-    activeProjects: any[];
-    recentNotes: any[];
-    currentGoals: any[];
-    todayHabits: any[];
-    moodEntry?: any;
+    todayTasks: DashboardTask[];
+    upcomingDeadlines: DashboardTask[];
+    activeProjects: DashboardProject[];
+    recentNotes: DashboardNote[];
+    currentGoals: DashboardGoal[];
+    todayHabits: DashboardHabit[];
+    moodEntry?: DashboardMoodEntry;
     weeklyStats: {
         tasksCompleted: number;
         projectsActive: number;
@@ -27,20 +98,42 @@ export interface DashboardData {
     };
 }
 
+export interface DashboardJournalEntry {
+    _id: string;
+    title?: string;
+    content: string;
+    mood?: number;
+    tags: string[];
+    date: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface DashboardPerson {
+    _id: string;
+    name: string;
+    email?: string;
+    role?: string;
+    company?: string;
+    tags: string[];
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface MyDayData {
     date: Date;
-    plannedTasks: any[];
-    inProgressTasks: any[];
-    todayHabits: any[];
-    journalEntry?: any;
-    moodEntry?: any;
+    plannedTasks: DashboardTask[];
+    inProgressTasks: DashboardTask[];
+    todayHabits: DashboardHabit[];
+    journalEntry?: DashboardJournalEntry;
+    moodEntry?: DashboardMoodEntry;
 }
 
 export interface SearchResults {
-    tasks?: any[];
-    notes?: any[];
-    projects?: any[];
-    people?: any[];
+    tasks?: DashboardTask[];
+    notes?: DashboardNote[];
+    projects?: DashboardProject[];
+    people?: DashboardPerson[];
 }
 
 // Mock data for development
@@ -156,6 +249,43 @@ export const secondBrainApi = {
                 journalEntry: null,
                 moodEntry: null
             }
+        );
+    },
+
+    // Get recent captures
+    getRecentCaptures: async (limit: number = 20): Promise<{ data: any[] }> => {
+        return apiCallWithFallback(
+            async () => {
+                // Fetch recent tasks, notes, and ideas in parallel
+                const [tasksRes, notesRes] = await Promise.all([
+                    apiClient.get<ApiResponse<{ tasks: any[] }>>('/second-brain/tasks', {
+                        params: { limit: Math.ceil(limit / 2), sort: 'createdAt', order: 'desc' }
+                    }),
+                    apiClient.get<ApiResponse<{ notes: any[] }>>('/second-brain/notes', {
+                        params: { limit: Math.ceil(limit / 2), sort: 'createdAt', order: 'desc' }
+                    })
+                ]);
+
+                const tasks = tasksRes.data.data.tasks.map((task: any) => ({
+                    ...task,
+                    type: 'task',
+                    capturedAt: task.createdAt
+                }));
+
+                const notes = notesRes.data.data.notes.map((note: any) => ({
+                    ...note,
+                    type: note.type || 'note',
+                    capturedAt: note.createdAt
+                }));
+
+                // Combine and sort by creation date
+                const allItems = [...tasks, ...notes]
+                    .sort((a, b) => new Date(b.capturedAt).getTime() - new Date(a.capturedAt).getTime())
+                    .slice(0, limit);
+
+                return { data: allItems };
+            },
+            { data: [] }
         );
     },
 

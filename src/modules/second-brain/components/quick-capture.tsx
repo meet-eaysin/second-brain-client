@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, CheckSquare, BookOpen, Lightbulb, X } from 'lucide-react';
-import { secondBrainApi, QuickCaptureData } from '../services/second-brain-api';
+import { secondBrainApi } from '../services/second-brain-api';
+import type { QuickCaptureData } from '../services/second-brain-api';
 import { toast } from 'sonner';
 
 interface QuickCaptureProps {
@@ -32,7 +33,19 @@ export function QuickCapture({ trigger, defaultType = 'task' }: QuickCaptureProp
         mutationFn: secondBrainApi.quickCapture,
         onSuccess: () => {
             toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} captured successfully!`);
-            queryClient.invalidateQueries({ queryKey: ['second-brain'] });
+
+            // Add a small delay to ensure backend processing is complete
+            setTimeout(() => {
+                // Clear all task-related queries and force complete refetch
+                queryClient.removeQueries({
+                    predicate: (query) => query.queryKey[0] === 'tasks'
+                });
+
+                // Also invalidate other related queries
+                queryClient.invalidateQueries({ queryKey: ['second-brain'] });
+                queryClient.invalidateQueries({ queryKey: ['recent-captures'] });
+            }, 100);
+
             resetForm();
             setOpen(false);
         },

@@ -4,7 +4,6 @@ import { Main } from '@/layout/main';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
     User, Palette, Building2, Bell, Shield, CreditCard,
     ChevronRight, Settings, Zap, Database, Key, Globe

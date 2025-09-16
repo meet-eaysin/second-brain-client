@@ -1,435 +1,236 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Main } from '@/layout/main';
 import { EnhancedHeader } from '@/components/enhanced-header';
-import { DevelopmentNotice } from '@/components/development-notice';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Database as DatabaseIcon, Server, Star, Clock } from 'lucide-react';
+import { DocumentView } from '@/modules/document-view';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-    Database as DatabaseIcon,
-    Plus,
-    Search,
-    Grid,
-    List,
-    ArrowUpDown,
-    Clock,
-} from 'lucide-react';
-import { useAuth } from '@/modules/auth/hooks/useAuth';
-import { DatabaseQueryParams, Database } from '@/types/database.types';
-import { PageErrorBoundary } from '@/components/error-boundary';
+    useDatabasesViewsQuery,
+    useDefaultDatabasesViewQuery,
+    useDatabasesViewConfigQuery,
+    useDatabasesFrozenConfigQuery,
+    useDatabasesQuery,
+    useUpdateDatabaseMutation,
+    useDeleteDatabaseMutation,
+} from '../hooks/use-databases-document-view';
+import { useDatabases } from '../services/databaseQueries';
 
-import {
-    DatabaseCard,
-    DatabaseDialogs,
-    DatabaseProvider,
-    useDatabaseContext,
-    useDatabases,
-    useDeleteDatabase
-} from "@/modules/databases";
-import { getDatabasesTableColumns } from '../components/databases-table-columns';
-import { DatabasesDataTable } from '../components/databases-data-table';
+export function DatabasesPage() {
+    // API Data Queries
+    const { data: viewConfig } = useDatabasesViewConfigQuery();
+    const { data: apiFrozenConfig } = useDatabasesFrozenConfigQuery();
+    const { data: views, isLoading: viewsLoading } = useDatabasesViewsQuery();
+    const { data: defaultView } = useDefaultDatabasesViewQuery();
+    const { data: databasesResponse, isLoading: databasesLoading } = useDatabasesQuery();
 
-const DatabasesPageComponent: React.FC = () => {
-    const navigate = useNavigate();
-    const { user: currentUser } = useAuth();
-    const { setCurrentDatabase, setDialogOpen: setOpen } = useDatabaseContext();
+    // Also get the actual databases list for records
+    const { data: databasesList, isLoading: databasesListLoading } = useDatabases();
 
-    // Simplified state management
-    const [searchQuery, setSearchQuery] = useState('');
-    const [activeTab, setActiveTab] = useState<'all' | 'mine' | 'shared' | 'public'>('all');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
-    const [sortBy, setSortBy] = useState<'updatedAt' | 'name' | 'createdAt'>('updatedAt');
-    const [isSearching, setIsSearching] = useState(false);
+    console.log("** view Config", viewConfig);
+    console.log("** apiFrozenConfig", apiFrozenConfig);
+    console.log("** views", views);
+    console.log("** defaultView", defaultView);
+    console.log("** databasesResponse", databasesResponse);
+    console.log("** databasesList", databasesList);
 
-    // Build query parameters
-    const [queryParams, setQueryParams] = useState<DatabaseQueryParams>({
-        page: 1,
-        limit: 12,
-        sortBy: 'updatedAt',
-        sortOrder: 'desc',
-    });
+    // Extract data from API responses
+    const databases = databasesList?.databases || [];
+    const apiViews = views || [];
+    const defaultProperties = viewConfig?.defaultProperties || [];
+    const databaseMetadata = viewConfig?.database;
 
-    // Debounced search and filter updates
-    useEffect(() => {
-        setIsSearching(true);
-        
-        const timer = setTimeout(() => {
-            const newParams: DatabaseQueryParams = {
-                page: 1,
-                limit: 12,
-                sortBy,
-                sortOrder: 'desc',
-            };
+    // Merge default properties with custom properties from all views
+    const allCustomProperties = apiViews?.flatMap(view => (view as any).customProperties || []) || [];
+    const apiProperties = [
+        ...defaultProperties,
+        ...allCustomProperties
+    ];
 
-            if (searchQuery.trim()) {
-                newParams.search = searchQuery.trim();
-            }
+    // Get current user info (this should come from auth context in real app)
+    const currentUserId = 'current-user'; // TODO: Get from auth context
 
-            // Tab-based filtering
-            switch (activeTab) {
-                case 'mine':
-                    newParams.ownerId = currentUser?.id;
-                    break;
-                case 'shared':
-                    newParams.excludeOwnerId = currentUser?.id;
-                    newParams.isPublic = false;
-                    break;
-                case 'public':
-                    newParams.isPublic = true;
-                    break;
-            }
+    // Use database ID from API or generate dynamic one as fallback
+    const databaseId = databaseMetadata?.id || `databases-${currentUserId}-db`;
 
-            setQueryParams(newParams);
-            setIsSearching(false);
-        }, 300);
+    // Mutations
+    const updateDatabaseMutation = useUpdateDatabaseMutation();
+    const deleteDatabaseMutation = useDeleteDatabaseMutation();
 
-        return () => clearTimeout(timer);
-    }, [searchQuery, activeTab, sortBy, currentUser?.id]);
+    // Event Handlers
+    const handleRecordEdit = (record: any) => {
+        console.log('Edit database:', record);
+        // TODO: Implement database editing
+    };
 
-    const { data: databasesData, isLoading, error } = useDatabases(queryParams);
-    const deleteDatabaseMutation = useDeleteDatabase();
+    const handleRecordDelete = (recordId: string) => {
+        deleteDatabaseMutation.mutate(recordId);
+    };
 
-    // Event handlers
-    const handleViewDatabase = (database: Database) => {
-        console.log('handleViewDatabase called with:', database);
-
-        // API response has id field, so use it directly
-        const databaseId = database?.id;
-
-        console.log('Database ID check:', {
-            id: database?.id,
-            hasId: !!database?.id,
-            databaseObject: database
+    const handleRecordUpdate = (recordId: string, updates: Record<string, any>) => {
+        // For now, pass updates directly to the mutation
+        // The API service will handle custom properties separation
+        updateDatabaseMutation.mutate({
+            databaseId: recordId,
+            updates
         });
+    };
 
-        if (!databaseId) {
-            console.error('Database ID is missing:', database);
-            console.error('Full database object:', JSON.stringify(database, null, 2));
-            alert('Cannot view database: Missing database ID. Please check the console for details.');
-            return;
+    // Transform databases data to database records format
+    const databaseRecords = databases.map((database: any) => ({
+        id: database.id,
+        databaseId: databaseId,
+        createdAt: database.createdAt || new Date().toISOString(),
+        updatedAt: database.updatedAt || new Date().toISOString(),
+        createdBy: database.createdBy || currentUserId,
+        properties: {
+            name: database.name,
+            description: database.description,
+            icon: database.icon,
+            cover: database.cover,
+            isPublic: database.isPublic,
+            isFavorite: database.isFavorite,
+            categoryId: database.categoryId,
+            tags: database.tags || [],
+            frozen: database.frozen,
+            createdAt: database.createdAt,
+            updatedAt: database.updatedAt,
+            // Include any custom properties from database.customProperties
+            ...(database.customProperties || {})
         }
+    }));
 
-        console.log('Navigating to:', `/app/databases/${databaseId}`);
-        setCurrentDatabase(database);
-        navigate(`/app/databases/${databaseId}`);
-    };
-
-    const handleEditDatabase = (database: Database) => {
-        setCurrentDatabase(database);
-        setOpen('edit-database');
-    };
-
-    const handleShareDatabase = (database: Database) => {
-        setCurrentDatabase(database);
-        setOpen('share-database');
-    };
-
-    const handleDeleteDatabase = (databaseId: string) => {
-        if (confirm('Are you sure you want to delete this database? This action cannot be undone.')) {
-            deleteDatabaseMutation.mutate(databaseId);
+    // Create database structure using API data with dynamic values
+    const databasesDatabase = {
+        id: databaseId,
+        name: databaseMetadata?.displayNamePlural || 'Databases',
+        icon: databaseMetadata?.icon || '🗄️',
+        description: databaseMetadata?.description || 'Manage your databases and data collections',
+        properties: apiProperties || [],
+        views: Array.isArray(apiViews) ? apiViews : [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        frozen: false,
+        ownerId: currentUserId,
+        isPublic: false,
+        permissions: [],
+        config: {
+            moduleType: databaseMetadata?.entityKey || 'databases'
         }
     };
-
-    const handleCreateDatabase = () => {
-        setOpen('create-database');
-    };
-
-    // Computed values
-    const databases = useMemo(() => databasesData?.databases || [], [databasesData?.databases]);
-    const totalCount = databasesData?.total || 0;
-    const isLoadingState = isLoading || isSearching;
-
-    // Tab counts for better UX
-    const tabCounts = useMemo(() => {
-        if (!databases.length) return { all: 0, mine: 0, shared: 0, public: 0 };
-        
-        return {
-            all: totalCount,
-            mine: databases.filter(d => d.ownerId === currentUser?.id).length,
-            shared: databases.filter(d => d.ownerId !== currentUser?.id && !d.isPublic).length,
-            public: databases.filter(d => d.isPublic).length,
-        };
-    }, [databases, totalCount, currentUser?.id]);
-
-    // Error state
-    if (error) {
-        return (
-            <div>
-                <EnhancedHeader showDatabaseActions={true} />
-                <Main className="flex items-center justify-center min-h-[60vh]">
-                    <Card className="w-full max-w-md">
-                        <CardContent className="flex flex-col items-center justify-center py-12">
-                            <DatabaseIcon className="h-12 w-12 text-destructive mb-4" />
-                            <h3 className="text-lg font-semibold mb-2">Connection Issue</h3>
-                            <p className="text-muted-foreground text-center mb-4">
-                                Unable to connect to the server. Please try again.
-                            </p>
-                            <Button variant="outline" onClick={() => window.location.reload()}>
-                                Retry
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </Main>
-            </div>
-        );
-    }
 
     // Loading state
-    if (isLoadingState && !databases.length) {
+    if (databasesLoading || viewsLoading || databasesListLoading) {
         return (
-            <div>
-                <EnhancedHeader showDatabaseActions={true} />
-                <Main className="space-y-8">
-                    <DevelopmentNotice show={!!error} />
-                    
-                    {/* Header skeleton */}
-                    <div className="space-y-2">
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-4 w-96" />
-                    </div>
-
-                    {/* Tabs skeleton */}
-                    <div className="space-y-4">
-                        <Skeleton className="h-10 w-full max-w-md" />
-                        <div className="flex gap-4">
-                            <Skeleton className="h-10 w-64" />
-                            <Skeleton className="h-10 w-32" />
-                        </div>
-                    </div>
-
-                    {/* Content skeleton */}
-                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                        {[...Array(6)].map((_, i) => (
-                            <Card key={i}>
-                                <CardContent className="p-6">
-                                    <Skeleton className="h-6 w-3/4 mb-2" />
-                                    <Skeleton className="h-4 w-full mb-4" />
-                                    <div className="flex gap-2">
-                                        <Skeleton className="h-6 w-16" />
-                                        <Skeleton className="h-6 w-20" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </Main>
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
     }
 
     return (
         <>
-            <EnhancedHeader showDatabaseActions={true} />
-            
+            <EnhancedHeader />
+
             <Main className="space-y-8">
-                <DevelopmentNotice show={!!error} />
-
                 {/* Clean Header */}
-                <div className="space-y-2">
-                    <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
-                    <p className="text-muted-foreground">
-                        Manage your databases and data collections
-                    </p>
-                </div>
-
-                {/* Simplified Navigation Tabs */}
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'all' | 'mine' | 'shared' | 'public')} className="space-y-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <TabsList className="grid w-full max-w-md grid-cols-4">
-                            <TabsTrigger value="all" className="text-xs">
-                                All {tabCounts.all > 0 && `(${tabCounts.all})`}
-                            </TabsTrigger>
-                            <TabsTrigger value="mine" className="text-xs">
-                                Mine {tabCounts.mine > 0 && `(${tabCounts.mine})`}
-                            </TabsTrigger>
-                            <TabsTrigger value="shared" className="text-xs">
-                                Shared {tabCounts.shared > 0 && `(${tabCounts.shared})`}
-                            </TabsTrigger>
-                            <TabsTrigger value="public" className="text-xs">
-                                Public {tabCounts.public > 0 && `(${tabCounts.public})`}
-                            </TabsTrigger>
-                        </TabsList>
-
-                        <div className="flex items-center gap-3">
-                            {/* Search */}
-                            <div className="relative">
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search databases..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 w-64"
-                                />
-                            </div>
-
-                            {/* Sort */}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="sm">
-                                        <ArrowUpDown className="h-4 w-4 mr-2" />
-                                        Sort
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => setSortBy('updatedAt')}>
-                                        <Clock className="h-4 w-4 mr-2" />
-                                        Recently Updated
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setSortBy('name')}>
-                                        <DatabaseIcon className="h-4 w-4 mr-2" />
-                                        Name
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setSortBy('createdAt')}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Date Created
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-
-                            {/* View Toggle */}
-                            <div className="flex items-center border rounded-lg overflow-hidden">
-                                <Button
-                                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                                    size="sm"
-                                    onClick={() => setViewMode('grid')}
-                                    className="rounded-none h-8 px-3 border-0"
-                                >
-                                    <Grid className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                                    size="sm"
-                                    onClick={() => setViewMode('list')}
-                                    className="rounded-none h-8 px-3 border-0"
-                                >
-                                    <List className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
+                <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
+                        <p className="text-muted-foreground">
+                            Manage your databases and data collections
+                        </p>
                     </div>
-
-                    {/* Tab Content - Clean and Focused */}
-                    <TabsContent value={activeTab} className="space-y-6">
-                        {databases.length === 0 ? (
-                            <Card>
-                                <CardContent className="flex flex-col items-center justify-center py-16">
-                                    <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                                        <DatabaseIcon className="h-8 w-8 text-muted-foreground" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2">
-                                        {searchQuery ? 'No databases found' : 
-                                         activeTab === 'mine' ? 'No databases created yet' :
-                                         activeTab === 'shared' ? 'No shared databases' :
-                                         activeTab === 'public' ? 'No public databases' : 
-                                         'No databases yet'}
-                                    </h3>
-                                    <p className="text-muted-foreground text-center max-w-md mb-6">
-                                        {searchQuery ? 'Try adjusting your search terms.' :
-                                         activeTab === 'mine' ? 'Create your first database to get started.' :
-                                         activeTab === 'shared' ? 'Databases shared with you will appear here.' :
-                                         activeTab === 'public' ? 'Public databases from the community will appear here.' :
-                                         'Create your first database to get started.'}
-                                    </p>
-                                    {(!searchQuery && (activeTab === 'all' || activeTab === 'mine')) && (
-                                        <Button onClick={handleCreateDatabase} size="lg">
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Create Database
-                                        </Button>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        ) : (
-                            <>
-                                {/* Results Summary */}
-                                <div className="flex items-center justify-between">
-                                    <p className="text-sm text-muted-foreground">
-                                        {databases.length} database{databases.length !== 1 ? 's' : ''} found
-                                        {searchQuery && ` for "${searchQuery}"`}
-                                    </p>
-                                    {isLoadingState && (
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
-                                            Searching...
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Database Grid/List */}
-                                {viewMode === 'grid' ? (
-                                    <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-                                        {databases.map((database) => (
-                                            <DatabaseCard
-                                                key={database.id}
-                                                database={database}
-                                                onView={handleViewDatabase}
-                                                onEdit={handleEditDatabase}
-                                                onShare={handleShareDatabase}
-                                                onDelete={handleDeleteDatabase}
-                                                currentUserId={currentUser?.id}
-                                            />
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <DatabasesDataTable
-                                        columns={getDatabasesTableColumns({
-                                            onView: handleViewDatabase,
-                                            onEdit: handleEditDatabase,
-                                            onShare: handleShareDatabase,
-                                            onDelete: handleDeleteDatabase,
-                                            currentUserId: currentUser?.id,
-                                        })}
-                                        data={databases}
-                                        searchQuery={searchQuery}
-                                        onSearchChange={setSearchQuery}
-                                        filterOwner="all"
-                                        onFilterOwnerChange={() => {}}
-                                        filterPublic="all"
-                                        onFilterPublicChange={() => {}}
-                                        sortBy={sortBy}
-                                        onSortByChange={setSortBy}
-                                        sortOrder="desc"
-                                        onSortOrderChange={() => {}}
-                                        onCreateDatabase={handleCreateDatabase}
-                                        onRowClick={handleViewDatabase}
-                                    />
-                                )}
-                            </>
-                        )}
-                    </TabsContent>
-                </Tabs>
-
-                {/* Floating Action Button for Mobile */}
-                <div className="fixed bottom-6 right-6 sm:hidden">
-                    <Button
-                        onClick={handleCreateDatabase}
-                        size="lg"
-                        className="h-14 w-14 rounded-full shadow-lg"
-                    >
-                        <Plus className="h-6 w-6" />
-                    </Button>
+                    {/* DocumentView component handles record creation via "New Record" row */}
                 </div>
-            </Main>
 
-            <DatabaseDialogs />
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Total Databases</p>
+                                    <p className="text-2xl font-bold text-foreground">{databases.length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <DatabaseIcon className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Public</p>
+                                    <p className="text-2xl font-bold text-foreground">{databases.filter((d: any) => d.isPublic).length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Server className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Favorites</p>
+                                    <p className="text-2xl font-bold text-foreground">{databases.filter((d: any) => d.isFavorite).length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Star className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Recent</p>
+                                    <p className="text-2xl font-bold text-foreground">{databases.filter((d: any) => {
+                                        const updatedAt = new Date(d.updatedAt);
+                                        const weekAgo = new Date();
+                                        weekAgo.setDate(weekAgo.getDate() - 7);
+                                        return updatedAt > weekAgo;
+                                    }).length}</p>
+                                </div>
+                                <div className="p-3 bg-primary/10 rounded-lg">
+                                    <Clock className="h-6 w-6 text-primary" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Databases Document View */}
+                <DocumentView
+                    database={databasesDatabase}
+                    records={databaseRecords}
+                    moduleType="databases"
+                    config={{
+                        title: databaseMetadata?.displayNamePlural || 'Databases',
+                        icon: databaseMetadata?.icon || '🗄️',
+                        description: databaseMetadata?.description || 'Manage your databases and data collections',
+                        canCreate: true,
+                        canEdit: true,
+                        canDelete: true,
+                        canShare: true,
+                        enableViews: true,
+                        enableSearch: true,
+                        enableFilters: true,
+                        enableSorts: true,
+                        disablePropertyManagement: false,
+                        isFrozen: false,
+                        defaultViewId: defaultView?.id,
+                        apiFrozenConfig: apiFrozenConfig,
+                    }}
+                    onRecordEdit={handleRecordEdit}
+                    onRecordDelete={handleRecordDelete}
+                    onRecordUpdate={handleRecordUpdate}
+                />
+            </Main>
         </>
     );
-};
-
-export const DatabasesPage: React.FC = () => (
-    <PageErrorBoundary>
-        <DatabaseProvider>
-            <DatabasesPageComponent />
-        </DatabaseProvider>
-    </PageErrorBoundary>
-);
-
+}
 export default DatabasesPage;

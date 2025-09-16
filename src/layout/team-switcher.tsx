@@ -107,7 +107,7 @@ export function TeamSwitcher({
                                                 {displayCurrentWorkspace.name}
                                             </span>
                                             <span className='truncate text-xs'>
-                                                {displayCurrentWorkspace.isPersonal ? 'Personal' : 'Team Workspace'}
+                                                {(displayCurrentWorkspace as any).isPersonal ? 'Personal' : 'Team Workspace'}
                                             </span>
                                         </div>
                                     </>
@@ -144,7 +144,7 @@ export function TeamSwitcher({
                                         onClick={() => {
                                             // Use real setCurrentWorkspace if available, otherwise just update display
                                             if (workspaces.length > 0) {
-                                                setCurrentWorkspace(workspace)
+                                                setCurrentWorkspace(workspace as any)
                                             }
                                         }}
                                         className='gap-2 p-2'

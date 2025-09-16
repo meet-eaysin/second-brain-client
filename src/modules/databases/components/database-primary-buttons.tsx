@@ -67,7 +67,7 @@ export function DatabasePrimaryButtons() {
     if (currentDatabase) {
         return (
             <div className="flex items-center gap-2">
-                <Button
+                {/* <Button
                     onClick={() => {
                         if (currentDatabase?.id) {
                             setOpen('create-record');
@@ -90,7 +90,7 @@ export function DatabasePrimaryButtons() {
                 >
                     <Columns className="mr-2 h-4 w-4" />
                     Add Property
-                </Button>
+                </Button> */}
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -108,7 +108,6 @@ export function DatabasePrimaryButtons() {
                             disabled={!currentDatabase?.id}
                         >
                             <Plus className="mr-2 h-4 w-4" />
-                            Add View
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={handleImportData}>

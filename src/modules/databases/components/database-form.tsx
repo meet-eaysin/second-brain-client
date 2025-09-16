@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { X, Image, Camera, Globe, Lock, Database as DatabaseIcon, Grid } from 'lucide-react';
-import type { Database } from '@/types/database.types';
+import type { Database } from '@/types/document.types.ts';
 import { useCreateDatabase, useUpdateDatabase } from "@/modules/databases";
 import { PropertyList } from './property-list';
 import {Switch} from "@/components/ui/switch.tsx";
@@ -246,12 +246,12 @@ export function DatabaseForm({ database, open, onOpenChange, mode = 'create' }: 
                   <div className="px-6 pt-8 pb-4">
                       <DialogHeader className="text-left space-y-1">
                           <DialogTitle className="text-xl">
-                              {mode === 'create' ? 'Create New Database' : 'Edit Database'}
+                              {mode === 'create' ? 'Create New Document' : 'Edit Document'}
                           </DialogTitle>
                           <DialogDescription>
                               {mode === 'create'
-                                ? 'Set up your new database with a name, description, and settings.'
-                                : 'Update your database information and settings.'
+                                ? 'Set up your new document with a name, description, and settings.'
+                                : 'Update your document information and settings.'
                               }
                           </DialogDescription>
                       </DialogHeader>

@@ -3,16 +3,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { CreditCard, Calendar, Download, ExternalLink } from 'lucide-react';
+import { CreditCard, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const BillingSettings: React.FC = () => {
     const handleUpgrade = () => {
         toast.info('Billing management coming soon');
-    };
-
-    const handleDownloadInvoice = () => {
-        toast.info('Invoice download coming soon');
     };
 
     return (

@@ -35,7 +35,7 @@ import { Copy, Database, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { databaseApi } from '../services/databaseApi';
 // import { useWorkspace } from '@/modules/workspaces/context/workspace-context';
-import type { Database, DatabaseCategory } from '@/types/database.types';
+import type { Database, DatabaseCategory } from '@/types/document.types.ts';
 
 const duplicateFormSchema = z.object({
     name: z.string().min(1, 'Database name is required').max(100, 'Name must be less than 100 characters'),

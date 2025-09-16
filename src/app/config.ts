@@ -10,6 +10,46 @@ if (!envVars.success) {
     throw new Error(`Config validation error: ${envVars.error.errors.map(e => e.message).join(', ')}`);
 }
 
+// Font configuration
+export const fonts = [
+    {
+        name: "Default",
+        label: "Default",
+        value: "font-sans",
+        class: "font-sans"
+    },
+    {
+        name: "Inter",
+        label: "Inter",
+        value: "font-inter",
+        class: "font-inter"
+    },
+    {
+        name: "Manrope",
+        label: "Manrope",
+        value: "font-manrope",
+        class: "font-manrope"
+    },
+    {
+        name: "System",
+        label: "System",
+        value: "font-system",
+        class: "font-system"
+    },
+    {
+        name: "Serif",
+        label: "Serif",
+        value: "font-serif",
+        class: "font-serif"
+    },
+    {
+        name: "Mono",
+        label: "Monospace",
+        value: "font-mono",
+        class: "font-mono"
+    }
+] as const;
+
 export const appConfig = {
     APPLICATION_NAME: 'Sync-Workbench-Frontend',
     env: import.meta.env.MODE || 'development',

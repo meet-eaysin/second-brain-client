@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext } from 'react';
-import type { Database, DatabaseRecord, DatabaseProperty, DatabaseView } from '@/types/database.types';
+import type { Database, DatabaseRecord, DatabaseProperty, DatabaseView } from '@/types/document.types.ts';
 
 type DatabaseDialogType = 'create-database' | 'edit-database' | 'create-property' | 'edit-property' | 'create-record' | 'edit-record' | 'view-record' | 'create-view' | 'edit-view' | 'share-database' | 'delete-database' | 'manage-sorts' | 'manage-filters';
 

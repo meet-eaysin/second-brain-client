@@ -7,13 +7,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TableIcon, Columns, List, Grid, Calendar, Clock, Eye, EyeOff, Plus } from 'lucide-react';
-import type { DatabaseProperty, ViewType, CreateViewRequest } from '@/types/database.types';
+import type { DatabaseProperty, ViewType, CreateViewRequest } from '@/types/document.types.ts';
 import { toast } from 'sonner';
 
 interface ViewFormProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    properties: DatabaseProperty[];
+    properties?: DatabaseProperty[];
     view?: DatabaseView | null; // For edit mode
     mode?: 'create' | 'edit';
     onSubmit?: (viewData: CreateViewRequest) => Promise<void>;
@@ -27,7 +27,7 @@ const viewTypes: { value: ViewType; label: string; icon: React.ReactNode; descri
         description: 'Display records in rows and columns'
     },
     {
-        value: 'BOARD',
+        value: 'KANBAN',
         label: 'Board',
         icon: <Columns className="h-5 w-5" />,
         description: 'Group records by a select property'
@@ -58,12 +58,12 @@ const viewTypes: { value: ViewType; label: string; icon: React.ReactNode; descri
     },
 ];
 
-export function ViewForm({ open, onOpenChange, properties, view, mode = 'create', onSubmit }: ViewFormProps) {
+export function ViewForm({ open, onOpenChange, properties = [], view, mode = 'create', onSubmit }: ViewFormProps) {
     const [formData, setFormData] = useState<CreateViewRequest>({
         name: 'Table', // Auto-fill with default view type
         type: 'TABLE',
         isDefault: false,
-        visibleProperties: properties.map(p => p.id),
+        visibleProperties: properties?.map(p => p.id) || [],
         filters: [],
         sorts: []
     });
@@ -77,7 +77,7 @@ export function ViewForm({ open, onOpenChange, properties, view, mode = 'create'
                     name: view.name,
                     type: view.type,
                     isDefault: view.isDefault,
-                    visibleProperties: view.visibleProperties || properties.map(p => p.id),
+                    visibleProperties: view.visibleProperties || properties?.map(p => p.id) || [],
                     filters: view.filters || [],
                     sorts: view.sorts || []
                 });
@@ -87,7 +87,7 @@ export function ViewForm({ open, onOpenChange, properties, view, mode = 'create'
                     name: 'Table',
                     type: 'TABLE',
                     isDefault: false,
-                    visibleProperties: properties.map(p => p.id),
+                    visibleProperties: properties?.map(p => p.id) || [],
                     filters: [],
                     sorts: []
                 });
@@ -103,7 +103,7 @@ export function ViewForm({ open, onOpenChange, properties, view, mode = 'create'
             return;
         }
 
-        if (properties.length === 0) {
+        if (!properties || properties.length === 0) {
             toast.error('Cannot create view: No properties available. Please create some properties first.');
             return;
         }
@@ -123,7 +123,7 @@ export function ViewForm({ open, onOpenChange, properties, view, mode = 'create'
                 name: 'Table', // Auto-fill with default view type
                 type: 'TABLE',
                 isDefault: false,
-                visibleProperties: properties.map(p => p.id),
+                visibleProperties: properties?.map(p => p.id) || [],
                 filters: [],
                 sorts: []
             });
@@ -237,9 +237,9 @@ export function ViewForm({ open, onOpenChange, properties, view, mode = 'create'
                                     size="sm"
                                     onClick={() => setFormData(prev => ({
                                         ...prev,
-                                        visibleProperties: properties.map(p => p.id)
+                                        visibleProperties: properties?.map(p => p.id) || []
                                     }))}
-                                    disabled={properties.length === 0}
+                                    disabled={!properties || properties.length === 0}
                                 >
                                     <Eye className="h-3 w-3 mr-1" />
                                     All
@@ -276,7 +276,7 @@ export function ViewForm({ open, onOpenChange, properties, view, mode = 'create'
                         ) : (
                             <>
                                 <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-muted/20">
-                                    {properties.map((property) => (
+                                    {(properties || []).map((property) => (
                                         <div key={property.id} className="flex items-center space-x-2 p-2 rounded hover:bg-background/80 transition-colors">
                                             <Checkbox
                                                 id={`property-${property.id}`}

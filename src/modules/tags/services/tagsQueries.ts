@@ -1,8 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { tagsApi } from './tagsApi';
 import type {
-    Tag,
-    TagWithUsage,
     CreateTagRequest,
     UpdateTagRequest,
     TagQueryParams,
@@ -60,7 +58,7 @@ export const useCreateTag = () => {
 
     return useMutation({
         mutationFn: (data: CreateTagRequest) => tagsApi.createTag(data),
-        onSuccess: (newTag) => {
+        onSuccess: () => {
             // Invalidate and refetch tags list
             queryClient.invalidateQueries({ queryKey: TAG_KEYS.lists() });
             queryClient.invalidateQueries({ queryKey: TAG_KEYS.popular() });

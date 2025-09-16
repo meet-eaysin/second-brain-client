@@ -1,35 +1,23 @@
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
-import { ErrorBoundary } from '../providers/error-boundary.tsx'
-import { authRoutes } from '@/modules/auth'
-import { lazy } from 'react'
+import {createBrowserRouter, RouterProvider, Navigate} from 'react-router-dom'
+import {ErrorBoundary} from '../providers/error-boundary.tsx'
+import {authRoutes} from '@/modules/auth'
+import {lazy} from 'react'
 import {
     getAuthParentLink,
     getHomeLink,
     getAppLink,
     getDashboardLink,
     getDataTablesLink,
-    getDatabasesLink,
     getUsersLink,
-    getDatabaseTemplatesLink,
-    getDatabaseImportLink,
-    getDatabaseCategoriesLink,
-    getTagsLink,
-    getFilesLink,
     getNotificationsLink,
-    getSettingsLink,
 } from "@/app/router/router-link.ts";
 import {
     AuthenticatedLayout,
+    CalendarPage,
     DashboardPage,
     DataTablePage,
-    DatabasesPage,
-    DatabaseDetailPage,
-    DatabaseTemplatesPage,
-    DatabaseImportPage,
-    DatabaseCategoriesPage,
     UsersPage,
     TagsPage,
-    FilesPage,
     NotificationsPage,
     SettingsPage,
     ProfileSettingsPage,
@@ -42,15 +30,13 @@ import {
     WorkspaceSettingsPage,
     HomePage,
     NotFoundPage,
-    ProtectedRoute,
     PublicRoute
 } from "@/app/router/lazy-components";
 import AIAssistantPage from '@/modules/ai-assistant/pages/ai-assistant-page';
-import KnowledgeGraphPage from '@/modules/second-brain/pages/knowledge-graph-page';
-import NotesPage from '@/modules/second-brain/pages/notes-page';
-import SearchPage from '@/modules/second-brain/pages/search-page';
-import { DatabaseProvider } from '@/modules/databases';
-import { SecondBrainRoutes } from '@/modules/second-brain/routes/second-brain-routes';
+import {KnowledgeGraphPage} from '@/modules/knowledge-graph/pages/knowledge-graph-page';
+import NotesPage from '@/modules/notes/pages/notes-page';
+import SearchPage from '@/modules/search/pages/search-page';
+import {SecondBrainRoutes} from '@/modules/second-brain/routes/second-brain-routes';
 
 const UnauthorizedPage = lazy(() => import('@/modules/auth/pages/unauthorized-page'));
 
@@ -58,35 +44,35 @@ const router = createBrowserRouter([
     {
         path: getHomeLink(),
         element: (
-          <ErrorBoundary>
-              <HomePage />
-          </ErrorBoundary>
+            <ErrorBoundary>
+                <HomePage/>
+            </ErrorBoundary>
         ),
     },
     {
         path: getAuthParentLink(),
-        element: <PublicRoute />,
+        element: <PublicRoute/>,
         children: authRoutes
     },
     {
         path: '/unauthorized',
         element: (
-          <ErrorBoundary>
-              <UnauthorizedPage />
-          </ErrorBoundary>
+            <ErrorBoundary>
+                <UnauthorizedPage/>
+            </ErrorBoundary>
         ),
     },
     {
         path: getAppLink(),
         element: (
-          <ProtectedRoute>
-              <AuthenticatedLayout />
-          </ProtectedRoute>
+            //   <ProtectedRoute>
+            <AuthenticatedLayout/>
+            //   </ProtectedRoute>
         ),
         children: [
             {
                 index: true,
-                element: <Navigate to={getDashboardLink()} replace />,
+                element: <Navigate to={getDashboardLink()} replace/>,
             },
             {
                 path: getDashboardLink().replace('/app/', ''),
@@ -94,7 +80,7 @@ const router = createBrowserRouter([
             },
             {
                 path: 'second-brain/*',
-                element: <SecondBrainRoutes />,
+                element: <SecondBrainRoutes/>,
             },
             {
                 path: 'ai-assistant',
@@ -102,89 +88,59 @@ const router = createBrowserRouter([
             },
             {
                 path: 'knowledge-graph',
-                element: <KnowledgeGraphPage />,
+                element: <KnowledgeGraphPage/>,
             },
             {
                 path: 'notes',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'ideas',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'capture',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'collections',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'favorites',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'recent',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'search',
-                element: <SearchPage />,
+                element: <SearchPage/>,
             },
             {
                 path: 'templates',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: 'calendar',
-                element: <NotesPage />,
+                element: <CalendarPage/>,
             },
             {
                 path: 'tags',
-                element: <TagsPage />,
+                element: <TagsPage/>,
             },
             {
                 path: 'archive',
-                element: <NotesPage />,
+                element: <NotesPage/>,
             },
             {
                 path: getDataTablesLink().replace('/app/', ''),
                 element: <DataTablePage/>,
             },
             {
-                path: getDatabasesLink().replace('/app/', ''),
-                element: <DatabasesPage/>,
-            },
-            {
-                path: 'databases/:id',
-                element: (
-                    <ErrorBoundary>
-                        <DatabaseProvider>
-                            <DatabaseDetailPage/>
-                        </DatabaseProvider>
-                    </ErrorBoundary>
-                ),
-            },
-            {
-                path: getDatabaseTemplatesLink().replace('/app/', ''),
-                element: <DatabaseTemplatesPage/>,
-            },
-            {
-                path: getDatabaseImportLink().replace('/app/', ''),
-                element: <DatabaseImportPage/>,
-            },
-            {
-                path: getDatabaseCategoriesLink().replace('/app/', ''),
-                element: <DatabaseCategoriesPage/>,
-            },
-            {
                 path: getUsersLink().replace('/app/', ''),
                 element: <UsersPage/>,
-            },
-            {
-                path: getFilesLink().replace('/app/', ''),
-                element: <FilesPage/>,
             },
             {
                 path: getNotificationsLink().replace('/app/', ''),
@@ -236,13 +192,13 @@ const router = createBrowserRouter([
     {
         path: '*',
         element: (
-          <ErrorBoundary>
-              <NotFoundPage/>
-          </ErrorBoundary>
+            <ErrorBoundary>
+                <NotFoundPage/>
+            </ErrorBoundary>
         ),
     },
 ])
 
 export const AppRouter = () => {
-    return <RouterProvider router={router} />
+    return <RouterProvider router={router}/>
 }

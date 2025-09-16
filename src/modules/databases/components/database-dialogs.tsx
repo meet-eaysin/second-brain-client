@@ -7,7 +7,7 @@ import {
     useAddView,
     useUpdateView
 } from '../services/databaseQueries';
-import { RecordForm } from './record-form';
+import { RecordForm } from '@/modules/document-view/components/record-form';
 import {
     Dialog,
     DialogContent,
@@ -40,7 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Copy, Mail, Trash2, Users, Globe, Lock } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Database, PermissionLevel } from '@/types/database.types';
+import type { Database, PermissionLevel } from '@/types/document.types.ts';
 import { DatabaseForm } from "./database-form";
 import { PropertyForm } from "./property-form";
 import { ViewForm } from "./view-form";

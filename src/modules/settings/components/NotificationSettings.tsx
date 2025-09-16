@@ -13,7 +13,6 @@ export const NotificationSettings: React.FC = () => {
     const [pushNotifications, setPushNotifications] = useState(true);
     const [workspaceInvites, setWorkspaceInvites] = useState(true);
     const [databaseShares, setDatabaseShares] = useState(true);
-    const [comments, setComments] = useState(true);
     const [mentions, setMentions] = useState(true);
     const [weeklyDigest, setWeeklyDigest] = useState(false);
     const [notificationFrequency, setNotificationFrequency] = useState('immediate');

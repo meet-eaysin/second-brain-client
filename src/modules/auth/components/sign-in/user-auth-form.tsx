@@ -7,7 +7,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {PasswordInput} from "@/components/password-input.tsx";
 import {Link} from "react-router-dom";
 import {Button} from "@/components/ui/button.tsx";
-import {IconBrandGoogle} from "@tabler/icons-react";
+import {Chrome} from "lucide-react";
 import {cn} from "@/lib/utils.ts";
 import { toast } from 'sonner';
 import { usePerformance } from '@/hooks/usePerformance';
@@ -119,7 +119,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
                     onClick={handleGoogleLogin}
                     className="w-full"
                 >
-                    <IconBrandGoogle className='h-4 w-4 mr-2' />
+                    <Chrome className='h-4 w-4 mr-2' />
                     {googleLoading ? 'Authenticating...' : 'Continue with Google'}
                 </Button>
             </form>

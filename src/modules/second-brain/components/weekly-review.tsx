@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
-    Calendar, CheckSquare, Target, TrendingUp, 
+    CheckSquare, Target, 
     Star, AlertCircle, Lightbulb, ArrowRight,
-    BarChart3, Smile, BookOpen, Plus, X
+    BarChart3, BookOpen, Plus, X
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';
 import { toast } from 'sonner';
@@ -123,12 +122,12 @@ export function WeeklyReview({ onComplete }: WeeklyReviewProps) {
         createJournalMutation.mutate(journalEntry);
     };
 
-    const weeklyData = weeklyStats?.data;
-    const completedTasks = weeklyData?.tasks?.data?.tasks?.filter((t: any) => t.status === 'completed') || [];
-    const totalTasks = weeklyData?.tasks?.data?.tasks?.length || 0;
+    const weeklyData = weeklyStats;
+    const completedTasks = weeklyData?.tasks?.filter((t: any) => t.status === 'completed') || [];
+    const totalTasks = weeklyData?.tasks?.length || 0;
     const completionRate = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
 
-    const activeProjects = weeklyData?.projects?.data?.projects?.filter((p: any) => p.status === 'active') || [];
+    const activeProjects = weeklyData?.projects?.filter((p: any) => p.status === 'active') || [];
     const moodEntries = weeklyData?.mood?.data?.moods || [];
     const avgMood = moodEntries.length > 0 
         ? moodEntries.reduce((sum: number, m: any) => sum + m.mood.value, 0) / moodEntries.length 
@@ -211,32 +210,32 @@ export function WeeklyReview({ onComplete }: WeeklyReviewProps) {
                         <AccomplishmentsStep
                             accomplishments={reviewData.accomplishments}
                             completedTasks={completedTasks}
-                            onAdd={(value) => addItem('accomplishments', value)}
-                            onRemove={(index) => removeItem('accomplishments', index)}
+                            onAdd={(value: string) => addItem('accomplishments', value)}
+                            onRemove={(index: number) => removeItem('accomplishments', index)}
                         />
                     )}
 
                     {currentStep === 1 && (
                         <ChallengesStep
                             challenges={reviewData.challenges}
-                            onAdd={(value) => addItem('challenges', value)}
-                            onRemove={(index) => removeItem('challenges', index)}
+                            onAdd={(value: string) => addItem('challenges', value)}
+                            onRemove={(index: number) => removeItem('challenges', index)}
                         />
                     )}
 
                     {currentStep === 2 && (
                         <InsightsStep
                             insights={reviewData.insights}
-                            onAdd={(value) => addItem('insights', value)}
-                            onRemove={(index) => removeItem('insights', index)}
+                            onAdd={(value: string) => addItem('insights', value)}
+                            onRemove={(index: number) => removeItem('insights', index)}
                         />
                     )}
 
                     {currentStep === 3 && (
                         <NextWeekStep
                             goals={reviewData.nextWeekGoals}
-                            onAdd={(value) => addItem('nextWeekGoals', value)}
-                            onRemove={(index) => removeItem('nextWeekGoals', index)}
+                            onAdd={(value: string) => addItem('nextWeekGoals', value)}
+                            onRemove={(index: number) => removeItem('nextWeekGoals', index)}
                         />
                     )}
 
@@ -246,7 +245,7 @@ export function WeeklyReview({ onComplete }: WeeklyReviewProps) {
                             moodReflection={reviewData.moodReflection}
                             energyLevel={reviewData.energyLevel}
                             satisfactionLevel={reviewData.satisfactionLevel}
-                            onChange={(field, value) => setReviewData(prev => ({ ...prev, [field]: value }))}
+                            onChange={(field: string, value: any) => setReviewData(prev => ({ ...prev, [field]: value }))}
                         />
                     )}
                 </CardContent>

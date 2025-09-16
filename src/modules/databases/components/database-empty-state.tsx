@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, TableIcon, Columns, List, Grid, Calendar, Clock, Database } from 'lucide-react';
-import type { ViewType } from '@/types/database.types';
+import type { ViewType } from '@/types/document.types.ts';
 
 interface DatabaseEmptyStateProps {
     viewType: ViewType;

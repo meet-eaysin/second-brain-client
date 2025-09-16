@@ -268,7 +268,7 @@ export const authApi = {
                 }, 1000);
 
                 const timeoutId = setTimeout(() => {
-                    if (!messageReceived && !popupClosed) {
+                    if (!messageReceived && !popup.closed) {
                         cleanup();
 
                         console.log('⏰ Authentication timeout after 10 minutes');
@@ -381,7 +381,7 @@ export const authApi = {
 
             console.log('🧪 Test result:', { url, isValid });
 
-            return { url, isValid };
+            return { url, isValid: Boolean(isValid) };
         } catch (error) {
             console.error('🧪 Test failed:', error);
             throw error;

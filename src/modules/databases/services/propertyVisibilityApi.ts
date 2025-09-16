@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/api-client';
 import { API_ENDPOINTS } from '@/constants/api-endpoints';
 import type { ApiResponse } from '@/types/api.types';
-import type { Database, DatabaseView } from '@/types/database.types';
+import type { Database, DatabaseView } from '@/types/document.types.ts';
 
 export interface PropertyVisibilityRequest {
     isVisible: boolean;

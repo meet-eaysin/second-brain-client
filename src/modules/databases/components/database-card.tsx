@@ -28,7 +28,7 @@ import {
     Tag,
     Copy
 } from 'lucide-react';
-import type { Database, DatabaseCategory } from '@/types/database.types';
+import type { Database, DatabaseCategory } from '@/types/document.types.ts';
 import { useToggleFavorite, useMoveToCategory, useCategories, useTrackAccess } from '../hooks/enhanced-features-hooks';
 
 interface DatabaseCardProps {

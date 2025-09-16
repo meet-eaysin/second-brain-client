@@ -69,7 +69,7 @@ export const useUpdateProfile = () => {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.profile() });
             toast.success('Profile updated successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to update profile';
             toast.error(message);
         },
@@ -87,7 +87,7 @@ export const useDeleteAccount = () => {
             toast.success('Account deleted successfully');
             window.location.href = '/';
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to delete account';
             toast.error(message);
         },
@@ -106,7 +106,7 @@ export const useUpdateUser = () => {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
             toast.success('User updated successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to update user';
             toast.error(message);
         },
@@ -123,7 +123,7 @@ export const useDeleteUser = () => {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
             toast.success('User deleted successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to delete user';
             toast.error(message);
         },
@@ -142,7 +142,7 @@ export const useToggleUserStatus = () => {
             const status = data.isActive ? 'activated' : 'deactivated';
             toast.success(`User ${status} successfully`);
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to update user status';
             toast.error(message);
         },
@@ -161,7 +161,7 @@ export const useUpdateUserRole = () => {
             queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });
             toast.success('User role updated successfully');
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to update user role';
             toast.error(message);
         },
@@ -181,7 +181,7 @@ export const useBulkUpdateUsers = () => {
                 result.errors.forEach(error => toast.error(error));
             }
         },
-        onError: (error: AxiosError<ApiResponse>) => {
+        onError: (error: AxiosError<ApiResponse<any>>) => {
             const message = error.response?.data?.message || 'Failed to update users';
             toast.error(message);
         },

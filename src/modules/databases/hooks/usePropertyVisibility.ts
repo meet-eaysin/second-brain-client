@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { propertyVisibilityApi } from '../services/propertyVisibilityApi';
 import { DATABASE_KEYS } from '../services/queryKeys';
-import type { DatabaseProperty, DatabaseView } from '@/types/database.types';
+import type { DatabaseProperty, DatabaseView } from '@/types/document.types.ts';
 import type { AxiosError } from 'axios';
 import type { ApiResponse } from '@/types/api.types';
 
