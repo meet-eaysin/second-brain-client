@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useDocumentView } from "../context/document-view-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createStandardModuleApiService } from "../services/dynamic-api-service";
+import { createStandardModuleApiService } from "../services/api-service.ts";
 import { toast } from "sonner";
 
 export function DatabasePrimaryButtons() {
@@ -90,7 +90,6 @@ export function DatabasePrimaryButtons() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleImportData}>
               <Import className="mr-2 h-4 w-4" />
               Import Data

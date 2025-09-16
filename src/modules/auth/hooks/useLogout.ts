@@ -1,29 +1,32 @@
-import { useLogoutMutation, useLogoutAllMutation } from "../services/authQueries.ts";
+import {
+  useLogoutMutation,
+  useLogoutAllMutation,
+} from "../services/auth-queries.ts";
 
 export const useLogout = () => {
-    const logoutMutation = useLogoutMutation();
+  const logoutMutation = useLogoutMutation();
 
-    const handleLogout = () => {
-        logoutMutation.mutate();
-    };
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
 
-    return {
-        handleLogout,
-        isLoading: logoutMutation.isPending,
-        error: logoutMutation.error,
-    };
+  return {
+    handleLogout,
+    isLoading: logoutMutation.isPending,
+    error: logoutMutation.error,
+  };
 };
 
 export const useLogoutAll = () => {
-    const logoutAllMutation = useLogoutAllMutation();
+  const logoutAllMutation = useLogoutAllMutation();
 
-    const handleLogoutAll = () => {
-        logoutAllMutation.mutate();
-    };
+  const handleLogoutAll = () => {
+    logoutAllMutation.mutate();
+  };
 
-    return {
-        handleLogoutAll,
-        isLoading: logoutAllMutation.isPending,
-        error: logoutAllMutation.error,
-    };
+  return {
+    handleLogoutAll,
+    isLoading: logoutAllMutation.isPending,
+    error: logoutAllMutation.error,
+  };
 };

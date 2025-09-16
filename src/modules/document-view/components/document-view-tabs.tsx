@@ -28,7 +28,7 @@ import {
 import { toast } from "sonner";
 import { useDocumentView } from "../context/document-view-context";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createStandardModuleApiService } from "../services/dynamic-api-service";
+import { createStandardModuleApiService } from "../services/api-service.ts";
 import type {
   DatabaseView,
   DatabaseProperty,

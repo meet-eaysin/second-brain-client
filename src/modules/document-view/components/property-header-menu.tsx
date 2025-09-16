@@ -46,7 +46,7 @@ import {
 import { toast } from "sonner";
 import type { DocumentProperty, PropertyType } from "@/modules/document-view";
 import { propertyService } from "@/services/property.service";
-import { createStandardModuleApiService } from "../services/dynamic-api-service";
+import { createStandardModuleApiService } from "../services/api-service.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   canEditProperty,

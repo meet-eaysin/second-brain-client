@@ -10,12 +10,10 @@ import { apiClient } from '@/services/api-client';
 import type { DocumentView } from '@/modules/document-view';
 import { normalizePropertiesFromAPI } from '@/modules/document-view/utils/select-option-utils';
 
-// People-specific interfaces
 export interface PeopleViewConfig {
     moduleType: 'people';
     documentType: 'PEOPLE';
 
-    // Database metadata
     database: {
         id: string;
         name: string;

@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createStandardModuleApiService } from '../services/dynamic-api-service';
+import { createStandardModuleApiService } from '../services/api-service.ts';
 
 interface DocumentProperty {
     id: string;

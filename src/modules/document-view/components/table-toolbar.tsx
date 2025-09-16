@@ -108,22 +108,6 @@ export function TableToolbar({
               {records.length} record{records.length !== 1 ? "s" : ""}
             </Badge>
 
-            {/* <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFilterOpen(true)}
-              className="relative"
-            >
-              <Filter />
-              {activeFiltersCount > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="ml-1 p-0 text-xs flex items-center justify-center"
-                >
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </Button> */}
             <FilterManager
               open={isFilterOpen}
               onOpenChange={setIsFilterOpen}

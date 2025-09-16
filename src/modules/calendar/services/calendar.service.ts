@@ -1,5 +1,4 @@
-import { api } from './api';
-import type { 
+import type {
     Calendar, 
     CalendarEvent, 
     CalendarIntegration,
@@ -10,7 +9,8 @@ import type {
     UpdateEventRequest,
     CalendarEventsQuery,
     IntegrationProvider,
-} from '@/types/calendar';
+} from '@/types/calendar.ts';
+import apiClient from "@/services/api-client.ts";
 
 export interface CalendarSyncResult {
     success: boolean;
@@ -30,56 +30,56 @@ export interface ExternalCalendarAuth {
 class CalendarService {
     // Calendar Management
     async getCalendars(): Promise<Calendar[]> {
-        const response = await api.get('/api/calendars');
+        const response = await apiClient.get('/api/calendars');
         return response.data;
     }
 
     async getCalendar(calendarId: string): Promise<Calendar> {
-        const response = await api.get(`/api/calendars/${calendarId}`);
+        const response = await apiClient.get(`/api/calendars/${calendarId}`);
         return response.data;
     }
 
     async createCalendar(data: CreateCalendarRequest): Promise<Calendar> {
-        const response = await api.post('/api/calendars', data);
+        const response = await apiClient.post('/api/calendars', data);
         return response.data;
     }
 
     async updateCalendar(calendarId: string, data: UpdateCalendarRequest): Promise<Calendar> {
-        const response = await api.put(`/api/calendars/${calendarId}`, data);
+        const response = await apiClient.put(`/api/calendars/${calendarId}`, data);
         return response.data;
     }
 
     async deleteCalendar(calendarId: string): Promise<void> {
-        await api.delete(`/api/calendars/${calendarId}`);
+        await apiClient.delete(`/api/calendars/${calendarId}`);
     }
 
     // Event Management
     async getEvents(query: CalendarEventsQuery): Promise<CalendarEvent[]> {
-        const response = await api.get('/api/calendar-events', { params: query });
+        const response = await apiClient.get('/api/calendar-events', { params: query });
         return response.data;
     }
 
     async getEvent(eventId: string): Promise<CalendarEvent> {
-        const response = await api.get(`/api/calendar-events/${eventId}`);
+        const response = await apiClient.get(`/api/calendar-events/${eventId}`);
         return response.data;
     }
 
     async createEvent(data: CreateEventRequest): Promise<CalendarEvent> {
-        const response = await api.post('/api/calendar-events', data);
+        const response = await apiClient.post('/api/calendar-events', data);
         return response.data;
     }
 
     async updateEvent(eventId: string, data: UpdateEventRequest): Promise<CalendarEvent> {
-        const response = await api.put(`/api/calendar-events/${eventId}`, data);
+        const response = await apiClient.put(`/api/calendar-events/${eventId}`, data);
         return response.data;
     }
 
     async deleteEvent(eventId: string): Promise<void> {
-        await api.delete(`/api/calendar-events/${eventId}`);
+        await apiClient.delete(`/api/calendar-events/${eventId}`);
     }
 
     async duplicateEvent(eventId: string, newStartTime?: Date): Promise<CalendarEvent> {
-        const response = await api.post(`/api/calendar-events/${eventId}/duplicate`, {
+        const response = await apiClient.post(`/api/calendar-events/${eventId}/duplicate`, {
             newStartTime,
         });
         return response.data;
@@ -97,7 +97,7 @@ class CalendarService {
             byMonth?: number[];
         };
     }): Promise<CalendarEvent> {
-        const response = await api.post('/api/calendar-events/recurring', data);
+        const response = await apiClient.post('/api/calendar-events/recurring', data);
         return response.data;
     }
 
@@ -106,7 +106,7 @@ class CalendarService {
         data: UpdateEventRequest,
         updateType: 'this' | 'following' | 'all' = 'this'
     ): Promise<CalendarEvent> {
-        const response = await api.put(`/api/calendar-events/${eventId}/recurring`, {
+        const response = await apiClient.put(`/api/calendar-events/${eventId}/recurring`, {
             ...data,
             updateType,
         });
@@ -117,7 +117,7 @@ class CalendarService {
         eventId: string,
         deleteType: 'this' | 'following' | 'all' = 'this'
     ): Promise<void> {
-        await api.delete(`/api/calendar-events/${eventId}/recurring`, {
+        await apiClient.delete(`/api/calendar-events/${eventId}/recurring`, {
             params: { deleteType },
         });
     }
@@ -129,7 +129,7 @@ class CalendarService {
         level: 'VIEWER' | 'CONTRIBUTOR' | 'EDITOR' | 'ADMIN',
         message?: string
     ): Promise<CalendarPermission> {
-        const response = await api.post(`/api/calendars/${calendarId}/share`, {
+        const response = await apiClient.post(`/api/calendars/${calendarId}/share`, {
             email,
             level,
             message,
@@ -143,7 +143,7 @@ class CalendarService {
         level: string,
         permissions?: any
     ): Promise<CalendarPermission> {
-        const response = await api.put(`/api/calendars/${calendarId}/permissions/${permissionId}`, {
+        const response = await apiClient.put(`/api/calendars/${calendarId}/permissions/${permissionId}`, {
             level,
             permissions,
         });
@@ -151,17 +151,17 @@ class CalendarService {
     }
 
     async revokeCalendarAccess(calendarId: string, permissionId: string): Promise<void> {
-        await api.delete(`/api/calendars/${calendarId}/permissions/${permissionId}`);
+        await apiClient.delete(`/api/calendars/${calendarId}/permissions/${permissionId}`);
     }
 
     async getCalendarPermissions(calendarId: string): Promise<CalendarPermission[]> {
-        const response = await api.get(`/api/calendars/${calendarId}/permissions`);
+        const response = await apiClient.get(`/api/calendars/${calendarId}/permissions`);
         return response.data;
     }
 
     // External Calendar Integration
     async getIntegrationAuthUrl(provider: IntegrationProvider): Promise<ExternalCalendarAuth> {
-        const response = await api.get(`/api/calendar-integrations/auth/${provider}`);
+        const response = await apiClient.get(`/api/calendar-integrations/auth/${provider}`);
         return response.data;
     }
 
@@ -170,7 +170,7 @@ class CalendarService {
         provider: IntegrationProvider,
         authCode: string
     ): Promise<CalendarIntegration> {
-        const response = await api.post(`/api/calendar-integrations/connect`, {
+        const response = await apiClient.post(`/api/calendar-integrations/connect`, {
             calendarId,
             provider,
             authCode,
@@ -183,7 +183,7 @@ class CalendarService {
         feedUrl: string,
         name: string
     ): Promise<CalendarIntegration> {
-        const response = await api.post(`/api/calendar-integrations/ical`, {
+        const response = await apiClient.post(`/api/calendar-integrations/ical`, {
             calendarId,
             feedUrl,
             name,
@@ -192,12 +192,12 @@ class CalendarService {
     }
 
     async getCalendarIntegrations(calendarId: string): Promise<CalendarIntegration[]> {
-        const response = await api.get(`/api/calendars/${calendarId}/integrations`);
+        const response = await apiClient.get(`/api/calendars/${calendarId}/integrations`);
         return response.data;
     }
 
     async syncCalendarIntegration(integrationId: string): Promise<CalendarSyncResult> {
-        const response = await api.post(`/api/calendar-integrations/${integrationId}/sync`);
+        const response = await apiClient.post(`/api/calendar-integrations/${integrationId}/sync`);
         return response.data;
     }
 
@@ -209,12 +209,12 @@ class CalendarService {
             webhookConfig?: any;
         }
     ): Promise<CalendarIntegration> {
-        const response = await api.put(`/api/calendar-integrations/${integrationId}`, settings);
+        const response = await apiClient.put(`/api/calendar-integrations/${integrationId}`, settings);
         return response.data;
     }
 
     async disconnectIntegration(integrationId: string): Promise<void> {
-        await api.delete(`/api/calendar-integrations/${integrationId}`);
+        await apiClient.delete(`/api/calendar-integrations/${integrationId}`);
     }
 
     // Reminders & Notifications
@@ -227,7 +227,7 @@ class CalendarService {
             config?: any;
         }
     ): Promise<void> {
-        await api.post(`/api/calendar-events/${eventId}/reminders`, reminder);
+        await apiClient.post(`/api/calendar-events/${eventId}/reminders`, reminder);
     }
 
     async updateEventReminders(
@@ -239,15 +239,15 @@ class CalendarService {
             config?: any;
         }>
     ): Promise<void> {
-        await api.put(`/api/calendar-events/${eventId}/reminders`, { reminders });
+        await apiClient.put(`/api/calendar-events/${eventId}/reminders`, { reminders });
     }
 
     async snoozeReminder(reminderId: string, snoozeMinutes: number = 5): Promise<void> {
-        await api.post(`/api/calendar-reminders/${reminderId}/snooze`, { snoozeMinutes });
+        await apiClient.post(`/api/calendar-reminders/${reminderId}/snooze`, { snoozeMinutes });
     }
 
     async dismissReminder(reminderId: string): Promise<void> {
-        await api.post(`/api/calendar-reminders/${reminderId}/dismiss`);
+        await apiClient.post(`/api/calendar-reminders/${reminderId}/dismiss`);
     }
 
     // Calendar Export & Import
@@ -256,7 +256,7 @@ class CalendarService {
         format: 'ical' | 'csv' | 'json' = 'ical',
         dateRange?: { start: Date; end: Date }
     ): Promise<Blob> {
-        const response = await api.get(`/api/calendars/${calendarId}/export`, {
+        const response = await apiClient.get(`/api/calendars/${calendarId}/export`, {
             params: { format, ...dateRange },
             responseType: 'blob',
         });
@@ -281,7 +281,7 @@ class CalendarService {
             formData.append('options', JSON.stringify(options));
         }
 
-        const response = await api.post(`/api/calendars/${calendarId}/import`, formData, {
+        const response = await apiClient.post(`/api/calendars/${calendarId}/import`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data;
@@ -296,7 +296,7 @@ class CalendarService {
         userId: string;
         busyTimes: Array<{ start: Date; end: Date; status: string }>;
     }>> {
-        const response = await api.post('/api/calendar/freebusy', {
+        const response = await apiClient.post('/api/calendar/freebusy', {
             userIds,
             startTime,
             endTime,
@@ -314,7 +314,7 @@ class CalendarService {
             timeZone?: string;
         }
     ): Promise<Array<{ start: Date; end: Date; confidence: number }>> {
-        const response = await api.post('/api/calendar/find-meeting-time', {
+        const response = await apiClient.post('/api/calendar/find-meeting-time', {
             attendeeEmails,
             duration,
             timeRange,
@@ -348,7 +348,7 @@ class CalendarService {
         endTime: Date,
         excludeEventId?: string
     ): Promise<CalendarEvent[]> {
-        const response = await api.post(`/api/calendars/${calendarId}/check-conflicts`, {
+        const response = await apiClient.post(`/api/calendars/${calendarId}/check-conflicts`, {
             startTime,
             endTime,
             excludeEventId,
@@ -363,7 +363,7 @@ class CalendarService {
         busyHours: Array<{ hour: number; count: number }>;
         topLocations: Array<{ location: string; count: number }>;
     }> {
-        const response = await api.get(`/api/calendars/${calendarId}/stats`, {
+        const response = await apiClient.get(`/api/calendars/${calendarId}/stats`, {
             params: { period },
         });
         return response.data;

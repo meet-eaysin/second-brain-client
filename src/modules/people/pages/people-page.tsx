@@ -1,7 +1,5 @@
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, Briefcase, Star, Clock } from "lucide-react";
 import { DocumentView } from "@/modules/document-view";
 import {
   usePeopleViewsQuery,
@@ -393,31 +391,7 @@ export function PeoplePage() {
       <Main className="space-y-8">
         {/* People Document View */}
         <DocumentView
-          database={peopleDatabase}
-          records={peopleRecords}
           moduleType="people"
-          config={{
-            title: databaseMetadata?.displayNamePlural || "People",
-            icon: databaseMetadata?.icon || "👥",
-            description:
-              databaseMetadata?.description ||
-              "Manage your contacts and relationships",
-            canCreate: true,
-            canEdit: true,
-            canDelete: true,
-            canShare: true,
-            enableViews: true,
-            enableSearch: true,
-            enableFilters: true,
-            enableSorts: true,
-            disablePropertyManagement: false,
-            isFrozen: false,
-            defaultViewId: defaultView?.id || "view-all",
-            apiFrozenConfig: apiFrozenConfig,
-          }}
-          onRecordEdit={handleRecordEdit}
-          onRecordDelete={handleRecordDelete}
-          onRecordUpdate={handleRecordUpdate}
         />
       </Main>
     </>

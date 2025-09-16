@@ -9,7 +9,7 @@ import {
 import {
   createStandardModuleApiService,
   isModuleSupported,
-} from "../services/dynamic-api-service";
+} from "../services/api-service.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { RecordForm } from "./record-form";
 import {

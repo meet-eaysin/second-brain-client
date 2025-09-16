@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, CalendarEvent, calendarService } from '@/services/calendar.service';
+import { useState, useEffect } from 'react';
+import { calendarService } from '@/modules/calendar/services/calendar.service.ts';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { 
     Select, 
     SelectContent, 
@@ -24,23 +22,10 @@ import {
     Settings, 
     Share2, 
     Download,
-    Calendar as CalendarIcon,
-    Clock,
-    MapPin,
-    Users,
-    Filter,
-    Search,
     Grid3X3,
-    List,
     MoreHorizontal
 } from 'lucide-react';
-import { CalendarMonthView } from './calendar-month-view';
-import { CalendarWeekView } from './calendar-week-view';
-import { CalendarDayView } from './calendar-day-view';
-import { CalendarAgendaView } from './calendar-agenda-view';
-import { CalendarTimelineView } from './calendar-timeline-view';
-import { CreateEventDialog } from './create-event-dialog';
-import { CalendarSidebar } from './calendar-sidebar';
+import type {Calendar, CalendarEvent} from "@/types/calendar.ts";
 
 export type CalendarViewType = 'month' | 'week' | 'day' | 'agenda' | 'timeline';
 
