@@ -1,4 +1,4 @@
-// Base types
+// Client-side type definitions (independent of backend)
 export interface IBaseEntity {
   id: string;
   createdAt: Date;
@@ -13,7 +13,6 @@ export interface ISoftDelete {
   deletedBy?: string;
 }
 
-// Database Types
 export enum EDatabaseType {
   DASHBOARD = "dashboard",
   FINANCE = "finance",
@@ -67,8 +66,8 @@ export interface IDatabase extends IBaseEntity {
   isPublic: boolean;
   isTemplate: boolean;
   isArchived: boolean;
-  properties: IProperty[];
-  views: IView[];
+  properties: IDatabaseProperty[];
+  views: IDatabaseView[];
   templates: IDatabaseTemplate[];
   recordCount: number;
   lastActivityAt?: Date;
@@ -96,12 +95,8 @@ export interface IDatabaseStats {
   }>;
 }
 
-// Response types
-export interface IDatabaseResponse extends IDatabase {}
-export interface IDatabaseStatsResponse extends IDatabaseStats {}
-
-export interface IDatabaseListResponse {
-  databases: IDatabaseResponse[];
+export interface IDatabaseList {
+  databases: IDatabase[];
   total: number;
   page: number;
   limit: number;
@@ -109,8 +104,7 @@ export interface IDatabaseListResponse {
   hasPrev: boolean;
 }
 
-// Request types
-export interface ICreateDatabaseRequest {
+export interface ICreateDatabase {
   workspaceId: string;
   name: string;
   type: EDatabaseType;
@@ -128,7 +122,7 @@ export interface ICreateDatabaseRequest {
   templateId?: string;
 }
 
-export interface IUpdateDatabaseRequest {
+export interface IUpdateDatabase {
   name?: string;
   description?: string;
   icon?: IDatabaseIcon;
@@ -162,7 +156,6 @@ export interface IDatabaseQueryParams {
   limit?: number;
 }
 
-// Property Types
 export enum EPropertyType {
   TEXT = "text",
   RICH_TEXT = "rich_text",
@@ -195,7 +188,7 @@ export enum EPropertyType {
   LOOKUP = "LOOKUP",
 }
 
-export interface IPropertyOption {
+export interface ISelectOption {
   id: string;
   value: string;
   label: string;
@@ -204,7 +197,7 @@ export interface IPropertyOption {
 }
 
 export interface IPropertyConfig {
-  options?: IPropertyOption[];
+  options?: ISelectOption[];
   format?: "number" | "currency" | "percentage";
   precision?: number;
   includeTime?: boolean;
@@ -230,22 +223,22 @@ export interface IPropertyConfig {
   defaultValue?: TPropertyValue;
 }
 
-export interface IProperty extends IBaseEntity {
+export interface IDatabaseProperty extends IBaseEntity {
   databaseId: string;
   name: string;
   type: EPropertyType;
   config: IPropertyConfig;
   isSystem: boolean;
   isVisible: boolean;
+  required: boolean;
   order: number;
   description?: string;
 }
 
-// Property value types
 export type TPrimitiveValue = string | number | boolean | Date | null;
 export type TArrayValue =
   | string[]
-  | IPropertyOption[]
+  | ISelectOption[]
   | IRelationValue[]
   | IFileValue[];
 
@@ -271,21 +264,16 @@ export interface IRollupValue {
 
 export type TPropertyValue =
   | TPrimitiveValue
-  | IPropertyOption
+  | ISelectOption
   | TArrayValue
   | IRollupValue
   | Record<string, unknown>;
 
-// Response types
-export interface IPropertyResponse extends IProperty {}
-export type TPropertyListResponse = IPropertyResponse[];
-
-// Request types
 export interface ICreatePropertyRequest {
   name: string;
   type: EPropertyType;
   description?: string;
-  isRequired?: boolean;
+  required?: boolean;
   isVisible?: boolean;
   isFrozen?: boolean;
   order?: number;
@@ -296,7 +284,7 @@ export interface IUpdatePropertyRequest {
   name?: string;
   type?: EPropertyType;
   description?: string;
-  isRequired?: boolean;
+  required?: boolean;
   isVisible?: boolean;
   isFrozen?: boolean;
   order?: number;
@@ -310,11 +298,21 @@ export interface IReorderPropertiesRequest {
   }>;
 }
 
-// Record Types
+export interface IPropertyResponse extends IDatabaseProperty {}
+
+export interface IPropertyListResponse {
+  properties: IDatabaseProperty[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 export interface IRecord extends IBaseEntity, ISoftDelete {
   databaseId: string;
   properties: Record<string, TPropertyValue>;
-  content?: IRecordContent[];
+  content?: IContentBlock[];
   order?: number;
   isTemplate: boolean;
   isFavorite: boolean;
@@ -328,118 +326,7 @@ export interface IRecord extends IBaseEntity, ISoftDelete {
   relationsCache?: Record<string, any[]>;
 }
 
-// Rich content types
-export enum EContentBlockType {
-  PARAGRAPH = "paragraph",
-  HEADING_1 = "heading_1",
-  HEADING_2 = "heading_2",
-  HEADING_3 = "heading_3",
-  BULLETED_LIST_ITEM = "bulleted_list_item",
-  NUMBERED_LIST_ITEM = "numbered_list_item",
-  TO_DO = "to_do",
-  TOGGLE = "toggle",
-  QUOTE = "quote",
-  DIVIDER = "divider",
-  CODE = "code",
-  CALLOUT = "callout",
-  IMAGE = "image",
-  VIDEO = "video",
-  FILE = "file",
-  BOOKMARK = "bookmark",
-  EMBED = "embed",
-  TABLE = "table",
-  COLUMN_LIST = "column_list",
-  COLUMN = "column",
-}
-
-export interface IRichText {
-  type: "text" | "mention" | "equation";
-  text?: {
-    content: string;
-    link?: { url: string };
-  };
-  mention?: {
-    type: "user" | "page" | "database" | "date";
-    user?: { id: string };
-    page?: { id: string };
-    database?: { id: string };
-    date?: { start: string; end?: string };
-  };
-  equation?: {
-    expression: string;
-  };
-  annotations: {
-    bold: boolean;
-    italic: boolean;
-    strikethrough: boolean;
-    underline: boolean;
-    code: boolean;
-    color: string;
-  };
-  plain_text: string;
-  href?: string;
-}
-
-export interface IRecordContent {
-  id: string;
-  type: EContentBlockType;
-  content: IRichText[];
-  children?: IRecordContent[];
-  checked?: boolean;
-  language?: string;
-  caption?: IRichText[];
-  url?: string;
-  createdAt: Date;
-  createdBy: string;
-  lastEditedAt: Date;
-  lastEditedBy: string;
-}
-
-// Response types
-export interface IRecordResponse extends IRecord {}
-export interface IRecordListResponse {
-  records: IRecordResponse[];
-  total: number;
-  page: number;
-  limit: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
-// Request types
-export interface ICreateRecordRequest {
-  properties: Record<string, TPropertyValue>;
-  content?: IRecordContent[];
-  order?: number;
-}
-
-export interface IUpdateRecordRequest {
-  properties?: Record<string, TPropertyValue>;
-  content?: IRecordContent[];
-  order?: number;
-  isFavorite?: boolean;
-  isArchived?: boolean;
-}
-
-export interface IBulkUpdateRecordsRequest {
-  recordIds: string[];
-  updates: {
-    properties?: Record<string, TPropertyValue>;
-    content?: IRecordContent[];
-  };
-}
-
-export interface IBulkDeleteRecordsRequest {
-  recordIds: string[];
-  permanent?: boolean;
-}
-
-export interface IDuplicateRecordRequest {
-  includeContent?: boolean;
-  newProperties?: Record<string, TPropertyValue>;
-}
-
-export interface IRecordQueryParams {
+export interface IRecordQueryOptions {
   databaseId: string;
   viewId?: string;
   search?: string;
@@ -452,7 +339,72 @@ export interface IRecordQueryParams {
   limit?: number;
 }
 
-// View Types
+export interface IRecordQueryParams {
+  databaseId?: string;
+  viewId?: string;
+  search?: string;
+  filters?: any;
+  sorts?: any;
+  isTemplate?: boolean;
+  isFavorite?: boolean;
+  isArchived?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+export interface IRecordListResponse {
+  records: IRecord[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
+export interface ICreateRecordRequest {
+  properties: Record<string, TPropertyValue>;
+  content?: IContentBlock[];
+  order?: number;
+}
+
+export interface IUpdateRecordRequest {
+  properties?: Record<string, TPropertyValue>;
+  content?: IContentBlock[];
+  order?: number;
+  isFavorite?: boolean;
+  isArchived?: boolean;
+}
+
+export interface IBulkUpdateRecordsRequest {
+  recordIds: string[];
+  updates: {
+    properties?: Record<string, TPropertyValue>;
+    content?: IContentBlock[];
+  };
+}
+
+export interface IBulkDeleteRecordsRequest {
+  recordIds: string[];
+  permanent?: boolean;
+}
+
+export interface IReorderRecordsRequest {
+  recordIds: string[];
+}
+
+export interface IDuplicateRecordRequest {
+  includeContent?: boolean;
+  newProperties?: Record<string, TPropertyValue>;
+}
+
+export interface IRecordResponse extends IRecord {}
+
+export interface IBulkOperationResponse {
+  updated: number;
+  failed: number;
+  errors?: string[];
+}
+
 export enum EViewType {
   TABLE = "table",
   BOARD = "board",
@@ -461,11 +413,6 @@ export enum EViewType {
   GALLERY = "gallery",
   TIMELINE = "timeline",
   GANTT = "gantt",
-}
-
-export interface ISortConfig {
-  propertyId: string;
-  direction: "asc" | "desc";
 }
 
 export enum EFilterOperator {
@@ -504,15 +451,30 @@ export enum EFilterOperator {
   NOT_CONTAINS_RELATION = "not_contains_relation",
 }
 
-export interface IFilterCondition {
+export interface IViewFilter {
   propertyId: string;
   operator: EFilterOperator;
   value?: any;
 }
 
-export interface IFilterGroup {
-  operator: "and" | "or";
-  conditions: (IFilterCondition | IFilterGroup)[];
+export interface IViewSort {
+  propertyId: string;
+  direction: "asc" | "desc";
+}
+
+export interface IViewGroup {
+  propertyId: string;
+  hideEmpty?: boolean;
+  sortGroups?: "asc" | "desc" | "manual";
+}
+
+export interface IViewSettings {
+  pageSize?: number;
+  showFilters?: boolean;
+  showSearch?: boolean;
+  showToolbar?: boolean;
+  kanbanGroupBy?: string;
+  [key: string]: any;
 }
 
 export interface IViewConfig {
@@ -558,24 +520,20 @@ export interface ITimelineConfig {
   showDependencies?: boolean;
 }
 
-export interface IView extends IBaseEntity {
+export interface IDatabaseView extends IBaseEntity {
   databaseId: string;
   name: string;
   type: EViewType;
   isDefault: boolean;
   isPublic: boolean;
   config: IViewConfig;
-  sorts: ISortConfig[];
-  filters: IFilterGroup;
+  sorts: IViewSort[];
+  filters: IViewFilter[];
   order: number;
   description?: string;
+  visibleProperties?: string[];
 }
 
-// Response types
-export interface IViewResponse extends IView {}
-export type TViewListResponse = IViewResponse[];
-
-// Request types
 export interface ICreateViewRequest {
   name: string;
   type: EViewType;
@@ -591,15 +549,34 @@ export interface IUpdateViewRequest {
   isDefault?: boolean;
   isPublic?: boolean;
   settings?: Record<string, any>;
+  sorts?: IViewSort[];
+  filters?: IViewFilter[];
   order?: number;
 }
 
-// Relation Types
+export interface IViewResponse extends IDatabaseView {}
+
+export interface IViewListResponse {
+  views: IDatabaseView[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+
 export enum ERelationType {
   ONE_TO_ONE = "one_to_one",
   ONE_TO_MANY = "one_to_many",
   MANY_TO_ONE = "many_to_one",
   MANY_TO_MANY = "many_to_many",
+}
+
+export interface IRelation extends IBaseEntity {
+  name: string;
+  description?: string;
+  config: IRelationConfig;
+  isActive: boolean;
 }
 
 export interface IRelationConfig {
@@ -616,13 +593,6 @@ export interface IRelationConfig {
   maxConnections?: number;
 }
 
-export interface IRelation extends IBaseEntity {
-  name: string;
-  description?: string;
-  config: IRelationConfig;
-  isActive: boolean;
-}
-
 export interface IRelationConnection {
   id: string;
   relationId: string;
@@ -633,27 +603,23 @@ export interface IRelationConnection {
   properties?: Record<string, any>;
 }
 
-// Response types
-export interface IRelationResponse extends IRelation {}
-export interface IRelationConnectionResponse extends IRelationConnection {}
-export type TRelationListResponse = IRelationResponse[];
-export type TRelationConnectionListResponse = IRelationConnectionResponse[];
+export type TRelationList = IRelation[];
+export type TRelationConnectionList = IRelationConnection[];
 
-// Request types
-export interface ICreateRelationRequest {
+export interface ICreateRelation {
   name: string;
   description?: string;
   config: IRelationConfig;
 }
 
-export interface IUpdateRelationRequest {
+export interface IUpdateRelation {
   name?: string;
   description?: string;
   config?: Partial<IRelationConfig>;
   isActive?: boolean;
 }
 
-export interface ICreateRelationConnectionRequest {
+export interface ICreateRelationConnection {
   relationId: string;
   sourceRecordId: string;
   targetRecordId: string;
@@ -678,7 +644,6 @@ export interface IRelationConnectionQueryParams {
   limit?: number;
 }
 
-// Block Types
 export enum BlockType {
   PARAGRAPH = "paragraph",
   HEADING_1 = "heading_1",
@@ -815,29 +780,26 @@ export interface IContentBlock {
   lastEditedBy: string;
 }
 
-// Response types
-export interface IBlockResponse extends IContentBlock {}
-export interface IBlockListResponse {
-  blocks: IBlockResponse[];
+export interface IBlockList {
+  blocks: IContentBlock[];
   total: number;
   hasMore: boolean;
   nextCursor?: string;
 }
 
-// Request types
-export interface ICreateBlockRequest {
+export interface ICreateBlock {
   type: BlockType;
   afterBlockId?: string;
   parentId?: string;
   content: Partial<IContentBlock>;
 }
 
-export interface IUpdateBlockRequest {
+export interface IUpdateBlock {
   content?: Partial<IContentBlock>;
   archived?: boolean;
 }
 
-export interface IMoveBlockRequest {
+export interface IMoveBlock {
   afterBlockId?: string;
   parentId?: string;
 }
@@ -845,7 +807,7 @@ export interface IMoveBlockRequest {
 export interface IBulkBlockOperation {
   operation: "create" | "update" | "delete" | "move";
   blockId?: string;
-  data?: ICreateBlockRequest | IUpdateBlockRequest | IMoveBlockRequest;
+  data?: ICreateBlock | IUpdateBlock | IMoveBlock;
 }
 
 export interface IBlockSearchOptions {
@@ -860,4 +822,206 @@ export interface IBlockSearchOptions {
   archived?: boolean;
   limit?: number;
   cursor?: string;
+}
+
+// Frontend-specific type aliases for backward compatibility
+export type IProperty = IDatabaseProperty;
+export type IView = IDatabaseView;
+export type IDatabaseRecord = IRecord;
+
+// Legacy type aliases for backward compatibility
+export type Document = IDatabase;
+export type DocumentProperty = IDatabaseProperty;
+export type DocumentView = IDatabaseView;
+export type DocumentRecord = IDatabaseRecord;
+export type DatabaseView = IDatabaseView;
+export type DatabaseProperty = IDatabaseProperty;
+export type DatabaseRecord = IDatabaseRecord;
+
+// Property type enum for frontend use (uppercase for consistency)
+export enum PropertyType {
+  TEXT = "TEXT",
+  RICH_TEXT = "RICH_TEXT",
+  NUMBER = "NUMBER",
+  DATE = "DATE",
+  CHECKBOX = "CHECKBOX",
+  URL = "URL",
+  EMAIL = "EMAIL",
+  PHONE = "PHONE",
+  CURRENCY = "CURRENCY",
+  PERCENT = "PERCENT",
+  SELECT = "SELECT",
+  MULTI_SELECT = "MULTI_SELECT",
+  STATUS = "STATUS",
+  PRIORITY = "PRIORITY",
+  FILE = "FILE",
+  RELATION = "RELATION",
+  ROLLUP = "ROLLUP",
+  CREATED_TIME = "CREATED_TIME",
+  CREATED_BY = "CREATED_BY",
+  LAST_EDITED_TIME = "LAST_EDITED_TIME",
+  LAST_EDITED_BY = "LAST_EDITED_BY",
+  MOOD_SCALE = "MOOD_SCALE",
+  FREQUENCY = "FREQUENCY",
+  CONTENT_TYPE = "CONTENT_TYPE",
+  FINANCE_TYPE = "FINANCE_TYPE",
+  FINANCE_CATEGORY = "FINANCE_CATEGORY",
+  FILES = "FILES",
+  LOOKUP = "LOOKUP",
+}
+
+// View type enum for frontend use
+export enum ViewType {
+  TABLE = "TABLE",
+  BOARD = "BOARD",
+  LIST = "LIST",
+  CALENDAR = "CALENDAR",
+  GALLERY = "GALLERY",
+  TIMELINE = "TIMELINE",
+  GANTT = "GANTT",
+}
+
+// Select option interface for frontend
+export interface SelectOption {
+  id: string;
+  name: string;
+  color: string;
+  description?: string;
+}
+
+// Legacy interfaces for backward compatibility
+export interface CreateDocumentRequest {
+  name: string;
+  description?: string;
+  icon?: string;
+  cover?: string;
+  workspaceId?: string;
+  isPublic?: boolean;
+}
+
+export interface UpdateDocumentRequest {
+  name?: string;
+  description?: string;
+  icon?: string;
+  cover?: string;
+  isPublic?: boolean;
+}
+
+export interface CreatePropertyRequest {
+  name: string;
+  type: PropertyType;
+  description?: string;
+  required?: boolean;
+  selectOptions?: Omit<SelectOption, "id">[];
+  relationConfig?: Record<string, unknown>;
+  order?: number;
+}
+
+export interface UpdatePropertyRequest {
+  name?: string;
+  description?: string;
+  required?: boolean;
+  selectOptions?: SelectOption[];
+}
+
+export interface CreateViewRequest {
+  name: string;
+  type: ViewType;
+  isDefault?: boolean;
+  filters?: Array<{
+    propertyId: string;
+    operator: string;
+    value: unknown;
+  }>;
+  sorts?: Array<{
+    propertyId: string;
+    direction: "asc" | "desc";
+  }>;
+  visibleProperties?: string[];
+  config?: Record<string, unknown>;
+}
+
+export interface UpdateViewRequest {
+  name?: string;
+  filters?: Array<{
+    propertyId: string;
+    operator: string;
+    value: unknown;
+  }>;
+  sorts?: Array<{
+    propertyId: string;
+    direction: "asc" | "desc";
+  }>;
+  visibleProperties?: string[];
+  config?: Record<string, unknown>;
+}
+
+export interface DocumentRecord {
+  id: string;
+  documentViewId: string;
+  properties: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+}
+
+export interface CreateRecordRequest {
+  properties: Record<string, unknown>;
+}
+
+export interface UpdateRecordRequest {
+  properties: Record<string, unknown>;
+}
+
+export type PermissionLevel = "read" | "write" | "admin";
+
+export interface DocumentPermission {
+  userId: string;
+  permission: PermissionLevel;
+  grantedAt: string;
+}
+
+export interface ShareDocumentRequest {
+  userId: string;
+  permission: PermissionLevel;
+}
+
+export interface PaginatedDocumentResponse {
+  documents: IDatabase[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+export interface PaginatedRecordsResponse {
+  records: IDatabaseRecord[];
+  total: number;
+  totalPages: number;
+  currentPage: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  groupedData?: Record<string, IDatabaseRecord[]>;
+}
+
+export interface DocumentQueryParams {
+  workspaceId?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  ownerId?: string;
+  excludeOwnerId?: string;
+  isPublic?: boolean;
+  sortBy?: "name" | "createdAt" | "updatedAt" | "lastAccessedAt";
+  sortOrder?: "asc" | "desc";
+}
+
+export interface RecordQueryParams {
+  viewId?: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  searchProperties?: string;
+  groupBy?: string;
+  filters?: string;
+  sorts?: string;
 }

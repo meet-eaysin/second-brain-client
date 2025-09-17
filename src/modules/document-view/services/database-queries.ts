@@ -3,44 +3,46 @@ import { databaseApi } from "./database-api";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import type {
-  IDatabaseResponse,
-  IDatabaseListResponse,
-  IDatabaseStatsResponse,
-  ICreateDatabaseRequest,
-  IUpdateDatabaseRequest,
-  IPropertyResponse,
-  TPropertyListResponse,
+  IDatabaseList,
+  IDatabase,
+  IDatabaseStats,
+  ICreateDatabase,
+  IUpdateDatabase,
+  IDatabaseQueryParams,
+  IPropertyListResponse,
+  IDatabaseProperty,
   ICreatePropertyRequest,
   IUpdatePropertyRequest,
-  IRecordResponse,
+  IReorderPropertiesRequest,
   IRecordListResponse,
+  IDatabaseRecord,
   ICreateRecordRequest,
   IUpdateRecordRequest,
   IBulkUpdateRecordsRequest,
   IBulkDeleteRecordsRequest,
-  IViewResponse,
-  TViewListResponse,
+  IDuplicateRecordRequest,
+  IViewListResponse,
+  IDatabaseView,
   ICreateViewRequest,
   IUpdateViewRequest,
-  IRelationResponse,
-  TRelationListResponse,
-  ICreateRelationRequest,
-  IUpdateRelationRequest,
-  ICreateRelationConnectionRequest,
-  IRelationConnectionResponse,
-  TRelationConnectionListResponse,
-  IBlockResponse,
-  IBlockListResponse,
-  ICreateBlockRequest,
-  IUpdateBlockRequest,
-  IBulkBlockOperation,
-  IRecordQueryParams,
-  IDatabaseQueryParams,
+  IRecordQueryOptions,
+  TRelationList,
+  IRelation,
+  ICreateRelation,
+  IUpdateRelation,
+  TRelationConnectionList,
+  IRelationConnection,
+  ICreateRelationConnection,
   IRelationQueryParams,
   IRelationConnectionQueryParams,
+  IContentBlock,
+  ICreateBlock,
+  IUpdateBlock,
+  IBlockList,
+  IBulkBlockOperation,
   IBlockSearchOptions,
-} from "@/modules/document-view/types";
-import type {ApiError} from "@/types/api.types.ts";
+} from "../types";
+import type { ApiError } from "@/types/api.types.ts";
 
 export const DATABASE_KEYS = {
   all: ["databases"] as const,
@@ -79,14 +81,14 @@ export const DATABASE_KEYS = {
 
 // Database hooks
 export const useDatabases = (params?: IDatabaseQueryParams) => {
-  return useQuery<IDatabaseListResponse, AxiosError>({
+  return useQuery<IDatabaseList, AxiosError>({
     queryKey: DATABASE_KEYS.list(params || {}),
     queryFn: () => databaseApi.getDatabases(params),
   });
 };
 
 export const useDatabase = (id: string) => {
-  return useQuery<IDatabaseResponse, AxiosError>({
+  return useQuery<IDatabase, AxiosError>({
     queryKey: DATABASE_KEYS.detail(id),
     queryFn: () => databaseApi.getDatabase(id),
     enabled: !!id,
@@ -94,7 +96,7 @@ export const useDatabase = (id: string) => {
 };
 
 export const useDatabaseStats = (id: string) => {
-  return useQuery<IDatabaseStatsResponse, AxiosError>({
+  return useQuery<IDatabaseStats, AxiosError>({
     queryKey: DATABASE_KEYS.stats(id),
     queryFn: () => databaseApi.getDatabaseStats(id),
     enabled: !!id,
@@ -104,7 +106,7 @@ export const useDatabaseStats = (id: string) => {
 export const useCreateDatabase = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<IDatabaseResponse, AxiosError<ApiError>, ICreateDatabaseRequest>({
+  return useMutation<IDatabase, AxiosError<ApiError>, ICreateDatabase>({
     mutationFn: databaseApi.createDatabase,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
@@ -120,9 +122,9 @@ export const useUpdateDatabase = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabaseResponse,
-      AxiosError<ApiError>,
-    { id: string; data: IUpdateDatabaseRequest }
+    IDatabase,
+    AxiosError<ApiError>,
+    { id: string; data: IUpdateDatabase }
   >({
     mutationFn: ({ id, data }) => databaseApi.updateDatabase(id, data),
     onSuccess: (_, variables) => {
@@ -158,7 +160,7 @@ export const useDuplicateDatabase = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabaseResponse,
+    IDatabase,
     AxiosError<ApiError>,
     { id: string; name: string }
   >({
@@ -177,7 +179,7 @@ export const useDuplicateDatabase = () => {
 
 // Property hooks
 export const useProperties = (databaseId: string) => {
-  return useQuery<TPropertyListResponse, AxiosError>({
+  return useQuery<IPropertyListResponse, AxiosError>({
     queryKey: DATABASE_KEYS.properties(databaseId),
     queryFn: () => databaseApi.getProperties(databaseId),
     enabled: !!databaseId,
@@ -185,7 +187,7 @@ export const useProperties = (databaseId: string) => {
 };
 
 export const useProperty = (databaseId: string, propertyId: string) => {
-  return useQuery<IPropertyResponse, AxiosError>({
+  return useQuery<IDatabaseProperty, AxiosError>({
     queryKey: DATABASE_KEYS.property(databaseId, propertyId),
     queryFn: () => databaseApi.getProperty(databaseId, propertyId),
     enabled: !!databaseId && !!propertyId,
@@ -196,7 +198,7 @@ export const useCreateProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IPropertyResponse,
+    IDatabaseProperty,
     AxiosError<ApiError>,
     { databaseId: string; data: ICreatePropertyRequest }
   >({
@@ -218,7 +220,7 @@ export const useUpdateProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IPropertyResponse,
+    IDatabaseProperty,
     AxiosError<ApiError>,
     { databaseId: string; propertyId: string; data: IUpdatePropertyRequest }
   >({
@@ -278,11 +280,11 @@ export const useReorderProperties = () => {
     AxiosError<ApiError>,
     {
       databaseId: string;
-      propertyOrders: Array<{ propertyId: string; order: number }>;
+      data: IReorderPropertiesRequest;
     }
   >({
-    mutationFn: ({ databaseId, propertyOrders }) =>
-      databaseApi.reorderProperties(databaseId, propertyOrders),
+    mutationFn: ({ databaseId, data }) =>
+      databaseApi.reorderProperties(databaseId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.properties(variables.databaseId),
@@ -298,7 +300,10 @@ export const useReorderProperties = () => {
 };
 
 // Record hooks
-export const useRecords = (databaseId: string, params?: IRecordQueryParams) => {
+export const useRecords = (
+  databaseId: string,
+  params?: IRecordQueryOptions
+) => {
   return useQuery<IRecordListResponse, AxiosError>({
     queryKey: [...DATABASE_KEYS.records(databaseId), params],
     queryFn: () => databaseApi.getRecords(databaseId, params),
@@ -307,7 +312,7 @@ export const useRecords = (databaseId: string, params?: IRecordQueryParams) => {
 };
 
 export const useRecord = (databaseId: string, recordId: string) => {
-  return useQuery<IRecordResponse, AxiosError>({
+  return useQuery<IDatabaseRecord, AxiosError>({
     queryKey: DATABASE_KEYS.record(databaseId, recordId),
     queryFn: () => databaseApi.getRecord(databaseId, recordId),
     enabled: !!databaseId && !!recordId,
@@ -318,7 +323,7 @@ export const useCreateRecord = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IRecordResponse,
+    IDatabaseRecord,
     AxiosError<ApiError>,
     { databaseId: string; data: ICreateRecordRequest }
   >({
@@ -340,7 +345,7 @@ export const useUpdateRecord = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IRecordResponse,
+    IDatabaseRecord,
     AxiosError<ApiError>,
     { databaseId: string; recordId: string; data: IUpdateRecordRequest }
   >({
@@ -440,12 +445,12 @@ export const useDuplicateRecord = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IRecordResponse,
+    IDatabaseRecord,
     AxiosError<ApiError>,
     {
       databaseId: string;
       recordId: string;
-      data: { includeContent?: boolean; newProperties?: Record<string, any> };
+      data?: IDuplicateRecordRequest;
     }
   >({
     mutationFn: ({ databaseId, recordId, data }) =>
@@ -466,7 +471,7 @@ export const useDuplicateRecord = () => {
 
 // View hooks
 export const useViews = (databaseId: string) => {
-  return useQuery<TViewListResponse, AxiosError>({
+  return useQuery<IViewListResponse, AxiosError>({
     queryKey: DATABASE_KEYS.views(databaseId),
     queryFn: () => databaseApi.getViews(databaseId),
     enabled: !!databaseId,
@@ -474,7 +479,7 @@ export const useViews = (databaseId: string) => {
 };
 
 export const useView = (databaseId: string, viewId: string) => {
-  return useQuery<IViewResponse, AxiosError>({
+  return useQuery<IDatabaseView, AxiosError>({
     queryKey: DATABASE_KEYS.view(databaseId, viewId),
     queryFn: () => databaseApi.getView(databaseId, viewId),
     enabled: !!databaseId && !!viewId,
@@ -485,7 +490,7 @@ export const useCreateView = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IViewResponse,
+    IDatabaseView,
     AxiosError<ApiError>,
     { databaseId: string; data: ICreateViewRequest }
   >({
@@ -507,7 +512,7 @@ export const useUpdateView = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IViewResponse,
+    IDatabaseView,
     AxiosError<ApiError>,
     { databaseId: string; viewId: string; data: IUpdateViewRequest }
   >({
@@ -531,7 +536,11 @@ export const useUpdateView = () => {
 export const useDeleteView = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, AxiosError<ApiError>, { databaseId: string; viewId: string }>({
+  return useMutation<
+    void,
+    AxiosError<ApiError>,
+    { databaseId: string; viewId: string }
+  >({
     mutationFn: ({ databaseId, viewId }) =>
       databaseApi.deleteView(databaseId, viewId),
     onSuccess: (_, variables) => {
@@ -549,16 +558,38 @@ export const useDeleteView = () => {
   });
 };
 
+export const useDuplicateView = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    IDatabaseView,
+    AxiosError<ApiError>,
+    { databaseId: string; viewId: string; newName?: string }
+  >({
+    mutationFn: ({ databaseId, viewId, newName }) =>
+      databaseApi.duplicateView(databaseId, viewId, newName),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.views(variables.databaseId),
+      });
+      toast.success("View duplicated successfully");
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to duplicate view");
+    },
+  });
+};
+
 // Relation hooks
 export const useRelations = (params?: IRelationQueryParams) => {
-  return useQuery<TRelationListResponse, AxiosError>({
+  return useQuery<TRelationList, AxiosError>({
     queryKey: [...DATABASE_KEYS.relations, params],
     queryFn: () => databaseApi.getRelations(params),
   });
 };
 
 export const useRelation = (relationId: string) => {
-  return useQuery<IRelationResponse, AxiosError>({
+  return useQuery<IRelation, AxiosError>({
     queryKey: DATABASE_KEYS.relation(relationId),
     queryFn: () => databaseApi.getRelation(relationId),
     enabled: !!relationId,
@@ -568,7 +599,7 @@ export const useRelation = (relationId: string) => {
 export const useCreateRelation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<IRelationResponse, AxiosError<ApiError>, ICreateRelationRequest>({
+  return useMutation<IRelation, AxiosError<ApiError>, ICreateRelation>({
     mutationFn: databaseApi.createRelation,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.relations });
@@ -584,9 +615,9 @@ export const useUpdateRelation = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IRelationResponse,
+    IRelation,
     AxiosError<ApiError>,
-    { relationId: string; data: IUpdateRelationRequest }
+    { relationId: string; data: IUpdateRelation }
   >({
     mutationFn: ({ relationId, data }) =>
       databaseApi.updateRelation(relationId, data),
@@ -624,7 +655,7 @@ export const useDeleteRelation = () => {
 export const useRelationConnections = (
   params?: IRelationConnectionQueryParams
 ) => {
-  return useQuery<TRelationConnectionListResponse, AxiosError>({
+  return useQuery<TRelationConnectionList, AxiosError>({
     queryKey: [...DATABASE_KEYS.relations, "connections", params],
     queryFn: () => databaseApi.getRelationConnections(params),
   });
@@ -634,9 +665,9 @@ export const useCreateRelationConnection = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IRelationConnectionResponse,
+    IRelationConnection,
     AxiosError<ApiError>,
-    ICreateRelationConnectionRequest
+    ICreateRelationConnection
   >({
     mutationFn: databaseApi.createRelationConnection,
     onSuccess: () => {
@@ -678,7 +709,7 @@ export const useBlocks = (
   recordId: string,
   params?: IBlockSearchOptions
 ) => {
-  return useQuery<IBlockListResponse, AxiosError>({
+  return useQuery<IBlockList, AxiosError>({
     queryKey: [...DATABASE_KEYS.blocks(databaseId, recordId), params],
     queryFn: () => databaseApi.getBlocks(databaseId, recordId, params),
     enabled: !!databaseId && !!recordId,
@@ -690,7 +721,7 @@ export const useBlock = (
   recordId: string,
   blockId: string
 ) => {
-  return useQuery<IBlockResponse, AxiosError>({
+  return useQuery<IContentBlock, AxiosError>({
     queryKey: DATABASE_KEYS.block(databaseId, recordId, blockId),
     queryFn: () => databaseApi.getBlock(databaseId, recordId, blockId),
     enabled: !!databaseId && !!recordId && !!blockId,
@@ -701,9 +732,9 @@ export const useCreateBlock = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IBlockResponse,
+    IContentBlock,
     AxiosError<ApiError>,
-    { databaseId: string; recordId: string; data: ICreateBlockRequest }
+    { databaseId: string; recordId: string; data: ICreateBlock }
   >({
     mutationFn: ({ databaseId, recordId, data }) =>
       databaseApi.createBlock(databaseId, recordId, data),
@@ -726,13 +757,13 @@ export const useUpdateBlock = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IBlockResponse,
+    IContentBlock,
     AxiosError<ApiError>,
     {
       databaseId: string;
       recordId: string;
       blockId: string;
-      data: IUpdateBlockRequest;
+      data: IUpdateBlock;
     }
   >({
     mutationFn: ({ databaseId, recordId, blockId, data }) =>
@@ -859,7 +890,7 @@ export const useDuplicateBlock = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IBlockResponse,
+    IContentBlock,
     AxiosError<ApiError>,
     { databaseId: string; recordId: string; blockId: string }
   >({

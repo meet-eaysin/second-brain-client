@@ -29,9 +29,9 @@ import type { DocumentProperty, DatabaseRecord } from "@/modules/document-view";
 
 interface EditableCellProps {
   property: DocumentProperty;
-  value: any;
+  value: unknown;
   record: DatabaseRecord;
-  onSave: (recordId: string, propertyId: string, newValue: any) => void;
+  onSave: (recordId: string, propertyId: string, newValue: unknown) => void;
   onCancel: () => void;
 }
 

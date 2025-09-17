@@ -2,8 +2,9 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DocumentTableHeader } from "./document-table-header";
-import type { DocumentRecord, DocumentProperty } from "@/modules/document-view";
+import type { IDatabaseRecord, IDatabaseProperty } from "../types";
 import { EditableCell } from "./editable-cell";
+import { Users } from "lucide-react";
 
 export interface FrozenPropertyConfig {
   propertyId: string;
@@ -81,13 +82,13 @@ const priorityColors = {
   Urgent: "bg-red-100 text-red-800",
 };
 
-const renderCellValue = (property: DocumentProperty, value: unknown) => {
+const renderCellValue = (property: IDatabaseProperty, value: unknown) => {
   if (!value && value !== false && value !== 0) {
     return <span className="text-muted-foreground">-</span>;
   }
 
   switch (property.type) {
-    case "SELECT": {
+    case "select": {
       if (
         typeof value === "object" &&
         value !== null &&
@@ -122,7 +123,7 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
       return <Badge className="bg-gray-100 text-gray-800">{value}</Badge>;
     }
 
-    case "MULTI_SELECT":
+    case "multi_select":
       if (!Array.isArray(value))
         return <span className="text-muted-foreground">-</span>;
       return (
@@ -166,13 +167,13 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
         </div>
       );
 
-    case "CHECKBOX":
+    case "checkbox":
       return <Checkbox checked={value === true || value === "true"} disabled />;
 
-    case "DATE":
+    case "date":
       return value ? new Date(value).toLocaleDateString() : "-";
 
-    case "URL":
+    case "url":
       return (
         <a
           href={value}
@@ -185,7 +186,7 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
         </a>
       );
 
-    case "EMAIL":
+    case "email":
       return (
         <a
           href={`mailto:${value}`}
@@ -196,7 +197,7 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
         </a>
       );
 
-    case "PHONE":
+    case "phone":
       return (
         <a
           href={`tel:${value}`}
@@ -207,7 +208,7 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
         </a>
       );
 
-    case "RELATION":
+    case "relation":
       return (
         <div className="flex items-center gap-2">
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -215,20 +216,20 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
         </div>
       );
 
-    case "FORMULA":
-    case "ROLLUP":
+    case "formula":
+    case "rollup":
       return (
         <span className="truncate max-w-xs font-mono text-sm">
           {String(value)}
         </span>
       );
 
-    case "CREATED_TIME":
-    case "LAST_EDITED_TIME":
+    case "created_time":
+    case "last_edited_time":
       return value ? new Date(value).toLocaleString() : "-";
 
-    case "CREATED_BY":
-    case "LAST_EDITED_BY":
+    case "created_by":
+    case "last_edited_by":
       return (
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs">
@@ -248,9 +249,9 @@ const renderCellValue = (property: DocumentProperty, value: unknown) => {
 };
 
 export const generateDocumentColumns = (
-  properties: DocumentProperty[],
+  properties: IDatabaseProperty[],
   databaseId: string,
-  onEdit?: (record: DocumentRecord) => void,
+  onEdit?: (record: IDatabaseRecord) => void,
   onDelete?: (recordId: string) => void,
   onUpdateRecord?: (
     recordId: string,
@@ -260,12 +261,12 @@ export const generateDocumentColumns = (
   onRefresh?: () => void,
   isFrozen?: boolean,
   frozenConfig?: ViewFrozenConfig | null,
-  onFilter?: (property: DocumentProperty) => void,
-  onFreeze?: (property: DocumentProperty) => void,
+  onFilter?: (property: IDatabaseProperty) => void,
+  onFreeze?: (property: IDatabaseProperty) => void,
   disablePropertyManagement?: boolean,
   moduleType?: string,
   apiFrozenConfig?: ViewFrozenConfig | null
-): ColumnDef<DocumentRecord>[] => {
+): ColumnDef<IDatabaseRecord>[] => {
   const columns: ColumnDef<DocumentRecord>[] = [
     {
       id: "select",
@@ -353,7 +354,7 @@ export const generateDocumentColumns = (
       filterFn: (row, _id, value) => {
         const cellValue = row.original.properties[property.id];
 
-        if (property.type === "MULTI_SELECT" && Array.isArray(cellValue)) {
+        if (property.type === "multi_select" && Array.isArray(cellValue)) {
           return value.some((v: string) => {
             return cellValue.some(
               (
@@ -372,7 +373,7 @@ export const generateDocumentColumns = (
           });
         }
 
-        if (property.type === "SELECT") {
+        if (property.type === "select") {
           if (
             typeof cellValue === "object" &&
             cellValue !== null &&

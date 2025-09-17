@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,19 +27,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDocumentView } from "../context/document-view-context";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createStandardModuleApiService } from "../services/api-service.ts";
-import type {
-  DatabaseView,
-  DatabaseProperty,
-  DatabaseRecord,
-} from "@/types/database.types";
+import { useDeleteView, useDuplicateView } from "../services/database-queries";
+import type { IDatabaseView } from "../types";
 
 interface DocumentViewTabsProps {
-  views: DatabaseView[];
-  properties: DatabaseProperty[];
-  records: DatabaseRecord[];
+  views: IDatabaseView[];
   currentViewId?: string;
+  databaseId?: string;
   moduleType?: string;
   isFrozen?: boolean;
   onViewChange: (viewId: string) => void;
@@ -47,53 +41,29 @@ interface DocumentViewTabsProps {
 }
 
 const VIEW_TYPE_ICONS = {
-  TABLE: Table,
-  BOARD: Kanban,
-  KANBAN: Kanban,
-  GALLERY: Grid3X3,
-  LIST: List,
-  CALENDAR: Calendar,
-  TIMELINE: Clock,
+  table: Table,
+  board: Kanban,
+  kanban: Kanban,
+  gallery: Grid3X3,
+  list: List,
+  calendar: Calendar,
+  timeline: Clock,
 } as const;
 
 export function DocumentViewTabs({
   views,
   currentViewId,
-  moduleType,
+  databaseId,
   isFrozen = false,
   onViewChange,
 }: DocumentViewTabsProps) {
   const { setDialogOpen, setCurrentView } = useDocumentView();
 
-  const queryClient = useQueryClient();
-  const apiService = createStandardModuleApiService(moduleType);
-
-  const deleteViewMutation = useMutation({
-    mutationFn: (viewId: string) => apiService.deleteView(viewId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [moduleType, "views"] });
-      queryClient.invalidateQueries({ queryKey: [moduleType, "view"] });
-      queryClient.invalidateQueries({ queryKey: [moduleType, "defaultView"] });
-      toast.success("View deleted successfully");
-    },
-    onError: (error) => toast.error(error?.message || "Failed to delete view"),
-  });
-
-  const duplicateViewMutation = useMutation({
-    mutationFn: ({ viewId, newName }: { viewId: string; newName: string }) =>
-      apiService.duplicateView(viewId, newName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [moduleType, "views"] });
-      queryClient.invalidateQueries({ queryKey: [moduleType, "view"] });
-      queryClient.invalidateQueries({ queryKey: [moduleType, "defaultView"] });
-      toast.success("View duplicated successfully");
-    },
-    onError: (error) =>
-      toast.error(error?.message || "Failed to duplicate view"),
-  });
+  const deleteViewMutation = useDeleteView();
+  const duplicateViewMutation = useDuplicateView();
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [viewToDelete, setViewToDelete] = useState<DatabaseView | null>(null);
+  const [viewToDelete, setViewToDelete] = useState<IDatabaseView | null>(null);
 
   const activeViewId =
     currentViewId || views.find((v) => v.isDefault)?.id || views[0]?.id;
@@ -102,7 +72,7 @@ export function DocumentViewTabs({
   const handleViewChange = (viewId: string) => onViewChange(viewId);
   const handleAddView = () => setDialogOpen("create-view");
 
-  const handleEditView = (view: DatabaseView) => {
+  const handleEditView = (view: IDatabaseView) => {
     if (view.config?.canEdit === false || view.config?.isSystemView === true) {
       toast.error("This view cannot be edited");
       return;
@@ -111,9 +81,12 @@ export function DocumentViewTabs({
     setDialogOpen("edit-view");
   };
 
-  const handleDuplicateView = async (view: DatabaseView) => {
+  const handleDuplicateView = async (view: IDatabaseView) => {
+    if (!databaseId) return;
+
     try {
       await duplicateViewMutation.mutateAsync({
+        databaseId,
         viewId: view.id,
         newName: `${view.name} (Copy)`,
       });
@@ -122,7 +95,7 @@ export function DocumentViewTabs({
     }
   };
 
-  const handleDeleteView = (view: DatabaseView) => {
+  const handleDeleteView = (view: IDatabaseView) => {
     if (views.length <= 1) {
       toast.error("Cannot delete the last view");
       return;
@@ -141,10 +114,13 @@ export function DocumentViewTabs({
   };
 
   const confirmDeleteView = async () => {
-    if (!viewToDelete) return;
+    if (!viewToDelete || !databaseId) return;
 
     try {
-      await deleteViewMutation.mutateAsync(viewToDelete.id);
+      await deleteViewMutation.mutateAsync({
+        databaseId,
+        viewId: viewToDelete.id,
+      });
     } catch (error) {
       console.error("Failed to delete view:", error);
     } finally {

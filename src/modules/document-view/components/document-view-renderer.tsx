@@ -9,14 +9,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 import type {
-  DocumentView,
-  DocumentProperty,
+  IDatabaseView,
+  IDatabaseProperty,
   DatabaseRecord,
 } from "@/modules/document-view";
 
 interface DocumentViewRendererProps {
-  view: DocumentView;
-  properties: DocumentProperty[];
+  view: IDatabaseView;
+  properties: IDatabaseProperty[];
   records: DatabaseRecord[];
   onRecordSelect?: (record: DatabaseRecord) => void;
   onRecordEdit?: (record: DatabaseRecord) => void;
@@ -69,10 +69,10 @@ export function DocumentViewRenderer({
   };
 
   const renderView = () => {
-    const viewType = view.type || "TABLE";
+    const viewType = view.type || "table";
 
     switch (viewType) {
-      case "TABLE":
+      case "table":
         return (
           <DocumentTableView
             {...commonProps}
@@ -81,8 +81,8 @@ export function DocumentViewRenderer({
           />
         );
 
-      case "BOARD":
-      case "KANBAN":
+      case "board":
+      case "kanban":
         return (
           <DocumentBoardView
             {...commonProps}
@@ -91,18 +91,18 @@ export function DocumentViewRenderer({
           />
         );
 
-      case "GALLERY":
+      case "gallery":
         return <DocumentGalleryView {...commonProps} />;
 
-      case "LIST":
+      case "list":
         return (
           <DocumentListView {...commonProps} onRecordUpdate={onRecordUpdate} />
         );
 
-      case "CALENDAR":
+      case "calendar":
         return <DocumentCalendarView {...commonProps} />;
 
-      case "TIMELINE":
+      case "timeline":
         return <DocumentTimelineView {...commonProps} />;
 
       default:
@@ -118,8 +118,8 @@ export function DocumentViewRenderer({
                   The view type "{viewType}" is not supported yet.
                 </p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Supported types: TABLE, BOARD, KANBAN, GALLERY, LIST,
-                  CALENDAR, TIMELINE
+                  Supported types: table, board, kanban, gallery, list,
+                  calendar, timeline
                 </p>
                 <Button
                   variant="outline"

@@ -2,6 +2,11 @@ export { DocumentView } from "./components/document-view";
 export type { DocumentViewProps } from "./components/document-view";
 export { DocumentDataTable } from "./components/document-data-table";
 
+// Export types
+export { EDatabaseType } from "./types";
+
+export type { IDatabaseView, IRecord, IRecordQueryParams } from "./types";
+
 export { FilterManager } from "./components/filter-manager";
 export { SortManager } from "./components/sort-manager";
 export { SearchBar } from "./components/search-bar";
@@ -62,23 +67,9 @@ export interface UpdateDocumentRequest {
   isPublic?: boolean;
 }
 
-export type PropertyType =
-  | "TEXT"
-  | "NUMBER"
-  | "SELECT"
-  | "MULTI_SELECT"
-  | "DATE"
-  | "CHECKBOX"
-  | "URL"
-  | "EMAIL"
-  | "PHONE"
-  | "RELATION"
-  | "FORMULA"
-  | "ROLLUP"
-  | "CREATED_TIME"
-  | "CREATED_BY"
-  | "LAST_EDITED_TIME"
-  | "LAST_EDITED_BY";
+import type { EPropertyType } from "./types";
+
+export type PropertyType = EPropertyType;
 
 export interface SelectOption {
   id: string;
@@ -126,18 +117,14 @@ export interface UpdatePropertyRequest {
   selectOptions?: SelectOption[];
 }
 
-export type ViewType =
-  | "TABLE"
-  | "KANBAN"
-  | "TIMELINE"
-  | "CALENDAR"
-  | "GALLERY"
-  | "LIST";
+import type { EViewType } from "./types";
+
+export type ViewType = EViewType;
 
 export interface ViewFilter {
   propertyId: string;
   operator: string;
-  value: unknown;
+  value?: unknown;
 }
 
 export interface ViewSort {
@@ -167,7 +154,7 @@ export interface DocumentView {
     showSearch?: boolean;
     showToolbar?: boolean;
     kanbanGroupBy?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -185,7 +172,7 @@ export interface CreateViewRequest {
     showSearch?: boolean;
     showToolbar?: boolean;
     kanbanGroupBy?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -201,7 +188,7 @@ export interface UpdateViewRequest {
     showSearch?: boolean;
     showToolbar?: boolean;
     kanbanGroupBy?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }
 
@@ -209,8 +196,8 @@ export interface DocumentRecord {
   id: string;
   documentViewId: string;
   properties: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   createdBy: string;
 }
 

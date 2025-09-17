@@ -8,7 +8,6 @@ import {
 import { sidebarData } from './data/sidebar-data'
 import {TeamSwitcher} from "@/layout/team-switcher.tsx";
 import {NavGroup} from "@/layout/nav-group.tsx";
-import {DynamicNavGroup} from "@/layout/dynamic-nav-group.tsx";
 import {NavUser} from "@/layout/nav-user.tsx";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -19,10 +18,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 {sidebarData.navGroups.map((props) => {
-                    // Use DynamicNavGroup for groups that need active state handling
-                    if (props.title === 'General' || props.title === 'Second Brain' || props.title === 'Other') {
-                        return <DynamicNavGroup key={props.title} {...props} />
-                    }
                     return <NavGroup key={props.title} {...props} />
                 })}
             </SidebarContent>

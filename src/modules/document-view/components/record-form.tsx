@@ -38,17 +38,17 @@ import {
 import { CalendarIcon, Save, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { DocumentProperty, DatabaseRecord } from "@/modules/document-view";
+import type { IDatabaseProperty, IDatabaseRecord } from "../types";
 import {
   normalizeSelectValue,
   getSelectOptionId,
 } from "@/modules/document-view/utils/select-option-utils";
 
-type RecordFormData = Record<string, any>;
+type RecordFormData = Record<string, unknown>;
 
 interface RecordFormProps {
-  record?: DatabaseRecord | null;
-  properties?: DocumentProperty[];
+  record?: IDatabaseRecord | null;
+  properties?: IDatabaseProperty[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: RecordFormData) => Promise<void>;
@@ -74,16 +74,16 @@ export function RecordForm({
       let fieldSchema: z.ZodTypeAny;
 
       switch (property.type) {
-        case "TEXT":
-        case "EMAIL":
-        case "URL":
-        case "PHONE":
+        case "text":
+        case "email":
+        case "url":
+        case "phone":
           fieldSchema = z.string().optional();
           if (property.required) {
             fieldSchema = z.string().min(1, `${property.name} is required`);
           }
           break;
-        case "NUMBER":
+        case "number":
           fieldSchema = z.union([z.number(), z.string()]).optional();
           if (property.required) {
             fieldSchema = z.union([
@@ -92,10 +92,10 @@ export function RecordForm({
             ]);
           }
           break;
-        case "CHECKBOX":
+        case "checkbox":
           fieldSchema = z.boolean().optional();
           break;
-        case "DATE":
+        case "date":
           fieldSchema = z.date().optional();
           if (property.required) {
             fieldSchema = z.date({
@@ -103,13 +103,13 @@ export function RecordForm({
             });
           }
           break;
-        case "SELECT":
+        case "select":
           fieldSchema = z.string().optional();
           if (property.required) {
             fieldSchema = z.string().min(1, `${property.name} is required`);
           }
           break;
-        case "MULTI_SELECT":
+        case "multi_select":
           fieldSchema = z.array(z.string()).optional();
           if (property.required) {
             fieldSchema = z
@@ -118,7 +118,7 @@ export function RecordForm({
           }
           break;
         default:
-          fieldSchema = z.any().optional();
+          fieldSchema = z.unknown().optional();
       }
 
       schemaFields[property.id] = fieldSchema;
@@ -144,18 +144,18 @@ export function RecordForm({
 
         const value = record.properties[property.id];
         if (value !== undefined) {
-          if (property.type === "DATE" && typeof value === "string") {
+          if (property.type === "date" && typeof value === "string") {
             const dateValue = new Date(value);
             formData[property.id] = !isNaN(dateValue.getTime())
               ? dateValue
               : undefined;
-          } else if (property.type === "SELECT") {
+          } else if (property.type === "select") {
             const normalizedValue = normalizeSelectValue(value, false);
             formData[property.id] = getSelectOptionId(normalizedValue) || "";
-          } else if (property.type === "MULTI_SELECT") {
+          } else if (property.type === "multi_select") {
             const normalizedValues = normalizeSelectValue(value, true);
             formData[property.id] = normalizedValues
-              .map((v: any) => getSelectOptionId(v))
+              .map((v: unknown) => getSelectOptionId(v))
               .filter(Boolean);
           } else {
             formData[property.id] = value;
@@ -169,13 +169,13 @@ export function RecordForm({
         if (!property || !property.id || !property.type) return;
 
         switch (property.type) {
-          case "CHECKBOX":
+          case "checkbox":
             defaultData[property.id] = false;
             break;
-          case "MULTI_SELECT":
+          case "multi_select":
             defaultData[property.id] = [];
             break;
-          case "NUMBER":
+          case "number":
             defaultData[property.id] = "";
             break;
           default:
@@ -194,31 +194,31 @@ export function RecordForm({
 
         const value = record.properties?.[property.id];
         if (value !== undefined) {
-          if (property.type === "DATE" && typeof value === "string") {
+          if (property.type === "date" && typeof value === "string") {
             const dateValue = new Date(value);
             formData[property.id] = !isNaN(dateValue.getTime())
               ? dateValue
               : undefined;
-          } else if (property.type === "SELECT") {
+          } else if (property.type === "select") {
             const normalizedValue = normalizeSelectValue(value, false);
             formData[property.id] = getSelectOptionId(normalizedValue) || "";
-          } else if (property.type === "MULTI_SELECT") {
+          } else if (property.type === "multi_select") {
             const normalizedValues = normalizeSelectValue(value, true);
             formData[property.id] = normalizedValues
-              .map((v: any) => getSelectOptionId(v))
+              .map((v: unknown) => getSelectOptionId(v))
               .filter(Boolean);
           } else {
             formData[property.id] = value;
           }
         } else {
           switch (property.type) {
-            case "CHECKBOX":
+            case "checkbox":
               formData[property.id] = false;
               break;
-            case "MULTI_SELECT":
+            case "multi_select":
               formData[property.id] = [];
               break;
-            case "NUMBER":
+            case "number":
               formData[property.id] = "";
               break;
             default:
@@ -239,11 +239,11 @@ export function RecordForm({
         const value = data[property.id];
 
         if (value !== undefined && value !== "" && value !== null) {
-          if (property.type === "DATE" && value instanceof Date) {
+          if (property.type === "date" && value instanceof Date) {
             transformedData[property.id] = value.toISOString();
-          } else if (property.type === "SELECT" && typeof value === "string") {
+          } else if (property.type === "select" && typeof value === "string") {
             transformedData[property.id] = value;
-          } else if (property.type === "MULTI_SELECT" && Array.isArray(value)) {
+          } else if (property.type === "multi_select" && Array.isArray(value)) {
             transformedData[property.id] = value;
           } else {
             transformedData[property.id] = value;
@@ -258,7 +258,7 @@ export function RecordForm({
     }
   };
 
-  const renderField = (property: DocumentProperty) => {
+  const renderField = (property: IDatabaseProperty) => {
     const fieldKey = `field-${property.id}`;
 
     return (
@@ -274,7 +274,7 @@ export function RecordForm({
             </FormLabel>
 
             {/* TEXT Field */}
-            {property.type === "TEXT" && (
+            {property.type === "text" && (
               <FormControl>
                 <Input
                   className="w-full"
@@ -285,7 +285,7 @@ export function RecordForm({
             )}
 
             {/* NUMBER Field */}
-            {property.type === "NUMBER" && (
+            {property.type === "number" && (
               <FormControl>
                 <Input
                   className="w-full"
@@ -300,7 +300,7 @@ export function RecordForm({
             )}
 
             {/* EMAIL Field */}
-            {property.type === "EMAIL" && (
+            {property.type === "email" && (
               <FormControl>
                 <Input
                   className="w-full"
@@ -312,7 +312,7 @@ export function RecordForm({
             )}
 
             {/* URL Field */}
-            {property.type === "URL" && (
+            {property.type === "url" && (
               <FormControl>
                 <Input
                   className="w-full"
@@ -324,7 +324,7 @@ export function RecordForm({
             )}
 
             {/* PHONE Field */}
-            {property.type === "PHONE" && (
+            {property.type === "phone" && (
               <FormControl>
                 <Input
                   className="w-full"
@@ -336,7 +336,7 @@ export function RecordForm({
             )}
 
             {/* CHECKBOX Field */}
-            {property.type === "CHECKBOX" && (
+            {property.type === "checkbox" && (
               <FormControl>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -349,7 +349,7 @@ export function RecordForm({
             )}
 
             {/* DATE Field */}
-            {property.type === "DATE" && (
+            {property.type === "date" && (
               <FormControl>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -386,7 +386,7 @@ export function RecordForm({
             )}
 
             {/* SELECT Field */}
-            {property.type === "SELECT" && (
+            {property.type === "select" && (
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="w-full">
@@ -396,16 +396,10 @@ export function RecordForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {property.selectOptions?.map((option) => {
-                    const optionId = getSelectOptionId(option);
-                    const optionLabel =
-                      typeof option === "string"
-                        ? option
-                        : option.name || String(option);
-                    const optionColor =
-                      typeof option === "object" && option.color
-                        ? option.color
-                        : undefined;
+                  {property.config?.options?.map((option) => {
+                    const optionId = option.id;
+                    const optionLabel = option.name || String(option);
+                    const optionColor = option.color;
 
                     return (
                       <SelectItem key={optionId} value={optionId}>
@@ -426,21 +420,15 @@ export function RecordForm({
             )}
 
             {/* MULTI_SELECT Field */}
-            {property.type === "MULTI_SELECT" && (
+            {property.type === "multi_select" && (
               <div className="space-y-2">
                 <div className="flex flex-wrap gap-1 min-h-[2rem] p-2 border rounded-md">
                   {(field.value || []).map((selectedId: string) => {
-                    const option = property.selectOptions?.find(
-                      (opt) => getSelectOptionId(opt) === selectedId
+                    const option = property.config?.options?.find(
+                      (opt) => opt.id === selectedId
                     );
-                    const optionLabel =
-                      typeof option === "string"
-                        ? option
-                        : option?.name || selectedId;
-                    const optionColor =
-                      typeof option === "object" && option?.color
-                        ? option.color
-                        : undefined;
+                    const optionLabel = option?.name || selectedId;
+                    const optionColor = option?.color;
 
                     return (
                       <Badge
@@ -488,21 +476,14 @@ export function RecordForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {property.selectOptions
+                    {property.config?.options
                       ?.filter((option) => {
-                        const optionId = getSelectOptionId(option);
-                        return !(field.value || []).includes(optionId);
+                        return !(field.value || []).includes(option.id);
                       })
                       .map((option) => {
-                        const optionId = getSelectOptionId(option);
-                        const optionLabel =
-                          typeof option === "string"
-                            ? option
-                            : option.name || String(option);
-                        const optionColor =
-                          typeof option === "object" && option.color
-                            ? option.color
-                            : undefined;
+                        const optionId = option.id;
+                        const optionLabel = option.name || String(option);
+                        const optionColor = option.color;
 
                         return (
                           <SelectItem key={optionId} value={optionId}>

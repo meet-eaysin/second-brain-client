@@ -15,25 +15,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GripVertical, Plus, Trash2, Filter as FilterIcon } from "lucide-react";
-import type { DocumentProperty, DatabaseView } from "@/modules/document-view";
+import type { IDatabaseProperty, IDatabaseView } from "../types";
 
 interface FilterRule {
   propertyId: string;
   operator: string;
-  value: any;
+  value: unknown;
 }
 
 interface FilterManagerProps {
-  properties: DocumentProperty[];
-  currentView?: DatabaseView;
+  properties: IDatabaseProperty[];
+  currentView?: IDatabaseView;
   onSave: (filters: FilterRule[]) => void;
 }
 
 const FILTER_OPERATORS = {
-  TEXT: [
+  text: [
     { value: "contains", label: "Contains" },
     { value: "not_contains", label: "Does not contain" },
     { value: "equals", label: "Equals" },
@@ -43,7 +42,7 @@ const FILTER_OPERATORS = {
     { value: "is_empty", label: "Is empty" },
     { value: "is_not_empty", label: "Is not empty" },
   ],
-  NUMBER: [
+  number: [
     { value: "equals", label: "Equals" },
     { value: "not_equals", label: "Does not equal" },
     { value: "greater_than", label: "Greater than" },
@@ -53,7 +52,7 @@ const FILTER_OPERATORS = {
     { value: "is_empty", label: "Is empty" },
     { value: "is_not_empty", label: "Is not empty" },
   ],
-  DATE: [
+  date: [
     { value: "equals", label: "Is" },
     { value: "not_equals", label: "Is not" },
     { value: "before", label: "Before" },
@@ -63,17 +62,17 @@ const FILTER_OPERATORS = {
     { value: "is_empty", label: "Is empty" },
     { value: "is_not_empty", label: "Is not empty" },
   ],
-  CHECKBOX: [
+  checkbox: [
     { value: "checked", label: "Is checked" },
     { value: "unchecked", label: "Is unchecked" },
   ],
-  SELECT: [
+  select: [
     { value: "equals", label: "Is" },
     { value: "not_equals", label: "Is not" },
     { value: "is_empty", label: "Is empty" },
     { value: "is_not_empty", label: "Is not empty" },
   ],
-  MULTI_SELECT: [
+  multi_select: [
     { value: "contains", label: "Contains" },
     { value: "not_contains", label: "Does not contain" },
     { value: "contains_all", label: "Contains all" },
@@ -117,7 +116,11 @@ export function FilterManager({
     setFilters(filters.filter((_, i) => i !== index));
   };
 
-  const updateFilter = (index: number, field: keyof FilterRule, value: any) => {
+  const updateFilter = (
+    index: number,
+    field: keyof FilterRule,
+    value: unknown
+  ) => {
     const newFilters = [...filters];
     newFilters[index] = { ...newFilters[index], [field]: value };
 
@@ -162,17 +165,17 @@ export function FilterManager({
     }
 
     switch (property.type) {
-      case "SELECT":
+      case "select":
         return (
           <Select
-            value={filter.value}
+            value={filter.value as string}
             onValueChange={(value) => updateFilter(index, "value", value)}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Select option..." />
             </SelectTrigger>
             <SelectContent>
-              {property.selectOptions?.map((option) => (
+              {property.config?.options?.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   {option.name}
                 </SelectItem>
@@ -181,10 +184,10 @@ export function FilterManager({
           </Select>
         );
 
-      case "MULTI_SELECT":
+      case "multi_select":
         return (
           <div className="w-[140px] space-y-2">
-            {property.selectOptions?.map((option) => (
+            {property.config?.options?.map((option) => (
               <div key={option.id} className="flex items-center space-x-2">
                 <Checkbox
                   id={`${index}-${option.id}`}
@@ -198,7 +201,7 @@ export function FilterManager({
                       : [];
                     const newValues = checked
                       ? [...currentValues, option.id]
-                      : currentValues.filter((id) => id !== option.id);
+                      : currentValues.filter((id: string) => id !== option.id);
                     updateFilter(index, "value", newValues);
                   }}
                 />

@@ -45,9 +45,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { DocumentProperty, PropertyType } from "@/modules/document-view";
-import { propertyService } from "@/services/property.service";
-import { createStandardModuleApiService } from "../services/api-service.ts";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   canEditProperty,
   canHideProperty,
@@ -90,7 +87,6 @@ export function PropertyHeaderMenu({
   property,
   frozenConfig,
   disablePropertyManagement = false,
-  moduleType = "document",
   onEditName,
   onChangeType,
   onFilter,
@@ -113,50 +109,25 @@ export function PropertyHeaderMenu({
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const queryClient = useQueryClient();
-
-  const invalidatePropertyQueries = () => {
-    if (moduleType === "people") {
-      const targetQueries = [
-        ["people-document-view", "views"],
-        ["people-document-view", "config"],
-        ["people-document-view", "frozen-config"],
-      ];
-
-      targetQueries.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey, exact: false });
-      });
-    } else {
-      queryClient.invalidateQueries({
-        queryKey: [moduleType, "views"],
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: [moduleType, "config"],
-        exact: false,
-      });
-    }
-  };
-
   const canEdit = canEditProperty(property.id, frozenConfig);
   const canHide = canHideProperty(property.id, frozenConfig);
   const canDelete = canDeleteProperty(property.id, frozenConfig);
 
   const handleEditName = async () => {
     if (newName.trim() && newName !== property.name) {
-      const validation = propertyService.validatePropertyName(newName.trim());
-      if (!validation.valid) {
-        toast.error(validation.error);
+      // Simple validation for property name
+      if (newName.trim().length < 1) {
+        toast.error("Property name cannot be empty");
+        return;
+      }
+      if (newName.trim().length > 100) {
+        toast.error("Property name cannot be longer than 100 characters");
         return;
       }
 
       setIsLoading(true);
       try {
-        const dynamicApi = createStandardModuleApiService(moduleType);
-        await dynamicApi.updateProperty(property.id, { name: newName.trim() });
-
         onEditName?.(property, newName.trim());
-        invalidatePropertyQueries();
         onRefresh?.();
         toast.success("Property name updated");
       } catch (error) {
@@ -176,14 +147,9 @@ export function PropertyHeaderMenu({
   const handleFreeze = async () => {
     setIsLoading(true);
     try {
-      const dynamicApi = createStandardModuleApiService(moduleType);
-      const newFrozenState = !isFrozen;
-      await dynamicApi.freezeProperty(property.id, { frozen: newFrozenState });
-
       onFreeze?.(property);
-      invalidatePropertyQueries();
       onRefresh?.();
-      toast.success(newFrozenState ? "Property frozen" : "Property unfrozen");
+      toast.success(isFrozen ? "Property unfrozen" : "Property frozen");
     } catch (error) {
       console.error("Failed to freeze/unfreeze property:", error);
       const errorMessage =
@@ -198,34 +164,72 @@ export function PropertyHeaderMenu({
 
   const handleChangeType = async (newType: PropertyType) => {
     if (newType !== property.type) {
-      const validation = propertyService.validatePropertyType(newType);
-      if (!validation.valid) {
-        toast.error(validation.error);
+      // Simple validation for property type
+      const validTypes = [
+        "TEXT",
+        "NUMBER",
+        "DATE",
+        "CHECKBOX",
+        "SELECT",
+        "MULTI_SELECT",
+        "URL",
+        "EMAIL",
+        "PHONE",
+      ];
+      if (!validTypes.includes(newType)) {
+        toast.error("Invalid property type");
         return;
       }
 
-      if (!propertyService.canConvertPropertyType(property.type, newType)) {
+      // Simple conversion validation (can be expanded later)
+      const convertibleTypes = {
+        TEXT: ["TEXT", "NUMBER", "URL", "EMAIL", "PHONE"],
+        NUMBER: ["TEXT", "NUMBER"],
+        DATE: ["TEXT", "DATE"],
+        CHECKBOX: ["TEXT", "CHECKBOX"],
+        SELECT: ["TEXT", "SELECT", "MULTI_SELECT"],
+        MULTI_SELECT: ["TEXT", "MULTI_SELECT"],
+        URL: ["TEXT", "URL"],
+        EMAIL: ["TEXT", "EMAIL"],
+        PHONE: ["TEXT", "PHONE"],
+      };
+
+      if (!convertibleTypes[property.type]?.includes(newType)) {
+        const typeLabels = {
+          TEXT: "Text",
+          NUMBER: "Number",
+          DATE: "Date",
+          CHECKBOX: "Checkbox",
+          SELECT: "Select",
+          MULTI_SELECT: "Multi-select",
+          URL: "URL",
+          EMAIL: "Email",
+          PHONE: "Phone",
+        };
         toast.error(
-          `Cannot convert from ${propertyService.getPropertyTypeLabel(
-            property.type
-          )} to ${propertyService.getPropertyTypeLabel(newType)}`
+          `Cannot convert from ${typeLabels[property.type]} to ${
+            typeLabels[newType]
+          }`
         );
         return;
       }
 
       setIsLoading(true);
       try {
-        const dynamicApi = createStandardModuleApiService(moduleType);
-        await dynamicApi.updatePropertyType(property.id, { type: newType });
-
         onChangeType?.(property, newType);
-        invalidatePropertyQueries();
         onRefresh?.();
-        toast.success(
-          `Property type changed to ${propertyService.getPropertyTypeLabel(
-            newType
-          )}`
-        );
+        const typeLabels = {
+          TEXT: "Text",
+          NUMBER: "Number",
+          DATE: "Date",
+          CHECKBOX: "Checkbox",
+          SELECT: "Select",
+          MULTI_SELECT: "Multi-select",
+          URL: "URL",
+          EMAIL: "Email",
+          PHONE: "Phone",
+        };
+        toast.success(`Property type changed to ${typeLabels[newType]}`);
       } catch (error) {
         console.error("Failed to update property type:", error);
         toast.error("Failed to update property type");
@@ -238,11 +242,7 @@ export function PropertyHeaderMenu({
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const dynamicApi = createStandardModuleApiService(moduleType);
-      await dynamicApi.deleteProperty(property.id);
-
       onDelete?.(property);
-      invalidatePropertyQueries();
       onRefresh?.();
       toast.success("Property deleted");
     } catch (error) {
@@ -259,11 +259,7 @@ export function PropertyHeaderMenu({
   const handleDuplicate = async () => {
     setIsLoading(true);
     try {
-      const dynamicApi = createStandardModuleApiService(moduleType);
-      await dynamicApi.duplicateProperty(property.id);
-
       onDuplicate?.(property);
-      invalidatePropertyQueries();
       onRefresh?.();
       toast.success("Property duplicated");
     } catch (error) {
@@ -282,15 +278,7 @@ export function PropertyHeaderMenu({
 
     setIsLoading(true);
     try {
-      const dynamicApi = createStandardModuleApiService(moduleType);
-      await dynamicApi.insertProperty(property.id, {
-        position: "left",
-        name: "New Property",
-        type: "TEXT",
-      });
-
       onInsertLeft?.(property);
-      invalidatePropertyQueries();
       onRefresh?.();
       toast.success("Property inserted");
     } catch (error) {
@@ -309,15 +297,7 @@ export function PropertyHeaderMenu({
 
     setIsLoading(true);
     try {
-      const dynamicApi = createStandardModuleApiService(moduleType);
-      await dynamicApi.insertProperty(property.id, {
-        position: "right",
-        name: "New Property",
-        type: "TEXT",
-      });
-
       onInsertRight?.(property);
-      invalidatePropertyQueries();
       onRefresh?.();
       toast.success("Property inserted");
     } catch (error) {

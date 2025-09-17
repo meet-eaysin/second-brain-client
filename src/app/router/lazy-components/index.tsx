@@ -30,21 +30,6 @@ export const DashboardPage = withLazyLoading(dashboardPageImport)
 export const DataTablePage = withLazyLoading(() =>
     import('@/modules/data-table')
 )
-export const DatabasesPage = withLazyLoading(() =>
-    import('@/modules/databases/pages/databases-page')
-)
-export const DatabaseDetailPage = withLazyLoading(() =>
-    import('@/modules/databases/pages/database-detail-page')
-)
-export const DatabaseTemplatesPage = withLazyLoading(() =>
-    import('@/modules/databases/pages/database-templates-page')
-)
-export const DatabaseImportPage = withLazyLoading(() =>
-    import('@/modules/databases/pages/database-import-page')
-)
-export const DatabaseCategoriesPage = withLazyLoading(() =>
-    import('@/modules/databases/pages/database-categories-page')
-)
 export const UsersPage = withLazyLoading(() =>
     import('@/modules/users/pages/users-page')
 )

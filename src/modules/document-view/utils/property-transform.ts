@@ -1,234 +1,165 @@
 /**
  * Property Data Transformation Utilities
- * 
+ *
  * Handles the transformation between server and client property formats:
  * - Server: uses 'options' and camelCase types ('multiSelect')
  * - Client: uses 'selectOptions' and UPPER_CASE types ('MULTI_SELECT')
  */
 
-export interface ServerPropertyOption {
-    name: string;
-    color: string;
-    value?: any;
-}
+import type {
+  IPropertyOption,
+  IDatabaseProperty,
+  EPropertyType,
+} from "../types";
 
-export interface ClientPropertyOption {
-    id: string;
-    name: string;
-    color: string;
-}
-
-export interface ServerProperty {
-    id: string;
-    name: string;
-    type: 'text' | 'number' | 'select' | 'multiSelect' | 'date' | 'boolean' | 'checkbox';
-    description?: string;
-    required: boolean;
-    options: ServerPropertyOption[];
-    frozen: boolean;
-    order: number;
-    visible: boolean;
-    width: number;
-    defaultValue?: any;
-    validation?: {
-        min?: number;
-        max?: number;
-    };
-}
-
-export interface ClientProperty {
-    id: string;
-    name: string;
-    type: 'TEXT' | 'NUMBER' | 'SELECT' | 'MULTI_SELECT' | 'DATE' | 'BOOLEAN' | 'CHECKBOX';
-    description?: string;
-    required: boolean;
-    selectOptions: ClientPropertyOption[];
-    frozen: boolean;
-    order: number;
-    visible: boolean;
-    width: number;
-    defaultValue?: any;
-    validation?: {
-        min?: number;
-        max?: number;
-    };
-}
+// Re-export backend types for convenience
+export type ServerPropertyOption = IPropertyOption;
+export type ClientPropertyOption = IPropertyOption;
+export type ServerProperty = IDatabaseProperty;
+export type ClientProperty = IDatabaseProperty;
 
 /**
  * Transform server property type to client type
+ * Since we're using the same enum on both sides, this is now a no-op
  */
-export function transformPropertyTypeToClient(serverType: string): string {
-    const typeMapping: Record<string, string> = {
-        'text': 'TEXT',
-        'number': 'NUMBER',
-        'select': 'SELECT',
-        'multiSelect': 'MULTI_SELECT',
-        'date': 'DATE',
-        'boolean': 'BOOLEAN',
-        'checkbox': 'CHECKBOX'
-    };
-    
-    return typeMapping[serverType] || serverType.toUpperCase();
+export function transformPropertyTypeToClient(
+  serverType: EPropertyType
+): EPropertyType {
+  return serverType;
 }
 
 /**
  * Transform client property type to server type
+ * Since we're using the same enum on both sides, this is now a no-op
  */
-export function transformPropertyTypeToServer(clientType: string): string {
-    const typeMapping: Record<string, string> = {
-        'TEXT': 'text',
-        'NUMBER': 'number',
-        'SELECT': 'select',
-        'MULTI_SELECT': 'multiSelect',
-        'DATE': 'date',
-        'BOOLEAN': 'boolean',
-        'CHECKBOX': 'checkbox'
-    };
-    
-    return typeMapping[clientType] || clientType.toLowerCase();
+export function transformPropertyTypeToServer(
+  clientType: EPropertyType
+): EPropertyType {
+  return clientType;
 }
 
 /**
  * Transform server property options to client selectOptions
+ * Since we're using the same types now, this is mostly a pass-through
  */
-export function transformOptionsToClient(serverOptions: ServerPropertyOption[]): ClientPropertyOption[] {
-    return serverOptions.map((option, index) => ({
-        id: option.value || option.name.toLowerCase().replace(/\s+/g, '-') || `option-${index}`,
-        name: option.name,
-        color: option.color
-    }));
+export function transformOptionsToClient(
+  serverOptions: IPropertyOption[]
+): IPropertyOption[] {
+  return serverOptions.map((option, index) => ({
+    ...option,
+    // Ensure id is set if missing
+    id:
+      option.id ||
+      option.name.toLowerCase().replace(/\s+/g, "-") ||
+      `option-${index}`,
+  }));
 }
 
 /**
  * Transform client selectOptions to server options
  * Handles both proper ClientPropertyOption format and raw objects from forms
  */
-export function transformOptionsToServer(clientOptions: any[]): ServerPropertyOption[] {
-    if (!Array.isArray(clientOptions)) {
-        return [];
-    }
+export function transformOptionsToServer(
+  clientOptions: IPropertyOption[]
+): IPropertyOption[] {
+  if (!Array.isArray(clientOptions)) {
+    return [];
+  }
 
-    return clientOptions.map((option, index) => {
-        // Handle different input formats
-        const name = option.name || option.label || `Option ${index + 1}`;
-        const color = option.color || '#6366f1'; // Default color
-        const value = option.id || option.value || name.toLowerCase().replace(/\s+/g, '-') || `option-${index}`;
+  return clientOptions.map((option, index) => {
+    // Handle different input formats
+    const name = option.name || option.label || `Option ${index + 1}`;
+    const color = option.color || "#6366f1"; // Default color
+    const value =
+      option.id ||
+      option.value ||
+      name.toLowerCase().replace(/\s+/g, "-") ||
+      `option-${index}`;
 
-        return {
-            name,
-            color,
-            value
-        };
-    });
+    return {
+      id: option.id || value,
+      name,
+      color,
+      description: option.description,
+    };
+  });
 }
 
 /**
  * Transform complete server property to client format
+ * Since we're using the same types now, this is mostly a pass-through
  */
-export function transformPropertyToClient(serverProperty: ServerProperty): ClientProperty {
-    return {
-        id: serverProperty.id,
-        name: serverProperty.name,
-        type: transformPropertyTypeToClient(serverProperty.type) as ClientProperty['type'],
-        description: serverProperty.description,
-        required: serverProperty.required,
-        selectOptions: transformOptionsToClient(serverProperty.options || []),
-        frozen: serverProperty.frozen,
-        order: serverProperty.order,
-        visible: serverProperty.visible,
-        width: serverProperty.width,
-        defaultValue: serverProperty.defaultValue,
-        validation: serverProperty.validation
-    };
+export function transformPropertyToClient(
+  serverProperty: ServerProperty
+): ClientProperty {
+  return {
+    ...serverProperty,
+    // Transform options to selectOptions if needed
+    selectOptions: serverProperty.options || [],
+  };
 }
 
 /**
  * Transform complete client property to server format
+ * Since we're using the same types now, this is mostly a pass-through
  */
-export function transformPropertyToServer(clientProperty: Partial<ClientProperty>): Partial<ServerProperty> {
-    // Debug logging
-    console.log('🔄 transformPropertyToServer input:', {
-        clientProperty,
-        hasSelectOptions: !!(clientProperty.selectOptions),
-        selectOptionsType: typeof clientProperty.selectOptions,
-        selectOptionsLength: Array.isArray(clientProperty.selectOptions) ? clientProperty.selectOptions.length : 'not array',
-        selectOptions: clientProperty.selectOptions
-    });
+export function transformPropertyToServer(
+  clientProperty: Partial<ClientProperty>
+): Partial<ServerProperty> {
+  const serverProperty: Partial<ServerProperty> = {
+    ...clientProperty,
+    // Transform selectOptions to options if needed
+    options: clientProperty.selectOptions,
+  };
 
-    const serverProperty: Partial<ServerProperty> = {
-        id: clientProperty.id,
-        name: clientProperty.name,
-        description: clientProperty.description,
-        required: clientProperty.required,
-        frozen: clientProperty.frozen,
-        order: clientProperty.order,
-        visible: clientProperty.visible,
-        width: clientProperty.width,
-        defaultValue: clientProperty.defaultValue,
-        validation: clientProperty.validation
-    };
-
-    // Transform type if provided
-    if (clientProperty.type) {
-        serverProperty.type = transformPropertyTypeToServer(clientProperty.type) as ServerProperty['type'];
-    }
-
-    // Transform selectOptions to options if provided
-    if (clientProperty.selectOptions && Array.isArray(clientProperty.selectOptions)) {
-        serverProperty.options = transformOptionsToServer(clientProperty.selectOptions);
-    } else if ((clientProperty as any).selectOptions) {
-        // Handle case where selectOptions might be in a different format
-        serverProperty.options = transformOptionsToServer((clientProperty as any).selectOptions);
-    }
-
-    // Debug logging for output
-    console.log('🔄 transformPropertyToServer output:', {
-        serverProperty,
-        hasOptions: !!(serverProperty.options),
-        optionsLength: Array.isArray(serverProperty.options) ? serverProperty.options.length : 'not array',
-        options: serverProperty.options
-    });
-
-    return serverProperty;
+  return serverProperty;
 }
 
 /**
  * Transform array of server properties to client format
  */
-export function transformPropertiesToClient(serverProperties: ServerProperty[]): ClientProperty[] {
-    return serverProperties.map(transformPropertyToClient);
+export function transformPropertiesToClient(
+  serverProperties: ServerProperty[]
+): ClientProperty[] {
+  return serverProperties.map(transformPropertyToClient);
 }
 
 /**
  * Transform array of client properties to server format
  */
-export function transformPropertiesToServer(clientProperties: Partial<ClientProperty>[]): Partial<ServerProperty>[] {
-    return clientProperties.map(transformPropertyToServer);
+export function transformPropertiesToServer(
+  clientProperties: Partial<ClientProperty>[]
+): Partial<ServerProperty>[] {
+  return clientProperties.map(transformPropertyToServer);
 }
 
 /**
  * Handle special status property value transformation
  * Server uses underscores, client validation expects hyphens
  */
-export function transformStatusValues(property: ClientProperty): ClientProperty {
-    if (property.id === 'status' && property.selectOptions) {
-        return {
-            ...property,
-            selectOptions: property.selectOptions.map(option => ({
-                ...option,
-                id: option.id.replace(/_/g, '-') // Convert underscore to hyphen
-            }))
-        };
-    }
-    return property;
+export function transformStatusValues(
+  property: ClientProperty
+): ClientProperty {
+  if (property.id === "status" && property.selectOptions) {
+    return {
+      ...property,
+      selectOptions: property.selectOptions.map((option) => ({
+        ...option,
+        id: option.id.replace(/_/g, "-"), // Convert underscore to hyphen
+      })),
+    };
+  }
+  return property;
 }
 
 /**
  * Main transformation function for books module properties
  * Handles all the special cases and transformations needed
  */
-export function transformBooksProperties(serverProperties: ServerProperty[]): ClientProperty[] {
-    return serverProperties
-        .map(transformPropertyToClient)
-        .map(transformStatusValues);
+export function transformBooksProperties(
+  serverProperties: ServerProperty[]
+): ClientProperty[] {
+  return serverProperties
+    .map(transformPropertyToClient)
+    .map(transformStatusValues);
 }

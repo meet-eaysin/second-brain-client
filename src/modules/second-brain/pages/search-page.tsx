@@ -13,7 +13,6 @@ import {
     Target,
     User,
     BookOpen,
-    Calendar,
     TrendingUp
 } from 'lucide-react';
 

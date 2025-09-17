@@ -23,10 +23,6 @@ class RoutePreloader {
     // Preload most commonly used routes
     this.preload(() => import("@/modules/dashboard"), "dashboard");
     this.preload(() => import("@/modules/auth/pages/sign-up-page"), "sign-up");
-    this.preload(
-      () => import("@/modules/databases/pages/databases-page"),
-      "databases"
-    );
   }
 }
 

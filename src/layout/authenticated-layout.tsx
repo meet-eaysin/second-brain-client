@@ -6,7 +6,6 @@ import {Outlet} from "react-router-dom";
 import {AppSidebar} from "@/layout/app-sidebar.tsx";
 import React from "react";
 import Cookies from 'js-cookie'
-// import { FloatingQuickCapture } from '@/modules/second-brain/components/floating-quick-capture'
 
 interface Props {
     children?: React.ReactNode
@@ -34,9 +33,6 @@ function AuthenticatedLayout({ children }: Props) {
                 >
                     {children ? children : <Outlet />}
                 </div>
-
-                {/* Floating Quick Capture Button */}
-                {/* <FloatingQuickCapture /> */}
             </SidebarProvider>
         </SearchProvider>
     )

@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SearchBar } from "./search-bar";
 import { FilterManager } from "./filter-manager";
 import { SortManager } from "./sort-manager";
-import { Filter } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -26,6 +24,7 @@ interface TableToolbarProps {
   currentView?: DatabaseView;
   onFiltersChange?: (filters) => void;
   onSortsChange?: (sorts) => void;
+  onUpdateView?: (viewId, data) => Promise<void>;
   visibleProperties?: string[];
   className?: string;
   moduleType;
@@ -39,6 +38,7 @@ export function TableToolbar({
   currentView,
   onFiltersChange,
   onSortsChange,
+  onUpdateView,
   visibleProperties = [],
   moduleType,
   className = "",
@@ -47,6 +47,7 @@ export function TableToolbar({
     moduleType,
     properties,
     currentView,
+    onUpdateView,
   });
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);

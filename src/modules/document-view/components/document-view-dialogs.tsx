@@ -1,17 +1,7 @@
-import {
-  useAddProperty,
-  useUpdateProperty,
-  useCreateRecord,
-  useUpdateRecord,
-  useAddView,
-  useUpdateView,
-} from "../../databases/services/databaseQueries";
-import {
-  createStandardModuleApiService,
-  isModuleSupported,
-} from "../services/api-service.ts";
-import { useQueryClient } from "@tanstack/react-query";
 import { RecordForm } from "./record-form";
+import { DatabaseForm } from "./database-form";
+import { PropertyForm } from "./property-form";
+import { ViewForm } from "./view-form";
 import {
   Dialog,
   DialogContent,
@@ -22,10 +12,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Copy, Mail, FileText } from "lucide-react";
-import { DatabaseForm } from "../../databases/components/database-form";
-import { PropertyForm } from "../../databases/components/property-form";
-import { ViewForm } from "../../databases/components/view-form";
 import { useDocumentView } from "../context/document-view-context";
+import {
+  useCreateProperty,
+  useUpdateProperty,
+  useCreateRecord,
+  useUpdateRecord,
+  useCreateView,
+  useUpdateView,
+} from "../services/database-queries";
 
 export function DatabaseDialogs() {
   const {
@@ -40,63 +35,12 @@ export function DatabaseDialogs() {
     setCurrentView,
   } = useDocumentView();
 
-  const queryClient = useQueryClient();
-
-  const addPropertyMutation = useAddProperty();
+  const createPropertyMutation = useCreateProperty();
   const updatePropertyMutation = useUpdateProperty();
   const createRecordMutation = useCreateRecord();
   const updateRecordMutation = useUpdateRecord();
-  const addViewMutation = useAddView();
+  const createViewMutation = useCreateView();
   const updateViewMutation = useUpdateView();
-
-  const getApiService = () => {
-    const moduleType = currentSchema?.config?.moduleType;
-
-    if (
-      moduleType &&
-      moduleType.toLowerCase() !== "databases" &&
-      isModuleSupported(moduleType)
-    ) {
-      return createStandardModuleApiService(moduleType);
-    }
-    return null;
-  };
-
-  const invalidateModuleQueries = () => {
-    const moduleType = currentSchema?.config?.moduleType || "tasks";
-
-    queryClient.invalidateQueries({ queryKey: [moduleType] });
-    queryClient.invalidateQueries({ queryKey: ["second-brain"] });
-
-    if (moduleType === "books") {
-      queryClient.invalidateQueries({
-        queryKey: ["books-document-view"],
-        exact: false,
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["books-document-view-config"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["books-document-view-properties"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["books-document-view-views"],
-      });
-      queryClient.invalidateQueries({ queryKey: ["books-stats"] });
-      console.log("📚 Books queries invalidated - properties should refresh");
-    }
-
-    if (moduleType === "people") {
-      queryClient.invalidateQueries({
-        queryKey: ["people-document-view"],
-        exact: false,
-      });
-      queryClient.invalidateQueries({ queryKey: ["people"] });
-      queryClient.invalidateQueries({ queryKey: ["people-records"] });
-      queryClient.invalidateQueries({ queryKey: ["people-views"] });
-      queryClient.invalidateQueries({ queryKey: ["document-views", "people"] });
-    }
-  };
 
   return (
     <>
@@ -249,46 +193,10 @@ export function DatabaseDialogs() {
         }}
         onSubmit={async (data) => {
           if (currentSchema?.id) {
-            const apiService = getApiService();
-
-            if (apiService) {
-              try {
-                const defaultView = await apiService.getDefaultView();
-                if (defaultView?.id) {
-                  const propertyData = {
-                    name: data.name,
-                    type: data.type,
-                    description: data.description,
-                    required: data.required || false,
-                    order: currentSchema.properties?.length || 0,
-                  };
-
-                  if (
-                    ["SELECT", "MULTI_SELECT"].includes(data.type) &&
-                    data.selectOptions
-                  ) {
-                    propertyData.selectOptions = data.selectOptions.map(
-                      (option) => ({
-                        name: option.name,
-                        color: option.color,
-                      })
-                    );
-                  }
-
-                  await apiService.addProperty(defaultView.id, propertyData);
-                  invalidateModuleQueries();
-                } else {
-                  console.error("No default view found");
-                }
-              } catch (error) {
-                console.error("Failed to create property:", error);
-              }
-            } else {
-              addPropertyMutation.mutate({
-                databaseId: currentSchema.id,
-                data: data,
-              });
-            }
+            createPropertyMutation.mutate({
+              databaseId: currentSchema.id,
+              data: data,
+            });
           }
           setOpen(null);
         }}
@@ -326,22 +234,10 @@ export function DatabaseDialogs() {
         properties={currentSchema?.properties || []}
         onSubmit={async (data) => {
           if (currentSchema?.id) {
-            const apiService = getApiService();
-
-            if (apiService) {
-              try {
-                await apiService.createRecord(data);
-
-                invalidateModuleQueries();
-              } catch (error) {
-                console.error("Failed to create record:", error);
-              }
-            } else {
-              createRecordMutation.mutate({
-                databaseId: currentSchema.id,
-                data,
-              });
-            }
+            createRecordMutation.mutate({
+              databaseId: currentSchema.id,
+              data,
+            });
           }
           setOpen(null);
         }}
@@ -360,22 +256,11 @@ export function DatabaseDialogs() {
         record={currentRecord}
         onSubmit={async (data) => {
           if (currentSchema?.id && currentRecord?.id) {
-            const apiService = getApiService();
-
-            if (apiService) {
-              try {
-                await apiService.updateRecord(currentRecord.id, data);
-                console.log("Record updated successfully");
-              } catch (error) {
-                console.error("Failed to update record:", error);
-              }
-            } else {
-              updateRecordMutation.mutate({
-                databaseId: currentSchema.id,
-                recordId: currentRecord.id,
-                data,
-              });
-            }
+            updateRecordMutation.mutate({
+              databaseId: currentSchema.id,
+              recordId: currentRecord.id,
+              data,
+            });
           }
           setOpen(null);
           setCurrentRecord(null);
@@ -428,22 +313,10 @@ export function DatabaseDialogs() {
             properties={currentSchema?.properties || []}
             onSubmit={async (data) => {
               if (currentSchema?.id) {
-                const apiService = getApiService();
-
-                if (apiService) {
-                  try {
-                    await apiService.createView(data);
-
-                    invalidateModuleQueries();
-                  } catch (error) {
-                    console.error("Failed to create view:", error);
-                  }
-                } else {
-                  addViewMutation.mutate({
-                    databaseId: currentSchema.id,
-                    data: data,
-                  });
-                }
+                createViewMutation.mutate({
+                  databaseId: currentSchema.id,
+                  data: data,
+                });
               }
               setOpen(null);
             }}
@@ -478,21 +351,11 @@ export function DatabaseDialogs() {
             mode="edit"
             onSubmit={async (data) => {
               if (currentSchema?.id && currentView?.id) {
-                const apiService = getApiService();
-
-                if (apiService) {
-                  try {
-                    await apiService.updateView(currentView.id, data);
-                  } catch (error) {
-                    console.error("Failed to update view:", error);
-                  }
-                } else {
-                  updateViewMutation.mutate({
-                    databaseId: currentSchema.id,
-                    viewId: currentView.id,
-                    data: data,
-                  });
-                }
+                updateViewMutation.mutate({
+                  databaseId: currentSchema.id,
+                  viewId: currentView.id,
+                  data: data,
+                });
               }
               setOpen(null);
               setCurrentView(null);
