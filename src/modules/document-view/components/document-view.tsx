@@ -281,12 +281,13 @@ function DocumentViewInternal({
     );
   }
 
-  if (!effectiveDatabase) {
+  // If we don't have a databaseId, show no database message
+  if (!effectiveDatabaseId) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <h3 className="text-lg font-medium mb-2">No Data</h3>
+        <h3 className="text-lg font-medium mb-2">No Database</h3>
         <p className="text-muted-foreground text-center">
-          No database data available
+          Database not initialized. Please try refreshing the page.
         </p>
       </div>
     );
@@ -499,7 +500,7 @@ function DocumentViewInternal({
               <TableToolbar
                 searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
-                properties={effectiveDatabase.properties || []}
+                properties={effectiveDatabase?.properties || []}
                 records={records}
                 currentView={currentView}
                 onFiltersChange={handleFiltersChange}
@@ -511,7 +512,7 @@ function DocumentViewInternal({
                     data,
                   });
                 }}
-                visibleProperties={effectiveDatabase.properties
+                visibleProperties={effectiveDatabase?.properties
                   ?.filter((p) => p.isVisible)
                   .map((p) => p.id)}
               />
@@ -521,10 +522,14 @@ function DocumentViewInternal({
       )}
 
       <div className="flex-1 overflow-auto">
-        {currentView ? (
+        {effectiveDatabaseLoading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : currentView ? (
           <DocumentViewRenderer
             view={currentView}
-            properties={effectiveDatabase.properties || []}
+            properties={effectiveDatabase?.properties || []}
             records={records}
             onRecordSelect={handleRecordSelect}
             onRecordEdit={handleRecordEdit}
@@ -535,7 +540,9 @@ function DocumentViewInternal({
             onBulkEdit={handleBulkEdit}
             onAddProperty={handleAddProperty}
             databaseId={
-              config.dataSourceId || effectiveDatabaseId || effectiveDatabase.id
+              config.dataSourceId ||
+              effectiveDatabaseId ||
+              effectiveDatabase?.id
             }
             moduleType={moduleType}
             isFrozen={effectiveDatabase?.isArchived || config.isFrozen || false}
