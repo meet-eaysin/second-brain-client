@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { IModuleConfig } from "@/modules/document-view/services/api-service.ts";
 import {
@@ -83,13 +83,14 @@ function DocumentViewInternal({
   );
   const { searchQuery, setSearchQuery } = useDocumentView();
   const currentWorkspace = useCurrentWorkspace();
-  const queryClient = useQueryClient();
 
   const { data: primaryWorkspace } = useQuery({
     queryKey:
-      !workspaceId && !currentWorkspace?.id ? ["primary-workspace"] : [],
+      !workspaceId && !currentWorkspace?._id && !currentWorkspace?.id
+        ? ["primary-workspace"]
+        : [],
     queryFn: () => workspaceApi.getPrimaryWorkspace(),
-    enabled: !workspaceId && !currentWorkspace?.id,
+    enabled: !workspaceId && !currentWorkspace?._id && !currentWorkspace?.id,
   });
 
   const effectiveWorkspaceId =
@@ -107,98 +108,65 @@ function DocumentViewInternal({
     setVisibleProperties,
   } = useDocumentView();
 
-  const { data: moduleStatus, isLoading: moduleStatusLoading } = useQuery({
+  const { data: moduleInfo, isLoading: moduleInfoLoading } = useQuery({
     queryKey:
       moduleType && !databaseId && effectiveWorkspaceId
-        ? ["module-status", moduleType, effectiveWorkspaceId]
+        ? ["module-info", moduleType, effectiveWorkspaceId]
         : [],
     queryFn: async () => {
       if (!moduleType || !effectiveWorkspaceId || databaseId) return null;
 
       try {
-        const response = await apiClient.get(
+        const statusResponse = await apiClient.get(
           `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/status`
         );
-        return response.data;
-      } catch {
-        return { isInitialized: false };
+        const isInitialized = statusResponse.data.isInitialized;
+
+        if (!isInitialized) {
+          await apiClient.post(
+            `/modules/workspace/${effectiveWorkspaceId}/initialize`,
+            {
+              modules: [moduleType],
+              createSampleData: false,
+            }
+          );
+
+          const dbIdResponse = await apiClient.get(
+            `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
+          );
+          return {
+            isInitialized: true,
+            databaseId: dbIdResponse.data.databaseId,
+          };
+        } else {
+          const dbIdResponse = await apiClient.get(
+            `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
+          );
+          return {
+            isInitialized: true,
+            databaseId: dbIdResponse.data.databaseId,
+          };
+        }
+      } catch (error) {
+        console.error("Module initialization error:", error);
+        return { isInitialized: false, databaseId: null };
       }
     },
     enabled: !!moduleType && !databaseId && !!effectiveWorkspaceId,
-  });
-
-  const { data: moduleDatabaseId, isLoading: moduleDatabaseIdLoading } =
-    useQuery({
-      queryKey:
-        moduleType &&
-        !databaseId &&
-        effectiveWorkspaceId &&
-        moduleStatus?.isInitialized
-          ? ["module-database-id", moduleType, effectiveWorkspaceId]
-          : [],
-      queryFn: async () => {
-        if (
-          !moduleType ||
-          !effectiveWorkspaceId ||
-          !moduleStatus?.isInitialized
-        )
-          return null;
-
-        const response = await apiClient.get(
-          `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
-        );
-        return response.data.databaseId;
-      },
-      enabled:
-        !!moduleType &&
-        !databaseId &&
-        !!effectiveWorkspaceId &&
-        moduleStatus?.isInitialized,
-    });
-
-  const initializeModuleMutation = useMutation({
-    mutationFn: async () => {
-      if (!moduleType || !effectiveWorkspaceId)
-        throw new Error("Module type or workspace not available");
-
-      const response = await apiClient.post(
-        `/modules/workspace/${effectiveWorkspaceId}/initialize`,
-        {
-          modules: [moduleType],
-          createSampleData: false,
-        }
-      );
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["module-status", moduleType, effectiveWorkspaceId],
-      });
-      toast.success("Module initialized successfully");
-    },
-    onError: (error: Error) => {
-      toast.error(error?.message || "Failed to initialize module");
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: (failureCount, error) => {
+      if (
+        error?.status === 404 ||
+        error?.status === 401 ||
+        error?.status === 403
+      ) {
+        return false;
+      }
+      return failureCount < 2;
     },
   });
 
-  useEffect(() => {
-    if (
-      moduleType &&
-      !databaseId &&
-      effectiveWorkspaceId &&
-      moduleStatus &&
-      !moduleStatus.isInitialized &&
-      !moduleStatusLoading
-    ) {
-      initializeModuleMutation.mutate();
-    }
-  }, [
-    moduleType,
-    databaseId,
-    effectiveWorkspaceId,
-    moduleStatus,
-    moduleStatusLoading,
-  ]);
+  const moduleDatabaseId = moduleInfo?.databaseId || null;
 
   const effectiveDatabaseId = moduleDatabaseId || databaseId;
 
@@ -278,9 +246,7 @@ function DocumentViewInternal({
     effectiveDatabaseLoading ||
     effectiveViewsLoading ||
     effectiveRecordsLoading ||
-    moduleStatusLoading ||
-    moduleDatabaseIdLoading ||
-    initializeModuleMutation.isPending ||
+    moduleInfoLoading ||
     (!workspaceId &&
       !currentWorkspace?._id &&
       !currentWorkspace?.id &&
