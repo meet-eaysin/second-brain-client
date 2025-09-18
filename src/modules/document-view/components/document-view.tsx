@@ -120,7 +120,7 @@ function DocumentViewInternal({
         const statusResponse = await apiClient.get(
           `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/status`
         );
-        const isInitialized = statusResponse.data.isInitialized;
+        const isInitialized = statusResponse.data.data.isInitialized;
 
         if (!isInitialized) {
           await apiClient.post(
@@ -136,7 +136,7 @@ function DocumentViewInternal({
           );
           return {
             isInitialized: true,
-            databaseId: dbIdResponse.data.databaseId,
+            databaseId: dbIdResponse.data.data.databaseId,
           };
         } else {
           const dbIdResponse = await apiClient.get(
@@ -144,7 +144,7 @@ function DocumentViewInternal({
           );
           return {
             isInitialized: true,
-            databaseId: dbIdResponse.data.databaseId,
+            databaseId: dbIdResponse.data.data.databaseId,
           };
         }
       } catch (error) {
