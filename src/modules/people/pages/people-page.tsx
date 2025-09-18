@@ -6,12 +6,14 @@ import {
   useDeletePeopleRecord,
   usePeopleModuleConfig,
 } from "../hooks/use-people-document-view";
+import { useCurrentWorkspace } from "@/modules/workspaces/context/workspace-context";
 import { toast } from "sonner";
 import { EDatabaseType } from "@/modules/document-view";
 
 export function PeoplePage() {
   const { data: moduleConfig, isLoading: configLoading } =
     usePeopleModuleConfig();
+  const currentWorkspace = useCurrentWorkspace();
 
   const updateRecordMutation = useUpdatePeopleRecord();
   const deleteRecordMutation = useDeletePeopleRecord();
@@ -61,6 +63,7 @@ export function PeoplePage() {
       <Main className="space-y-8">
         <DocumentView
           moduleType={EDatabaseType.PEOPLE}
+          workspaceId={currentWorkspace?.id}
           moduleConfig={moduleConfig}
           config={{
             canCreate: true,

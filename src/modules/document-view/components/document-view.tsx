@@ -26,11 +26,13 @@ import { TableToolbar } from "@/modules/document-view";
 import { DocumentViewRenderer } from "@/modules/document-view/components/document-view-renderer.tsx";
 import { DatabaseDialogs } from "@/modules/document-view/components/document-view-dialogs.tsx";
 import { useCurrentWorkspace } from "@/modules/workspaces/context/workspace-context";
+import { workspaceApi } from "@/modules/workspaces/services/workspaceApi";
 import { apiClient } from "@/services/api-client";
 
 export interface DocumentViewProps {
   moduleType?: EDatabaseType | string;
   databaseId?: string;
+  workspaceId?: string;
   moduleConfig?: IModuleConfig;
   config?: {
     title?: string;
@@ -64,6 +66,7 @@ export interface DocumentViewProps {
 function DocumentViewInternal({
   databaseId,
   moduleType = "",
+  workspaceId,
   moduleConfig,
   config = {},
   onRecordView,
@@ -82,6 +85,16 @@ function DocumentViewInternal({
   const currentWorkspace = useCurrentWorkspace();
   const queryClient = useQueryClient();
 
+  const { data: primaryWorkspace } = useQuery({
+    queryKey:
+      !workspaceId && !currentWorkspace?.id ? ["primary-workspace"] : [],
+    queryFn: () => workspaceApi.getPrimaryWorkspace(),
+    enabled: !workspaceId && !currentWorkspace?.id,
+  });
+
+  const effectiveWorkspaceId =
+    workspaceId || currentWorkspace?.id || primaryWorkspace?.id;
+
   const {
     setCurrentSchema,
     setCurrentRecord,
@@ -92,22 +105,22 @@ function DocumentViewInternal({
 
   const { data: moduleStatus, isLoading: moduleStatusLoading } = useQuery({
     queryKey:
-      moduleType && !databaseId && currentWorkspace?.id
-        ? ["module-status", moduleType, currentWorkspace.id]
+      moduleType && !databaseId && effectiveWorkspaceId
+        ? ["module-status", moduleType, effectiveWorkspaceId]
         : [],
     queryFn: async () => {
-      if (!moduleType || !currentWorkspace?.id || databaseId) return null;
+      if (!moduleType || !effectiveWorkspaceId || databaseId) return null;
 
       try {
         const response = await apiClient.get(
-          `/modules/workspace/${currentWorkspace.id}/${moduleType}/status`
+          `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/status`
         );
         return response.data;
       } catch {
         return { isInitialized: false };
       }
     },
-    enabled: !!moduleType && !databaseId && !!currentWorkspace?.id,
+    enabled: !!moduleType && !databaseId && !!effectiveWorkspaceId,
   });
 
   const { data: moduleDatabaseId, isLoading: moduleDatabaseIdLoading } =
@@ -115,37 +128,37 @@ function DocumentViewInternal({
       queryKey:
         moduleType &&
         !databaseId &&
-        currentWorkspace?.id &&
+        effectiveWorkspaceId &&
         moduleStatus?.isInitialized
-          ? ["module-database-id", moduleType, currentWorkspace.id]
+          ? ["module-database-id", moduleType, effectiveWorkspaceId]
           : [],
       queryFn: async () => {
         if (
           !moduleType ||
-          !currentWorkspace?.id ||
+          !effectiveWorkspaceId ||
           !moduleStatus?.isInitialized
         )
           return null;
 
         const response = await apiClient.get(
-          `/modules/workspace/${currentWorkspace.id}/${moduleType}/database-id`
+          `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
         );
         return response.data.databaseId;
       },
       enabled:
         !!moduleType &&
         !databaseId &&
-        !!currentWorkspace?.id &&
+        !!effectiveWorkspaceId &&
         moduleStatus?.isInitialized,
     });
 
   const initializeModuleMutation = useMutation({
     mutationFn: async () => {
-      if (!moduleType || !currentWorkspace?.id)
+      if (!moduleType || !effectiveWorkspaceId)
         throw new Error("Module type or workspace not available");
 
       const response = await apiClient.post(
-        `/modules/workspace/${currentWorkspace.id}/initialize`,
+        `/modules/workspace/${effectiveWorkspaceId}/initialize`,
         {
           modules: [moduleType],
           createSampleData: false,
@@ -155,7 +168,7 @@ function DocumentViewInternal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["module-status", moduleType, currentWorkspace?.id],
+        queryKey: ["module-status", moduleType, effectiveWorkspaceId],
       });
       toast.success("Module initialized successfully");
     },
@@ -168,7 +181,7 @@ function DocumentViewInternal({
     if (
       moduleType &&
       !databaseId &&
-      currentWorkspace?.id &&
+      effectiveWorkspaceId &&
       moduleStatus &&
       !moduleStatus.isInitialized &&
       !moduleStatusLoading
@@ -178,7 +191,7 @@ function DocumentViewInternal({
   }, [
     moduleType,
     databaseId,
-    currentWorkspace?.id,
+    effectiveWorkspaceId,
     moduleStatus,
     moduleStatusLoading,
   ]);
@@ -263,7 +276,8 @@ function DocumentViewInternal({
     effectiveRecordsLoading ||
     moduleStatusLoading ||
     moduleDatabaseIdLoading ||
-    initializeModuleMutation.isPending
+    initializeModuleMutation.isPending ||
+    (!workspaceId && !currentWorkspace?.id && !primaryWorkspace)
   ) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -277,6 +291,18 @@ function DocumentViewInternal({
       <div className="flex flex-col items-center justify-center h-64">
         <h3 className="text-lg font-medium mb-2">Error</h3>
         <p className="text-muted-foreground text-center">{error}</p>
+      </div>
+    );
+  }
+
+  // If we don't have a workspaceId, show no workspace message
+  if (!effectiveWorkspaceId) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <h3 className="text-lg font-medium mb-2">No Workspace</h3>
+        <p className="text-muted-foreground text-center">
+          No workspace available. Please create or select a workspace first.
+        </p>
       </div>
     );
   }
