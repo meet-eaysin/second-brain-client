@@ -469,7 +469,12 @@ export interface IViewGroup {
 }
 
 export interface IViewSettings {
-  pageSize?: number;
+  filters: IViewFilter[];
+  sorts: IViewSort[];
+  groupBy?: IViewGroup;
+  visibleProperties: string[];
+  frozenColumns: string[];
+  pageSize: number;
   showFilters?: boolean;
   showSearch?: boolean;
   showToolbar?: boolean;
@@ -531,7 +536,7 @@ export interface IDatabaseView extends IBaseEntity {
   filters: IViewFilter[];
   order: number;
   description?: string;
-  visibleProperties?: string[];
+  settings: IViewSettings;
 }
 
 export interface ICreateViewRequest {
@@ -540,7 +545,7 @@ export interface ICreateViewRequest {
   description?: string;
   isDefault?: boolean;
   isPublic?: boolean;
-  settings?: Record<string, any>;
+  settings: IViewSettings;
 }
 
 export interface IUpdateViewRequest {
@@ -548,7 +553,7 @@ export interface IUpdateViewRequest {
   description?: string;
   isDefault?: boolean;
   isPublic?: boolean;
-  settings?: Record<string, any>;
+  settings?: Partial<IViewSettings>;
   sorts?: IViewSort[];
   filters?: IViewFilter[];
   order?: number;
@@ -928,32 +933,12 @@ export interface CreateViewRequest {
   name: string;
   type: ViewType;
   isDefault?: boolean;
-  filters?: Array<{
-    propertyId: string;
-    operator: string;
-    value: unknown;
-  }>;
-  sorts?: Array<{
-    propertyId: string;
-    direction: "asc" | "desc";
-  }>;
-  visibleProperties?: string[];
-  config?: Record<string, unknown>;
+  settings: IViewSettings;
 }
 
 export interface UpdateViewRequest {
   name?: string;
-  filters?: Array<{
-    propertyId: string;
-    operator: string;
-    value: unknown;
-  }>;
-  sorts?: Array<{
-    propertyId: string;
-    direction: "asc" | "desc";
-  }>;
-  visibleProperties?: string[];
-  config?: Record<string, unknown>;
+  settings?: Partial<IViewSettings>;
 }
 
 export interface DocumentRecord {

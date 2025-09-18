@@ -138,10 +138,14 @@ export interface DocumentView {
   type: ViewType;
   description?: string;
   isDefault: boolean;
-  filters: ViewFilter[];
-  sorts: ViewSort[];
-  groupBy?: string;
-  visibleProperties: string[];
+  settings: {
+    filters: ViewFilter[];
+    sorts: ViewSort[];
+    groupBy?: string;
+    visibleProperties: string[];
+    frozenColumns: string[];
+    pageSize?: number;
+  };
   customProperties?: DocumentProperty[];
   frozen?: boolean;
   frozenAt?: string;
@@ -149,7 +153,6 @@ export interface DocumentView {
   frozenReason?: string;
   config?: {
     rowHeight?: "compact" | "medium" | "tall";
-    pageSize?: number;
     showFilters?: boolean;
     showSearch?: boolean;
     showToolbar?: boolean;
@@ -162,12 +165,15 @@ export interface CreateViewRequest {
   name: string;
   type: ViewType;
   isDefault?: boolean;
-  filters?: ViewFilter[];
-  sorts?: ViewSort[];
-  visibleProperties?: string[];
+  settings: {
+    filters?: ViewFilter[];
+    sorts?: ViewSort[];
+    visibleProperties?: string[];
+    frozenColumns?: string[];
+    pageSize?: number;
+  };
   config?: {
     rowHeight?: "compact" | "medium" | "tall";
-    pageSize?: number;
     showFilters?: boolean;
     showSearch?: boolean;
     showToolbar?: boolean;
@@ -178,12 +184,15 @@ export interface CreateViewRequest {
 
 export interface UpdateViewRequest {
   name?: string;
-  filters?: ViewFilter[];
-  sorts?: ViewSort[];
-  visibleProperties?: string[];
+  settings?: {
+    filters?: ViewFilter[];
+    sorts?: ViewSort[];
+    visibleProperties?: string[];
+    frozenColumns?: string[];
+    pageSize?: number;
+  };
   config?: {
     rowHeight?: "compact" | "medium" | "tall";
-    pageSize?: number;
     showFilters?: boolean;
     showSearch?: boolean;
     showToolbar?: boolean;
