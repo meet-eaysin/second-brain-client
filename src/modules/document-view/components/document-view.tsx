@@ -117,20 +117,8 @@ function DocumentViewInternal({
       if (!moduleType || !effectiveWorkspaceId || databaseId) return null;
 
       try {
-        const statusResponse = await apiClient.get(
-          `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/status`
-        );
-        const isInitialized = statusResponse.data.data.isInitialized;
-
-        if (!isInitialized) {
-          await apiClient.post(
-            `/modules/workspace/${effectiveWorkspaceId}/initialize`,
-            {
-              modules: [moduleType],
-              createSampleData: false,
-            }
-          );
-
+        // Try to get database ID first (works if module is initialized)
+        try {
           const dbIdResponse = await apiClient.get(
             `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
           );
@@ -138,17 +126,32 @@ function DocumentViewInternal({
             isInitialized: true,
             databaseId: dbIdResponse.data.data.databaseId,
           };
-        } else {
-          const dbIdResponse = await apiClient.get(
-            `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
-          );
-          return {
-            isInitialized: true,
-            databaseId: dbIdResponse.data.data.databaseId,
-          };
+        } catch {
+          // Database ID not found, try to initialize
+          try {
+            await apiClient.post(
+              `/modules/workspace/${effectiveWorkspaceId}/initialize`,
+              {
+                modules: [moduleType],
+                createSampleData: false,
+              }
+            );
+
+            // Now get the database ID
+            const dbIdResponse = await apiClient.get(
+              `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
+            );
+            return {
+              isInitialized: true,
+              databaseId: dbIdResponse.data.data.databaseId,
+            };
+          } catch (initError) {
+            console.error("Module initialization error:", initError);
+            return { isInitialized: false, databaseId: null };
+          }
         }
       } catch (error) {
-        console.error("Module initialization error:", error);
+        console.error("Module setup error:", error);
         return { isInitialized: false, databaseId: null };
       }
     },
