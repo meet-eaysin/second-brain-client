@@ -63,7 +63,7 @@ export function PeoplePage() {
       <Main className="space-y-8">
         <DocumentView
           moduleType={EDatabaseType.PEOPLE}
-          workspaceId={currentWorkspace?.id}
+          workspaceId={currentWorkspace?._id}
           moduleConfig={moduleConfig}
           config={{
             canCreate: true,

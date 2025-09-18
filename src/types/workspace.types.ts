@@ -93,7 +93,8 @@ export interface WorkspaceMember {
 }
 
 export interface Workspace {
-  id: string;
+  _id: string;
+  id?: string; // For compatibility
   name: string;
   description?: string;
   type: EWorkspaceType;
@@ -134,6 +135,12 @@ export interface Workspace {
 
   createdAt: string;
   updatedAt: string;
+
+  // MongoDB fields
+  __v?: number;
+  isDeleted?: boolean;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface WorkspaceWithUserInfo extends Workspace {

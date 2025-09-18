@@ -93,7 +93,11 @@ function DocumentViewInternal({
   });
 
   const effectiveWorkspaceId =
-    workspaceId || currentWorkspace?.id || primaryWorkspace?.id;
+    workspaceId ||
+    currentWorkspace?._id ||
+    currentWorkspace?.id ||
+    primaryWorkspace?._id ||
+    primaryWorkspace?.id;
 
   const {
     setCurrentSchema,
@@ -277,7 +281,10 @@ function DocumentViewInternal({
     moduleStatusLoading ||
     moduleDatabaseIdLoading ||
     initializeModuleMutation.isPending ||
-    (!workspaceId && !currentWorkspace?.id && !primaryWorkspace)
+    (!workspaceId &&
+      !currentWorkspace?._id &&
+      !currentWorkspace?.id &&
+      !primaryWorkspace)
   ) {
     return (
       <div className="flex items-center justify-center h-64">
