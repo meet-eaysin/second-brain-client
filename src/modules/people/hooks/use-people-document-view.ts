@@ -4,8 +4,7 @@ import {
   useRecords,
   useViews,
 } from "@/modules/document-view/services/database-queries";
-import { createModuleApi } from "@/modules/document-view/services/api-service";
-import { EDatabaseType } from "@/modules/document-view";
+import { apiClient } from "@/services/api-client";
 
 // Query Keys
 export const PEOPLE_DOCUMENT_VIEW_QUERY_KEYS = {
@@ -18,11 +17,13 @@ export const PEOPLE_DOCUMENT_VIEW_QUERY_KEYS = {
 
 // Hook for people module configuration
 export function usePeopleModuleConfig() {
-  const apiService = createModuleApi(EDatabaseType.PEOPLE);
-
   return useQuery({
     queryKey: PEOPLE_DOCUMENT_VIEW_QUERY_KEYS.config(),
-    queryFn: () => apiService.getConfig(),
+    queryFn: async () => {
+      // Get module config from modules API
+      const response = await apiClient.get("/modules/config/people");
+      return response.data.module;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
@@ -54,7 +55,6 @@ export function usePeopleRecords(filters?: Record<string, unknown>) {
 // Hook for updating people records
 export function useUpdatePeopleRecord() {
   const queryClient = useQueryClient();
-  const apiService = createModuleApi(EDatabaseType.PEOPLE);
 
   return useMutation({
     mutationFn: async ({
@@ -64,7 +64,8 @@ export function useUpdatePeopleRecord() {
       recordId: string;
       data: Record<string, unknown>;
     }) => {
-      return await apiService.updateRecord(recordId, data);
+      const response = await apiClient.put(`/people/${recordId}`, data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -79,11 +80,10 @@ export function useUpdatePeopleRecord() {
 // Hook for deleting people records
 export function useDeletePeopleRecord() {
   const queryClient = useQueryClient();
-  const apiService = createModuleApi(EDatabaseType.PEOPLE);
 
   return useMutation({
     mutationFn: async (recordId: string) => {
-      return await apiService.deleteRecord(recordId);
+      await apiClient.delete(`/people/${recordId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -98,11 +98,11 @@ export function useDeletePeopleRecord() {
 // Hook for creating people records
 export function useCreatePeopleRecord() {
   const queryClient = useQueryClient();
-  const apiService = createModuleApi(EDatabaseType.PEOPLE);
 
   return useMutation({
     mutationFn: async (data: Record<string, unknown>) => {
-      return await apiService.createRecord(data);
+      const response = await apiClient.post("/people", data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { IModuleConfig } from "@/modules/document-view/services/api-service.ts";
 import {
@@ -14,7 +14,6 @@ import {
   useUpdateView,
   useViews,
 } from "@/modules/document-view/services/database-queries.ts";
-import { createModuleApi } from "@/modules/document-view/services/api-service.ts";
 import {
   EDatabaseType,
   type IDatabaseView,
@@ -26,16 +25,13 @@ import { DocumentViewTabs } from "@/modules/document-view/components/document-vi
 import { TableToolbar } from "@/modules/document-view";
 import { DocumentViewRenderer } from "@/modules/document-view/components/document-view-renderer.tsx";
 import { DatabaseDialogs } from "@/modules/document-view/components/document-view-dialogs.tsx";
+import { useCurrentWorkspace } from "@/modules/workspaces/context/workspace-context";
+import { apiClient } from "@/services/api-client";
 
 export interface DocumentViewProps {
-  // Module identification
   moduleType?: EDatabaseType | string;
   databaseId?: string;
-
-  // Module configuration (from backend)
   moduleConfig?: IModuleConfig;
-
-  // UI Configuration
   config?: {
     title?: string;
     icon?: string;
@@ -55,19 +51,13 @@ export interface DocumentViewProps {
     disablePropertyManagement?: boolean;
     apiFrozenConfig?: string;
   };
-
-  // Event handlers
   onRecordView?: (record: IRecord) => void;
   onRecordEdit?: (record: IRecord) => void;
   onRecordDelete?: (recordId: string) => void;
   onRecordCreate?: () => void;
   onRecordUpdate?: (recordId: string, updates: Record<string, unknown>) => void;
-
-  // State
   isLoading?: boolean;
   error?: string | null;
-
-  // Styling
   className?: string;
 }
 
@@ -89,6 +79,8 @@ function DocumentViewInternal({
     config.defaultViewId
   );
   const { searchQuery, setSearchQuery } = useDocumentView();
+  const currentWorkspace = useCurrentWorkspace();
+  const queryClient = useQueryClient();
 
   const {
     setCurrentSchema,
@@ -98,51 +90,117 @@ function DocumentViewInternal({
     setVisibleProperties,
   } = useDocumentView();
 
-  // Fetch database data
+  const { data: moduleStatus, isLoading: moduleStatusLoading } = useQuery({
+    queryKey:
+      moduleType && !databaseId && currentWorkspace?.id
+        ? ["module-status", moduleType, currentWorkspace.id]
+        : [],
+    queryFn: async () => {
+      if (!moduleType || !currentWorkspace?.id || databaseId) return null;
+
+      try {
+        const response = await apiClient.get(
+          `/modules/workspace/${currentWorkspace.id}/${moduleType}/status`
+        );
+        return response.data;
+      } catch {
+        return { isInitialized: false };
+      }
+    },
+    enabled: !!moduleType && !databaseId && !!currentWorkspace?.id,
+  });
+
+  const { data: moduleDatabaseId, isLoading: moduleDatabaseIdLoading } =
+    useQuery({
+      queryKey:
+        moduleType &&
+        !databaseId &&
+        currentWorkspace?.id &&
+        moduleStatus?.isInitialized
+          ? ["module-database-id", moduleType, currentWorkspace.id]
+          : [],
+      queryFn: async () => {
+        if (
+          !moduleType ||
+          !currentWorkspace?.id ||
+          !moduleStatus?.isInitialized
+        )
+          return null;
+
+        const response = await apiClient.get(
+          `/modules/workspace/${currentWorkspace.id}/${moduleType}/database-id`
+        );
+        return response.data.databaseId;
+      },
+      enabled:
+        !!moduleType &&
+        !databaseId &&
+        !!currentWorkspace?.id &&
+        moduleStatus?.isInitialized,
+    });
+
+  const initializeModuleMutation = useMutation({
+    mutationFn: async () => {
+      if (!moduleType || !currentWorkspace?.id)
+        throw new Error("Module type or workspace not available");
+
+      const response = await apiClient.post(
+        `/modules/workspace/${currentWorkspace.id}/initialize`,
+        {
+          modules: [moduleType],
+          createSampleData: false,
+        }
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["module-status", moduleType, currentWorkspace?.id],
+      });
+      toast.success("Module initialized successfully");
+    },
+    onError: (error: Error) => {
+      toast.error(error?.message || "Failed to initialize module");
+    },
+  });
+
+  useEffect(() => {
+    if (
+      moduleType &&
+      !databaseId &&
+      currentWorkspace?.id &&
+      moduleStatus &&
+      !moduleStatus.isInitialized &&
+      !moduleStatusLoading
+    ) {
+      initializeModuleMutation.mutate();
+    }
+  }, [
+    moduleType,
+    databaseId,
+    currentWorkspace?.id,
+    moduleStatus,
+    moduleStatusLoading,
+  ]);
+
+  const effectiveDatabaseId = moduleDatabaseId || databaseId;
+
   const { data: database, isLoading: databaseLoading } = useDatabase(
-    databaseId || ""
+    effectiveDatabaseId || ""
   );
 
-  // Fetch module database if needed
-  const { data: moduleDatabase, isLoading: moduleDatabaseLoading } = useQuery({
-    queryKey: moduleType && !databaseId ? ["module-database", moduleType] : [],
-    queryFn: () => {
-      if (moduleType && typeof moduleType === "string") {
-        const apiService = createModuleApi(moduleType as EDatabaseType);
-        return apiService.getDatabase();
-      }
-      return null;
-    },
-    enabled: !!moduleType && !databaseId && typeof moduleType === "string",
-  });
+  const effectiveDatabase = database;
+  const effectiveDatabaseLoading = databaseLoading;
 
-  // Use module database if available, otherwise use regular database
-  const effectiveDatabase = moduleDatabase || database;
-  const effectiveDatabaseLoading = moduleDatabaseLoading || databaseLoading;
+  const { data: views, isLoading: viewsLoading } = useViews(
+    effectiveDatabaseId || ""
+  );
 
-  // Fetch views
-  const { data: views, isLoading: viewsLoading } = useViews(databaseId || "");
+  const effectiveViews = views;
+  const effectiveViewsLoading = viewsLoading;
 
-  // Fetch module views if needed
-  const { data: moduleViews, isLoading: moduleViewsLoading } = useQuery({
-    queryKey: moduleType && !databaseId ? ["module-views", moduleType] : [],
-    queryFn: () => {
-      if (moduleType && typeof moduleType === "string") {
-        const apiService = createModuleApi(moduleType as EDatabaseType);
-        return apiService.getViews();
-      }
-      return null;
-    },
-    enabled: !!moduleType && !databaseId && typeof moduleType === "string",
-  });
-
-  // Use module views if available, otherwise use regular views
-  const effectiveViews = moduleViews ? { views: moduleViews } : views;
-  const effectiveViewsLoading = moduleViewsLoading || viewsLoading;
-
-  // Prepare record query params
   const recordQueryParams: IRecordQueryParams = {
-    databaseId: databaseId || "",
+    databaseId: effectiveDatabaseId || "",
     viewId: currentViewId,
     search: searchQuery,
     page: 1,
@@ -151,35 +209,15 @@ function DocumentViewInternal({
     isTemplate: false,
   };
 
-  // Fetch records
   const { data: recordsResponse, isLoading: recordsLoading } = useRecords(
-    databaseId || "",
+    effectiveDatabaseId || "",
     recordQueryParams
   );
 
-  // Fetch module records if needed
-  const { data: moduleRecordsResponse, isLoading: moduleRecordsLoading } =
-    useQuery({
-      queryKey:
-        moduleType && !databaseId
-          ? ["module-records", moduleType, recordQueryParams]
-          : [],
-      queryFn: () => {
-        if (moduleType && typeof moduleType === "string") {
-          const apiService = createModuleApi(moduleType as EDatabaseType);
-          return apiService.getRecords(recordQueryParams);
-        }
-        return null;
-      },
-      enabled: !!moduleType && !databaseId && typeof moduleType === "string",
-    });
-
-  // Use module records if available, otherwise use regular records
-  const effectiveRecordsResponse = moduleRecordsResponse || recordsResponse;
-  const effectiveRecordsLoading = moduleRecordsLoading || recordsLoading;
+  const effectiveRecordsResponse = recordsResponse;
+  const effectiveRecordsLoading = recordsLoading;
   const records = effectiveRecordsResponse?.records || [];
 
-  // Mutations
   const updateRecordMutation = useUpdateRecord();
   const deleteRecordMutation = useDeleteRecord();
   const updateViewMutation = useUpdateView();
@@ -222,7 +260,10 @@ function DocumentViewInternal({
     isLoading ||
     effectiveDatabaseLoading ||
     effectiveViewsLoading ||
-    effectiveRecordsLoading
+    effectiveRecordsLoading ||
+    moduleStatusLoading ||
+    moduleDatabaseIdLoading ||
+    initializeModuleMutation.isPending
   ) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -286,7 +327,7 @@ function DocumentViewInternal({
     } else {
       try {
         await deleteRecordMutation.mutateAsync({
-          databaseId: databaseId || "",
+          databaseId: effectiveDatabaseId || "",
           recordId,
         });
         toast.success("Record deleted successfully");
@@ -308,7 +349,7 @@ function DocumentViewInternal({
       await Promise.all(
         recordIds.map((id) =>
           deleteRecordMutation.mutateAsync({
-            databaseId: databaseId || "",
+            databaseId: effectiveDatabaseId || "",
             recordId: id,
           })
         )
@@ -321,7 +362,7 @@ function DocumentViewInternal({
 
   const handleBulkEdit = (records: IRecord[]) => {
     if (config.canEdit === false) return;
-    setCurrentRecord(records[0]); // Set first record as context
+    setCurrentRecord(records[0]);
     setDialogOpen("bulk-edit");
   };
 
@@ -362,7 +403,7 @@ function DocumentViewInternal({
     } else {
       try {
         await updateRecordMutation.mutateAsync({
-          databaseId: databaseId || "",
+          databaseId: effectiveDatabaseId || "",
           recordId,
           data: updates,
         });
@@ -377,7 +418,7 @@ function DocumentViewInternal({
     if (currentView?.id) {
       try {
         await updateViewMutation.mutateAsync({
-          databaseId: databaseId || "",
+          databaseId: effectiveDatabaseId || "",
           viewId: currentView.id,
           data: { filters },
         });
@@ -392,7 +433,7 @@ function DocumentViewInternal({
     if (currentView?.id) {
       try {
         await updateViewMutation.mutateAsync({
-          databaseId: databaseId || "",
+          databaseId: effectiveDatabaseId || "",
           viewId: currentView.id,
           data: { sorts },
         });
@@ -439,7 +480,7 @@ function DocumentViewInternal({
             <DocumentViewTabs
               views={effectiveViews.views}
               currentViewId={currentViewId}
-              databaseId={databaseId}
+              databaseId={effectiveDatabaseId}
               moduleType={moduleType}
               isFrozen={
                 effectiveDatabase?.isArchived || config.isFrozen || false
@@ -465,7 +506,7 @@ function DocumentViewInternal({
                 onSortsChange={handleSortsChange}
                 onUpdateView={async (viewId, data) => {
                   await updateViewMutation.mutateAsync({
-                    databaseId: databaseId || "",
+                    databaseId: effectiveDatabaseId || "",
                     viewId,
                     data,
                   });
@@ -493,7 +534,9 @@ function DocumentViewInternal({
             onBulkDelete={handleBulkDelete}
             onBulkEdit={handleBulkEdit}
             onAddProperty={handleAddProperty}
-            databaseId={config.dataSourceId || effectiveDatabase.id}
+            databaseId={
+              config.dataSourceId || effectiveDatabaseId || effectiveDatabase.id
+            }
             moduleType={moduleType}
             isFrozen={effectiveDatabase?.isArchived || config.isFrozen || false}
             disablePropertyManagement={

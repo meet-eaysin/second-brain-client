@@ -10,15 +10,12 @@ import { toast } from "sonner";
 import { EDatabaseType } from "@/modules/document-view";
 
 export function PeoplePage() {
-  // Use people-specific hooks
   const { data: moduleConfig, isLoading: configLoading } =
     usePeopleModuleConfig();
 
-  // Mutations
   const updateRecordMutation = useUpdatePeopleRecord();
   const deleteRecordMutation = useDeletePeopleRecord();
 
-  // Event Handlers
   const handleRecordEdit = (record: unknown) => {
     console.log("Edit person:", record);
   };
@@ -62,7 +59,6 @@ export function PeoplePage() {
       <EnhancedHeader />
 
       <Main className="space-y-8">
-        {/* People Document View */}
         <DocumentView
           moduleType={EDatabaseType.PEOPLE}
           moduleConfig={moduleConfig}
