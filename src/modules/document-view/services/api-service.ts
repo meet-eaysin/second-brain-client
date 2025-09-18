@@ -24,6 +24,22 @@ import type {
   IDatabaseView,
 } from "../types";
 
+// Client-side module configuration type (matches backend)
+export interface IModuleConfig {
+  readonly id: EDatabaseType;
+  readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+  readonly color: string;
+  readonly category: string;
+  readonly isCore: boolean;
+  readonly dependencies: readonly EDatabaseType[];
+  readonly defaultProperties: readonly unknown[];
+  readonly defaultViews: readonly unknown[];
+  readonly defaultRelations: readonly unknown[];
+  readonly templates: readonly unknown[];
+}
+
 export const databaseApi = {
   getDatabases: async (params?: Record<string, unknown>) => {
     const response = await apiClient.get("/databases", { params });
