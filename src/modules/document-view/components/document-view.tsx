@@ -9,6 +9,7 @@ import {
 import {
   useDatabase,
   useDeleteRecord,
+  useProperties,
   useRecords,
   useUpdateRecord,
   useUpdateView,
@@ -16,6 +17,7 @@ import {
 } from "@/modules/document-view/services/database-queries.ts";
 import {
   EDatabaseType,
+  type IDatabase,
   type IDatabaseView,
   type IRecord,
   type IRecordQueryParams,
@@ -27,32 +29,34 @@ import { DocumentViewRenderer } from "@/modules/document-view/components/documen
 import { DatabaseDialogs } from "@/modules/document-view/components/document-view-dialogs.tsx";
 import { useCurrentWorkspace } from "@/modules/workspaces/context/workspace-context";
 import { workspaceApi } from "@/modules/workspaces/services/workspaceApi";
-import { apiClient } from "@/services/api-client";
+import type { IDatabaseProperty } from "@/modules/document-view/types";
+
+export interface IDocumentViewConfig {
+  title?: string;
+  icon?: string;
+  description?: string;
+  canCreate?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  canShare?: boolean;
+  enableViews?: boolean;
+  enableSearch?: boolean;
+  enableFilters?: boolean;
+  enableSorts?: boolean;
+  isFrozen?: boolean;
+  defaultViewId?: string;
+  dataSourceId?: string;
+  dataSourceType?: string;
+  disablePropertyManagement?: boolean;
+  apiFrozenConfig?: string;
+}
 
 export interface DocumentViewProps {
   moduleType?: EDatabaseType | string;
   databaseId?: string;
   workspaceId?: string;
   moduleConfig?: IModuleConfig;
-  config?: {
-    title?: string;
-    icon?: string;
-    description?: string;
-    canCreate?: boolean;
-    canEdit?: boolean;
-    canDelete?: boolean;
-    canShare?: boolean;
-    enableViews?: boolean;
-    enableSearch?: boolean;
-    enableFilters?: boolean;
-    enableSorts?: boolean;
-    isFrozen?: boolean;
-    defaultViewId?: string;
-    dataSourceId?: string;
-    dataSourceType?: string;
-    disablePropertyManagement?: boolean;
-    apiFrozenConfig?: string;
-  };
+  config?: IDocumentViewConfig;
   onRecordView?: (record: IRecord) => void;
   onRecordEdit?: (record: IRecord) => void;
   onRecordDelete?: (recordId: string) => void;
@@ -62,6 +66,122 @@ export interface DocumentViewProps {
   error?: string | null;
   className?: string;
 }
+
+// Loading Component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
+
+// Error Component
+const ErrorMessage = ({ message }: { message: string }) => (
+  <div className="flex flex-col items-center justify-center h-64">
+    <h3 className="text-lg font-medium mb-2">Error</h3>
+    <p className="text-muted-foreground text-center">{message}</p>
+  </div>
+);
+
+// No Workspace Component
+const NoWorkspaceMessage = () => (
+  <div className="flex flex-col items-center justify-center h-64">
+    <h3 className="text-lg font-medium mb-2">No Workspace</h3>
+    <p className="text-muted-foreground text-center">
+      No workspace available. Please create or select a workspace first.
+    </p>
+  </div>
+);
+
+// No Database Component
+const NoDatabaseMessage = () => (
+  <div className="flex flex-col items-center justify-center h-64">
+    <h3 className="text-lg font-medium mb-2">No Database</h3>
+    <p className="text-muted-foreground text-center">
+      Database not initialized. Please try refreshing the page.
+    </p>
+  </div>
+);
+
+// No View Component
+const NoViewMessage = ({ message }: { message: string }) => (
+  <div className="flex items-center justify-center h-64">
+    <div className="text-center">
+      <h3 className="text-lg font-medium mb-2">No View Available</h3>
+      <p className="text-muted-foreground">{message}</p>
+    </div>
+  </div>
+);
+
+// Main Content Component
+const DocumentContent = ({
+  effectiveDatabaseLoading,
+  currentView,
+  effectiveDatabase,
+  effectiveProperties,
+  records,
+  moduleType,
+  typedConfig,
+  getNoViewMessage,
+  getEffectiveDatabaseId,
+  handleRecordSelect,
+  handleRecordEdit,
+  handleRecordDelete,
+  handleRecordCreate,
+  handleRecordUpdate,
+  handleBulkDelete,
+  handleBulkEdit,
+  handleAddProperty,
+}: {
+  effectiveDatabaseLoading: boolean;
+  currentView: IDatabaseView | undefined;
+  effectiveDatabase: IDatabase | undefined;
+  effectiveProperties: IDatabaseProperty[];
+  records: IRecord[];
+  moduleType: string;
+  typedConfig: IDocumentViewConfig;
+  getNoViewMessage: () => string;
+  getEffectiveDatabaseId: () => string;
+  handleRecordSelect: (record: IRecord) => void;
+  handleRecordEdit: (record: IRecord) => void;
+  handleRecordDelete: (recordId: string) => Promise<void>;
+  handleRecordCreate: () => void;
+  handleRecordUpdate: (
+    recordId: string,
+    updates: Record<string, unknown>
+  ) => Promise<void>;
+  handleBulkDelete: (recordIds: string[]) => Promise<void>;
+  handleBulkEdit: (records: IRecord[]) => void;
+  handleAddProperty: () => void;
+}) => {
+  if (effectiveDatabaseLoading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!currentView) {
+    return <NoViewMessage message={getNoViewMessage()} />;
+  }
+
+  return (
+    <DocumentViewRenderer
+      view={currentView}
+      properties={effectiveProperties}
+      records={records}
+      onRecordSelect={handleRecordSelect}
+      onRecordEdit={handleRecordEdit}
+      onRecordDelete={handleRecordDelete}
+      onRecordCreate={handleRecordCreate}
+      onRecordUpdate={handleRecordUpdate}
+      onBulkDelete={handleBulkDelete}
+      onBulkEdit={handleBulkEdit}
+      onAddProperty={handleAddProperty}
+      databaseId={getEffectiveDatabaseId()}
+      moduleType={moduleType}
+      isFrozen={effectiveDatabase?.isArchived || typedConfig.isFrozen || false}
+      disablePropertyManagement={typedConfig.disablePropertyManagement || false}
+      apiFrozenConfig={typedConfig.apiFrozenConfig}
+    />
+  );
+};
 
 function DocumentViewInternal({
   databaseId,
@@ -78,27 +198,37 @@ function DocumentViewInternal({
   error = null,
   className,
 }: DocumentViewProps) {
+  // Ensure config has proper typing
+  const typedConfig: IDocumentViewConfig = config || {};
   const [currentViewId, setCurrentViewId] = useState<string | undefined>(
-    config.defaultViewId
+    typedConfig.defaultViewId
   );
   const { searchQuery, setSearchQuery } = useDocumentView();
   const currentWorkspace = useCurrentWorkspace();
 
+  // Helper function to determine if primary workspace query should run
+  const shouldFetchPrimaryWorkspace = () => {
+    return !workspaceId && !currentWorkspace?._id && !currentWorkspace?.id;
+  };
+
   const { data: primaryWorkspace } = useQuery({
-    queryKey:
-      !workspaceId && !currentWorkspace?._id && !currentWorkspace?.id
-        ? ["primary-workspace"]
-        : [],
+    queryKey: shouldFetchPrimaryWorkspace() ? ["primary-workspace"] : [],
     queryFn: () => workspaceApi.getPrimaryWorkspace(),
-    enabled: !workspaceId && !currentWorkspace?._id && !currentWorkspace?.id,
+    enabled: shouldFetchPrimaryWorkspace(),
   });
 
-  const effectiveWorkspaceId =
-    workspaceId ||
-    currentWorkspace?._id ||
-    currentWorkspace?.id ||
-    primaryWorkspace?._id ||
-    primaryWorkspace?.id;
+  // Helper function to get effective workspace ID
+  const getEffectiveWorkspaceId = () => {
+    return (
+      workspaceId ||
+      currentWorkspace?._id ||
+      currentWorkspace?.id ||
+      primaryWorkspace?._id ||
+      primaryWorkspace?.id
+    );
+  };
+
+  const effectiveWorkspaceId = getEffectiveWorkspaceId();
 
   const {
     setCurrentSchema,
@@ -119,31 +249,31 @@ function DocumentViewInternal({
       try {
         // Try to get database ID first (works if module is initialized)
         try {
-          const dbIdResponse = await apiClient.get(
-            `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
+          const dbIdResponse = await workspaceApi.getModuleDatabaseId(
+            effectiveWorkspaceId,
+            moduleType
           );
           return {
             isInitialized: true,
-            databaseId: dbIdResponse.data.data.databaseId,
+            databaseId: dbIdResponse.databaseId,
           };
         } catch {
           // Database ID not found, try to initialize
           try {
-            await apiClient.post(
-              `/modules/workspace/${effectiveWorkspaceId}/initialize`,
-              {
-                modules: [moduleType],
-                createSampleData: false,
-              }
+            await workspaceApi.initializeWorkspaceModules(
+              effectiveWorkspaceId,
+              [moduleType],
+              false
             );
 
             // Now get the database ID
-            const dbIdResponse = await apiClient.get(
-              `/modules/workspace/${effectiveWorkspaceId}/${moduleType}/database-id`
+            const dbIdResponse = await workspaceApi.getModuleDatabaseId(
+              effectiveWorkspaceId,
+              moduleType
             );
             return {
               isInitialized: true,
-              databaseId: dbIdResponse.data.data.databaseId,
+              databaseId: dbIdResponse.databaseId,
             };
           } catch (initError) {
             console.error("Module initialization error:", initError);
@@ -177,14 +307,20 @@ function DocumentViewInternal({
     effectiveDatabaseId || ""
   );
 
-  const effectiveDatabase = database;
+  const effectiveDatabase = database?.data;
   const effectiveDatabaseLoading = databaseLoading;
+
+  const { data: propertiesResponse, isLoading: propertiesLoading } =
+    useProperties(effectiveDatabaseId || "");
+
+  const effectiveProperties = propertiesResponse?.data || [];
+  const effectivePropertiesLoading = propertiesLoading;
 
   const { data: views, isLoading: viewsLoading } = useViews(
     effectiveDatabaseId || ""
   );
 
-  const effectiveViews = views;
+  const effectiveViews = views?.data;
   const effectiveViewsLoading = viewsLoading;
 
   const recordQueryParams: IRecordQueryParams = {
@@ -210,30 +346,53 @@ function DocumentViewInternal({
   const deleteRecordMutation = useDeleteRecord();
   const updateViewMutation = useUpdateView();
 
-  const currentView =
-    effectiveViews?.views?.find((v: IDatabaseView) => v.id === currentViewId) ||
-    effectiveViews?.views?.find(
-      (v: IDatabaseView) => v.id === config.defaultViewId
-    ) ||
-    effectiveViews?.views?.find((v: IDatabaseView) => v.isDefault) ||
-    effectiveViews?.views?.[0];
+  // Helper function to determine the current view with clear priority
+  const getCurrentView = (): IDatabaseView | undefined => {
+    if (!effectiveViews) return undefined;
+
+    // Priority 1: View matching currentViewId
+    const viewById = effectiveViews.find(
+      (v: IDatabaseView) => v.id === currentViewId
+    );
+    if (viewById) return viewById;
+
+    // Priority 2: View matching config.defaultViewId
+    const viewByConfigDefault = effectiveViews.find(
+      (v: IDatabaseView) => v.id === typedConfig.defaultViewId
+    );
+    if (viewByConfigDefault) return viewByConfigDefault;
+
+    // Priority 3: Default view
+    const defaultView = effectiveViews.find((v: IDatabaseView) => v.isDefault);
+    if (defaultView) return defaultView;
+
+    // Priority 4: First available view
+    return effectiveViews[0];
+  };
+
+  const currentView = getCurrentView();
 
   useEffect(() => {
-    if (effectiveDatabase) {
+    if (effectiveDatabase && effectiveProperties.length > 0) {
       setCurrentSchema(effectiveDatabase);
 
       const initialVisibility =
-        effectiveDatabase.properties?.reduce(
+        effectiveProperties.reduce(
           (acc, prop) => ({ ...acc, [prop.id]: true }),
           {}
         ) || {};
       setVisibleProperties(initialVisibility);
     }
-  }, [effectiveDatabase, setCurrentSchema, setVisibleProperties]);
+  }, [
+    effectiveDatabase,
+    effectiveProperties,
+    setCurrentSchema,
+    setVisibleProperties,
+  ]);
 
   useEffect(() => {
-    if (effectiveViews?.views && currentViewId) {
-      const view = effectiveViews.views.find(
+    if (effectiveViews && currentViewId) {
+      const view = effectiveViews.find(
         (v: IDatabaseView) => v.id === currentViewId
       );
       if (view) setCurrentView(view);
@@ -244,55 +403,48 @@ function DocumentViewInternal({
     if (!currentViewId && currentView) setCurrentViewId(currentView.id);
   }, [currentViewId, currentView]);
 
-  if (
-    isLoading ||
-    effectiveDatabaseLoading ||
-    effectiveViewsLoading ||
-    effectiveRecordsLoading ||
-    moduleInfoLoading ||
-    (!workspaceId &&
-      !currentWorkspace?._id &&
-      !currentWorkspace?.id &&
-      !primaryWorkspace)
-  ) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+  // Helper function to determine if we should show loading state
+  const shouldShowLoading = (): boolean => {
+    // Basic loading states
+    if (
+      isLoading ||
+      effectiveDatabaseLoading ||
+      effectiveViewsLoading ||
+      effectiveRecordsLoading ||
+      effectivePropertiesLoading ||
+      moduleInfoLoading
+    ) {
+      return true;
+    }
+
+    // Check if we need workspace but don't have one
+    const hasWorkspaceId =
+      workspaceId ||
+      currentWorkspace?._id ||
+      currentWorkspace?.id ||
+      primaryWorkspace;
+    if (!hasWorkspaceId) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Early returns for different states
+  if (shouldShowLoading()) {
+    return <LoadingSpinner />;
   }
 
   if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <h3 className="text-lg font-medium mb-2">Error</h3>
-        <p className="text-muted-foreground text-center">{error}</p>
-      </div>
-    );
+    return <ErrorMessage message={error} />;
   }
 
-  // If we don't have a workspaceId, show no workspace message
   if (!effectiveWorkspaceId) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <h3 className="text-lg font-medium mb-2">No Workspace</h3>
-        <p className="text-muted-foreground text-center">
-          No workspace available. Please create or select a workspace first.
-        </p>
-      </div>
-    );
+    return <NoWorkspaceMessage />;
   }
 
-  // If we don't have a databaseId, show no database message
   if (!effectiveDatabaseId) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64">
-        <h3 className="text-lg font-medium mb-2">No Database</h3>
-        <p className="text-muted-foreground text-center">
-          Database not initialized. Please try refreshing the page.
-        </p>
-      </div>
-    );
+    return <NoDatabaseMessage />;
   }
 
   const handleViewChange = (viewId: string) => setCurrentViewId(viewId);
@@ -307,7 +459,7 @@ function DocumentViewInternal({
   };
 
   const handleRecordEdit = (record: IRecord) => {
-    if (config.canEdit === false) return;
+    if (typedConfig.canEdit === false) return;
     if (onRecordEdit) {
       onRecordEdit(record);
     } else {
@@ -317,7 +469,7 @@ function DocumentViewInternal({
   };
 
   const handleRecordDelete = async (recordId: string) => {
-    if (config.canDelete === false) return;
+    if (typedConfig.canDelete === false) return;
 
     if (effectiveDatabase?.isArchived) {
       toast.error("Cannot delete records: Database is archived");
@@ -341,7 +493,7 @@ function DocumentViewInternal({
   };
 
   const handleBulkDelete = async (recordIds: string[]) => {
-    if (config.canDelete === false) return;
+    if (typedConfig.canDelete === false) return;
 
     if (effectiveDatabase?.isArchived) {
       toast.error("Cannot delete records: Database is archived");
@@ -364,18 +516,18 @@ function DocumentViewInternal({
   };
 
   const handleBulkEdit = (records: IRecord[]) => {
-    if (config.canEdit === false) return;
+    if (typedConfig.canEdit === false) return;
     setCurrentRecord(records[0]);
     setDialogOpen("bulk-edit");
   };
 
   const handleAddProperty = () => {
-    if (config.canEdit === false) return;
+    if (typedConfig.canEdit === false) return;
     setDialogOpen("create-property");
   };
 
   const handleRecordCreate = () => {
-    if (config.canCreate === false) return;
+    if (typedConfig.canCreate === false) return;
 
     if (effectiveDatabase?.isArchived) {
       toast.error("Cannot create records: Database is archived");
@@ -394,7 +546,7 @@ function DocumentViewInternal({
     recordId: string,
     updates: Record<string, unknown>
   ) => {
-    if (config.canEdit === false) return;
+    if (typedConfig.canEdit === false) return;
 
     if (effectiveDatabase?.isArchived) {
       toast.error("Cannot update records: Database is archived");
@@ -447,62 +599,98 @@ function DocumentViewInternal({
     }
   };
 
+  // Helper functions for cleaner rendering
+  const getDisplayTitle = (): string => {
+    return (
+      typedConfig.title ||
+      moduleConfig?.name ||
+      effectiveDatabase?.name ||
+      "Document View"
+    );
+  };
+
+  const getDisplayDescription = (): string => {
+    if (typedConfig.description) return typedConfig.description;
+    if (moduleConfig?.description) return moduleConfig.description;
+
+    const recordCount = records.length;
+    const viewCount = effectiveViews?.views?.length || 0;
+    return `${recordCount} records • ${viewCount} views`;
+  };
+
+  const shouldShowFrozenBadge = (): boolean => {
+    return !!(typedConfig.isFrozen || effectiveDatabase?.isArchived);
+  };
+
+  const getEffectiveDatabaseId = (): string => {
+    return (
+      typedConfig.dataSourceId ||
+      effectiveDatabaseId ||
+      effectiveDatabase?.id ||
+      ""
+    );
+  };
+
+  const getVisiblePropertyIds = (): string[] => {
+    return (
+      effectiveProperties.filter((p) => p.isVisible).map((p) => p.id) || []
+    );
+  };
+
+  const getNoViewMessage = (): string => {
+    if (!effectiveViews) return "Loading views...";
+    return effectiveViews.length === 0
+      ? "Create a view to display your data."
+      : "Select a view to display your data.";
+  };
+
   return (
     <div className={`flex flex-col ${className || ""}`}>
       <div className="flex-shrink-0 mb-4 flex flex-wrap items-center justify-between space-y-2 gap-x-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            {config.title ||
-              moduleConfig?.name ||
-              effectiveDatabase?.name ||
-              "Document View"}
+            {getDisplayTitle()}
             {moduleConfig?.icon && (
               <span className="text-lg">{moduleConfig.icon}</span>
             )}
-            {(config.isFrozen || effectiveDatabase?.isArchived) && (
+            {shouldShowFrozenBadge() && (
               <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
                 Frozen
               </span>
             )}
           </h2>
-          <p className="text-muted-foreground">
-            {config.description ||
-              moduleConfig?.description ||
-              `${records.length} records • ${
-                effectiveViews?.views?.length || 0
-              } views`}
-          </p>
+          <p className="text-muted-foreground">{getDisplayDescription()}</p>
         </div>
         <DatabasePrimaryButtons />
       </div>
 
-      {config.enableViews !== false &&
-        effectiveViews?.views &&
-        effectiveViews.views.length > 0 && (
+      {typedConfig.enableViews !== false &&
+        effectiveViews &&
+        effectiveViews.length > 0 && (
           <div className="flex-shrink-0 mb-4">
             <DocumentViewTabs
-              views={effectiveViews.views}
+              views={effectiveViews}
               currentViewId={currentViewId}
               databaseId={effectiveDatabaseId}
               moduleType={moduleType}
               isFrozen={
-                effectiveDatabase?.isArchived || config.isFrozen || false
+                effectiveDatabase?.isArchived || typedConfig.isFrozen || false
               }
               onViewChange={handleViewChange}
             />
           </div>
         )}
 
-      {(config.enableSearch !== false ||
-        config.enableFilters !== false ||
-        config.enableSorts !== false) && (
+      {(typedConfig.enableSearch !== false ||
+        typedConfig.enableFilters !== false ||
+        typedConfig.enableSorts !== false) && (
         <div className="flex-shrink-0 mb-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
               <TableToolbar
                 searchValue={searchQuery}
                 onSearchChange={setSearchQuery}
-                properties={effectiveDatabase?.properties || []}
+                properties={effectiveProperties}
                 records={records}
                 currentView={currentView}
                 onFiltersChange={handleFiltersChange}
@@ -514,9 +702,7 @@ function DocumentViewInternal({
                     data,
                   });
                 }}
-                visibleProperties={effectiveDatabase?.properties
-                  ?.filter((p) => p.isVisible)
-                  .map((p) => p.id)}
+                visibleProperties={getVisiblePropertyIds()}
               />
             </div>
           </div>
@@ -524,47 +710,25 @@ function DocumentViewInternal({
       )}
 
       <div className="flex-1 overflow-auto">
-        {effectiveDatabaseLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
-        ) : currentView ? (
-          <DocumentViewRenderer
-            view={currentView}
-            properties={effectiveDatabase?.properties || []}
-            records={records}
-            onRecordSelect={handleRecordSelect}
-            onRecordEdit={handleRecordEdit}
-            onRecordDelete={handleRecordDelete}
-            onRecordCreate={handleRecordCreate}
-            onRecordUpdate={handleRecordUpdate}
-            onBulkDelete={handleBulkDelete}
-            onBulkEdit={handleBulkEdit}
-            onAddProperty={handleAddProperty}
-            databaseId={
-              config.dataSourceId ||
-              effectiveDatabaseId ||
-              effectiveDatabase?.id
-            }
-            moduleType={moduleType}
-            isFrozen={effectiveDatabase?.isArchived || config.isFrozen || false}
-            disablePropertyManagement={
-              config.disablePropertyManagement || false
-            }
-            apiFrozenConfig={config.apiFrozenConfig}
-          />
-        ) : (
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <h3 className="text-lg font-medium mb-2">No View Available</h3>
-              <p className="text-muted-foreground">
-                {effectiveViews?.views?.length === 0
-                  ? "Create a view to display your data."
-                  : "Select a view to display your data."}
-              </p>
-            </div>
-          </div>
-        )}
+        <DocumentContent
+          effectiveDatabaseLoading={effectiveDatabaseLoading}
+          currentView={currentView}
+          effectiveDatabase={effectiveDatabase}
+          effectiveProperties={effectiveProperties}
+          records={records}
+          moduleType={moduleType}
+          typedConfig={typedConfig}
+          getNoViewMessage={getNoViewMessage}
+          getEffectiveDatabaseId={getEffectiveDatabaseId}
+          handleRecordSelect={handleRecordSelect}
+          handleRecordEdit={handleRecordEdit}
+          handleRecordDelete={handleRecordDelete}
+          handleRecordCreate={handleRecordCreate}
+          handleRecordUpdate={handleRecordUpdate}
+          handleBulkDelete={handleBulkDelete}
+          handleBulkEdit={handleBulkEdit}
+          handleAddProperty={handleAddProperty}
+        />
       </div>
 
       <DatabaseDialogs />

@@ -94,4 +94,26 @@ export const workspaceApi = {
     >(`/workspaces/${id}/access`);
     return response.data.data;
   },
+
+  // Module management operations
+  getModuleDatabaseId: async (
+    workspaceId: string,
+    moduleType: string
+  ): Promise<{ databaseId: string }> => {
+    const response = await apiClient.get<ApiResponse<{ databaseId: string }>>(
+      `/modules/workspace/${workspaceId}/${moduleType}/database-id`
+    );
+    return response.data.data;
+  },
+
+  initializeWorkspaceModules: async (
+    workspaceId: string,
+    modules: string[],
+    createSampleData: boolean = false
+  ): Promise<void> => {
+    await apiClient.post(`/modules/workspace/${workspaceId}/initialize`, {
+      modules,
+      createSampleData,
+    });
+  },
 };

@@ -1,4 +1,3 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,8 +37,11 @@ export function DocumentGalleryView({
 }: DocumentGalleryViewProps) {
   // Filter properties based on view's visible properties for display
   const visibleProperties = properties.filter((property) => {
-    if (view?.visibleProperties && view.visibleProperties.length > 0) {
-      return view.visibleProperties.includes(property.id);
+    if (
+      view?.settings?.visibleProperties &&
+      view.settings.visibleProperties.length > 0
+    ) {
+      return view.settings.visibleProperties.includes(property.id);
     }
     return property.isVisible !== false;
   });

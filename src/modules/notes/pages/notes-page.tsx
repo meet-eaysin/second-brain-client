@@ -2,7 +2,6 @@ import { Main } from '@/layout/main';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { BookOpen, FileText, Star, Clock } from 'lucide-react';
-import { DocumentView } from '@/modules/document-view';
 import {
     useNotesViewsQuery,
     useDefaultNotesViewQuery,
@@ -148,31 +147,31 @@ export function NotesPage() {
                 </div>
 
                 {/* Notes Document View */}
-                <DocumentView
-                    database={notesDatabase}
-                    records={notesRecords}
-                    moduleType="notes"
-                    config={{
-                        title: databaseMetadata?.displayNamePlural || 'Notes',
-                        icon: databaseMetadata?.icon || '📝',
-                        description: databaseMetadata?.description || 'Manage your personal knowledge base',
-                        canCreate: true,
-                        canEdit: true,
-                        canDelete: true,
-                        canShare: true,
-                        enableViews: true,
-                        enableSearch: true,
-                        enableFilters: true,
-                        enableSorts: true,
-                        disablePropertyManagement: false,
-                        isFrozen: false,
-                        defaultViewId: defaultView?.id,
-                        apiFrozenConfig: apiFrozenConfig,
-                    }}
-                    onRecordEdit={handleRecordEdit}
-                    onRecordDelete={handleRecordDelete}
-                    onRecordUpdate={handleRecordUpdate}
-                />
+                {/*<DocumentView*/}
+                {/*    database={notesDatabase}*/}
+                {/*    records={notesRecords}*/}
+                {/*    moduleType="notes"*/}
+                {/*    config={{*/}
+                {/*        title: databaseMetadata?.displayNamePlural || 'Notes',*/}
+                {/*        icon: databaseMetadata?.icon || '📝',*/}
+                {/*        description: databaseMetadata?.description || 'Manage your personal knowledge base',*/}
+                {/*        canCreate: true,*/}
+                {/*        canEdit: true,*/}
+                {/*        canDelete: true,*/}
+                {/*        canShare: true,*/}
+                {/*        enableViews: true,*/}
+                {/*        enableSearch: true,*/}
+                {/*        enableFilters: true,*/}
+                {/*        enableSorts: true,*/}
+                {/*        disablePropertyManagement: false,*/}
+                {/*        isFrozen: false,*/}
+                {/*        defaultViewId: defaultView?.id,*/}
+                {/*        apiFrozenConfig: apiFrozenConfig,*/}
+                {/*    }}*/}
+                {/*    onRecordEdit={handleRecordEdit}*/}
+                {/*    onRecordDelete={handleRecordDelete}*/}
+                {/*    onRecordUpdate={handleRecordUpdate}*/}
+                {/*/>*/}
             </Main>
         </>
     );

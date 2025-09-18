@@ -1,5 +1,5 @@
-export { DocumentView } from "./components/document-view";
 export type { DocumentViewProps } from "./components/document-view";
+export { DocumentView } from "./components/document-view";
 export { DocumentDataTable } from "./components/document-data-table";
 
 // Export types

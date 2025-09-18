@@ -17,13 +17,10 @@ import { Button } from "@/components/ui/button";
 import { Chrome } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { toast } from "sonner";
-import { usePerformance } from "@/hooks/usePerformance";
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
-  usePerformance("UserAuthForm");
-
   const { form, handleLogin, isLoading, error } = useLogin();
   const [googleLoading, setGoogleLoading] = useState(false);
 

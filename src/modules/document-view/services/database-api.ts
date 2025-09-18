@@ -34,9 +34,7 @@ export const databaseApi = {
 
   // Property operations
   getProperties: (databaseId: string, includeHidden = false) =>
-    databaseApiService
-      .getProperties(databaseId, includeHidden)
-      .then((res) => res.properties),
+    databaseApiService.getProperties(databaseId, includeHidden),
   getProperty: (databaseId: string, propertyId: string) =>
     databaseApiService.getPropertyById(databaseId, propertyId),
   createProperty: (databaseId: string, data: ICreatePropertyRequest) =>

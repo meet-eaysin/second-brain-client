@@ -42,6 +42,8 @@ export function DocumentTableView({
   disablePropertyManagement = false,
   apiFrozenConfig,
 }: DocumentTableViewProps) {
+  console.log("PROPERITES", properties);
+  
   const { config, currentSchema, searchQuery } = useDocumentView();
 
   // Get frozen configuration from context
@@ -50,8 +52,11 @@ export function DocumentTableView({
   // Filter properties based on view's visible properties
   const visibleProperties = properties.filter((property) => {
     // Check view's visible properties
-    if (view?.visibleProperties && view.visibleProperties.length > 0) {
-      return view.visibleProperties?.includes(property.id) || false;
+    if (
+      view?.settings?.visibleProperties &&
+      view.settings.visibleProperties.length > 0
+    ) {
+      return view.settings.visibleProperties.includes(property.id);
     }
     return property.isVisible !== false;
   });
