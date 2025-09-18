@@ -1,3 +1,5 @@
+import { useQueryClient } from "@tanstack/react-query";
+
 interface DocumentProperty {
   id: string;
   name: string;
