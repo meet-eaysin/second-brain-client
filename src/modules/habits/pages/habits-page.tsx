@@ -34,7 +34,6 @@ export function HabitsPage() {
 
     // Handlers
     const handleRecordEdit = (record: any) => {
-        console.log('Edit habits:', record);
         // TODO: Implement habits editing
     };
 

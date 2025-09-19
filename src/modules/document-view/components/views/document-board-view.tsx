@@ -22,6 +22,7 @@ import {
   getSelectOptionId,
   getSelectOptionColor,
 } from "@/modules/document-view/utils/select-option-utils";
+import { NoDataMessage } from "../../../../components/no-data-message.tsx";
 
 interface DocumentBoardViewProps {
   view: IDatabaseView;
@@ -275,19 +276,13 @@ export function DocumentBoardView({
 
   if (!groupingProperty) {
     return (
-      <div className="flex items-center justify-center h-64 text-center">
-        <div>
-          <p className="text-muted-foreground mb-2">
-            Board view requires a SELECT property for grouping
-          </p>
-          <Button
-            variant="outline"
-            onClick={() => setDialogOpen("create-property")}
-          >
-            Add SELECT Property
-          </Button>
-        </div>
-      </div>
+      <NoDataMessage
+        message="Board view requires a SELECT property for grouping"
+        action={{
+          label: "Add SELECT Property",
+          onClick: () => setDialogOpen("create-property"),
+        }}
+      />
     );
   }
 
@@ -340,9 +335,10 @@ export function DocumentBoardView({
                     )}
 
                     {groupedRecords[group.id]?.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground text-sm">
-                        No records in this group
-                      </div>
+                      <NoDataMessage
+                        message="No records in this group"
+                        compact
+                      />
                     )}
                     {provided.placeholder}
                   </div>

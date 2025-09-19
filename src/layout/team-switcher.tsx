@@ -29,7 +29,7 @@ export function TeamSwitcher({
     }[]
 }) {
     const { isMobile } = useSidebar()
-    const { workspaces, currentWorkspace, setCurrentWorkspace, createWorkspace, isLoading } = useWorkspace()
+    const { workspaces, currentWorkspace, setCurrentWorkspace, createWorkspace } = useWorkspace()
     const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] = React.useState(false)
     const [isCreatingWorkspace, setIsCreatingWorkspace] = React.useState(false)
 
@@ -100,7 +100,7 @@ export function TeamSwitcher({
                                             className='flex aspect-square size-8 items-center justify-center rounded-lg text-white'
                                             style={{ backgroundColor: displayCurrentWorkspace.color || '#3b82f6' }}
                                         >
-                                            <span className='text-lg'>{displayCurrentWorkspace.icon || '🏢'}</span>
+                                            <span className='text-lg'>{displayCurrentWorkspace.icon?.color || '🏢'}</span>
                                         </div>
                                         <div className='grid flex-1 text-left text-sm leading-tight'>
                                             <span className='truncate font-semibold'>

@@ -29,29 +29,6 @@ export function NotesPage() {
 
     // Extract data
     const notesRecords = notesDatabase?.records || [];
-    const databaseMetadata = notesDatabase?.metadata;
-
-    // Handlers
-    const handleRecordEdit = (record: any) => {
-        console.log('Edit note:', record);
-        // TODO: Implement note editing
-    };
-
-    const handleRecordDelete = async (recordId: string) => {
-        try {
-            await deleteNoteMutation.mutateAsync(recordId);
-        } catch (error) {
-            console.error('Failed to delete note:', error);
-        }
-    };
-
-    const handleRecordUpdate = async (recordId: string, updates: Record<string, any>) => {
-        try {
-            await updateNoteMutation.mutateAsync({ noteId: recordId, updates });
-        } catch (error) {
-            console.error('Failed to update note:', error);
-        }
-    };
 
     if (isLoading) {
         return (

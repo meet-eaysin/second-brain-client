@@ -6,20 +6,18 @@ import type {
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
   GetWorkspacesQuery,
-  WorkspaceListResponse,
   WorkspaceStatsResponse,
 } from "@/types/workspace.types";
 
 export const workspaceApi = {
-  // Basic workspace operations
   getWorkspaces: async (
     params?: GetWorkspacesQuery
-  ): Promise<WorkspaceListResponse> => {
-    const response = await apiClient.get<ApiResponse<WorkspaceListResponse>>(
+  ): Promise<ApiResponse<Workspace[]>> => {
+    const response = await apiClient.get<ApiResponse<Workspace[]>>(
       "/workspaces",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   createWorkspace: async (data: CreateWorkspaceRequest): Promise<Workspace> => {
@@ -52,12 +50,12 @@ export const workspaceApi = {
     await apiClient.delete(`/workspaces/${id}`);
   },
 
-  // Primary workspace operations
-  getPrimaryWorkspace: async (): Promise<Workspace> => {
+  getPrimaryWorkspace: async (): Promise<ApiResponse<Workspace>> => {
     const response = await apiClient.get<ApiResponse<Workspace>>(
       "/workspaces/primary"
     );
-    return response.data.data;
+
+    return response?.data;
   },
 
   getOrCreateDefaultWorkspace: async (

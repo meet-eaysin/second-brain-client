@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { SearchBar } from "./search-bar";
 import { FilterManager } from "./filter-manager";
@@ -8,26 +7,27 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import type {
-  DocumentProperty,
-  DatabaseView,
-  DatabaseRecord,
-} from "@/modules/document-view";
 import { ColumnVisibilityMenu } from "./column-visibility-menu";
 import { useColumnVisibility } from "../hooks/use-column-visibility";
+import {
+    type DatabaseRecord,
+    type DatabaseView,
+    EDatabaseType,
+    type IDatabaseProperty
+} from "@/modules/document-view/types";
 
 interface TableToolbarProps {
   searchValue: string;
   onSearchChange: (value: string) => void;
-  properties: DocumentProperty[];
+  properties: IDatabaseProperty[];
   records: DatabaseRecord[];
-  currentView?: DatabaseView;
+  currentView: DatabaseView | undefined;
   onFiltersChange?: (filters) => void;
   onSortsChange?: (sorts) => void;
   onUpdateView?: (viewId, data) => Promise<void>;
   visibleProperties?: string[];
+  moduleType: EDatabaseType;
   className?: string;
-  moduleType;
 }
 
 export function TableToolbar({
@@ -49,9 +49,6 @@ export function TableToolbar({
     currentView,
     onUpdateView,
   });
-
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isSortOpen, setIsSortOpen] = useState(false);
 
   const activeFiltersCount = currentView?.filters?.length || 0;
   const activeSortsCount = currentView?.sorts?.length || 0;
@@ -110,32 +107,30 @@ export function TableToolbar({
             </Badge>
 
             <FilterManager
-              open={isFilterOpen}
-              onOpenChange={setIsFilterOpen}
               properties={properties}
               currentView={currentView}
               onSave={handleFiltersChange}
             />
 
             <SortManager
-              open={isSortOpen}
-              onOpenChange={setIsSortOpen}
               properties={properties}
               currentView={currentView}
               onSave={handleSortsChange}
             />
+
+          {currentView && moduleType && columnVisibility && (
+              <ColumnVisibilityMenu
+                  properties={properties}
+                  currentView={currentView}
+                  onToggleProperty={columnVisibility.toggleProperty}
+                  onShowAll={columnVisibility.showAll}
+                  onHideAll={columnVisibility.hideAll}
+              />
+          )}
           </div>
         </div>
 
-        {currentView && moduleType && columnVisibility && (
-          <ColumnVisibilityMenu
-            properties={properties}
-            currentView={currentView}
-            onToggleProperty={columnVisibility.toggleProperty}
-            onShowAll={columnVisibility.showAll}
-            onHideAll={columnVisibility.hideAll}
-          />
-        )}
+
       </div>
     </TooltipProvider>
   );

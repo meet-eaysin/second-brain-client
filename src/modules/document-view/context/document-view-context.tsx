@@ -1,116 +1,7 @@
 import React, { useState, createContext, useContext } from "react";
-import type { ViewFrozenConfig } from "../components/document-columns";
-
-export interface DocumentRecord<T = Record<string, unknown>> {
-  id: string;
-  properties: T;
-  createdAt: string;
-  updatedAt: string;
-  createdBy?: string;
-  [key: string]: unknown; // Allow additional fields
-}
-
-export interface DocumentProperty {
-  id: string;
-  name: string;
-  type: string;
-  description?: string;
-  required?: boolean;
-  isVisible?: boolean;
-  order?: number;
-  config?: Record<string, unknown>; // Property-specific configuration
-  [key: string]: unknown; // Allow additional fields
-}
-
-export interface DocumentView {
-  id: string;
-  name: string;
-  type: string;
-  isDefault?: boolean;
-  filters?: Array<DocumentFilter>;
-  sorts?: Array<DocumentSort>;
-  groupBy?: string;
-  visibleProperties?: string[];
-  customProperties?: DocumentProperty[]; // Custom properties added to this view
-  config?: Record<string, unknown>; // View-specific configuration
-  [key: string]: unknown; // Allow additional fields
-}
-
-export interface DocumentFilter {
-  propertyId: string;
-  operator: string;
-  value: unknown;
-  enabled?: boolean;
-}
-
-export interface DocumentSort {
-  propertyId: string;
-  direction: "asc" | "desc";
-  enabled?: boolean;
-}
-
-export interface DocumentSchema<
-  TRecord = DocumentRecord,
-  TProperty = DocumentProperty,
-  TView = DocumentView
-> {
-  id: string;
-  name: string;
-  description?: string;
-  icon?: string;
-  properties: TProperty[];
-  views: TView[];
-  records?: TRecord[];
-  config?: DocumentSchemaConfig;
-  [key: string]: unknown; // Allow additional fields
-}
-
-export interface DocumentSchemaConfig {
-  // Module identification
-  moduleType?: string; // 'CRM', 'TASKS', 'INVENTORY', etc.
-  documentType?: string; // 'PEOPLE', 'COMPANIES', 'PROJECTS', etc.
-
-  // Frozen property configuration
-  frozenConfig?: ViewFrozenConfig;
-
-  // Permissions and capabilities
-  permissions?: {
-    canCreate?: boolean;
-    canEdit?: boolean;
-    canDelete?: boolean;
-    canShare?: boolean;
-    canExport?: boolean;
-    canImport?: boolean;
-  };
-
-  // UI configuration
-  ui?: {
-    defaultView?: string;
-    enableViews?: boolean;
-    enableSearch?: boolean;
-    enableFilters?: boolean;
-    enableSorts?: boolean;
-    enableGrouping?: boolean;
-    showRecordCount?: boolean;
-    compactMode?: boolean;
-  };
-
-  // Data configuration
-  data?: {
-    pageSize?: number;
-    maxRecords?: number;
-    enablePagination?: boolean;
-    enableVirtualization?: boolean;
-    cacheResults?: boolean;
-  };
-
-  // Integration configuration
-  integrations?: {
-    enableExternalSync?: boolean;
-    webhookUrl?: string;
-    apiEndpoints?: Record<string, string>;
-  };
-}
+import type {IDatabase, IProperty, IRecord, IView} from "@/modules/document-view/types";
+import {useGetPrimaryWorkspace} from "@/modules/workspaces/services/workspace-queries.ts";
+import type {Workspace} from "@/types/workspace.types.ts";
 
 export type DocumentDialogType =
   | "create-document"
@@ -132,11 +23,12 @@ export type DocumentDialogType =
   | string; // Allow custom dialog types
 
 interface DocumentViewContextType<
-  TRecord = DocumentRecord,
-  TProperty = DocumentProperty,
-  TView = DocumentView,
-  TSchema = DocumentSchema<TRecord, TProperty, TView>
+  TRecord = IRecord,
+  TProperty = IProperty,
+  TView = IView,
+  TSchema = IDatabase
 > {
+  workspace: Workspace
   // Dialog state
   dialogOpen: DocumentDialogType | null;
   setDialogOpen: (dialog: DocumentDialogType | null) => void;
@@ -162,14 +54,6 @@ interface DocumentViewContextType<
   // Search and filters
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
-  filters: DocumentFilter[];
-  setFilters: React.Dispatch<React.SetStateAction<DocumentFilter[]>>;
-  sorts: DocumentSort[];
-  setSorts: React.Dispatch<React.SetStateAction<DocumentSort[]>>;
-
-  // Configuration
-  config: DocumentSchemaConfig;
-  setConfig: React.Dispatch<React.SetStateAction<DocumentSchemaConfig>>;
 
   // Loading and error states
   isLoading: boolean;
@@ -182,10 +66,10 @@ interface DocumentViewContextType<
 const DocumentViewContext = createContext<DocumentViewContextType | null>(null);
 
 interface DocumentViewProviderProps<
-  TRecord = DocumentRecord,
-  TProperty = DocumentProperty,
-  TView = DocumentView,
-  TSchema = DocumentSchema<TRecord, TProperty, TView>
+  TRecord = IRecord,
+  TProperty = IProperty,
+  TView = IView,
+  TSchema = IDatabase
 > {
   children: React.ReactNode;
   initialConfig?: Partial<DocumentSchemaConfig>;
@@ -193,19 +77,17 @@ interface DocumentViewProviderProps<
 }
 
 export function DocumentViewProvider<
-  TRecord = DocumentRecord,
-  TProperty = DocumentProperty,
-  TView = DocumentView,
-  TSchema = DocumentSchema<TRecord, TProperty, TView>
+  TRecord = IRecord,
+  TProperty = IProperty,
+  TView = IView,
+  TSchema = IDatabase
 >({
   children,
   initialConfig = {},
   initialSchema = null,
 }: DocumentViewProviderProps<TRecord, TProperty, TView, TSchema>) {
-  // Dialog state
+  const { data: workspace } = useGetPrimaryWorkspace();
   const [dialogOpen, setDialogOpen] = useState<DocumentDialogType | null>(null);
-
-  // Current items
   const [currentSchema, setCurrentSchema] = useState<TSchema | null>(
     initialSchema
   );
@@ -215,7 +97,6 @@ export function DocumentViewProvider<
   );
   const [currentView, setCurrentView] = useState<TView | null>(null);
 
-  // View state
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
     new Set()
   );
@@ -223,12 +104,10 @@ export function DocumentViewProvider<
     Record<string, boolean>
   >({});
 
-  // Search and filters
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<DocumentFilter[]>([]);
   const [sorts, setSorts] = useState<DocumentSort[]>([]);
 
-  // Configuration with defaults
   const [config, setConfig] = useState<DocumentSchemaConfig>({
     permissions: {
       canCreate: true,
@@ -261,6 +140,7 @@ export function DocumentViewProvider<
   const [error, setError] = useState<string | null>(null);
 
   const value: DocumentViewContextType<TRecord, TProperty, TView, TSchema> = {
+    workspace,
     // Dialog state
     dialogOpen,
     setDialogOpen,

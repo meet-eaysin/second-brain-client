@@ -128,40 +128,8 @@ export function BooksPage() {
     // Loading states
     const isLoading = booksLoading || configLoading || viewsLoading || propertiesLoading;
 
-    // Debug logging
-    console.log('📚 Books API Debug:', {
-        books: books ? `Array(${books.length})` : 'null',
-        booksResponse: booksResponse ? 'loaded' : 'null',
-        viewConfig: viewConfig ? 'loaded' : 'null',
-        views: Array.isArray(views) ? `Array(${views.length})` : typeof views,
-        properties: Array.isArray(properties) ? `Array(${properties.length})` : typeof properties,
-        transformedProperties: transformedProperties ? `Array(${transformedProperties.length})` : 'null',
-        loading: {
-            books: booksLoading,
-            config: configLoading,
-            views: viewsLoading,
-            properties: propertiesLoading,
-            overall: isLoading
-        },
-        errors: {
-            books: booksError ? (booksError as Error).message : null,
-            config: configError ? (configError as Error).message : null,
-            views: viewsError ? (viewsError as Error).message : null,
-            properties: propertiesError ? (propertiesError as Error).message : null
-        }
-    });
-
     if (process.env.NODE_ENV === 'development' && properties && properties.length > 0) {
         const multiSelectProps = transformedProperties.filter(p => p.type === 'MULTI_SELECT');
-        if (multiSelectProps.length > 0) {
-            console.log('🔀 MultiSelect Properties:', multiSelectProps.map(p => ({
-                id: p.id,
-                name: p.name,
-                type: p.type,
-                selectOptionsCount: p.selectOptions?.length || 0,
-                selectOptions: p.selectOptions
-            })));
-        }
     }
 
     return (
@@ -324,7 +292,6 @@ export function BooksPage() {
                                     // If server provides frozenConfig, those properties will be protected
                                 }}
                                 onRecordCreate={handleDocumentViewCreate}
-                                onRecordEdit={(record) => console.log('Edit:', record)}
                                 onRecordDelete={(recordId) => handleDeleteBook(recordId)}
                                 onRecordUpdate={(recordId, updates) => handleUpdateBook(recordId, updates)}
                                 isLoading={isLoading}

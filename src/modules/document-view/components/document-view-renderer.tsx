@@ -31,6 +31,8 @@ interface DocumentViewRendererProps {
   isFrozen?: boolean;
   disablePropertyManagement?: boolean;
   apiFrozenConfig?: string;
+  isPropertiesLoading?: boolean;
+  isRecordsLoading?: boolean;
 }
 
 export function DocumentViewRenderer({
@@ -50,6 +52,8 @@ export function DocumentViewRenderer({
   isFrozen = false,
   disablePropertyManagement = false,
   apiFrozenConfig,
+  isPropertiesLoading = false,
+  isRecordsLoading = false,
 }: DocumentViewRendererProps) {
   const commonProps = {
     view,
@@ -66,6 +70,8 @@ export function DocumentViewRenderer({
     isFrozen,
     disablePropertyManagement,
     apiFrozenConfig,
+    isPropertiesLoading,
+    isRecordsLoading,
   };
 
   const renderView = () => {

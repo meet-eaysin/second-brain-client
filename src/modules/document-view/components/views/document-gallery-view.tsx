@@ -19,6 +19,7 @@ import {
   getSelectOptionId,
   getSelectOptionColor,
 } from "@/modules/document-view/utils/select-option-utils";
+import { NoDataMessage } from "../../../../components/no-data-message.tsx";
 
 interface DocumentGalleryViewProps {
   view: IDatabaseView;
@@ -229,15 +230,7 @@ export function DocumentGalleryView({
 
       {/* Empty State */}
       {records.length === 0 && (
-        <div className="flex items-center justify-center h-64 text-center">
-          <div>
-            <Image className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-2">No records to display</p>
-            <p className="text-sm text-muted-foreground">
-              Add some records to see them in gallery view
-            </p>
-          </div>
-        </div>
+        <NoDataMessage message="No records to display" icon={Image} />
       )}
     </div>
   );

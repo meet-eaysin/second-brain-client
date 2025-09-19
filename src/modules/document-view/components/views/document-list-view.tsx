@@ -15,6 +15,7 @@ import type {
   DatabaseRecord,
 } from "@/modules/document-view";
 import type { DocumentViewConfig } from "../../types/document-view.types";
+import { NoDataMessage } from "../../../../components/no-data-message.tsx";
 
 interface DocumentListViewProps {
   view: IDatabaseView;
@@ -250,14 +251,14 @@ export function DocumentListView({
       {/* Records */}
       <div className="divide-y">
         {records.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <h3 className="text-lg font-medium mb-2">No items to display</h3>
-            <p className="text-muted-foreground">
-              {config.canCreate
+          <NoDataMessage
+            title="No items to display"
+            message={
+              config.canCreate
                 ? "Create your first item to see it in the list view."
-                : "No items are available to display."}
-            </p>
-          </div>
+                : "No items are available to display."
+            }
+          />
         ) : (
           records.map((record, index) => renderRecordRow(record, index))
         )}

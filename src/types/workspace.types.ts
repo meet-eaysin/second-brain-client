@@ -98,8 +98,6 @@ export interface Workspace {
   name: string;
   description?: string;
   type: EWorkspaceType;
-
-  // Appearance
   icon?: {
     type: "emoji" | "icon" | "image";
     value: string;
@@ -108,35 +106,22 @@ export interface Workspace {
     type: "color" | "gradient" | "image";
     value: string;
   };
-
-  // Settings
   config: WorkspaceConfig;
   isPublic: boolean;
   isArchived: boolean;
-
-  // Ownership
   ownerId: string;
-
-  // Statistics
   memberCount: number;
   databaseCount: number;
   recordCount: number;
-  storageUsed: number; // in bytes
-
-  // Metadata
+  storageUsed: number;
   lastActivityAt?: string;
-
-  // Billing (for team/org workspaces)
   planType?: "free" | "pro" | "team" | "enterprise";
   billingEmail?: string;
   subscriptionId?: string;
   subscriptionStatus?: "active" | "past_due" | "canceled" | "unpaid";
   trialEndsAt?: string;
-
   createdAt: string;
   updatedAt: string;
-
-  // MongoDB fields
   __v?: number;
   isDeleted?: boolean;
   createdBy?: string;
@@ -234,15 +219,6 @@ export interface SearchWorkspacesQuery {
   includePublic?: boolean;
   tags?: string[];
   limit?: number;
-}
-
-// Response types
-export interface WorkspaceListResponse {
-  workspaces: Workspace[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
 }
 
 export interface WorkspaceMembersResponse {

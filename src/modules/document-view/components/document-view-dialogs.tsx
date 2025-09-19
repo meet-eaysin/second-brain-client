@@ -59,7 +59,6 @@ export function DatabaseDialogs() {
           </DialogHeader>
           <DatabaseForm
             onSubmit={(data) => {
-              console.log("Create database:", data);
               setOpen(null);
             }}
             onCancel={() => setOpen(null)}

@@ -87,14 +87,6 @@ export class BooksDocumentViewService {
         // Transform client format to server format before sending
         const serverData = transformPropertyToServer(data);
 
-        // Debug logging to see transformation
-        console.log('🔧 Property Transformation Debug:', {
-            clientData: data,
-            serverData: serverData,
-            clientSelectOptions: data?.selectOptions,
-            serverOptions: serverData.options
-        });
-
         const response = await apiClient.post<DocumentProperty>(`${BOOKS_DOCUMENT_VIEW_BASE_URL}/properties`, serverData);
         return response.data;
     }

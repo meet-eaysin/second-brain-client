@@ -12,6 +12,7 @@ import type {
   DatabaseRecord,
 } from "@/modules/document-view";
 import type { DocumentViewConfig } from "../../types/document-view.types";
+import { NoDataMessage } from "../../../../components/no-data-message.tsx";
 
 interface DocumentCalendarViewProps {
   view: IDatabaseView;
@@ -123,13 +124,11 @@ export function DocumentCalendarView({
 
   if (!dateProperty) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">No Date Property Found</h3>
-        <p className="text-muted-foreground">
-          Add a date property to your data to use the calendar view.
-        </p>
-      </div>
+      <NoDataMessage
+        title="No Date Property Found"
+        message="Add a date property to your data to use the calendar view."
+        icon={CalendarIcon}
+      />
     );
   }
 

@@ -22,9 +22,6 @@ function analyzeDependencies() {
     const packageJson = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
     const dependencies = { ...packageJson.dependencies, ...packageJson.devDependencies };
 
-    console.log('📦 Large Dependencies Analysis:');
-    console.log('=====================================');
-
     // Known large packages to watch out for
     const heavyPackages = {
         'react': 'Core React library',
@@ -42,29 +39,14 @@ function analyzeDependencies() {
         '@hookform/resolvers': 'Form resolvers',
     };
 
-    Object.entries(dependencies).forEach(([name, version]) => {
-        if (heavyPackages[name]) {
-            console.log(`📦 ${name}@${version} - ${heavyPackages[name]}`);
-        }
-    });
-
     // Check for duplicate icon libraries
     const iconLibraries = Object.keys(dependencies).filter(name => 
         name.includes('icon') || name.includes('lucide') || name.includes('tabler')
     );
-
-    if (iconLibraries.length > 1) {
-        console.log('\n⚠️ Multiple icon libraries detected:');
-        iconLibraries.forEach(lib => console.log(`   - ${lib}`));
-        console.log('   Consider using only one icon library for better performance');
-    }
 }
 
 // Analyze source code for potential issues
 function analyzeSourceCode() {
-    console.log('\n🔍 Source Code Analysis:');
-    console.log('=====================================');
-
     const srcPath = path.join(process.cwd(), 'src');
     
     if (!fs.existsSync(srcPath)) {
@@ -130,32 +112,15 @@ function analyzeSourceCode() {
 
     analyzeDirectory(srcPath);
 
-    console.log(`📊 Total TypeScript files: ${totalFiles}`);
-
     if (largeFiles.length > 0) {
-        console.log('\n📏 Large files (>10KB):');
         largeFiles
             .sort((a, b) => parseFloat(b.size) - parseFloat(a.size))
             .slice(0, 10)
-            .forEach(({ file, size }) => {
-                console.log(`   ${file} (${size}KB)`);
-            });
-    }
-
-    if (importIssues.length > 0) {
-        console.log('\n⚠️ Import optimization opportunities:');
-        importIssues.slice(0, 10).forEach(({ file, line, issue, code }) => {
-            console.log(`   ${file}:${line} - ${issue}`);
-            console.log(`     ${code}`);
-        });
     }
 }
 
 // Performance recommendations
 function showRecommendations() {
-    console.log('\n💡 Performance Recommendations:');
-    console.log('=====================================');
-    
     const recommendations = [
         '1. Use tree-shaking friendly imports: import { Button } from "@/components/ui/button"',
         '2. Avoid wildcard imports: import * as Icons from "lucide-react"',
@@ -168,18 +133,8 @@ function showRecommendations() {
         '9. Remove unused dependencies and imports',
         '10. Use dynamic imports for conditional features'
     ];
-
-    recommendations.forEach(rec => console.log(`   ${rec}`));
 }
-
-// Main execution
-console.log('🚀 Bundle Performance Analysis');
-console.log('=====================================\n');
 
 analyzeDependencies();
 analyzeSourceCode();
 showRecommendations();
-
-console.log('\n✅ Analysis complete!');
-console.log('💡 Run "npm run build" and check the dist folder for actual bundle sizes');
-console.log('🔍 Use "npm run preview" to test the production build locally');

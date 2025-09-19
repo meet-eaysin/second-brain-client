@@ -36,6 +36,7 @@ import {
   Edit,
 } from "lucide-react";
 import type { DatabaseRecord, DocumentProperty } from "@/modules/document-view";
+import { NoDataMessage } from "../../../components/no-data-message.tsx";
 
 interface DocumentDataTableProps {
   columns: ColumnDef<DatabaseRecord, string>[];
@@ -51,6 +52,8 @@ interface DocumentDataTableProps {
   enablePagination?: boolean;
   enableRowSelection?: boolean;
   pageSize?: number;
+  isPropertiesLoading?: boolean;
+  isRecordsLoading?: boolean;
 }
 
 export function DocumentDataTable({
@@ -65,6 +68,8 @@ export function DocumentDataTable({
   enablePagination = true,
   enableRowSelection = true,
   pageSize = 50,
+  isPropertiesLoading = false,
+  isRecordsLoading = false,
 }: DocumentDataTableProps) {
   const [columnStats, setColumnStats] = useState<Record<string, string>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -144,6 +149,20 @@ export function DocumentDataTable({
 
   return (
     <div className="space-y-4 relative">
+      {/* Loading overlay */}
+      {(isPropertiesLoading || isRecordsLoading) && (
+        <div className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-md border">
+          <div className="flex items-center space-x-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <span className="text-sm text-muted-foreground">
+              {isPropertiesLoading
+                ? "Loading properties..."
+                : "Loading records..."}
+            </span>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-between min-h-[40px]">
         {selectedRecords.length > 0 ? (
           <>
@@ -258,14 +277,7 @@ export function DocumentDataTable({
                               <Edit className="h-4 w-4 mr-2" />
                               Edit Record
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                console.log(
-                                  "Duplicate record:",
-                                  row.original.id
-                                )
-                              }
-                            >
+                            <DropdownMenuItem onClick={() => {}}>
                               <Copy className="h-4 w-4 mr-2" />
                               Duplicate
                             </DropdownMenuItem>
@@ -290,7 +302,7 @@ export function DocumentDataTable({
                   colSpan={columns.length + (onAddProperty ? 1 : 0)}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <NoDataMessage message="No results." compact />
                 </TableCell>
               </TableRow>
             )}

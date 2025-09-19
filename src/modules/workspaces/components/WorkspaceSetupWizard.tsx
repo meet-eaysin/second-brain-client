@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { useCreateWorkspace } from '../services/workspaceQueries';
+import { useCreateWorkspace } from '@/modules/workspaces/services/workspace-queries';
 import type { CreateWorkspaceRequest } from '@/types/workspace.types';
 
 const workspaceSetupSchema = z.object({

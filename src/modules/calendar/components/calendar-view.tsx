@@ -210,7 +210,7 @@ export function CalendarView({ className }: CalendarViewProps) {
             events,
             calendars,
             currentDate,
-            onEventClick: (event: CalendarEvent) => console.log('Event clicked:', event),
+            onEventClick: (event: CalendarEvent) => {},
             onDateClick: (date: Date) => setCurrentDate(date),
             onEventCreate: handleEventCreate,
         };
@@ -247,8 +247,10 @@ export function CalendarView({ className }: CalendarViewProps) {
                     calendars={calendars}
                     selectedCalendars={selectedCalendars}
                     onCalendarToggle={handleCalendarToggle}
-                    onCalendarCreate={() => console.log('Create calendar')}
-                    onCalendarEdit={(calendar) => console.log('Edit calendar:', calendar)}
+                    onCalendarCreate={() => {
+
+                    }}
+                    onCalendarEdit={() => {}}
                     className="w-80 border-r"
                 />
             )}

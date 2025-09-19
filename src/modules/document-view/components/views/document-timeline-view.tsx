@@ -14,6 +14,7 @@ import type {
   DatabaseRecord,
 } from "@/modules/document-view";
 import type { DocumentViewConfig } from "../../types/document-view.types";
+import { NoDataMessage } from "../../../../components/no-data-message.tsx";
 
 interface DocumentTimelineViewProps {
   properties: IDatabaseProperty[];
@@ -277,15 +278,15 @@ export function DocumentTimelineView({
 
   if (records.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-center">
-        <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">No items to display</h3>
-        <p className="text-muted-foreground">
-          {config.canCreate
+      <NoDataMessage
+        title="No items to display"
+        message={
+          config.canCreate
             ? "Create your first item to see it in the timeline view."
-            : "No items are available to display."}
-        </p>
-      </div>
+            : "No items are available to display."
+        }
+        icon={Clock}
+      />
     );
   }
 

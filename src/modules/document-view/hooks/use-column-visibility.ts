@@ -1,27 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
-
-interface DocumentProperty {
-  id: string;
-  name: string;
-  type: string;
-  frozen?: boolean;
-  required?: boolean;
-}
-
-interface DocumentView {
-  id: string;
-  name: string;
-  settings: {
-    visibleProperties?: string[];
-    frozenColumns?: string[];
-  };
-  isDefault?: boolean;
-}
+import type {IDatabaseView} from "@/modules/document-view";
+import type {IProperty} from "@/modules/document-view/types";
 
 interface UseColumnVisibilityProps {
   moduleType: string;
-  properties: DocumentProperty[];
-  currentView: DocumentView;
+  properties: IProperty[];
+  currentView: IDatabaseView | undefined;
   onUpdateView?: (viewId, data) => Promise<void>;
 }
 
@@ -65,7 +49,7 @@ export function useColumnVisibility({
     propertyId: string,
     visible: boolean
   ): Promise<void> => {
-    const currentVisible = currentView.settings?.visibleProperties || [];
+    const currentVisible = currentView?.settings?.visibleProperties || [];
 
     let updatedVisible: string[];
     if (visible) {
@@ -77,7 +61,7 @@ export function useColumnVisibility({
     }
 
     // Update view via callback
-    await onUpdateView?.(currentView.id, {
+    await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: updatedVisible,
       },
@@ -91,7 +75,7 @@ export function useColumnVisibility({
   const showAll = async (): Promise<void> => {
     const allPropertyIds = properties.map((prop) => prop.id);
 
-    await onUpdateView?.(currentView.id, {
+    await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: allPropertyIds,
       },
@@ -103,10 +87,10 @@ export function useColumnVisibility({
   // Hide all non-required/non-frozen properties
   const hideAll = async (): Promise<void> => {
     const requiredPropertyIds = properties
-      .filter((prop) => prop.frozen || prop.required)
+      .filter((prop) => prop.isSystem || prop.required)
       .map((prop) => prop.id);
 
-    await onUpdateView?.(currentView.id, {
+    await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: requiredPropertyIds,
       },
@@ -121,13 +105,13 @@ export function useColumnVisibility({
     const defaultProperties = properties
       .filter(
         (prop) =>
-          prop.frozen ||
+          prop.isSystem ||
           prop.required ||
           ["title", "name", "status"].includes(prop.id)
       )
       .map((prop) => prop.id);
 
-    await onUpdateView?.(currentView.id, {
+    await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: defaultProperties,
       },
@@ -138,7 +122,7 @@ export function useColumnVisibility({
 
   // Get visibility statistics
   const getStats = () => {
-    const visibleCount = currentView.settings?.visibleProperties?.length || 0;
+    const visibleCount = currentView?.settings?.visibleProperties?.length || 0;
     const totalCount = properties.length;
     const hiddenCount = totalCount - visibleCount;
 
@@ -152,19 +136,19 @@ export function useColumnVisibility({
   };
 
   // Check if property can be hidden
-  const canHideProperty = (property: DocumentProperty): boolean => {
-    return !property.frozen && !property.required;
+  const canHideProperty = (property: IProperty): boolean => {
+    return !property.isSystem && !property.required;
   };
 
   // Get properties by visibility status
   const getPropertiesByVisibility = () => {
-    const visibleIds = currentView.settings?.visibleProperties || [];
+    const visibleIds = currentView?.settings?.visibleProperties || [];
 
     return {
       visible: properties.filter((prop) => visibleIds.includes(prop.id)),
       hidden: properties.filter((prop) => !visibleIds.includes(prop.id)),
-      required: properties.filter((prop) => prop.frozen || prop.required),
-      optional: properties.filter((prop) => !prop.frozen && !prop.required),
+      required: properties.filter((prop) => prop.isSystem || prop.required),
+      optional: properties.filter((prop) => !prop.isSystem && !prop.required),
     };
   };
 

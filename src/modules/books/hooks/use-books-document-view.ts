@@ -495,13 +495,6 @@ export function useAddBooksPropertyMutation() {
       };
     }) => booksDocumentViewService.addBooksProperty(viewId, property),
     onSuccess: (updatedView, { viewId }) => {
-      console.log("✅ Property added successfully to existing view:", {
-        viewId,
-        viewName: updatedView?.name,
-        customProperties: updatedView?.customProperties,
-      });
-
-      // Invalidate all books-related queries to refresh the UI
       queryClient.invalidateQueries({
         queryKey: ["books-document-view"],
         exact: false,
@@ -517,10 +510,6 @@ export function useAddBooksPropertyMutation() {
       queryClient.invalidateQueries({
         queryKey: BOOKS_DOCUMENT_VIEW_QUERY_KEYS.defaultProperties(),
       });
-
-      console.log(
-        "✅ All books queries invalidated - property should now appear in table"
-      );
     },
     onError: (error) => {
       console.error("❌ Failed to add property:", error);

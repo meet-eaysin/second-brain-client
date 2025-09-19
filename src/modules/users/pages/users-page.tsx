@@ -63,7 +63,6 @@ export const UsersPage: React.FC = () => {
 
     const handleEditUser = (user: User) => {
         // TODO: Open edit user modal
-        console.log('Edit user:', user);
     };
 
     const handleDeleteUser = (userId: string) => {

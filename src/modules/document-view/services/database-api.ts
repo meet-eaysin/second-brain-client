@@ -1,68 +1,161 @@
-import { databaseApiService } from "./api-service";
-import type {
-  ICreateDatabase,
-  IUpdateDatabase,
-  ICreatePropertyRequest,
-  IUpdatePropertyRequest,
-  IReorderPropertiesRequest,
-  ICreateRecordRequest,
-  IUpdateRecordRequest,
-  IBulkUpdateRecordsRequest,
-  IBulkDeleteRecordsRequest,
-  IReorderRecordsRequest,
-  IDuplicateRecordRequest,
-  ICreateViewRequest,
-  IUpdateViewRequest,
-  IRecordQueryOptions,
-  EPropertyType,
+import { apiClient } from "@/services/api-client";
+import {
+    type IDatabase,
+    type ICreateDatabase,
+    type IUpdateDatabase,
+    type ICreatePropertyRequest,
+    type IUpdatePropertyRequest,
+    type IReorderPropertiesRequest,
+    type ICreateRecordRequest,
+    type IUpdateRecordRequest,
+    type IBulkUpdateRecordsRequest,
+    type IBulkDeleteRecordsRequest,
+    type IReorderRecordsRequest,
+    type IDuplicateRecordRequest,
+    type ICreateViewRequest,
+    type IUpdateViewRequest,
+    type IRecordListResponse,
+    type EPropertyType,
+    type IDatabaseProperty,
+    type IRecordQueryOptions,
+    type IDatabaseRecord,
+    type IDatabaseView, EDatabaseType, type IDatabaseQueryParams,
 } from "../types";
+import type {ApiResponse} from "@/types/api.types.ts";
+import type {IDocumentViewConfig} from "@/modules/document-view/components/document-view.tsx";
 
-// Re-export the API service for backward compatibility
+export interface IModuleConfig {
+  readonly id: EDatabaseType;
+  readonly name: string;
+  readonly description: string;
+  readonly icon: string;
+  readonly color: string;
+  readonly category: string;
+  readonly isCore: boolean;
+  readonly dependencies: readonly EDatabaseType[];
+  readonly defaultProperties: readonly unknown[];
+  readonly defaultViews: readonly unknown[];
+  readonly defaultRelations: readonly unknown[];
+  readonly templates: readonly unknown[];
+}
+
 export const databaseApi = {
-  // Database operations
-  getDatabases: (params?: Record<string, unknown>) =>
-    databaseApiService.getDatabases(params),
-  getDatabase: (id: string) => databaseApiService.getDatabaseById(id),
-  createDatabase: (data: ICreateDatabase) =>
-    databaseApiService.createDatabase(data),
-  updateDatabase: (id: string, data: IUpdateDatabase) =>
-    databaseApiService.updateDatabase(id, data),
-  deleteDatabase: (id: string, permanent = false) =>
-    databaseApiService.deleteDatabase(id, permanent),
-  duplicateDatabase: (id: string, data: { name: string }) =>
-    databaseApiService.duplicateDatabase(id, data.name),
+  getModuleConfig: async (moduleType: EDatabaseType) => {
+      const response = await apiClient.get<ApiResponse<IDocumentViewConfig>>(`modules/config/${moduleType}`);
+      console.log("## RESPONSE", response);
+      return response.data;
+  },
 
-  // Property operations
-  getProperties: (databaseId: string, includeHidden = false) =>
-    databaseApiService.getProperties(databaseId, includeHidden),
-  getProperty: (databaseId: string, propertyId: string) =>
-    databaseApiService.getPropertyById(databaseId, propertyId),
-  createProperty: (databaseId: string, data: ICreatePropertyRequest) =>
-    databaseApiService.createProperty(databaseId, data),
-  updateProperty: (
+  getDatabases: async (params?: IDatabaseQueryParams) => {
+    const response = await apiClient.get("/databases", { params });
+    return response.data as {
+      databases: IDatabase[];
+      total: number;
+      page: number;
+      limit: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  },
+
+  getDatabaseById: async (id: string) => {
+    const response = await apiClient.get(`/databases/${id}`);
+    return response.data.data as IDatabase;
+  },
+
+  createDatabase: async (data: ICreateDatabase) => {
+    const response = await apiClient.post("/databases", data);
+    return response.data as IDatabase;
+  },
+
+  updateDatabase: async (id: string, data: IUpdateDatabase) => {
+    const response = await apiClient.put(`/databases/${id}`, data);
+    return response.data as IDatabase;
+  },
+
+  deleteDatabase: async (id: string, permanent = false) => {
+    await apiClient.delete(`/databases/${id}`, { params: { permanent } });
+  },
+
+  duplicateDatabase: async (id: string, data: { name: string }) => {
+    const response = await apiClient.post(`/databases/${id}/duplicate`, data);
+    return response.data as IDatabase;
+  },
+
+  getProperties: async (databaseId: string, includeHidden = false) => {
+    const response = await apiClient.get(
+      `/databases/${databaseId}/properties`,
+      {
+        params: { includeHidden },
+      }
+    );
+    return response.data.data as IDatabaseProperty[];
+  },
+
+  getPropertyById: async (databaseId: string, propertyId: string) => {
+    const response = await apiClient.get(
+      `/databases/${databaseId}/properties/${propertyId}`
+    );
+    return response.data as IDatabaseProperty;
+  },
+
+  createProperty: async (databaseId: string, data: ICreatePropertyRequest) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/properties`,
+      data
+    );
+    return response.data as IDatabaseProperty;
+  },
+
+  updateProperty: async (
     databaseId: string,
     propertyId: string,
     data: IUpdatePropertyRequest
-  ) => databaseApiService.updateProperty(databaseId, propertyId, data),
-  deleteProperty: (databaseId: string, propertyId: string) =>
-    databaseApiService.deleteProperty(databaseId, propertyId),
-  reorderProperties: (databaseId: string, data: IReorderPropertiesRequest) =>
-    databaseApiService.reorderProperties(databaseId, data),
-  duplicateProperty: (databaseId: string, propertyId: string, name?: string) =>
-    databaseApiService.duplicateProperty(databaseId, propertyId, name),
-  changePropertyType: (
+  ) => {
+    const response = await apiClient.put(
+      `/databases/${databaseId}/properties/${propertyId}`,
+      data
+    );
+    return response.data as IDatabaseProperty;
+  },
+
+  reorderProperties: async (
+    databaseId: string,
+    data: IReorderPropertiesRequest
+  ) => {
+    await apiClient.put(`/databases/${databaseId}/properties/reorder`, data);
+  },
+
+  deleteProperty: async (databaseId: string, propertyId: string) => {
+    await apiClient.delete(`/databases/${databaseId}/properties/${propertyId}`);
+  },
+
+  duplicateProperty: async (
     databaseId: string,
     propertyId: string,
-    newType: EPropertyType,
+    name?: string
+  ) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/properties/${propertyId}/duplicate`,
+      { name }
+    );
+    return response.data as IDatabaseProperty;
+  },
+
+  changePropertyType: async (
+    databaseId: string,
+    propertyId: string,
+    type: EPropertyType,
     config?: Record<string, unknown>
-  ) =>
-    databaseApiService.changePropertyType(
-      databaseId,
-      propertyId,
-      newType,
-      config
-    ),
-  insertPropertyAfter: (
+  ) => {
+    const response = await apiClient.put(
+      `/databases/${databaseId}/properties/${propertyId}/change-type`,
+      { type, config }
+    );
+    return response.data as IDatabaseProperty;
+  },
+
+  insertPropertyAfter: async (
     databaseId: string,
     data: {
       afterPropertyId: string;
@@ -70,84 +163,208 @@ export const databaseApi = {
       type: EPropertyType;
       config?: Record<string, unknown>;
     }
-  ) => databaseApiService.insertPropertyAfter(databaseId, data),
-  togglePropertyVisibility: (databaseId: string, propertyId: string) =>
-    databaseApiService.togglePropertyVisibility(databaseId, propertyId),
+  ) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/properties/insert-after`,
+      data
+    );
+    return response.data as IDatabaseProperty;
+  },
+
+  togglePropertyVisibility: async (databaseId: string, propertyId: string) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/properties/${propertyId}/toggle-visibility`
+    );
+    return response.data as IDatabaseProperty;
+  },
 
   // Record operations
-  getRecords: (databaseId: string, params?: IRecordQueryOptions) =>
-    databaseApiService.getRecords(databaseId, params).then((res) => ({
-      records: res.records,
-      total: res.total,
-      page: res.page,
-      limit: res.limit,
-      hasNext: res.hasNext,
-      hasPrev: res.hasPrev,
-    })),
-  getRecord: (databaseId: string, recordId: string) =>
-    databaseApiService.getRecordById(databaseId, recordId),
-  createRecord: (databaseId: string, data: ICreateRecordRequest) =>
-    databaseApiService.createRecord(databaseId, data),
-  updateRecord: (
+  getRecords: async (databaseId: string, params?: IRecordQueryOptions) => {
+    const response = await apiClient.get(`/databases/${databaseId}/records`, {
+      params,
+    });
+    return response.data as IRecordListResponse;
+  },
+
+  getRecordById: async (databaseId: string, recordId: string) => {
+    const response = await apiClient.get(
+      `/databases/${databaseId}/records/${recordId}`
+    );
+    return response.data as IDatabaseRecord;
+  },
+
+  createRecord: async (databaseId: string, data: ICreateRecordRequest) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/records`,
+      data
+    );
+    return response.data as IDatabaseRecord;
+  },
+
+  updateRecord: async (
     databaseId: string,
     recordId: string,
     data: IUpdateRecordRequest
-  ) => databaseApiService.updateRecord(databaseId, recordId, data),
-  deleteRecord: (databaseId: string, recordId: string, permanent = false) =>
-    databaseApiService.deleteRecord(databaseId, recordId, permanent),
-  bulkUpdateRecords: (databaseId: string, data: IBulkUpdateRecordsRequest) =>
-    databaseApiService.bulkUpdateRecords(databaseId, data),
-  bulkDeleteRecords: (databaseId: string, data: IBulkDeleteRecordsRequest) =>
-    databaseApiService.bulkDeleteRecords(databaseId, data),
-  reorderRecords: (databaseId: string, data: IReorderRecordsRequest) =>
-    databaseApiService.reorderRecords(databaseId, data),
-  duplicateRecord: (
+  ) => {
+    const response = await apiClient.put(
+      `/databases/${databaseId}/records/${recordId}`,
+      data
+    );
+    return response.data as IDatabaseRecord;
+  },
+
+  deleteRecord: async (
+    databaseId: string,
+    recordId: string,
+    permanent = false
+  ) => {
+    await apiClient.delete(`/databases/${databaseId}/records/${recordId}`, {
+      params: { permanent },
+    });
+  },
+
+  bulkUpdateRecords: async (
+    databaseId: string,
+    data: IBulkUpdateRecordsRequest
+  ) => {
+    const response = await apiClient.put(
+      `/databases/${databaseId}/records/bulk-update`,
+      data
+    );
+    return response.data as {
+      updated: number;
+      failed: number;
+      errors?: string[];
+    };
+  },
+
+  bulkDeleteRecords: async (
+    databaseId: string,
+    data: IBulkDeleteRecordsRequest
+  ) => {
+    const response = await apiClient.delete(
+      `/databases/${databaseId}/records/bulk-delete`,
+      { data }
+    );
+    return response.data as {
+      deleted: number;
+      failed: number;
+      errors?: string[];
+    };
+  },
+
+  reorderRecords: async (databaseId: string, data: IReorderRecordsRequest) => {
+    await apiClient.put(`/databases/${databaseId}/records/reorder`, data);
+  },
+
+  duplicateRecord: async (
     databaseId: string,
     recordId: string,
     data?: IDuplicateRecordRequest
-  ) => databaseApiService.duplicateRecord(databaseId, recordId, data),
+  ) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/records/${recordId}/duplicate`,
+      data
+    );
+    return response.data as IDatabaseRecord;
+  },
 
   // View operations
-  getViews: (databaseId: string, params?: Record<string, unknown>) =>
-    databaseApiService.getViews(databaseId, params),
-  getView: (databaseId: string, viewId: string) =>
-    databaseApiService.getViewById(databaseId, viewId),
-  createView: (databaseId: string, data: ICreateViewRequest) =>
-    databaseApiService.createView(databaseId, data),
-  updateView: (databaseId: string, viewId: string, data: IUpdateViewRequest) =>
-    databaseApiService.updateView(databaseId, viewId, data),
-  deleteView: (databaseId: string, viewId: string) =>
-    databaseApiService.deleteView(databaseId, viewId),
-  duplicateView: (databaseId: string, viewId: string, name?: string) =>
-    databaseApiService.duplicateView(databaseId, viewId, { name }),
-  updateViewGrouping: (
+  getViews: async (databaseId: string, params?: Record<string, unknown>) => {
+    const response = await apiClient.get(`/databases/${databaseId}/views`, {
+      params,
+    });
+    return response.data.data as IDatabaseView[];
+  },
+
+  getViewById: async (databaseId: string, viewId: string) => {
+    const response = await apiClient.get(
+      `/databases/${databaseId}/views/${viewId}`
+    );
+    return response.data as IDatabaseView;
+  },
+
+  createView: async (databaseId: string, data: ICreateViewRequest) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/views`,
+      data
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateView: async (
+    databaseId: string,
+    viewId: string,
+    data: IUpdateViewRequest
+  ) => {
+    const response = await apiClient.put(
+      `/databases/${databaseId}/views/${viewId}`,
+      data
+    );
+    return response.data as IDatabaseView;
+  },
+
+  deleteView: async (databaseId: string, viewId: string) => {
+    await apiClient.delete(`/databases/${databaseId}/views/${viewId}`);
+  },
+
+  duplicateView: async (
+    databaseId: string,
+    viewId: string,
+    data: { name: string }
+  ) => {
+    const response = await apiClient.post(
+      `/databases/${databaseId}/views/${viewId}/duplicate`,
+      data
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateViewGrouping: async (
     databaseId: string,
     viewId: string,
     groupBy: { propertyId: string; direction?: "asc" | "desc" }
-  ) => databaseApiService.updateViewGrouping(databaseId, viewId, groupBy),
-  changeViewType: (databaseId: string, viewId: string, newType: string) =>
-    databaseApiService.changeViewType(databaseId, viewId, newType),
-  updateViewPropertyVisibility: (
+  ) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/grouping`,
+      { groupBy }
+    );
+    return response.data as IDatabaseView;
+  },
+
+  changeViewType: async (databaseId: string, viewId: string, type: string) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/change-type`,
+      { type }
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateViewPropertyVisibility: async (
     databaseId: string,
     viewId: string,
     visibleProperties: string[]
-  ) =>
-    databaseApiService.updateViewPropertyVisibility(
-      databaseId,
-      viewId,
-      visibleProperties
-    ),
-  updateViewColumnFreeze: (
+  ) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/property-visibility`,
+      { visibleProperties }
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateViewColumnFreeze: async (
     databaseId: string,
     viewId: string,
     frozenColumns: string[]
-  ) =>
-    databaseApiService.updateViewColumnFreeze(
-      databaseId,
-      viewId,
-      frozenColumns
-    ),
-  updateViewFilters: (
+  ) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/column-freeze`,
+      { frozenColumns }
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateViewFilters: async (
     databaseId: string,
     viewId: string,
     filters: Array<{
@@ -155,27 +372,38 @@ export const databaseApi = {
       operator: string;
       value: unknown;
     }>
-  ) => databaseApiService.updateViewFilters(databaseId, viewId, filters),
-  updateViewSorts: (
+  ) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/filters`,
+      { filters }
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateViewSorts: async (
     databaseId: string,
     viewId: string,
     sorts: Array<{
       propertyId: string;
       direction: "asc" | "desc";
     }>
-  ) => databaseApiService.updateViewSorts(databaseId, viewId, sorts),
+  ) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/sorts`,
+      { sorts }
+    );
+    return response.data as IDatabaseView;
+  },
 };
 
 // Export individual functions for direct use
 export const {
   getDatabases,
-  getDatabase,
   createDatabase,
   updateDatabase,
   deleteDatabase,
   duplicateDatabase,
   getProperties,
-  getProperty,
   createProperty,
   updateProperty,
   deleteProperty,
@@ -185,7 +413,6 @@ export const {
   insertPropertyAfter,
   togglePropertyVisibility,
   getRecords,
-  getRecord,
   createRecord,
   updateRecord,
   deleteRecord,
@@ -194,7 +421,6 @@ export const {
   reorderRecords,
   duplicateRecord,
   getViews,
-  getView,
   createView,
   updateView,
   deleteView,

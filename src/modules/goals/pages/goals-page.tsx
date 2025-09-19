@@ -34,7 +34,6 @@ export function GoalsPage() {
 
     // Handlers
     const handleRecordEdit = (record: any) => {
-        console.log('Edit goals:', record);
         // TODO: Implement goals editing
     };
 

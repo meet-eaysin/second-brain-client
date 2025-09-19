@@ -34,7 +34,6 @@ export function ProjectsPage() {
 
     // Handlers
     const handleRecordEdit = (record: any) => {
-        console.log('Edit projects:', record);
         // TODO: Implement projects editing
     };
 

@@ -1,4 +1,3 @@
-// Client-side type definitions (independent of backend)
 export interface IBaseEntity {
   id: string;
   createdAt: Date;
@@ -52,7 +51,7 @@ export interface IDatabaseTemplate {
   id: string;
   name: string;
   description?: string;
-  defaultValues: Record<string, any>;
+  defaultValues: Record<string, TPropertyValue>;
   isDefault?: boolean;
 }
 
@@ -61,8 +60,8 @@ export interface IDatabase extends IBaseEntity {
   name: string;
   type: EDatabaseType;
   description?: string;
-  icon?: IDatabaseIcon;
-  cover?: IDatabaseCover;
+  icon?: IDatabaseIcon | undefined;
+  cover?: IDatabaseCover | undefined;
   isPublic: boolean;
   isTemplate: boolean;
   isArchived: boolean;
@@ -77,7 +76,7 @@ export interface IDatabase extends IBaseEntity {
   enableAuditLog: boolean;
   enableAutoTagging: boolean;
   enableSmartSuggestions: boolean;
-  syncSettings?: Record<string, any>;
+  syncSettings?: Record<string, unknown>;
 }
 
 export interface IDatabaseStats {
@@ -135,7 +134,7 @@ export interface IUpdateDatabase {
   enableAuditLog?: boolean;
   enableAutoTagging?: boolean;
   enableSmartSuggestions?: boolean;
-  syncSettings?: Record<string, any>;
+  syncSettings?: Record<string, unknown>;
 }
 
 export interface IDatabaseQueryParams {
@@ -298,17 +297,6 @@ export interface IReorderPropertiesRequest {
   }>;
 }
 
-export interface IPropertyResponse extends IDatabaseProperty {}
-
-export interface IPropertyListResponse {
-  properties: IDatabaseProperty[];
-  total: number;
-  page: number;
-  limit: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
 export interface IRecord extends IBaseEntity, ISoftDelete {
   databaseId: string;
   properties: Record<string, TPropertyValue>;
@@ -323,15 +311,15 @@ export interface IRecord extends IBaseEntity, ISoftDelete {
   version: number;
   autoTags?: string[];
   aiSummary?: string;
-  relationsCache?: Record<string, any[]>;
+  relationsCache?: Record<string, TPropertyValue[]>;
 }
 
 export interface IRecordQueryOptions {
   databaseId: string;
   viewId?: string;
   search?: string;
-  filters?: any;
-  sorts?: any;
+  filters?: IViewFilter[];
+  sorts?: IViewSort[];
   isTemplate?: boolean;
   isFavorite?: boolean;
   isArchived?: boolean;
@@ -340,11 +328,11 @@ export interface IRecordQueryOptions {
 }
 
 export interface IRecordQueryParams {
-  databaseId?: string;
+  databaseId: string | "";
   viewId?: string;
   search?: string;
-  filters?: any;
-  sorts?: any;
+  filters?: IViewFilter[];
+  sorts?: IViewSort[];
   isTemplate?: boolean;
   isFavorite?: boolean;
   isArchived?: boolean;
@@ -454,7 +442,7 @@ export enum EFilterOperator {
 export interface IViewFilter {
   propertyId: string;
   operator: EFilterOperator;
-  value?: any;
+  value?: TPropertyValue;
 }
 
 export interface IViewSort {
@@ -479,7 +467,7 @@ export interface IViewSettings {
   showSearch?: boolean;
   showToolbar?: boolean;
   kanbanGroupBy?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface IViewConfig {
@@ -559,17 +547,6 @@ export interface IUpdateViewRequest {
   order?: number;
 }
 
-export interface IViewResponse extends IDatabaseView {}
-
-export interface IViewListResponse {
-  views: IDatabaseView[];
-  total: number;
-  page: number;
-  limit: number;
-  hasNext: boolean;
-  hasPrev: boolean;
-}
-
 export enum ERelationType {
   ONE_TO_ONE = "one_to_one",
   ONE_TO_MANY = "one_to_many",
@@ -605,7 +582,7 @@ export interface IRelationConnection {
   targetRecordId: string;
   createdAt: Date;
   createdBy: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, TPropertyValue>;
 }
 
 export type TRelationList = IRelation[];
@@ -628,7 +605,7 @@ export interface ICreateRelationConnection {
   relationId: string;
   sourceRecordId: string;
   targetRecordId: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, TPropertyValue>;
 }
 
 export interface IRelationQueryParams {

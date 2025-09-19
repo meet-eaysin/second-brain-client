@@ -24,6 +24,8 @@ interface DocumentTableViewProps {
   isFrozen?: boolean;
   disablePropertyManagement?: boolean;
   apiFrozenConfig?: Record<string, unknown>; // API-provided frozen configuration
+  isPropertiesLoading?: boolean;
+  isRecordsLoading?: boolean;
 }
 
 export function DocumentTableView({
@@ -41,9 +43,9 @@ export function DocumentTableView({
   isFrozen = false,
   disablePropertyManagement = false,
   apiFrozenConfig,
+  isPropertiesLoading = false,
+  isRecordsLoading = false,
 }: DocumentTableViewProps) {
-  console.log("PROPERITES", properties);
-  
   const { config, currentSchema, searchQuery } = useDocumentView();
 
   // Get frozen configuration from context
@@ -78,12 +80,6 @@ export function DocumentTableView({
     if (onRecordUpdate) {
       const updates = { [propertyId]: newValue };
       onRecordUpdate(recordId, updates);
-    } else {
-      console.log("No update handler provided:", {
-        recordId,
-        propertyId,
-        newValue,
-      });
     }
   };
 
@@ -95,8 +91,6 @@ export function DocumentTableView({
     onRecordDelete,
     handleUpdateRecord,
     () => {
-      // Refresh callback - could trigger a refetch of data
-      console.log("Refreshing table data...");
     },
     isFrozen,
     frozenConfig,
@@ -204,6 +198,8 @@ export function DocumentTableView({
         onRecordDelete={onRecordDelete}
         onRecordCreate={onRecordCreate}
         onAddProperty={onAddProperty}
+        isPropertiesLoading={isPropertiesLoading}
+        isRecordsLoading={isRecordsLoading}
       />
     </div>
   );
