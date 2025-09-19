@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import type {IDatabaseView} from "@/modules/document-view";
-import type {IProperty} from "@/modules/document-view/types";
+import type { IDatabaseView } from "@/modules/document-view";
+import type { IProperty } from "@/modules/document-view/types";
 
 interface UseColumnVisibilityProps {
   moduleType: string;
@@ -50,13 +50,24 @@ export function useColumnVisibility({
     visible: boolean
   ): Promise<void> => {
     const currentVisible = currentView?.settings?.visibleProperties || [];
+    const currentHidden = currentView?.settings?.hiddenProperties || [];
 
     let updatedVisible: string[];
+    let updatedHidden: string[];
+
     if (visible) {
-      // Add property to visible list
-      updatedVisible = [...currentVisible, propertyId];
+      // Add property to visible list and remove from hidden list
+      updatedVisible = [
+        ...currentVisible.filter((id) => id !== propertyId),
+        propertyId,
+      ];
+      updatedHidden = currentHidden.filter((id) => id !== propertyId);
     } else {
-      // Remove property from visible list
+      // Add property to hidden list and remove from visible list
+      updatedHidden = [
+        ...currentHidden.filter((id) => id !== propertyId),
+        propertyId,
+      ];
       updatedVisible = currentVisible.filter((id) => id !== propertyId);
     }
 
@@ -64,6 +75,7 @@ export function useColumnVisibility({
     await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: updatedVisible,
+        hiddenProperties: updatedHidden,
       },
     });
 
@@ -78,6 +90,7 @@ export function useColumnVisibility({
     await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: allPropertyIds,
+        hiddenProperties: [],
       },
     });
 
@@ -89,10 +102,14 @@ export function useColumnVisibility({
     const requiredPropertyIds = properties
       .filter((prop) => prop.isSystem || prop.required)
       .map((prop) => prop.id);
+    const optionalPropertyIds = properties
+      .filter((prop) => !prop.isSystem && !prop.required)
+      .map((prop) => prop.id);
 
     await onUpdateView?.(currentView?.id, {
       settings: {
         visibleProperties: requiredPropertyIds,
+        hiddenProperties: optionalPropertyIds,
       },
     });
 
@@ -102,7 +119,7 @@ export function useColumnVisibility({
   // Reset to default view properties
   const resetToDefault = async (): Promise<void> => {
     // Get the default properties for this module
-    const defaultProperties = properties
+    const defaultVisibleProperties = properties
       .filter(
         (prop) =>
           prop.isSystem ||
@@ -111,9 +128,20 @@ export function useColumnVisibility({
       )
       .map((prop) => prop.id);
 
+    // Hide other properties
+    const defaultHiddenProperties = properties
+      .filter(
+        (prop) =>
+          !prop.isSystem &&
+          !prop.required &&
+          !["title", "name", "status"].includes(prop.id)
+      )
+      .map((prop) => prop.id);
+
     await onUpdateView?.(currentView?.id, {
       settings: {
-        visibleProperties: defaultProperties,
+        visibleProperties: defaultVisibleProperties,
+        hiddenProperties: defaultHiddenProperties,
       },
     });
 
@@ -122,13 +150,17 @@ export function useColumnVisibility({
 
   // Get visibility statistics
   const getStats = () => {
-    const visibleCount = currentView?.settings?.visibleProperties?.length || 0;
+    const visibleIds = currentView?.settings?.visibleProperties || [];
+    const hiddenIds = currentView?.settings?.hiddenProperties || [];
+    const visibleCount = visibleIds.length;
+    const hiddenCount = hiddenIds.length;
     const totalCount = properties.length;
-    const hiddenCount = totalCount - visibleCount;
+    const unassignedCount = totalCount - visibleCount - hiddenCount;
 
     return {
       visible: visibleCount,
       hidden: hiddenCount,
+      unassigned: unassignedCount,
       total: totalCount,
       percentage:
         totalCount > 0 ? Math.round((visibleCount / totalCount) * 100) : 0,
@@ -143,10 +175,15 @@ export function useColumnVisibility({
   // Get properties by visibility status
   const getPropertiesByVisibility = () => {
     const visibleIds = currentView?.settings?.visibleProperties || [];
+    const hiddenIds = currentView?.settings?.hiddenProperties || [];
 
     return {
       visible: properties.filter((prop) => visibleIds.includes(prop.id)),
-      hidden: properties.filter((prop) => !visibleIds.includes(prop.id)),
+      hidden: properties.filter(
+        (prop) =>
+          hiddenIds.includes(prop.id) ||
+          (!visibleIds.includes(prop.id) && !hiddenIds.includes(prop.id))
+      ),
       required: properties.filter((prop) => prop.isSystem || prop.required),
       optional: properties.filter((prop) => !prop.isSystem && !prop.required),
     };

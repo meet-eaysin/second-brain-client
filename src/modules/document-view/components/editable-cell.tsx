@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -25,26 +25,26 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { DocumentProperty, DatabaseRecord } from "@/modules/document-view";
+import type {IDatabaseProperty, IDatabaseRecord, IPropertyOption} from "@/modules/document-view/types";
+import {useUpdateRecord} from "@/modules/document-view/services/database-queries.ts";
 
 interface EditableCellProps {
-  property: DocumentProperty;
+  property: IDatabaseProperty;
   value: unknown;
-  record: DatabaseRecord;
-  onSave: (recordId: string, propertyId: string, newValue: unknown) => void;
-  onCancel: () => void;
+  record: IDatabaseRecord;
 }
 
 export function EditableCell({
   property,
   value,
   record,
-  onSave,
 }: EditableCellProps) {
+  const { } = useUpdateRecord()
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const currentSelectedValues = Array.isArray(editValue) ? editValue : [];
-  const option = property.selectOptions?.find((opt) => opt.id === value);
+  const option: IDatabaseProperty = property.config?.options?.find((opt: IPropertyOption) => opt.id === value);
+
 
   const handleSave = () => {
     if (editValue !== value) onSave(record.id, property.id, editValue);

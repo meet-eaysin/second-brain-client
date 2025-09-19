@@ -27,7 +27,10 @@ interface DocumentProperty {
 interface DocumentView {
   id: string;
   name: string;
-  visibleProperties?: string[];
+  settings?: {
+    visibleProperties?: string[];
+    hiddenProperties?: string[];
+  };
   isDefault?: boolean;
 }
 
@@ -50,13 +53,18 @@ export function ColumnVisibilityMenu({
 }: ColumnVisibilityMenuProps) {
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const visiblePropertyIds = currentView.visibleProperties || [];
+  const visiblePropertyIds = currentView.settings?.visibleProperties || [];
+  const hiddenPropertyIds = currentView.settings?.hiddenProperties || [];
+
   const visibleProperties = properties.filter((prop) =>
     visiblePropertyIds.includes(prop.id)
   );
 
   const hiddenProperties = properties.filter(
-    (prop) => !visiblePropertyIds.includes(prop.id)
+    (prop) =>
+      hiddenPropertyIds.includes(prop.id) ||
+      (!visiblePropertyIds.includes(prop.id) &&
+        !hiddenPropertyIds.includes(prop.id))
   );
 
   const canHideProperty = (property: DocumentProperty): boolean =>
@@ -138,7 +146,7 @@ export function ColumnVisibilityMenu({
         >
           <Eye className="h-4 w-4" />
           <Badge variant="secondary" className="ml-1">
-            {visibleProperties.length}/{properties.length}
+            {visiblePropertyIds.length}/{properties.length}
           </Badge>
         </Button>
       </DropdownMenuTrigger>
@@ -173,7 +181,7 @@ export function ColumnVisibilityMenu({
         {visibleProperties.length > 0 && (
           <>
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Visible ({visibleProperties.length})
+              Visible ({visiblePropertyIds.length})
             </DropdownMenuLabel>
             {visibleProperties.map((property) => (
               <DropdownMenuCheckboxItem
@@ -200,7 +208,7 @@ export function ColumnVisibilityMenu({
           <>
             {visibleProperties.length > 0 && <DropdownMenuSeparator />}
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Hidden ({hiddenProperties.length})
+              Hidden ({hiddenPropertyIds.length})
             </DropdownMenuLabel>
             {hiddenProperties.map((property) => (
               <DropdownMenuCheckboxItem

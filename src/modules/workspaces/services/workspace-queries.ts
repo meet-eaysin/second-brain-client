@@ -13,6 +13,8 @@ import type {
 } from "@/types/workspace.types";
 import { toast } from "sonner";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
+import {EDatabaseType} from "@/modules/document-view";
+import type {TModuleInitializeRequest} from "@/modules/workspaces/types/workspaces.types.ts";
 
 export const WORKSPACE_KEYS = {
   all: ["workspaces"] as const,
@@ -32,12 +34,30 @@ export const WORKSPACE_KEYS = {
   primary: () => [...WORKSPACE_KEYS.all, "primary"] as const,
 };
 
-// Query hooks
+export const useInitializeModules = (payload : TModuleInitializeRequest) => {
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.all,
+    queryFn: () => workspaceApi.initializeWorkspaceModules(payload),
+    staleTime: 5 * 60 * 1000,
+    enabled: !payload.isInitialized
+  });
+};
+
 export const useGetWorkspaces = (params?: GetWorkspacesQuery) => {
   return useQuery({
     queryKey: WORKSPACE_KEYS.list(params),
     queryFn: () => workspaceApi.getWorkspaces(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useGetModuleDatabaseId = (workspaceId: string, moduleType: EDatabaseType, initialized: boolean = false) => {
+    console.log("## moduleType", moduleType);
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.all,
+    queryFn: () => workspaceApi.getModuleDatabaseId(workspaceId, moduleType),
+    staleTime: 5 * 60 * 1000,
+    enabled: !initialized
   });
 };
 

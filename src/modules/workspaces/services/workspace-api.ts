@@ -8,12 +8,14 @@ import type {
   GetWorkspacesQuery,
   WorkspaceStatsResponse,
 } from "@/types/workspace.types";
+import {EDatabaseType} from "@/modules/document-view";
+import type {IWorkspaceInitResponse, TModuleInitializeRequest} from "@/modules/workspaces/types/workspaces.types.ts";
 
 export const workspaceApi = {
   getWorkspaces: async (
     params?: GetWorkspacesQuery
   ): Promise<ApiResponse<Workspace[]>> => {
-    const response = await apiClient.get<ApiResponse<Workspace[]>>(
+    const response = await apiClient.get(
       "/workspaces",
       { params }
     );
@@ -51,7 +53,7 @@ export const workspaceApi = {
   },
 
   getPrimaryWorkspace: async (): Promise<ApiResponse<Workspace>> => {
-    const response = await apiClient.get<ApiResponse<Workspace>>(
+    const response = await apiClient.get(
       "/workspaces/primary"
     );
 
@@ -93,25 +95,22 @@ export const workspaceApi = {
     return response.data.data;
   },
 
-  // Module management operations
   getModuleDatabaseId: async (
     workspaceId: string,
-    moduleType: string
-  ): Promise<{ databaseId: string }> => {
-    const response = await apiClient.get<ApiResponse<{ databaseId: string }>>(
+    moduleType: EDatabaseType
+  ): Promise<ApiResponse<{ databaseId: string }>> => {
+    const response = await apiClient.get(
       `/modules/workspace/${workspaceId}/${moduleType}/database-id`
     );
-    return response.data.data;
+    return response.data;
   },
 
-  initializeWorkspaceModules: async (
-    workspaceId: string,
-    modules: string[],
-    createSampleData: boolean = false
-  ): Promise<void> => {
-    await apiClient.post(`/modules/workspace/${workspaceId}/initialize`, {
-      modules,
+  initializeWorkspaceModules: async ({ workspaceId, moduleTypes, createSampleData }: TModuleInitializeRequest): Promise<ApiResponse<IWorkspaceInitResponse>> => {
+    const response = await apiClient.post(`/modules/workspace/${workspaceId}/initialize`, {
+      moduleTypes,
       createSampleData,
     });
+
+    return response.data
   },
 };

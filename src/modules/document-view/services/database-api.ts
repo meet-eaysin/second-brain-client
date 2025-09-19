@@ -19,10 +19,13 @@ import {
     type IDatabaseProperty,
     type IRecordQueryOptions,
     type IDatabaseRecord,
-    type IDatabaseView, EDatabaseType, type IDatabaseQueryParams,
+    type IDatabaseView,
+    EDatabaseType,
+    type IDatabaseQueryParams,
+    IRecord, IPropertyQueryParams, IRecordQueryParams,
 } from "../types";
-import type {ApiResponse} from "@/types/api.types.ts";
-import type {IDocumentViewConfig} from "@/modules/document-view/components/document-view.tsx";
+import type { ApiResponse } from "@/types/api.types.ts";
+import type { IDocumentViewConfig } from "@/modules/document-view/components/document-view.tsx";
 
 export interface IModuleConfig {
   readonly id: EDatabaseType;
@@ -40,12 +43,6 @@ export interface IModuleConfig {
 }
 
 export const databaseApi = {
-  getModuleConfig: async (moduleType: EDatabaseType) => {
-      const response = await apiClient.get<ApiResponse<IDocumentViewConfig>>(`modules/config/${moduleType}`);
-      console.log("## RESPONSE", response);
-      return response.data;
-  },
-
   getDatabases: async (params?: IDatabaseQueryParams) => {
     const response = await apiClient.get("/databases", { params });
     return response.data as {
@@ -82,12 +79,13 @@ export const databaseApi = {
     return response.data as IDatabase;
   },
 
-  getProperties: async (databaseId: string, includeHidden = false) => {
+  getProperties: async (
+    databaseId: string,
+    params: IPropertyQueryParams
+  ) => {
     const response = await apiClient.get(
       `/databases/${databaseId}/properties`,
-      {
-        params: { includeHidden },
-      }
+      params
     );
     return response.data.data as IDatabaseProperty[];
   },
@@ -179,11 +177,14 @@ export const databaseApi = {
   },
 
   // Record operations
-  getRecords: async (databaseId: string, params?: IRecordQueryOptions) => {
+  getRecords: async (
+      databaseId: string,
+      params?: IRecordQueryParams | undefined
+  ): Promise<ApiResponse<IRecord>> => {
     const response = await apiClient.get(`/databases/${databaseId}/records`, {
       params,
     });
-    return response.data as IRecordListResponse;
+    return response.data;
   },
 
   getRecordById: async (databaseId: string, recordId: string) => {
@@ -204,13 +205,10 @@ export const databaseApi = {
   updateRecord: async (
     databaseId: string,
     recordId: string,
-    data: IUpdateRecordRequest
-  ) => {
-    const response = await apiClient.put(
-      `/databases/${databaseId}/records/${recordId}`,
-      data
-    );
-    return response.data as IDatabaseRecord;
+    payload: Record<string, any>
+  ): Promise<ApiResponse<IDatabaseRecord>> => {
+    const response = await apiClient.put(`/databases/${databaseId}/records/${recordId}`, payload);
+    return response.data;
   },
 
   deleteRecord: async (
@@ -277,11 +275,11 @@ export const databaseApi = {
     return response.data.data as IDatabaseView[];
   },
 
-  getViewById: async (databaseId: string, viewId: string) => {
+  getViewById: async (databaseId: string, viewId: string): Promise<ApiResponse<IDatabaseView>> => {
     const response = await apiClient.get(
       `/databases/${databaseId}/views/${viewId}`
     );
-    return response.data as IDatabaseView;
+    return response.data;
   },
 
   createView: async (databaseId: string, data: ICreateViewRequest) => {
@@ -348,6 +346,18 @@ export const databaseApi = {
     const response = await apiClient.patch(
       `/databases/${databaseId}/views/${viewId}/property-visibility`,
       { visibleProperties }
+    );
+    return response.data as IDatabaseView;
+  },
+
+  updateViewHiddenProperties: async (
+    databaseId: string,
+    viewId: string,
+    hiddenProperties: string[]
+  ) => {
+    const response = await apiClient.patch(
+      `/databases/${databaseId}/views/${viewId}/hidden-properties`,
+      { hiddenProperties }
     );
     return response.data as IDatabaseView;
   },
@@ -428,6 +438,7 @@ export const {
   updateViewGrouping,
   changeViewType,
   updateViewPropertyVisibility,
+  updateViewHiddenProperties,
   updateViewColumnFreeze,
   updateViewFilters,
   updateViewSorts,

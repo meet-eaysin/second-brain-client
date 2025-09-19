@@ -10,10 +10,10 @@ import {
 import { ColumnVisibilityMenu } from "./column-visibility-menu";
 import { useColumnVisibility } from "../hooks/use-column-visibility";
 import {
-    type DatabaseRecord,
-    type DatabaseView,
-    EDatabaseType,
-    type IDatabaseProperty
+  type DatabaseRecord,
+  type DatabaseView,
+  EDatabaseType,
+  type IDatabaseProperty,
 } from "@/modules/document-view/types";
 
 interface TableToolbarProps {
@@ -25,7 +25,6 @@ interface TableToolbarProps {
   onFiltersChange?: (filters) => void;
   onSortsChange?: (sorts) => void;
   onUpdateView?: (viewId, data) => Promise<void>;
-  visibleProperties?: string[];
   moduleType: EDatabaseType;
   className?: string;
 }
@@ -39,7 +38,6 @@ export function TableToolbar({
   onFiltersChange,
   onSortsChange,
   onUpdateView,
-  visibleProperties = [],
   moduleType,
   className = "",
 }: TableToolbarProps) {
@@ -52,7 +50,8 @@ export function TableToolbar({
 
   const activeFiltersCount = currentView?.filters?.length || 0;
   const activeSortsCount = currentView?.sorts?.length || 0;
-  const hiddenPropertiesCount = properties.length - visibleProperties.length;
+  const hiddenPropertiesCount =
+    currentView?.settings?.hiddenProperties?.length || 0;
 
   const handleFiltersChange = (filters) => onFiltersChange?.(filters);
   const handleSortsChange = async (sorts) => onSortsChange?.(sorts);
@@ -118,19 +117,17 @@ export function TableToolbar({
               onSave={handleSortsChange}
             />
 
-          {currentView && moduleType && columnVisibility && (
+            {currentView && moduleType && columnVisibility && (
               <ColumnVisibilityMenu
-                  properties={properties}
-                  currentView={currentView}
-                  onToggleProperty={columnVisibility.toggleProperty}
-                  onShowAll={columnVisibility.showAll}
-                  onHideAll={columnVisibility.hideAll}
+                properties={properties}
+                currentView={currentView}
+                onToggleProperty={columnVisibility.toggleProperty}
+                onShowAll={columnVisibility.showAll}
+                onHideAll={columnVisibility.hideAll}
               />
-          )}
+            )}
           </div>
         </div>
-
-
       </div>
     </TooltipProvider>
   );

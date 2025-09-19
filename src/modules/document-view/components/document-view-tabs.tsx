@@ -73,10 +73,6 @@ export function DocumentViewTabs({
   const handleAddView = () => setDialogOpen("create-view");
 
   const handleEditView = (view: IDatabaseView) => {
-    if (view.config?.canEdit === false || view.config?.isSystemView === true) {
-      toast.error("This view cannot be edited");
-      return;
-    }
     setCurrentView(view);
     setDialogOpen("edit-view");
   };
@@ -101,14 +97,6 @@ export function DocumentViewTabs({
       return;
     }
 
-    if (
-      view.config?.canDelete === false ||
-      view.config?.isSystemView === true
-    ) {
-      toast.error("This view cannot be deleted");
-      return;
-    }
-
     setViewToDelete(view);
     setDeleteConfirmOpen(true);
   };
@@ -129,18 +117,19 @@ export function DocumentViewTabs({
     }
   };
 
+    console.log("## views", views);
   return (
     <>
       <div className="border-b">
         <div className="flex items-center justify-between">
           <Tabs
             value={activeViewId}
-            onValueChange={handleViewChange}
+            onValueChange={(viewId) => handleViewChange(viewId)}
             className="flex-1"
           >
             <div className="flex items-center justify-between py-2">
               <TabsList className="h-9">
-                {views.map((view) => {
+                {views?.map((view) => {
                   const Icon = VIEW_TYPE_ICONS[view.type] || Table;
                   return (
                     <TabsTrigger

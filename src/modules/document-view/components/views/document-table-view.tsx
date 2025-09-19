@@ -1,133 +1,44 @@
-import React from "react";
 import { DocumentDataTable } from "../document-data-table";
 import { generateDocumentColumns } from "../document-columns";
 import { useDocumentView } from "../../context/document-view-context";
 import { toast } from "sonner";
-import type {
-  IDatabaseProperty,
-  IDatabaseView,
-  DatabaseRecord,
-} from "@/modules/document-view";
+import {useMemo} from "react";
+import {useUpdateRecord} from "@/modules/document-view/services/database-queries.ts";
+import type {IDatabaseRecord} from "@/modules/document-view/types";
 
-interface DocumentTableViewProps {
-  view: IDatabaseView;
-  properties: IDatabaseProperty[];
-  records: DatabaseRecord[];
-  onRecordSelect?: (record: DatabaseRecord) => void;
-  onRecordEdit?: (record: DatabaseRecord) => void;
-  onRecordDelete?: (recordId: string) => void;
-  onRecordUpdate?: (recordId: string, updates: Record<string, unknown>) => void;
-  onRecordCreate?: () => void;
-  onAddProperty?: () => void;
-  databaseId?: string;
-  moduleType?: string;
-  isFrozen?: boolean;
-  disablePropertyManagement?: boolean;
-  apiFrozenConfig?: Record<string, unknown>; // API-provided frozen configuration
-  isPropertiesLoading?: boolean;
-  isRecordsLoading?: boolean;
-}
+export function DocumentTableView() {
+  const { database, currentView: view, visibleProperties, properties, records, searchQuery } = useDocumentView();
+  const { mutateAsync: onRecordUpdate } = useUpdateRecord()
 
-export function DocumentTableView({
-  view,
-  properties,
-  records,
-  onRecordSelect,
-  onRecordEdit,
-  onRecordDelete,
-  onRecordUpdate,
-  onRecordCreate,
-  onAddProperty,
-  databaseId,
-  moduleType,
-  isFrozen = false,
-  disablePropertyManagement = false,
-  apiFrozenConfig,
-  isPropertiesLoading = false,
-  isRecordsLoading = false,
-}: DocumentTableViewProps) {
-  const { config, currentSchema, searchQuery } = useDocumentView();
 
-  // Get frozen configuration from context
-  const frozenConfig =
-    config?.frozenConfig || currentSchema?.config?.frozenConfig;
-  // Filter properties based on view's visible properties
-  const visibleProperties = properties.filter((property) => {
-    // Check view's visible properties
-    if (
-      view?.settings?.visibleProperties &&
-      view.settings.visibleProperties.length > 0
-    ) {
-      return view.settings.visibleProperties.includes(property.id);
-    }
-    return property.isVisible !== false;
-  });
+    const handleUpdateRecord = async (recordId: string, propertyId: string, newValue: unknown) => {
+        if (!database?.id) return;
+        const payload = { [propertyId]: newValue };
+        await onRecordUpdate({ databaseId: database.id, recordId, payload });
+    };
 
-  // Handle record updates - delegate to parent component
-  const handleUpdateRecord = (
-    recordId: string,
-    propertyId: string,
-    newValue: unknown
-  ) => {
-    if (!databaseId) return;
 
-    if (isFrozen) {
-      toast.error("Database is frozen and cannot be edited");
-      return;
-    }
+  const columns = generateDocumentColumns(properties, handleUpdateRecord);
 
-    // Call the parent's update handler with the property update
-    if (onRecordUpdate) {
-      const updates = { [propertyId]: newValue };
-      onRecordUpdate(recordId, updates);
-    }
-  };
-
-  // Generate columns for the table
-  const columns = generateDocumentColumns(
-    visibleProperties,
-    databaseId || "",
-    onRecordEdit,
-    onRecordDelete,
-    handleUpdateRecord,
-    () => {
-    },
-    isFrozen,
-    frozenConfig,
-    undefined, // onFilter
-    undefined, // onFreeze
-    disablePropertyManagement,
-    moduleType || config?.moduleType || "database", // moduleType
-    apiFrozenConfig // API-provided frozen configuration
-  );
-
-  // Apply view filters, search, and sorts to records
-  const filteredRecords = React.useMemo(() => {
-    // Safety check for records
-    if (!records || !Array.isArray(records)) {
-      return [];
-    }
+  const filteredRecords = useMemo(() => {
+    if (!records || !Array.isArray(records)) return [];
 
     let result = [...records];
 
-    // Apply search query
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       result = result.filter((record) => {
-        // Search across all visible properties
         return visibleProperties.some((property) => {
           const value = record.properties[property.id];
           if (value == null) return false;
 
-          // Convert value to string and search
           const stringValue = String(value).toLowerCase();
           return stringValue.includes(query);
         });
       });
     }
 
-    // Apply filters
-    if (view.filters && view.filters.length > 0) {
+    if (view?.filters && view.filters.length > 0) {
       result = result.filter((record) => {
         return view.filters!.every((filter) => {
           const value = record.properties[filter.propertyId];
@@ -165,7 +76,7 @@ export function DocumentTableView({
     }
 
     // Apply sorts
-    if (view.sorts && view.sorts.length > 0) {
+    if (view?.sorts && view.sorts.length > 0) {
       result.sort((a, b) => {
         for (const sort of view.sorts!) {
           const aValue = a.properties[sort.propertyId];
@@ -185,21 +96,13 @@ export function DocumentTableView({
     }
 
     return result;
-  }, [records, view.filters, view.sorts, searchQuery, visibleProperties]);
+  }, [records, view?.filters, view?.sorts, searchQuery, visibleProperties]);
 
   return (
     <div className="space-y-4">
       <DocumentDataTable
         columns={columns}
         data={filteredRecords}
-        properties={properties} // Pass all properties, not just visible ones
-        onRecordSelect={onRecordSelect}
-        onRecordEdit={onRecordEdit}
-        onRecordDelete={onRecordDelete}
-        onRecordCreate={onRecordCreate}
-        onAddProperty={onAddProperty}
-        isPropertiesLoading={isPropertiesLoading}
-        isRecordsLoading={isRecordsLoading}
       />
     </div>
   );

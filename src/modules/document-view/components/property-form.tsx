@@ -287,7 +287,6 @@ export function PropertyForm({
   };
 
   const updateOptionColor = (optionId: string, color: string) => {
-    console.log("Updating option color:", optionId, color);
     setSelectOptions((prev) =>
       prev.map((option) =>
         option.id === optionId ? { ...option, color } : option
@@ -526,13 +525,8 @@ export function PropertyForm({
                       <Input
                         placeholder="Enter property name..."
                         {...field}
-                        onFocus={() => setShowSuggestions(true)}
-                        onBlur={() =>
-                          setTimeout(() => setShowSuggestions(false), 200)
-                        }
                       />
-                      {showSuggestions &&
-                        selectedType &&
+                      {selectedType &&
                         PROPERTY_SUGGESTIONS[selectedType] && (
                           <div className="flex flex-wrap gap-2">
                             {PROPERTY_SUGGESTIONS[selectedType].map(

@@ -1,4 +1,3 @@
-import React from "react";
 import { DocumentTableView } from "./views/document-table-view";
 import { DocumentBoardView } from "./views/document-board-view";
 import { DocumentGalleryView } from "./views/document-gallery-view";
@@ -8,108 +7,22 @@ import { DocumentTimelineView } from "./views/document-timeline-view";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
-import type {
-  IDatabaseView,
-  IDatabaseProperty,
-  DatabaseRecord,
-} from "@/modules/document-view";
+import {useDocumentView} from "@/modules/document-view/context/document-view-context.tsx";
 
-interface DocumentViewRendererProps {
-  view: IDatabaseView;
-  properties: IDatabaseProperty[];
-  records: DatabaseRecord[];
-  onRecordSelect?: (record: DatabaseRecord) => void;
-  onRecordEdit?: (record: DatabaseRecord) => void;
-  onRecordDelete?: (recordId: string) => void;
-  onRecordCreate?: (groupValue?: string) => void;
-  onRecordUpdate?: (recordId: string, updates: Record<string, string>) => void;
-  onBulkDelete?: (recordIds: string[]) => void;
-  onBulkEdit?: (records: DatabaseRecord[]) => void;
-  onAddProperty?: () => void;
-  databaseId?: string;
-  moduleType?: string;
-  isFrozen?: boolean;
-  disablePropertyManagement?: boolean;
-  apiFrozenConfig?: string;
-  isPropertiesLoading?: boolean;
-  isRecordsLoading?: boolean;
-}
-
-export function DocumentViewRenderer({
-  view,
-  properties,
-  records,
-  onRecordSelect,
-  onRecordEdit,
-  onRecordDelete,
-  onRecordCreate,
-  onRecordUpdate,
-  onBulkDelete,
-  onBulkEdit,
-  onAddProperty,
-  databaseId,
-  moduleType,
-  isFrozen = false,
-  disablePropertyManagement = false,
-  apiFrozenConfig,
-  isPropertiesLoading = false,
-  isRecordsLoading = false,
-}: DocumentViewRendererProps) {
-  const commonProps = {
-    view,
-    properties,
-    records,
-    onRecordSelect,
-    onRecordEdit,
-    onRecordDelete,
-    onBulkDelete,
-    onBulkEdit,
-    onAddProperty,
-    databaseId,
-    moduleType,
-    isFrozen,
-    disablePropertyManagement,
-    apiFrozenConfig,
-    isPropertiesLoading,
-    isRecordsLoading,
-  };
+export function DocumentViewRenderer() {
+  const { view } = useDocumentView();
 
   const renderView = () => {
     const viewType = view.type || "table";
 
     switch (viewType) {
-      case "table":
-        return (
-          <DocumentTableView
-            {...commonProps}
-            onRecordCreate={onRecordCreate}
-            onRecordUpdate={onRecordUpdate}
-          />
-        );
-
+      case "table": return <DocumentTableView/>
       case "board":
-      case "kanban":
-        return (
-          <DocumentBoardView
-            {...commonProps}
-            onRecordCreate={onRecordCreate}
-            onRecordUpdate={onRecordUpdate}
-          />
-        );
-
-      case "gallery":
-        return <DocumentGalleryView {...commonProps} />;
-
-      case "list":
-        return (
-          <DocumentListView {...commonProps} onRecordUpdate={onRecordUpdate} />
-        );
-
-      case "calendar":
-        return <DocumentCalendarView {...commonProps} />;
-
-      case "timeline":
-        return <DocumentTimelineView {...commonProps} />;
+      case "kanban": return <DocumentBoardView />
+      case "gallery":return <DocumentGalleryView />
+      case "list": return <DocumentListView />
+      case "calendar": return <DocumentCalendarView />
+      case "timeline": return <DocumentTimelineView />;
 
       default:
         return (

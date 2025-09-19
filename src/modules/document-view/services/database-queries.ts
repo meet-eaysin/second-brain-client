@@ -1,49 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {databaseApi, type IModuleConfig} from "./database-api";
+import { databaseApi } from "./database-api";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import {
-    type IDatabaseList,
     type IDatabase,
-    type IDatabaseStats,
-    type ICreateDatabase,
-    type IUpdateDatabase,
     type IDatabaseQueryParams,
-    type IPropertyListResponse,
     type IDatabaseProperty,
-    type ICreatePropertyRequest,
-    type IUpdatePropertyRequest,
-    type IReorderPropertiesRequest,
-    type IRecordListResponse,
     type IDatabaseRecord,
     type ICreateRecordRequest,
     type IUpdateRecordRequest,
-    type IBulkUpdateRecordsRequest,
-    type IBulkDeleteRecordsRequest,
-    type IDuplicateRecordRequest,
-    type IViewListResponse,
     type IDatabaseView,
     type ICreateViewRequest,
     type IUpdateViewRequest,
-    type IRecordQueryOptions,
-    type TRelationList,
-    type IRelation,
-    type ICreateRelation,
-    type IUpdateRelation,
-    type TRelationConnectionList,
-    type IRelationConnection,
-    type ICreateRelationConnection,
-    type IRelationQueryParams,
-    type IRelationConnectionQueryParams,
     type IContentBlock,
-    type ICreateBlock,
-    type IUpdateBlock,
-    type IBlockList,
-    type IBulkBlockOperation,
-    type IBlockSearchOptions, EDatabaseType,
+    type IPropertyQueryParams,
 } from "../types";
-import type {ApiError, ApiResponse} from "@/types/api.types.ts";
-import type {IDocumentViewConfig} from "@/modules/document-view/components/document-view.tsx";
+import type { ApiError } from "@/types/api.types.ts";
 
 export const DATABASE_KEYS = {
   all: ["databases"] as const,
@@ -79,13 +51,6 @@ export const DATABASE_KEYS = {
   block: (databaseId: string, recordId: string, blockId: string) =>
     [...DATABASE_KEYS.blocks(databaseId, recordId), blockId] as const,
 };
-
-export const useModuleConfig = (moduleType: EDatabaseType) => {
-    return useQuery<ApiResponse<IDocumentViewConfig>, AxiosError<ApiError>>({
-        queryKey: [DATABASE_KEYS.all, moduleType],
-        queryFn: () => databaseApi.getModuleConfig(moduleType),
-    });
-}
 
 export const useDatabases = (params?: IDatabaseQueryParams) => {
   return useQuery<IDatabaseList, AxiosError>({
@@ -185,10 +150,10 @@ export const useDuplicateDatabase = () => {
 };
 
 // Property hooks
-export const useProperties = (databaseId: string) => {
+export const useProperties = (databaseId?: string, params?: IPropertyQueryParams) => {
   return useQuery<IPropertyListResponse, AxiosError>({
-    queryKey: DATABASE_KEYS.properties(databaseId),
-    queryFn: () => databaseApi.getProperties(databaseId),
+    queryKey: [...DATABASE_KEYS.properties(databaseId), params?.viewId],
+    queryFn: () => databaseApi.getProperties(databaseId, params),
     enabled: !!databaseId,
   });
 };
@@ -306,12 +271,11 @@ export const useReorderProperties = () => {
   });
 };
 
-// Record hooks
 export const useRecords = (
-  databaseId: string,
-  params?: IRecordQueryOptions
+    databaseId: string,
+    params?: IRecordQueryParams
 ) => {
-  return useQuery<IRecordListResponse, AxiosError>({
+  return useQuery({
     queryKey: [...DATABASE_KEYS.records(databaseId), params],
     queryFn: () => databaseApi.getRecords(databaseId, params),
     enabled: !!databaseId,
@@ -351,13 +315,8 @@ export const useCreateRecord = () => {
 export const useUpdateRecord = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    IDatabaseRecord,
-    AxiosError<ApiError>,
-    { databaseId: string; recordId: string; data: IUpdateRecordRequest }
-  >({
-    mutationFn: ({ databaseId, recordId, data }) =>
-      databaseApi.updateRecord(databaseId, recordId, data),
+  return useMutation({
+    mutationFn: ({ databaseId, recordId, payload }) => databaseApi.updateRecord(databaseId, recordId, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.records(variables.databaseId),
@@ -486,7 +445,7 @@ export const useViews = (databaseId: string) => {
 };
 
 export const useView = (databaseId: string, viewId: string) => {
-  return useQuery<IDatabaseView, AxiosError>({
+  return useQuery({
     queryKey: DATABASE_KEYS.view(databaseId, viewId),
     queryFn: () => databaseApi.getViewById(databaseId, viewId),
     enabled: !!databaseId && !!viewId,

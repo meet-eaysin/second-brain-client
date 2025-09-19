@@ -2,7 +2,7 @@ import { type ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DocumentTableHeader } from "./document-table-header";
-import type { IDatabaseRecord, IDatabaseProperty } from "../types";
+import type {IDatabaseRecord, IDatabaseProperty, IPropertyOption} from "../types";
 import { EditableCell } from "./editable-cell";
 import { Users } from "lucide-react";
 
@@ -27,7 +27,7 @@ export const isPropertyFrozen = (
 ): FrozenPropertyConfig | null => {
   if (!frozenConfig) return null;
   return (
-    frozenConfig.frozenProperties.find((fp) => fp.propertyId === propertyId) ||
+    frozenConfig?.frozenProperties?.find((fp) => fp.propertyId === propertyId) ||
     null
   );
 };
@@ -54,14 +54,6 @@ export const canDeleteProperty = (
 ): boolean => {
   const frozenProp = isPropertyFrozen(propertyId, frozenConfig);
   return frozenProp ? frozenProp.allowDelete !== false : true;
-};
-
-export const getFrozenReason = (
-  propertyId: string,
-  frozenConfig?: ViewFrozenConfig | null
-): string | null => {
-  const frozenProp = isPropertyFrozen(propertyId, frozenConfig);
-  return frozenProp?.reason || null;
 };
 
 const statusColors = {
@@ -106,15 +98,15 @@ const renderCellValue = (property: IDatabaseProperty, value: unknown) => {
         );
       }
 
-      if (typeof value === "string" && property.selectOptions) {
-        const option = property.selectOptions.find((opt) => opt.id === value);
+      if (typeof value === "string" && property.config?.options) {
+        const option = property.config?.options?.find((opt: IPropertyOption) => opt.id === value);
         if (option) {
           return (
             <Badge
               className="text-white border-0"
               style={{ backgroundColor: option.color }}
             >
-              {option.name}
+              {option.label}
             </Badge>
           );
         }
@@ -250,24 +242,13 @@ const renderCellValue = (property: IDatabaseProperty, value: unknown) => {
 
 export const generateDocumentColumns = (
   properties: IDatabaseProperty[],
-  databaseId: string,
-  onEdit?: (record: IDatabaseRecord) => void,
-  onDelete?: (recordId: string) => void,
   onUpdateRecord?: (
     recordId: string,
     propertyId: string,
     newValue: string
   ) => void,
-  onRefresh?: () => void,
-  isFrozen?: boolean,
-  frozenConfig?: ViewFrozenConfig | null,
-  onFilter?: (property: IDatabaseProperty) => void,
-  onFreeze?: (property: IDatabaseProperty) => void,
-  disablePropertyManagement?: boolean,
-  moduleType?: string,
-  apiFrozenConfig?: ViewFrozenConfig | null
 ): ColumnDef<IDatabaseRecord>[] => {
-  const columns: ColumnDef<DocumentRecord>[] = [
+  const columns: ColumnDef<IDatabaseRecord>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -295,16 +276,9 @@ export const generateDocumentColumns = (
       accessorKey: `properties.${property.id}`,
       id: property.id,
       header: ({ column }) => {
-        const effectiveFrozenConfig = apiFrozenConfig || frozenConfig;
-        const frozenProp = isPropertyFrozen(property.id, effectiveFrozenConfig);
-        const isPropertyLocked = frozenProp !== null;
-
         return (
           <DocumentTableHeader
             property={property}
-            databaseId={databaseId}
-            disablePropertyManagement={disablePropertyManagement}
-            moduleType={moduleType}
             sortDirection={
               column.getIsSorted() === "asc"
                 ? "asc"
@@ -312,37 +286,18 @@ export const generateDocumentColumns = (
                 ? "desc"
                 : null
             }
-            isFiltered={column.getFilterValue() !== undefined}
-            isFrozen={isPropertyLocked}
-            frozenReason={frozenProp?.reason}
-            onPropertyUpdate={() => onRefresh?.()}
-            onEditName={() => onRefresh?.()}
-            onChangeType={() => onRefresh?.()}
-            onFilter={(prop) => onFilter && onFilter(prop)}
-            onSort={(prop, direction) =>
-              column.toggleSorting(direction === "desc")
-            }
-            onFreeze={(prop) => onFreeze && onFreeze(prop)}
-            onHide={() => column.toggleVisibility(false)}
-            onInsertLeft={() => onRefresh?.()}
-            onInsertRight={() => onRefresh?.()}
-            onDuplicate={() => onRefresh?.()}
-            onDelete={() => onRefresh?.()}
-            onRefresh={onRefresh}
           />
         );
       },
       cell: ({ row }) => {
         const value = row.original.properties[property.id];
 
-        if (onUpdateRecord && !isFrozen) {
+        if (onUpdateRecord) {
           return (
             <EditableCell
               property={property}
               value={value}
               record={row.original}
-              onSave={onUpdateRecord}
-              onCancel={() => {}}
             />
           );
         }

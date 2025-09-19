@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -35,42 +35,19 @@ import {
   Copy,
   Edit,
 } from "lucide-react";
-import type { DatabaseRecord, DocumentProperty } from "@/modules/document-view";
-import { NoDataMessage } from "../../../components/no-data-message.tsx";
+import type {IDatabaseRecord} from "@/modules/document-view/types";
+import {useDocumentView} from "@/modules/document-view/context/document-view-context.tsx";
 
 interface DocumentDataTableProps {
-  columns: ColumnDef<DatabaseRecord, string>[];
-  data: DatabaseRecord[];
-  properties?: DocumentProperty[];
-  onRecordSelect?: (record: DatabaseRecord) => void;
-  onRecordEdit?: (record: DatabaseRecord) => void;
-  onRecordDelete?: (recordId: string) => void;
-  onRecordCreate?: () => void;
-  onBulkDelete?: (recordIds: string[]) => void;
-  onBulkEdit?: (records: DatabaseRecord[]) => void;
-  onAddProperty?: () => void;
-  enablePagination?: boolean;
-  enableRowSelection?: boolean;
-  pageSize?: number;
-  isPropertiesLoading?: boolean;
-  isRecordsLoading?: boolean;
+  columns: ColumnDef<IDatabaseRecord, string>[];
+  data: IDatabaseRecord[];
 }
 
 export function DocumentDataTable({
   columns,
   data,
-  onRecordEdit,
-  onRecordDelete,
-  onRecordCreate,
-  onBulkDelete,
-  onBulkEdit,
-  onAddProperty,
-  enablePagination = true,
-  enableRowSelection = true,
-  pageSize = 50,
-  isPropertiesLoading = false,
-  isRecordsLoading = false,
 }: DocumentDataTableProps) {
+  const { properties } = useDocumentView();
   const [columnStats, setColumnStats] = useState<Record<string, string>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
@@ -81,15 +58,13 @@ export function DocumentDataTable({
       rowSelection,
       pagination: {
         pageIndex: 0,
-        pageSize,
+        pageSize: 25,
       },
     },
-    enableRowSelection: enableRowSelection,
+    enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: enablePagination
-      ? getPaginationRowModel()
-      : undefined,
+    getPaginationRowModel: true ? getPaginationRowModel() : undefined,
     getRowId: (row) => row.id,
   });
 

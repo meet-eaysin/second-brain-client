@@ -1,7 +1,30 @@
-import React, { useState, createContext, useContext } from "react";
-import type {IDatabase, IProperty, IRecord, IView} from "@/modules/document-view/types";
-import {useGetPrimaryWorkspace} from "@/modules/workspaces/services/workspace-queries.ts";
-import type {Workspace} from "@/types/workspace.types.ts";
+import { createContext, ReactNode, useContext, useState } from "react";
+import type {
+  DocumentFilter,
+  DocumentSort,
+  IDatabase,
+  IDatabaseProperty,
+  IProperty,
+  IRecord,
+  IView,
+} from "@/modules/document-view/types";
+import {
+  EDatabaseType,
+  IPropertyQueryParams,
+} from "@/modules/document-view/types";
+import {
+  useGetModuleDatabaseId,
+  useInitializeModules,
+} from "@/modules/workspaces/services/workspace-queries";
+import { useWorkspace } from "@/modules/workspaces/context/workspace-context";
+import {
+  useDatabase,
+  useProperties,
+  useRecords,
+  useView,
+  useViews,
+} from "@/modules/document-view/services/database-queries";
+import type { Workspace } from "@/types/workspace.types.ts";
 
 export type DocumentDialogType =
   | "create-document"
@@ -20,182 +43,196 @@ export type DocumentDialogType =
   | "import-data"
   | "export-data"
   | "configure-frozen"
-  | string; // Allow custom dialog types
+  | "bulk-edit";
 
-interface DocumentViewContextType<
-  TRecord = IRecord,
-  TProperty = IProperty,
-  TView = IView,
-  TSchema = IDatabase
-> {
-  workspace: Workspace
-  // Dialog state
+interface DocumentViewContextValue {
+  moduleType: EDatabaseType;
+  workspace: Workspace;
   dialogOpen: DocumentDialogType | null;
-  setDialogOpen: (dialog: DocumentDialogType | null) => void;
 
-  // Current items
-  currentSchema: TSchema | null;
-  setCurrentSchema: React.Dispatch<React.SetStateAction<TSchema | null>>;
-  currentRecord: TRecord | null;
-  setCurrentRecord: React.Dispatch<React.SetStateAction<TRecord | null>>;
-  currentProperty: TProperty | null;
-  setCurrentProperty: React.Dispatch<React.SetStateAction<TProperty | null>>;
-  currentView: TView | null;
-  setCurrentView: React.Dispatch<React.SetStateAction<TView | null>>;
+  database: IDatabase | null;
+  views: IView[];
+  currentView: IView | null;
+  properties: IProperty[];
+  records: IRecord[];
+  currentRecord: IRecord | null;
+  currentProperty: IProperty | null;
 
-  // View state
+  isLoadingDatabaseId: boolean;
+  isLoadingDatabase: boolean;
+  isLoadingViews: boolean;
+  isLoadingProperties: boolean;
+  isLoadingRecords: boolean;
+  isLoadingCurrentView: boolean;
+
   selectedRecords: Set<string>;
-  setSelectedRecords: React.Dispatch<React.SetStateAction<Set<string>>>;
-  visibleProperties: Record<string, boolean>;
-  setVisibleProperties: React.Dispatch<
-    React.SetStateAction<Record<string, boolean>>
-  >;
+  visibleProperties: IDatabaseProperty[];
 
-  // Search and filters
   searchQuery: string;
-  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  filters: DocumentFilter[];
+  sorts: DocumentSort[];
 
-  // Loading and error states
-  isLoading: boolean;
-  setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-  error: string | null;
-  setError: React.Dispatch<React.SetStateAction<string | null>>;
+  handleDialogOpen: (dialog: DocumentDialogType | null) => void;
+  handleViewChange: (viewId: string) => void;
+  handleCurrentRecordChange: (record: IRecord | null) => void;
+  handleCurrentPropertyChange: (property: IProperty | null) => void;
+  handleSelectedRecordsChange: (records: Set<string>) => void;
+  handleSearchQueryChange: (query: string) => void;
+  handleFiltersChange: (filters: DocumentFilter[]) => void;
+  handleSortsChange: (sorts: DocumentSort[]) => void;
 }
 
-// Create context
-const DocumentViewContext = createContext<DocumentViewContextType | null>(null);
-
-interface DocumentViewProviderProps<
-  TRecord = IRecord,
-  TProperty = IProperty,
-  TView = IView,
-  TSchema = IDatabase
-> {
-  children: React.ReactNode;
-  initialConfig?: Partial<DocumentSchemaConfig>;
-  initialSchema?: TSchema | null;
+interface DocumentViewProviderProps {
+  children: ReactNode;
+  moduleType?: EDatabaseType;
+  databaseId?: string;
 }
 
-export function DocumentViewProvider<
-  TRecord = IRecord,
-  TProperty = IProperty,
-  TView = IView,
-  TSchema = IDatabase
->({
+const DocumentViewContext = createContext<DocumentViewContextValue | null>(
+  null
+);
+
+export function DocumentViewProvider({
   children,
-  initialConfig = {},
-  initialSchema = null,
-}: DocumentViewProviderProps<TRecord, TProperty, TView, TSchema>) {
-  const { data: workspace } = useGetPrimaryWorkspace();
+  moduleType = EDatabaseType.CUSTOM,
+  databaseId,
+}: DocumentViewProviderProps) {
   const [dialogOpen, setDialogOpen] = useState<DocumentDialogType | null>(null);
-  const [currentSchema, setCurrentSchema] = useState<TSchema | null>(
-    initialSchema
-  );
-  const [currentRecord, setCurrentRecord] = useState<TRecord | null>(null);
-  const [currentProperty, setCurrentProperty] = useState<TProperty | null>(
-    null
-  );
-  const [currentView, setCurrentView] = useState<TView | null>(null);
 
-  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
-    new Set()
-  );
-  const [visibleProperties, setVisibleProperties] = useState<
-    Record<string, boolean>
-  >({});
+  const [currentRecord, setCurrentRecord] = useState<IRecord | null>(null);
+  const [currentProperty, setCurrentProperty] = useState<IProperty | null>(null);
+  const [currentViewId, setCurrentViewId] = useState<string>("");
+
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<DocumentFilter[]>([]);
   const [sorts, setSorts] = useState<DocumentSort[]>([]);
 
-  const [config, setConfig] = useState<DocumentSchemaConfig>({
-    permissions: {
-      canCreate: true,
-      canEdit: true,
-      canDelete: true,
-      canShare: false,
-      canExport: true,
-      canImport: true,
-    },
-    ui: {
-      enableViews: true,
-      enableSearch: true,
-      enableFilters: true,
-      enableSorts: true,
-      enableGrouping: false,
-      showRecordCount: true,
-      compactMode: false,
-    },
-    data: {
-      pageSize: 50,
-      enablePagination: true,
-      enableVirtualization: false,
-      cacheResults: true,
-    },
-    ...initialConfig,
-  });
+  const { currentWorkspace } = useWorkspace();
 
-  // Loading and error states
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data: databaseIdResponse, isLoading: isLoadingDatabaseId } =
+    useGetModuleDatabaseId(
+      currentWorkspace?._id || "",
+      moduleType || EDatabaseType.CUSTOM
+    );
 
-  const value: DocumentViewContextType<TRecord, TProperty, TView, TSchema> = {
-    workspace,
-    // Dialog state
+  let currentDatabaseId = databaseId || databaseIdResponse?.data.databaseId || "";
+  const moduleInitializedPayload = {
+    workspaceId: currentWorkspace?._id || "",
+    moduleTypes: [moduleType || EDatabaseType.CUSTOM],
+    createSampleData: false,
+    isInitialized: !!databaseId,
+  };
+  const { data: initialized } = useInitializeModules(moduleInitializedPayload);
+  const { data: currentDatabaseIdResponse } = useGetModuleDatabaseId(
+    currentWorkspace?._id || "",
+    moduleType || EDatabaseType.CUSTOM,
+    initialized?.success
+  );
+  currentDatabaseId = currentDatabaseIdResponse?.data.databaseId || "";
+
+  const { data: database, isLoading: isLoadingDatabase } =
+    useDatabase(currentDatabaseId);
+
+  const { data: views = [], isLoading: isLoadingViews } =
+    useViews(currentDatabaseId);
+
+  const { data: currentView, isLoading: isLoadingCurrentView } = useView(
+    currentDatabaseId,
+    currentViewId
+  );
+
+  const propertiesQueryParams: IPropertyQueryParams = {
+    viewId: currentViewId || "",
+    includeHidden: false,
+  };
+
+  const { data: properties = [], isLoading: isLoadingProperties } =
+    useProperties(databaseId, propertiesQueryParams);
+
+  const recordQueryParams = {
+    viewId: currentViewId,
+    search: searchQuery,
+    page: 1,
+    limit: 50,
+    isArchived: false,
+    isTemplate: false,
+  };
+
+  const { data: records, isLoading: isLoadingRecords } = useRecords(
+    databaseId || "",
+    recordQueryParams
+  );
+
+  const visibleProperties = properties.filter((property) => {
+        if (
+            currentView?.data.settings.visibleProperties &&
+            currentView?.data.settings.visibleProperties > 0
+        ) {
+            return currentView?.data.settings.visibleProperties.includes(property._id);
+        }
+        return property.isVisible !== false;
+    });
+
+  const handleDialogOpen = (dialog: DocumentDialogType | null) =>  setDialogOpen(dialog);
+  const handleViewChange = (viewId: string) => setCurrentViewId(viewId);
+  const handleCurrentRecordChange = (record: IRecord | null) => setCurrentRecord(record);
+  const handleCurrentPropertyChange = (property: IProperty | null) => setCurrentProperty(property);
+  const handleSelectedRecordsChange = (records: Set<string>) => setSelectedRecords(records);
+  const handleSearchQueryChange = (query: string) => setSearchQuery(query);
+  const handleFiltersChange = (newFilters: DocumentFilter[]) => setFilters(newFilters);
+  const handleSortsChange = (newSorts: DocumentSort[]) => setSorts(newSorts);
+
+  const contextValue: DocumentViewContextValue = {
+    moduleType,
+    workspace: currentWorkspace || null,
     dialogOpen,
-    setDialogOpen,
-
-    // Current items
-    currentSchema,
-    setCurrentSchema,
+    database: database || null,
+    views,
+    currentView: currentView?.data || null,
+    properties,
+    records,
     currentRecord,
-    setCurrentRecord,
     currentProperty,
-    setCurrentProperty,
-    currentView,
-    setCurrentView,
 
-    // View state
+    isLoadingDatabaseId,
+    isLoadingDatabase,
+    isLoadingViews,
+    isLoadingProperties,
+    isLoadingRecords,
+    isLoadingCurrentView,
+
     selectedRecords,
-    setSelectedRecords,
     visibleProperties,
-    setVisibleProperties,
 
-    // Search and filters
     searchQuery,
-    setSearchQuery,
     filters,
-    setFilters,
     sorts,
-    setSorts,
 
-    // Configuration
-    config,
-    setConfig,
-
-    // Loading and error states
-    isLoading,
-    setIsLoading,
-    error,
-    setError,
+    handleDialogOpen,
+    handleViewChange,
+    handleCurrentRecordChange,
+    handleCurrentPropertyChange,
+    handleSelectedRecordsChange,
+    handleSearchQueryChange,
+    handleFiltersChange,
+    handleSortsChange,
   };
 
   return (
-    <DocumentViewContext.Provider value={value}>
+    <DocumentViewContext.Provider value={contextValue}>
       {children}
     </DocumentViewContext.Provider>
   );
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
-export const useDocumentView = () => {
-  const documentViewContext = useContext(DocumentViewContext);
-
-  if (!documentViewContext) {
+export const useDocumentView = (): DocumentViewContextValue => {
+  const context = useContext(DocumentViewContext);
+  if (!context)
     throw new Error(
-      "useDocumentView has to be used within <DocumentViewProvider>"
+      "useDocumentView must be used within a DocumentViewProvider"
     );
-  }
 
-  return documentViewContext;
+  return context;
 };
