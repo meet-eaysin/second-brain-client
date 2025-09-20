@@ -11,7 +11,7 @@ import {ColumnVisibilityMenu} from "./column-visibility-menu";
 import {useDatabaseView} from "@/modules/database-view/context";
 
 export function TableToolbar() {
-  const {currentView, records, properties, moduleType, searchQuery, onSearchQueryChange} = useDatabaseView()
+  const {currentView, records, moduleType} = useDatabaseView()
 
   const activeFiltersCount = currentView?.filters?.length || 0;
   const activeSortsCount = currentView?.sorts?.length || 0;
@@ -23,9 +23,6 @@ export function TableToolbar() {
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 max-w-lg">
             <SearchBar
-              value={searchQuery}
-              onChange={onSearchQueryChange}
-              properties={properties}
               placeholder="Search records..."
               className="w-full"
             />
