@@ -1,23 +1,23 @@
 export const API_ENDPOINTS = {
   AUTH: {
-    SIGN_IN: '/auth/sign-in',
-    SIGN_UP: '/auth/sign-up',
-    LOGOUT: '/auth/logout',
-    LOGOUT_ALL: '/auth/logout-all',
-    ME: '/auth/me',
-    REFRESH_TOKEN: '/auth/refresh-token',
-    CHANGE_PASSWORD: '/auth/change-password',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
-    GOOGLE_AUTH: '/auth/google',
-    GOOGLE_AUTH_CALLBACK: '/auth/google/callback',
-    GOOGLE_GENERATE_URL: '/auth/google/generate-url',
+    SIGN_IN: "/auth/sign-in",
+    SIGN_UP: "/auth/sign-up",
+    LOGOUT: "/auth/logout",
+    LOGOUT_ALL: "/auth/logout-all",
+    ME: "/auth/me",
+    REFRESH_TOKEN: "/auth/refresh-token",
+    CHANGE_PASSWORD: "/auth/change-password",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
+    GOOGLE_AUTH: "/auth/google",
+    GOOGLE_AUTH_CALLBACK: "/auth/google/callback",
+    GOOGLE_GENERATE_URL: "/auth/google/generate-url",
   },
   USERS: {
-    LIST: '/users',
-    PROFILE: '/users/profile',
-    STATS: '/users/stats',
-    BULK_UPDATE: '/users/bulk-update',
+    LIST: "/users",
+    PROFILE: "/users/profile",
+    STATS: "/users/stats",
+    BULK_UPDATE: "/users/bulk-update",
     BY_ID: (id: string) => `/users/${id}`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
@@ -25,46 +25,46 @@ export const API_ENDPOINTS = {
     ROLE: (id: string) => `/users/${id}/role`,
   },
   DASHBOARD: {
-    STATS: '/dashboard/stats',
-    ANALYTICS: '/dashboard/analytics',
-    ACTIVITY: '/dashboard/activity',
-    TASKS: '/dashboard/tasks',
-    NOTIFICATIONS: '/dashboard/notifications',
-    LAYOUTS: '/dashboard/layouts',
-    PREFERENCES: '/dashboard/preferences',
-    QUICK_ACTIONS: '/dashboard/quick-actions',
+    STATS: "/dashboard/stats",
+    ANALYTICS: "/dashboard/analytics",
+    ACTIVITY: "/dashboard/activity",
+    TASKS: "/dashboard/tasks",
+    NOTIFICATIONS: "/dashboard/notifications",
+    LAYOUTS: "/dashboard/layouts",
+    PREFERENCES: "/dashboard/preferences",
+    QUICK_ACTIONS: "/dashboard/quick-actions",
   },
   ANALYTICS: {
-    DASHBOARD: '/analytics/dashboard',
+    DASHBOARD: "/analytics/dashboard",
     DATABASE: (id: string) => `/analytics/databases/${id}`,
-    USAGE: '/analytics/usage',
-    EVENTS: '/analytics/events',
-    ACTIVITY: '/analytics/activity',
+    USAGE: "/analytics/usage",
+    EVENTS: "/analytics/events",
+    ACTIVITY: "/analytics/activity",
   },
   SEARCH: {
-    GLOBAL: '/search/global',
-    DATABASES: '/search/databases',
-    RECORDS: '/search/records',
-    SUGGESTIONS: '/search/suggestions',
-    HISTORY: '/search/history',
-    SAVED: '/search/saved',
-    ADVANCED: '/search/advanced',
+    GLOBAL: "/search/global",
+    DATABASES: "/search/databases",
+    RECORDS: "/search/records",
+    SUGGESTIONS: "/search/suggestions",
+    HISTORY: "/search/history",
+    SAVED: "/search/saved",
+    ADVANCED: "/search/advanced",
   },
   PROFILE: {
-    GET: '/profile',
-    UPDATE: '/profile',
+    GET: "/profile",
+    UPDATE: "/profile",
   },
   CATEGORIES: {
-    LIST: '/categories',
-    CREATE: '/categories',
+    LIST: "/categories",
+    CREATE: "/categories",
     BY_ID: (id: string) => `/categories/${id}`,
     UPDATE: (id: string) => `/categories/${id}`,
     DELETE: (id: string) => `/categories/${id}`,
-    REORDER: '/categories/reorder',
+    REORDER: "/categories/reorder",
   },
   WORKSPACES: {
-    LIST: '/workspaces',
-    CREATE: '/workspaces',
+    LIST: "/workspaces",
+    CREATE: "/workspaces",
     BY_ID: (id: string) => `/workspaces/${id}`,
     UPDATE: (id: string) => `/workspaces/${id}`,
     DELETE: (id: string) => `/workspaces/${id}`,
@@ -72,208 +72,311 @@ export const API_ENDPOINTS = {
     LEAVE: (id: string) => `/workspaces/${id}/leave`,
     PERMISSIONS: (id: string) => `/workspaces/${id}/permissions`,
     ACTIVITY: (id: string) => `/workspaces/${id}/activity`,
-    STATS: '/workspaces/stats',
-    PUBLIC: '/workspaces/public',
-    SEARCH: '/workspaces/search',
+    STATS: "/workspaces/stats",
+    PUBLIC: "/workspaces/public",
+    SEARCH: "/workspaces/search",
     MEMBERS: (id: string) => `/workspaces/${id}/members`,
-    MEMBER: (id: string, userId: string) => `/workspaces/${id}/members/${userId}`,
+    MEMBER: (id: string, userId: string) =>
+      `/workspaces/${id}/members/${userId}`,
     INVITE: (id: string) => `/workspaces/${id}/members`,
-    MEMBER_ROLE: (workspaceId: string, userId: string) => `/workspaces/${workspaceId}/members/${userId}/role`,
+    MEMBER_ROLE: (workspaceId: string, userId: string) =>
+      `/workspaces/${workspaceId}/members/${userId}/role`,
     TRANSFER_OWNERSHIP: (id: string) => `/workspaces/${id}/transfer-ownership`,
     BULK_MEMBER_OPERATION: (id: string) => `/workspaces/${id}/members/bulk`,
   },
   SYSTEM: {
-    HEALTH: '/health',
-    INFO: '/',
-    API_STATUS: '/api',
+    HEALTH: "/health",
+    INFO: "/",
+    API_STATUS: "/api",
   },
   TAGS: {
-    LIST: '/tags',
-    CREATE: '/tags',
+    LIST: "/tags",
+    CREATE: "/tags",
     BY_ID: (id: string) => `/tags/${id}`,
     UPDATE: (id: string) => `/tags/${id}`,
     DELETE: (id: string) => `/tags/${id}`,
   },
   FILES: {
-    LIST: '/files',
-    UPLOAD: '/files/upload',
-    BULK_UPLOAD: '/files/bulk-upload',
+    LIST: "/files",
+    UPLOAD: "/files/upload",
+    BULK_UPLOAD: "/files/bulk-upload",
     BY_ID: (id: string) => `/files/${id}`,
     DOWNLOAD: (id: string) => `/files/${id}/download`,
     DELETE: (id: string) => `/files/${id}`,
   },
   NOTIFICATIONS: {
-    LIST: '/notifications',
+    LIST: "/notifications",
     BY_ID: (id: string) => `/notifications/${id}`,
     MARK_READ: (id: string) => `/notifications/${id}/read`,
-    MARK_ALL_READ: '/notifications/read-all',
+    MARK_ALL_READ: "/notifications/read-all",
     DELETE: (id: string) => `/notifications/${id}`,
   },
   DATABASE: {
-    GET_ALL: '/databases',
-    CREATE: '/databases',
+    GET_ALL: "/databases",
+    CREATE: "/databases",
     GET_BY_ID: (id: string) => `/databases/${id}`,
     UPDATE: (id: string) => `/databases/${id}`,
     DELETE: (id: string) => `/databases/${id}`,
     STATS: (id: string) => `/databases/${id}/stats`,
     DUPLICATE: (id: string) => `/databases/${id}/duplicate`,
     EXPORT: (id: string) => `/databases/${id}/export`,
-    IMPORT: '/databases/import',
+    IMPORT: "/databases/import",
     RESTORE: (id: string) => `/databases/${id}/restore`,
     ARCHIVE: (id: string) => `/databases/${id}/archive`,
     UNARCHIVE: (id: string) => `/databases/${id}/unarchive`,
-    BULK_UPDATE: '/databases/bulk-update',
-    BULK_DELETE: '/databases/bulk-delete',
+    BULK_UPDATE: "/databases/bulk-update",
+    BULK_DELETE: "/databases/bulk-delete",
     TEMPLATES: (id: string) => `/databases/${id}/templates`,
     CREATE_TEMPLATE: (id: string) => `/databases/${id}/templates`,
-    UPDATE_TEMPLATE: (id: string, templateId: string) => `/databases/${id}/templates/${templateId}`,
-    DELETE_TEMPLATE: (id: string, templateId: string) => `/databases/${id}/templates/${templateId}`,
+    UPDATE_TEMPLATE: (id: string, templateId: string) =>
+      `/databases/${id}/templates/${templateId}`,
+    DELETE_TEMPLATE: (id: string, templateId: string) =>
+      `/databases/${id}/templates/${templateId}`,
+    // Database-level filters
+    GET_FILTERS: (databaseId: string) => `/databases/${databaseId}/filters`,
+    CREATE_FILTER: (databaseId: string) => `/databases/${databaseId}/filters`,
+    GET_FILTER_BY_ID: (databaseId: string, filterId: string) =>
+      `/databases/${databaseId}/filters/${filterId}`,
+    UPDATE_FILTER: (databaseId: string, filterId: string) =>
+      `/databases/${databaseId}/filters/${filterId}`,
+    DELETE_FILTER: (databaseId: string, filterId: string) =>
+      `/databases/${databaseId}/filters/${filterId}`,
+    DUPLICATE_FILTER: (databaseId: string, filterId: string) =>
+      `/databases/${databaseId}/filters/${filterId}/duplicate`,
+    // Database-level sorts
+    GET_SORTS: (databaseId: string) => `/databases/${databaseId}/sorts`,
+    CREATE_SORT: (databaseId: string) => `/databases/${databaseId}/sorts`,
+    GET_SORT_BY_ID: (databaseId: string, sortId: string) =>
+      `/databases/${databaseId}/sorts/${sortId}`,
+    UPDATE_SORT: (databaseId: string, sortId: string) =>
+      `/databases/${databaseId}/sorts/${sortId}`,
+    DELETE_SORT: (databaseId: string, sortId: string) =>
+      `/databases/${databaseId}/sorts/${sortId}`,
+    DUPLICATE_SORT: (databaseId: string, sortId: string) =>
+      `/databases/${databaseId}/sorts/${sortId}/duplicate`,
+    // Database-level filter presets
+    GET_FILTER_PRESETS: (databaseId: string) =>
+      `/databases/${databaseId}/filter-presets`,
+    CREATE_FILTER_PRESET: (databaseId: string) =>
+      `/databases/${databaseId}/filter-presets`,
+    GET_FILTER_PRESET_BY_ID: (databaseId: string, presetId: string) =>
+      `/databases/${databaseId}/filter-presets/${presetId}`,
+    UPDATE_FILTER_PRESET: (databaseId: string, presetId: string) =>
+      `/databases/${databaseId}/filter-presets/${presetId}`,
+    DELETE_FILTER_PRESET: (databaseId: string, presetId: string) =>
+      `/databases/${databaseId}/filter-presets/${presetId}`,
+    DUPLICATE_FILTER_PRESET: (databaseId: string, presetId: string) =>
+      `/databases/${databaseId}/filter-presets/${presetId}/duplicate`,
+    APPLY_FILTER_PRESET: (databaseId: string, presetId: string) =>
+      `/databases/${databaseId}/filter-presets/${presetId}/apply`,
   },
   PROPERTY: {
     GET_ALL: (databaseId: string) => `/databases/${databaseId}/properties`,
     CREATE: (databaseId: string) => `/databases/${databaseId}/properties`,
-    GET_BY_ID: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}`,
-    UPDATE: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}`,
-    DELETE: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}`,
-    REORDER: (databaseId: string) => `/databases/${databaseId}/properties/reorder`,
-    VALIDATE: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}/validate`,
-    DUPLICATE: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}/duplicate`,
-    CHANGE_TYPE: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}/change-type`,
-    INSERT_AFTER: (databaseId: string) => `/databases/${databaseId}/properties/insert-after`,
-    CALCULATIONS: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}/calculations`,
-    TOGGLE_VISIBILITY: (databaseId: string, propertyId: string) => `/databases/${databaseId}/properties/${propertyId}/toggle-visibility`,
+    GET_BY_ID: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}`,
+    UPDATE: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}`,
+    DELETE: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}`,
+    REORDER: (databaseId: string) =>
+      `/databases/${databaseId}/properties/reorder`,
+    VALIDATE: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}/validate`,
+    DUPLICATE: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}/duplicate`,
+    CHANGE_TYPE: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}/change-type`,
+    INSERT_AFTER: (databaseId: string) =>
+      `/databases/${databaseId}/properties/insert-after`,
+    CALCULATIONS: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}/calculations`,
+    TOGGLE_VISIBILITY: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}/toggle-visibility`,
   },
   RECORD: {
     GET_ALL: (databaseId: string) => `/databases/${databaseId}/records`,
     CREATE: (databaseId: string) => `/databases/${databaseId}/records`,
-    GET_BY_ID: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}`,
-    UPDATE: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}`,
-    DELETE: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}`,
-    BULK_UPDATE: (databaseId: string) => `/databases/${databaseId}/records/bulk-update`,
-    BULK_DELETE: (databaseId: string) => `/databases/${databaseId}/records/bulk-delete`,
+    GET_BY_ID: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}`,
+    UPDATE: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}`,
+    DELETE: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}`,
+    BULK_UPDATE: (databaseId: string) =>
+      `/databases/${databaseId}/records/bulk-update`,
+    BULK_DELETE: (databaseId: string) =>
+      `/databases/${databaseId}/records/bulk-delete`,
     REORDER: (databaseId: string) => `/databases/${databaseId}/records/reorder`,
-    DUPLICATE: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}/duplicate`,
+    DUPLICATE: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}/duplicate`,
   },
   VIEW: {
     GET_ALL: (databaseId: string) => `/databases/${databaseId}/views`,
     CREATE: (databaseId: string) => `/databases/${databaseId}/views`,
-    GET_BY_ID: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}`,
-    UPDATE: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}`,
-    DELETE: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}`,
-    DUPLICATE: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/duplicate`,
-    UPDATE_GROUPING: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/grouping`,
-    CHANGE_TYPE: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/change-type`,
-    UPDATE_PROPERTY_VISIBILITY: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/property-visibility`,
-    UPDATE_HIDDEN_PROPERTIES: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/hidden-properties`,
-    UPDATE_COLUMN_FREEZE: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/column-freeze`,
-    UPDATE_FILTERS: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/filters`,
-    UPDATE_SORTS: (databaseId: string, viewId: string) => `/databases/${databaseId}/views/${viewId}/sorts`,
+    GET_BY_ID: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}`,
+    UPDATE: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}`,
+    DELETE: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}`,
+    DUPLICATE: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/duplicate`,
+    UPDATE_GROUPING: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/grouping`,
+    CHANGE_TYPE: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/change-type`,
+    UPDATE_PROPERTY_VISIBILITY: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/property-visibility`,
+    UPDATE_HIDDEN_PROPERTIES: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/hidden-properties`,
+    UPDATE_COLUMN_FREEZE: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/column-freeze`,
+    UPDATE_FILTERS: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/filters`,
+    UPDATE_SORTS: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/sorts`,
   },
   RELATION: {
-    GET_ALL: '/relations',
-    CREATE: '/relations',
+    GET_ALL: "/relations",
+    CREATE: "/relations",
     GET_BY_ID: (relationId: string) => `/relations/${relationId}`,
     UPDATE: (relationId: string) => `/relations/${relationId}`,
     DELETE: (relationId: string) => `/relations/${relationId}`,
-    CONNECTIONS: '/relations/connections',
-    CREATE_CONNECTION: '/relations/connections',
-    DELETE_CONNECTION: (connectionId: string) => `/relations/connections/${connectionId}`,
-    VALIDATE: '/relations/validate',
+    CONNECTIONS: "/relations/connections",
+    CREATE_CONNECTION: "/relations/connections",
+    DELETE_CONNECTION: (connectionId: string) =>
+      `/relations/connections/${connectionId}`,
+    VALIDATE: "/relations/validate",
     STATS: (relationId: string) => `/relations/${relationId}/stats`,
   },
   BLOCK: {
-    GET_ALL: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}/blocks`,
-    CREATE: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}/blocks`,
-    GET_BY_ID: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}`,
-    UPDATE: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}`,
-    DELETE: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}`,
-    BULK_OPERATIONS: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}/blocks/bulk`,
-    MOVE: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/move`,
-    DUPLICATE: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/duplicate`,
-    ARCHIVE: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/archive`,
-    RESTORE: (databaseId: string, recordId: string, blockId: string) => `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/restore`,
-    BULK_UPDATE: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}/blocks/bulk-update`,
-    SEARCH: (databaseId: string, recordId: string) => `/databases/${databaseId}/records/${recordId}/blocks/search`,
+    GET_ALL: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks`,
+    CREATE: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks`,
+    GET_BY_ID: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}`,
+    UPDATE: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}`,
+    DELETE: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}`,
+    BULK_OPERATIONS: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/bulk`,
+    MOVE: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/move`,
+    DUPLICATE: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/duplicate`,
+    ARCHIVE: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/archive`,
+    RESTORE: (databaseId: string, recordId: string, blockId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/${blockId}/restore`,
+    BULK_UPDATE: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/bulk-update`,
+    SEARCH: (databaseId: string, recordId: string) =>
+      `/databases/${databaseId}/records/${recordId}/blocks/search`,
   },
   MODULES: {
-    AVAILABLE: '/modules/available',
-    CORE: '/modules/core',
-    BY_CATEGORY: '/modules/category',
+    AVAILABLE: "/modules/available",
+    CORE: "/modules/core",
+    BY_CATEGORY: "/modules/category",
     CONFIG: (moduleId: string) => `/modules/config/${moduleId}`,
     AVAILABILITY: (moduleId: string) => `/modules/availability/${moduleId}`,
     DEPENDENCIES: (moduleId: string) => `/modules/dependencies/${moduleId}`,
-    VALIDATE: '/modules/validate',
-    WORKSPACE_OVERVIEW: (workspaceId: string) => `/modules/workspace/${workspaceId}`,
-    WORKSPACE_INITIALIZED: (workspaceId: string) => `/modules/workspace/${workspaceId}/initialized`,
-    WORKSPACE_RECOMMENDATIONS: (workspaceId: string) => `/modules/workspace/${workspaceId}/recommendations`,
-    WORKSPACE_VALIDATE: (workspaceId: string) => `/modules/workspace/${workspaceId}/validate`,
-    WORKSPACE_STATUS: (workspaceId: string, moduleId: string) => `/modules/workspace/${workspaceId}/${moduleId}/status`,
-    WORKSPACE_DATABASE_ID: (workspaceId: string, moduleId: string) => `/modules/workspace/${workspaceId}/${moduleId}/database-id`,
-    WORKSPACE_DETAILS: (workspaceId: string, moduleId: string) => `/modules/workspace/${workspaceId}/${moduleId}/details`,
-    INITIALIZE: (workspaceId: string) => `/modules/workspace/${workspaceId}/initialize`,
-    INITIALIZE_CORE: (workspaceId: string) => `/modules/workspace/${workspaceId}/initialize/core`,
-    INITIALIZE_SPECIFIC: (workspaceId: string) => `/modules/workspace/${workspaceId}/initialize/specific`,
+    VALIDATE: "/modules/validate",
+    WORKSPACE_OVERVIEW: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}`,
+    WORKSPACE_INITIALIZED: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}/initialized`,
+    WORKSPACE_RECOMMENDATIONS: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}/recommendations`,
+    WORKSPACE_VALIDATE: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}/validate`,
+    WORKSPACE_STATUS: (workspaceId: string, moduleId: string) =>
+      `/modules/workspace/${workspaceId}/${moduleId}/status`,
+    WORKSPACE_DATABASE_ID: (workspaceId: string, moduleId: string) =>
+      `/modules/workspace/${workspaceId}/${moduleId}/database-id`,
+    WORKSPACE_DETAILS: (workspaceId: string, moduleId: string) =>
+      `/modules/workspace/${workspaceId}/${moduleId}/details`,
+    INITIALIZE: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}/initialize`,
+    INITIALIZE_CORE: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}/initialize/core`,
+    INITIALIZE_SPECIFIC: (workspaceId: string) =>
+      `/modules/workspace/${workspaceId}/initialize/specific`,
   },
   CROSS_MODULE: {
-    INITIALIZE_RELATIONS: '/cross-module/relations/initialize',
-    CONNECT: '/cross-module/relations/connect',
-    DISCONNECT: '/cross-module/relations/disconnect',
-    BULK_CONNECT: '/cross-module/relations/bulk-connect',
-    RELATED_RECORDS: (recordId: string) => `/cross-module/relations/records/${recordId}/related`,
-    RECORD_NETWORK: (recordId: string) => `/cross-module/relations/records/${recordId}/network`,
-    RECORD_TIMELINE: (recordId: string) => `/cross-module/relations/records/${recordId}/timeline`,
-    RECORD_SUGGESTIONS: (recordId: string) => `/cross-module/relations/records/${recordId}/suggestions`,
-    MODULE_STATS: (moduleType: string) => `/cross-module/relations/modules/${moduleType}/stats`,
-    INSIGHTS: '/cross-module/relations/insights',
-    HEALTH_CHECK: '/cross-module/relations/health-check',
+    INITIALIZE_RELATIONS: "/cross-module/relations/initialize",
+    CONNECT: "/cross-module/relations/connect",
+    DISCONNECT: "/cross-module/relations/disconnect",
+    BULK_CONNECT: "/cross-module/relations/bulk-connect",
+    RELATED_RECORDS: (recordId: string) =>
+      `/cross-module/relations/records/${recordId}/related`,
+    RECORD_NETWORK: (recordId: string) =>
+      `/cross-module/relations/records/${recordId}/network`,
+    RECORD_TIMELINE: (recordId: string) =>
+      `/cross-module/relations/records/${recordId}/timeline`,
+    RECORD_SUGGESTIONS: (recordId: string) =>
+      `/cross-module/relations/records/${recordId}/suggestions`,
+    MODULE_STATS: (moduleType: string) =>
+      `/cross-module/relations/modules/${moduleType}/stats`,
+    INSIGHTS: "/cross-module/relations/insights",
+    HEALTH_CHECK: "/cross-module/relations/health-check",
   },
   RELATION_ANALYTICS: {
-    ANALYTICS: '/analytics/relations',
-    PRODUCTIVITY: '/analytics/productivity',
-    DASHBOARD: '/analytics/dashboard',
-    RECOMMENDATIONS: '/analytics/recommendations',
-    TRENDS: '/analytics/trends',
-    IMPACT: '/analytics/impact',
-    HEALTH: '/analytics/health',
+    ANALYTICS: "/analytics/relations",
+    PRODUCTIVITY: "/analytics/productivity",
+    DASHBOARD: "/analytics/dashboard",
+    RECOMMENDATIONS: "/analytics/recommendations",
+    TRENDS: "/analytics/trends",
+    IMPACT: "/analytics/impact",
+    HEALTH: "/analytics/health",
   },
   TEMPLATES: {
-    LIST: '/templates',
-    FEATURED: '/templates/featured',
-    OFFICIAL: '/templates/official',
-    POPULAR: '/templates/popular',
-    CATEGORIES: '/templates/categories',
-    TYPES: '/templates/types',
-    GALLERY: '/templates/gallery',
-    SEARCH: '/templates/search',
+    LIST: "/templates",
+    FEATURED: "/templates/featured",
+    OFFICIAL: "/templates/official",
+    POPULAR: "/templates/popular",
+    CATEGORIES: "/templates/categories",
+    TYPES: "/templates/types",
+    GALLERY: "/templates/gallery",
+    SEARCH: "/templates/search",
     BY_CATEGORY: (category: string) => `/templates/category/${category}`,
     BY_MODULE: (moduleType: string) => `/templates/module/${moduleType}`,
     BY_ID: (templateId: string) => `/templates/${templateId}`,
-    CREATE: '/templates',
+    CREATE: "/templates",
     UPDATE: (templateId: string) => `/templates/${templateId}`,
     DELETE: (templateId: string) => `/templates/${templateId}`,
     APPLY_ROW: (templateId: string) => `/templates/${templateId}/apply/row`,
-    APPLY_DATABASE: (templateId: string) => `/templates/${templateId}/apply/database`,
-    APPLY_WORKSPACE: (templateId: string) => `/templates/${templateId}/apply/workspace`,
+    APPLY_DATABASE: (templateId: string) =>
+      `/templates/${templateId}/apply/database`,
+    APPLY_WORKSPACE: (templateId: string) =>
+      `/templates/${templateId}/apply/workspace`,
     RATE: (templateId: string) => `/templates/${templateId}/rate`,
     ANALYTICS: (templateId: string) => `/templates/${templateId}/analytics`,
-    USER_TEMPLATES: '/templates/user/my-templates',
-    USER_HISTORY: '/templates/user/history',
+    USER_TEMPLATES: "/templates/user/my-templates",
+    USER_HISTORY: "/templates/user/history",
     SUGGESTIONS: (databaseId: string) => `/templates/suggestions/${databaseId}`,
     DUPLICATE: (templateId: string) => `/templates/${templateId}/duplicate`,
     EXPORT: (templateId: string) => `/templates/${templateId}/export`,
-    IMPORT: '/templates/import',
-    INITIALIZE_PREDEFINED: '/templates/admin/initialize-predefined',
+    IMPORT: "/templates/import",
+    INITIALIZE_PREDEFINED: "/templates/admin/initialize-predefined",
   },
   TEMPLATE_BUILDER: {
-    FROM_RECORD: (recordId: string) => `/template-builder/from-record/${recordId}`,
-    FROM_DATABASE: (databaseId: string) => `/template-builder/from-database/${databaseId}`,
-    FROM_WORKSPACE: (workspaceId: string) => `/template-builder/from-workspace/${workspaceId}`,
-    GENERATE_FROM_PROMPT: '/template-builder/generate-from-prompt',
-    ANALYZE_DATABASE: (databaseId: string) => `/template-builder/analyze-database/${databaseId}`,
-    VALIDATE: '/template-builder/validate',
-    PREVIEW: '/template-builder/preview',
-    SUGGESTIONS: '/template-builder/suggestions',
-    WIZARD_STEPS: (templateType: string) => `/template-builder/wizard-steps/${templateType}`,
-    ANALYTICS: '/template-builder/analytics',
+    FROM_RECORD: (recordId: string) =>
+      `/template-builder/from-record/${recordId}`,
+    FROM_DATABASE: (databaseId: string) =>
+      `/template-builder/from-database/${databaseId}`,
+    FROM_WORKSPACE: (workspaceId: string) =>
+      `/template-builder/from-workspace/${workspaceId}`,
+    GENERATE_FROM_PROMPT: "/template-builder/generate-from-prompt",
+    ANALYZE_DATABASE: (databaseId: string) =>
+      `/template-builder/analyze-database/${databaseId}`,
+    VALIDATE: "/template-builder/validate",
+    PREVIEW: "/template-builder/preview",
+    SUGGESTIONS: "/template-builder/suggestions",
+    WIZARD_STEPS: (templateType: string) =>
+      `/template-builder/wizard-steps/${templateType}`,
+    ANALYTICS: "/template-builder/analytics",
   },
 } as const;

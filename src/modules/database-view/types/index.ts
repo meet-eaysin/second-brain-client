@@ -80,7 +80,7 @@ export type TDatabase = TBaseEntity & {
 };
 
 export type TDatabaseStats = {
-  databaseId: TId;
+  databaseId: string;
   recordCount: number;
   propertyCount: number;
   viewCount: number;
@@ -89,10 +89,10 @@ export type TDatabaseStats = {
   createdThisWeek: number;
   updatedThisWeek: number;
   topContributors: Array<{
-    userId: TUserId;
+    userId: string;
     recordCount: number;
   }>;
-}
+};
 
 export type TDatabaseQueryParams = {
   workspaceId?: string;
@@ -101,7 +101,12 @@ export type TDatabaseQueryParams = {
   isTemplate?: boolean;
   isArchived?: boolean;
   search?: string;
-  sortBy?: "name" | "createdAt" | "updatedAt" | "lastActivityAt" | "recordCount";
+  sortBy?:
+    | "name"
+    | "createdAt"
+    | "updatedAt"
+    | "lastActivityAt"
+    | "recordCount";
   sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
@@ -155,7 +160,14 @@ export type TPropertyConfig = {
   relationDatabaseId?: string;
   relationPropertyId?: string;
   rollupPropertyId?: string;
-  rollupFunction?: "count" | "sum" | "average" | "min" | "max" | "latest" | "earliest";
+  rollupFunction?:
+    | "count"
+    | "sum"
+    | "average"
+    | "min"
+    | "max"
+    | "latest"
+    | "earliest";
   formula?: string;
   allowMultiple?: boolean;
   allowedTypes?: string[];
@@ -180,7 +192,11 @@ export type TProperty = TBaseEntity & {
 };
 
 export type TPrimitiveValue = string | number | boolean | Date | null;
-export type TArrayValue = string[] | TPropertyOption[] | TRelationValue[] | TFileValue[];
+export type TArrayValue =
+  | string[]
+  | TPropertyOption[]
+  | TRelationValue[]
+  | TFileValue[];
 
 export type TRelationValue = {
   recordId: string;
@@ -211,21 +227,21 @@ export type TPropertyValue =
 
 export type TRecord = TBaseEntity &
   TSoftDelete & {
-  databaseId: string;
-  properties: Record<string, TPropertyValue>;
-  content?: TContentBlock[];
-  order?: number;
-  isTemplate: boolean;
-  isFavorite: boolean;
-  isArchived: boolean;
-  lastEditedBy?: string;
-  lastEditedAt?: Date;
-  commentCount: number;
-  version: number;
-  autoTags?: string[];
-  aiSummary?: string;
-  relationsCache?: Record<string, TPropertyValue[]>;
-};
+    databaseId: string;
+    properties: Record<string, TPropertyValue>;
+    content?: TContentBlock[];
+    order?: number;
+    isTemplate: boolean;
+    isFavorite: boolean;
+    isArchived: boolean;
+    lastEditedBy?: string;
+    lastEditedAt?: Date;
+    commentCount: number;
+    version: number;
+    autoTags?: string[];
+    aiSummary?: string;
+    relationsCache?: Record<string, TPropertyValue[]>;
+  };
 
 export type TRecordQueryOptions = {
   databaseId: string;
@@ -449,27 +465,6 @@ export enum EBlockType {
   DIVIDER = "divider",
 }
 
-export type TRichText = {
-  type: "text" | "mention";
-  text?: { content: string; link?: { url: string } };
-  annotations?: { bold?: boolean; italic?: boolean; code?: boolean };
-  plain_text: string;
-};
-
-export type TContentBlock = {
-  id: string;
-  type: EBlockType;
-  content: TRichText[];
-  children?: TContentBlock[];
-  checked?: boolean;
-  language?: string;
-  url?: string;
-  createdAt: Date;
-  createdBy: string;
-  lastEditedAt: Date;
-  lastEditedBy: string;
-};
-
 export type TSelectOption = {
   id: string;
   name: string;
@@ -534,22 +529,22 @@ export type TUpdateRecordInput = {
 export type TBulkUpdateRecords = {
   recordIds: string[];
   updates: {
-    properties?: Record<string, any>;
-    content?: any[];
+    properties?: Record<string, TPropertyValue>;
+    content?: TContentBlock[];
   };
-}
+};
 
 export type TBulkDeleteRecords = {
   recordIds: string[];
   permanent?: boolean;
-}
+};
 
 export type TReorderRecords = {
   recordOrders: Array<{
     recordId: string;
     order: number;
   }>;
-}
+};
 
 export type TPermissionLevel = "read" | "write" | "admin";
 
@@ -592,6 +587,115 @@ export type TRecordQueryParams = {
   sorts?: string;
 };
 
+// Database-level filter and sort types
+export type TDatabaseFilter = {
+  id: string;
+  name: string;
+  databaseId: string;
+  conditions: TFilterCondition[];
+  isActive: boolean;
+  isDefault: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TDatabaseSort = {
+  id: string;
+  name: string;
+  databaseId: string;
+  sorts: TSortConfig[];
+  isActive: boolean;
+  isDefault: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TDatabaseFilterPreset = {
+  id: string;
+  name: string;
+  databaseId: string;
+  filters: TDatabaseFilter[];
+  sorts: TDatabaseSort[];
+  isPublic: boolean;
+  isDefault: boolean;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TCreateDatabaseFilter = {
+  name: string;
+  conditions: TFilterCondition[];
+  isActive?: boolean;
+  isDefault?: boolean;
+};
+
+export type TUpdateDatabaseFilter = {
+  name?: string;
+  conditions?: TFilterCondition[];
+  isActive?: boolean;
+  isDefault?: boolean;
+};
+
+export type TCreateDatabaseSort = {
+  name: string;
+  sorts: TSortConfig[];
+  isActive?: boolean;
+  isDefault?: boolean;
+};
+
+export type TUpdateDatabaseSort = {
+  name?: string;
+  sorts?: TSortConfig[];
+  isActive?: boolean;
+  isDefault?: boolean;
+};
+
+export type TCreateDatabaseFilterPreset = {
+  name: string;
+  filters: TDatabaseFilter[];
+  sorts: TDatabaseSort[];
+  isPublic?: boolean;
+  isDefault?: boolean;
+};
+
+export type TUpdateDatabaseFilterPreset = {
+  name?: string;
+  filters?: TDatabaseFilter[];
+  sorts?: TDatabaseSort[];
+  isPublic?: boolean;
+  isDefault?: boolean;
+};
+
+export type TDatabaseFilterQueryParams = {
+  databaseId: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type TDatabaseSortQueryParams = {
+  databaseId: string;
+  isActive?: boolean;
+  isDefault?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type TDatabaseFilterPresetQueryParams = {
+  databaseId: string;
+  isPublic?: boolean;
+  isDefault?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
 export type TDatabaseSchemaConfig = {
   databaseId?: string;
   viewId?: string;
@@ -612,4 +716,232 @@ export type TReorderProperties = {
     propertyId: string;
     order: number;
   }>;
+};
+
+// Relation Types
+export enum ERelationType {
+  ONE_TO_ONE = "one_to_one",
+  ONE_TO_MANY = "one_to_many",
+  MANY_TO_ONE = "many_to_one",
+  MANY_TO_MANY = "many_to_many",
+}
+
+export type TRelationConfig = {
+  type: ERelationType;
+  sourceDatabaseId: string;
+  sourcePropertyId: string;
+  targetDatabaseId: string;
+  targetPropertyId?: string;
+  onSourceDelete?: "cascade" | "set_null" | "restrict";
+  onTargetDelete?: "cascade" | "set_null" | "restrict";
+  displayProperty?: string;
+  allowDuplicates?: boolean;
+  required?: boolean;
+  maxConnections?: number;
+};
+
+export type IRelation = {
+  id: string;
+  name: string;
+  description?: string;
+  config: TRelationConfig;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: string;
+  updatedBy?: string;
+};
+
+export type TCreateRelation = {
+  name: string;
+  description?: string;
+  config: TRelationConfig;
+};
+
+export type TUpdateRelation = {
+  name?: string;
+  description?: string;
+  config?: Partial<TRelationConfig>;
+  isActive?: boolean;
+};
+
+export type TRelationConnection = {
+  id: string;
+  relationId: string;
+  sourceRecordId: string;
+  targetRecordId: string;
+  createdAt: Date;
+  createdBy: string;
+  properties?: Record<string, TPropertyValue>;
+};
+
+export type TCreateRelationConnection = {
+  relationId: string;
+  sourceRecordId: string;
+  targetRecordId: string;
+  properties?: Record<string, TPropertyValue>;
+};
+
+export type TRelationQueryParams = {
+  sourceDatabaseId?: string;
+  targetDatabaseId?: string;
+  type?: ERelationType;
+  isActive?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type TRelationList = {
+  relations: IRelation[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
+export type IRelationConnectionQueryParams = {
+  relationId?: string;
+  sourceRecordId?: string;
+  targetRecordId?: string;
+  page?: number;
+  limit?: number;
+};
+
+export type TRelationConnectionList = {
+  connections: TRelationConnection[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
+// Block Types
+export enum EBlockType {
+  PARAGRAPH = "paragraph",
+  HEADING_1 = "heading_1",
+  HEADING_2 = "heading_2",
+  HEADING_3 = "heading_3",
+  BULLETED_LIST_ITEM = "bulleted_list_item",
+  NUMBERED_LIST_ITEM = "numbered_list_item",
+  TO_DO = "to_do",
+  QUOTE = "quote",
+  CODE = "code",
+  IMAGE = "image",
+  VIDEO = "video",
+  FILE = "file",
+  DIVIDER = "divider",
+  EMBED = "embed",
+  BOOKMARK = "bookmark",
+  EQUATION = "equation",
+  TABLE = "table",
+  TABLE_ROW = "table_row",
+  CALLOUT = "callout",
+  COLUMN_LIST = "column_list",
+  COLUMN = "column",
+  CHILD_PAGE = "child_page",
+  CHILD_DATABASE = "child_database",
+  LINK_PREVIEW = "link_preview",
+  SYNCED_BLOCK = "synced_block",
+  TEMPLATE = "template",
+  TABLE_OF_CONTENTS = "table_of_contents",
+  BREADCRUMB = "breadcrumb",
+  TOGGLE = "toggle",
+}
+
+export enum ERichTextType {
+  TEXT = "text",
+  MENTION = "mention",
+  EQUATION = "equation",
+}
+
+export type TTextAnnotations = {
+  bold?: boolean;
+  italic?: boolean;
+  strikethrough?: boolean;
+  underline?: boolean;
+  code?: boolean;
+  color?: string;
+};
+
+export type TRichText = {
+  type: ERichTextType;
+  text?: {
+    content: string;
+    link?: {
+      url: string;
+    };
+  };
+  mention?: {
+    type: "user" | "page" | "database" | "date";
+    user?: { id: string };
+    page?: { id: string };
+    database?: { id: string };
+    date?: { start: string; end?: string };
+  };
+  equation?: {
+    expression: string;
+  };
+  annotations?: TTextAnnotations;
+  plain_text: string;
+  href?: string;
+};
+
+export type TContentBlock = {
+  id: string;
+  type: EBlockType;
+  content: TRichText[];
+  children?: TContentBlock[];
+  checked?: boolean;
+  language?: string;
+  url?: string;
+  caption?: TRichText[];
+  createdAt: Date;
+  createdBy: string;
+  lastEditedAt: Date;
+  lastEditedBy: string;
+};
+
+export interface ICreateBlock {
+  type: EBlockType;
+  afterBlockId?: string;
+  parentId?: string;
+  content: Partial<TContentBlock>;
+}
+
+export interface IUpdateBlock {
+  content?: Partial<TContentBlock>;
+  archived?: boolean;
+}
+
+export interface IBulkBlockOperation {
+  operation: "create" | "update" | "delete" | "move";
+  blockId?: string;
+  data?:
+    | ICreateBlock
+    | IUpdateBlock
+    | { afterBlockId?: string; parentId?: string };
+}
+
+export interface IBlockSearchOptions {
+  query?: string;
+  types?: EBlockType[];
+  createdBy?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  hasChildren?: boolean;
+  archived?: boolean;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface IBlockList {
+  blocks: TContentBlock[];
+  total: number;
+  hasMore: boolean;
+  nextCursor?: string;
 }
