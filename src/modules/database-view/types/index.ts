@@ -79,6 +79,21 @@ export type TDatabase = TBaseEntity & {
   syncSettings?: Record<string, unknown>;
 };
 
+export type TDatabaseStats = {
+  databaseId: TId;
+  recordCount: number;
+  propertyCount: number;
+  viewCount: number;
+  templateCount: number;
+  lastActivityAt?: Date;
+  createdThisWeek: number;
+  updatedThisWeek: number;
+  topContributors: Array<{
+    userId: TUserId;
+    recordCount: number;
+  }>;
+}
+
 export type TDatabaseQueryParams = {
   workspaceId?: string;
   type?: EDatabaseType;
@@ -516,6 +531,26 @@ export type TUpdateRecordInput = {
   properties: Record<string, unknown>;
 };
 
+export type TBulkUpdateRecords = {
+  recordIds: string[];
+  updates: {
+    properties?: Record<string, any>;
+    content?: any[];
+  };
+}
+
+export type TBulkDeleteRecords = {
+  recordIds: string[];
+  permanent?: boolean;
+}
+
+export type TReorderRecords = {
+  recordOrders: Array<{
+    recordId: string;
+    order: number;
+  }>;
+}
+
 export type TPermissionLevel = "read" | "write" | "admin";
 
 export type TDatabasePermission = {
@@ -571,3 +606,10 @@ export type TPropertyQueryParams = {
   viewId: string;
   includeHidden: boolean;
 };
+
+export type TReorderProperties = {
+  propertyOrders: Array<{
+    propertyId: string;
+    order: number;
+  }>;
+}

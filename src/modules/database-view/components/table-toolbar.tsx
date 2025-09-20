@@ -8,19 +8,14 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import {ColumnVisibilityMenu} from "./column-visibility-menu";
-import {useColumnVisibility} from "../hooks/use-column-visibility";
 import {useDatabaseView} from "@/modules/database-view/context";
 
 export function TableToolbar() {
   const {currentView, records, properties, moduleType, searchQuery, onSearchQueryChange} = useDatabaseView()
-  const columnVisibility = useColumnVisibility();
 
   const activeFiltersCount = currentView?.filters?.length || 0;
   const activeSortsCount = currentView?.sorts?.length || 0;
   const hiddenPropertiesCount = currentView?.settings?.hiddenProperties?.length || 0;
-
-  const handleFiltersChange = (filters) => onFiltersChange?.(filters);
-  const handleSortsChange = async (sorts) => onSortsChange?.(sorts);
 
   return (
     <TooltipProvider>
@@ -71,26 +66,12 @@ export function TableToolbar() {
               {records?.length} record{records?.length !== 1 ? "s" : ""}
             </Badge>
 
-            <FilterManager
-              properties={properties}
-              currentView={currentView}
-              onSave={handleFiltersChange}
-            />
+            <FilterManager />
 
-            <SortManager
-              properties={properties}
-              currentView={currentView}
-              onSave={handleSortsChange}
-            />
+            <SortManager  />
 
-            {currentView && moduleType && columnVisibility && (
-              <ColumnVisibilityMenu
-                properties={properties}
-                currentView={currentView}
-                onToggleProperty={columnVisibility.toggleProperty}
-                onShowAll={columnVisibility.showAll}
-                onHideAll={columnVisibility.hideAll}
-              />
+            {currentView && moduleType && (
+              <ColumnVisibilityMenu />
             )}
           </div>
         </div>

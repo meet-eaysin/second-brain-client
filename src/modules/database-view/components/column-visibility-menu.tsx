@@ -12,49 +12,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import {useDatabaseView} from "@/modules/database-view/context";
+import type {TProperty} from "@/modules/database-view/types";
+import {useColumnVisibility} from "@/modules/database-view/hooks/use-column-visibility.ts";
 
-interface DocumentProperty {
-  id: string;
-  name: string;
-  type: string;
-  description?: string;
-  required?: boolean;
-  frozen?: boolean;
-  visible?: boolean;
-  order?: number;
-}
-
-interface DocumentView {
-  id: string;
-  name: string;
-  settings?: {
-    visibleProperties?: string[];
-    hiddenProperties?: string[];
-  };
-  isDefault?: boolean;
-}
-
-interface ColumnVisibilityMenuProps {
-  properties: DocumentProperty[];
-  currentView: DocumentView;
-  onToggleProperty: (propertyId: string, visible: boolean) => Promise<void>;
-  onShowAll: () => Promise<void>;
-  onHideAll: () => Promise<void>;
-  disabled?: boolean;
-}
-
-export function ColumnVisibilityMenu({
-  properties,
-  currentView,
-  onToggleProperty,
-  onShowAll,
-  onHideAll,
-  disabled = false,
-}: ColumnVisibilityMenuProps) {
+export function ColumnVisibilityMenu() {
+  const { currentView, properties } = useDatabaseView();
+  const { toggleProperty, showAll, hideAll  } = useColumnVisibility()
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const visiblePropertyIds = currentView.settings?.visibleProperties || [];
-  const hiddenPropertyIds = currentView.settings?.hiddenProperties || [];
+  const visiblePropertyIds = currentView?.settings?.visibleProperties || [];
+  const hiddenPropertyIds = currentView?.settings?.hiddenProperties || [];
 
   const visibleProperties = properties.filter((prop) =>
     visiblePropertyIds.includes(prop.id)
@@ -67,8 +35,8 @@ export function ColumnVisibilityMenu({
         !hiddenPropertyIds.includes(prop.id))
   );
 
-  const canHideProperty = (property: DocumentProperty): boolean =>
-    !property.frozen && !property.required;
+  const canHideProperty = (property: TProperty): boolean =>
+    !property.isSystem && !property.required;
 
   const handleToggleProperty = async (
     propertyId: string,
@@ -87,10 +55,8 @@ export function ColumnVisibilityMenu({
     setIsLoading(true);
 
     try {
-      await onToggleProperty(propertyId, !currentlyVisible);
-      toast.success(
-        `${property.name} ${currentlyVisible ? "hidden" : "shown"}`
-      );
+      await toggleProperty(propertyId, !currentlyVisible);
+      toast.success(`${property.name} ${currentlyVisible ? "hidden" : "shown"}`);
     } catch (error) {
       console.log(error);
 
@@ -108,7 +74,7 @@ export function ColumnVisibilityMenu({
     setIsLoading(true);
 
     try {
-      await onShowAll();
+      await showAll();
       toast.success("All properties are now visible");
     } catch (error) {
       console.log(error);
@@ -124,7 +90,7 @@ export function ColumnVisibilityMenu({
 
     setIsLoading(true);
     try {
-      await onHideAll();
+      await hideAll();
       toast.success("Non-required properties hidden");
     } catch (error) {
       console.log(error);
@@ -141,7 +107,7 @@ export function ColumnVisibilityMenu({
         <Button
           variant="outline"
           size="sm"
-          disabled={disabled || isLoading}
+          // disabled={disabled || isLoading}
           className="h-8"
         >
           <Eye className="h-4 w-4" />
@@ -194,9 +160,9 @@ export function ColumnVisibilityMenu({
                 <div className="flex items-center">
                   <span>{property.name}</span>
                 </div>
-                {(property.frozen || property.required) && (
+                {(property.isSystem || property.required) && (
                   <Badge variant="outline" className="text-xs">
-                    {property.frozen ? "Frozen" : "Required"}
+                    {property.isSystem ? "Frozen" : "Required"}
                   </Badge>
                 )}
               </DropdownMenuCheckboxItem>

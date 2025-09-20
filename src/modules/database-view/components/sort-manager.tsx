@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Popover,
   PopoverContent,
@@ -31,19 +31,8 @@ import {
   Link,
   Phone,
 } from "lucide-react";
-import type { DocumentProperty } from "@/modules/database-view";
-import type {TView} from "@/modules/database-view/types";
-
-interface SortRule {
-  propertyId: string;
-  direction: "asc" | "desc";
-}
-
-interface SortManagerProps {
-  properties: DocumentProperty[];
-  currentView: TView;
-  onSave: (sorts: SortRule[]) => Promise<void>;
-}
+import type {TSortConfig} from "@/modules/database-view/types";
+import {useDatabaseView} from "@/modules/database-view/context";
 
 const PROPERTY_TYPE_ICONS = {
   TEXT: Type,
@@ -57,13 +46,10 @@ const PROPERTY_TYPE_ICONS = {
   MULTI_SELECT: Tags,
 } as const;
 
-export function SortManager({
-  properties,
-  currentView,
-  onSave,
-}: SortManagerProps) {
+export function SortManager() {
+  const { currentView, properties } = useDatabaseView();
   const [open, setOpen] = useState(false);
-  const [sorts, setSorts] = useState<SortRule[]>([]);
+  const [sorts, setSorts] = useState<TSortConfig[]>([]);
 
   useEffect(() => {
     setSorts(currentView?.sorts ?? []);
@@ -78,7 +64,7 @@ export function SortManager({
     }
   };
 
-  const updateSort = (i: number, field: keyof SortRule, value: string) => {
+  const updateSort = (i: number, field: keyof TSortConfig, value: string) => {
     const next = [...sorts];
     next[i] = { ...next[i], [field]: value };
     setSorts(next);

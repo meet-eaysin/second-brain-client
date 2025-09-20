@@ -1,11 +1,10 @@
-
-import { useState, useEffect } from "react";
+import {useState, useEffect} from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+import {Button} from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -13,79 +12,65 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { GripVertical, Plus, Trash2, Filter as FilterIcon } from "lucide-react";
-import type {TProperty, TView} from "@/modules/database-view/types";
-
-interface FilterRule {
-  propertyId: string;
-  operator: string;
-  value: unknown;
-}
-
-interface FilterManagerProps {
-  properties: TProperty[];
-  currentView?: TView;
-  onSave: (filters: FilterRule[]) => void;
-}
+import {Input} from "@/components/ui/input";
+import {Checkbox} from "@/components/ui/checkbox";
+import {GripVertical, Plus, Trash2, Filter as FilterIcon} from "lucide-react";
+import type {TFilterCondition, TPropertyOption} from "@/modules/database-view/types";
+import {useDatabaseView} from "@/modules/database-view/context";
 
 const FILTER_OPERATORS = {
   text: [
-    { value: "contains", label: "Contains" },
-    { value: "not_contains", label: "Does not contain" },
-    { value: "equals", label: "Equals" },
-    { value: "not_equals", label: "Does not equal" },
-    { value: "starts_with", label: "Starts with" },
-    { value: "ends_with", label: "Ends with" },
-    { value: "is_empty", label: "Is empty" },
-    { value: "is_not_empty", label: "Is not empty" },
+    {value: "contains", label: "Contains"},
+    {value: "not_contains", label: "Does not contain"},
+    {value: "equals", label: "Equals"},
+    {value: "not_equals", label: "Does not equal"},
+    {value: "starts_with", label: "Starts with"},
+    {value: "ends_with", label: "Ends with"},
+    {value: "is_empty", label: "Is empty"},
+    {value: "is_not_empty", label: "Is not empty"},
   ],
   number: [
-    { value: "equals", label: "Equals" },
-    { value: "not_equals", label: "Does not equal" },
-    { value: "greater_than", label: "Greater than" },
-    { value: "less_than", label: "Less than" },
-    { value: "greater_than_or_equal", label: "Greater than or equal" },
-    { value: "less_than_or_equal", label: "Less than or equal" },
-    { value: "is_empty", label: "Is empty" },
-    { value: "is_not_empty", label: "Is not empty" },
+    {value: "equals", label: "Equals"},
+    {value: "not_equals", label: "Does not equal"},
+    {value: "greater_than", label: "Greater than"},
+    {value: "less_than", label: "Less than"},
+    {value: "greater_than_or_equal", label: "Greater than or equal"},
+    {value: "less_than_or_equal", label: "Less than or equal"},
+    {value: "is_empty", label: "Is empty"},
+    {value: "is_not_empty", label: "Is not empty"},
   ],
   date: [
-    { value: "equals", label: "Is" },
-    { value: "not_equals", label: "Is not" },
-    { value: "before", label: "Before" },
-    { value: "after", label: "After" },
-    { value: "on_or_before", label: "On or before" },
-    { value: "on_or_after", label: "On or after" },
-    { value: "is_empty", label: "Is empty" },
-    { value: "is_not_empty", label: "Is not empty" },
+    {value: "equals", label: "Is"},
+    {value: "not_equals", label: "Is not"},
+    {value: "before", label: "Before"},
+    {value: "after", label: "After"},
+    {value: "on_or_before", label: "On or before"},
+    {value: "on_or_after", label: "On or after"},
+    {value: "is_empty", label: "Is empty"},
+    {value: "is_not_empty", label: "Is not empty"},
   ],
   checkbox: [
-    { value: "checked", label: "Is checked" },
-    { value: "unchecked", label: "Is unchecked" },
+    {value: "checked", label: "Is checked"},
+    {value: "unchecked", label: "Is unchecked"},
   ],
   select: [
-    { value: "equals", label: "Is" },
-    { value: "not_equals", label: "Is not" },
-    { value: "is_empty", label: "Is empty" },
-    { value: "is_not_empty", label: "Is not empty" },
+    {value: "equals", label: "Is"},
+    {value: "not_equals", label: "Is not"},
+    {value: "is_empty", label: "Is empty"},
+    {value: "is_not_empty", label: "Is not empty"},
   ],
   multi_select: [
-    { value: "contains", label: "Contains" },
-    { value: "not_contains", label: "Does not contain" },
-    { value: "contains_all", label: "Contains all" },
-    { value: "is_empty", label: "Is empty" },
-    { value: "is_not_empty", label: "Is not empty" },
+    {value: "contains", label: "Contains"},
+    {value: "not_contains", label: "Does not contain"},
+    {value: "contains_all", label: "Contains all"},
+    {value: "is_empty", label: "Is empty"},
+    {value: "is_not_empty", label: "Is not empty"},
   ],
 };
 
-export function FilterManager({
-  properties,
-  currentView,
-  onSave,
-}: FilterManagerProps) {
-  const [filters, setFilters] = useState<FilterRule[]>([]);
+export function FilterManager() {
+  const {currentView, properties} = useDatabaseView();
+  const [filters, setFilters] = useState<TFilterCondition[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -117,11 +102,11 @@ export function FilterManager({
 
   const updateFilter = (
     index: number,
-    field: keyof FilterRule,
+    field: keyof TFilterCondition,
     value: unknown
   ) => {
     const newFilters = [...filters];
-    newFilters[index] = { ...newFilters[index], [field]: value };
+    newFilters[index] = {...newFilters[index], [field]: value};
 
     if (field === "propertyId") {
       const property = properties.find((p) => p.id === value);
@@ -151,7 +136,7 @@ export function FilterManager({
   const getOperators = (propertyType: string) =>
     FILTER_OPERATORS[propertyType] || FILTER_OPERATORS.text;
 
-  const renderValueInput = (filter: FilterRule, index: number) => {
+  const renderValueInput = (filter: TFilterCondition, index: number) => {
     const property = getProperty(filter.propertyId);
     if (!property) return null;
 
@@ -171,7 +156,7 @@ export function FilterManager({
             onValueChange={(value) => updateFilter(index, "value", value)}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Select option..." />
+              <SelectValue placeholder="Select option..."/>
             </SelectTrigger>
             <SelectContent>
               {property.config?.options?.map((option) => (
@@ -226,7 +211,7 @@ export function FilterManager({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
-          <FilterIcon />
+          <FilterIcon/>
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -245,7 +230,7 @@ export function FilterManager({
                   key={index}
                   className="flex items-center gap-2 border rounded-md px-2 py-1"
                 >
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
+                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-move"/>
 
                   <Select
                     value={filter.propertyId}
@@ -254,7 +239,7 @@ export function FilterManager({
                     }
                   >
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Property" />
+                      <SelectValue placeholder="Property"/>
                     </SelectTrigger>
                     <SelectContent>
                       {properties.map((p) => (
@@ -272,11 +257,11 @@ export function FilterManager({
                     }
                   >
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Operator" />
+                      <SelectValue placeholder="Operator"/>
                     </SelectTrigger>
                     <SelectContent>
                       {property &&
-                        getOperators(property.type).map((op) => (
+                        getOperators(property.type).map((op: TPropertyOption) => (
                           <SelectItem key={op.value} value={op.value}>
                             {op.label}
                           </SelectItem>
@@ -292,7 +277,7 @@ export function FilterManager({
                     size="icon"
                     onClick={() => removeFilter(index)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4"/>
                   </Button>
                 </div>
               );
@@ -306,7 +291,7 @@ export function FilterManager({
 
         <div className="flex items-center gap-2 pt-1">
           <Button size="sm" onClick={addFilter}>
-            <Plus className="mr-1 h-4 w-4" />
+            <Plus className="mr-1 h-4 w-4"/>
             Add filter
           </Button>
           {filters.length > 0 && (

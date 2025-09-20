@@ -2,19 +2,21 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {databaseApi} from "./database-api";
 import {toast} from "sonner";
 import type {AxiosError} from "axios";
-
 import type {ApiError} from "@/types/api.types.ts";
 import type {
-  TCreateDocumentRequest, TCreateRecord,
+  TBulkDeleteRecords,
+  TBulkUpdateRecords,
+  TCreateDatabase, TCreateView,
   TDatabase,
-  TDatabaseQueryParams, TRecord, TRecordQueryParams,
-  TUpdateDocumentRequest, TUpdateViewRequest, TView
+  TDatabaseQueryParams,
+  TDatabaseStats, TProperty, TPropertyQueryParams, TRecord, TRecordQueryParams, TReorderProperties,
+  TUpdateDatabase, TUpdateProperty, TUpdateRecord, TView
 } from "@/modules/database-view/types";
 
 export const DATABASE_KEYS = {
   all: ["databases"] as const,
   lists: () => [...DATABASE_KEYS.all, "list"] as const,
-  list: (filters: IDatabaseQueryParams) =>
+  list: (filters: TDatabaseQueryParams) =>
     [...DATABASE_KEYS.lists(), filters] as const,
   details: () => [...DATABASE_KEYS.all, "detail"] as const,
   detail: (id: string) => [...DATABASE_KEYS.details(), id] as const,
@@ -62,7 +64,7 @@ export const useDatabase = (id: string) => {
 };
 
 export const useDatabaseStats = (id: string) => {
-  return useQuery<IDatabaseStats, AxiosError>({
+  return useQuery<TDatabaseStats, AxiosError>({
     queryKey: DATABASE_KEYS.stats(id),
     queryFn: () => databaseApi.getDatabaseStats(id),
     enabled: !!id,
@@ -72,7 +74,7 @@ export const useDatabaseStats = (id: string) => {
 export const useCreateDatabase = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<TDatabase, AxiosError<ApiError>, TCreateDocumentRequest>({
+  return useMutation<TDatabase, AxiosError<ApiError>, TCreateDatabase>({
     mutationFn: databaseApi.createDatabase,
     onSuccess: () => {
       queryClient.invalidateQueries({queryKey: DATABASE_KEYS.lists()});
@@ -90,7 +92,7 @@ export const useUpdateDatabase = () => {
   return useMutation<
     TDatabase,
     AxiosError<ApiError>,
-    { id: string; data: TUpdateDocumentRequest }
+    { id: string; data: TUpdateDatabase }
   >({
     mutationFn: ({id, data}) => databaseApi.updateDatabase(id, data),
     onSuccess: (_, variables) => {
@@ -126,7 +128,7 @@ export const useDuplicateDatabase = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabase,
+    TDatabase,
     AxiosError<ApiError>,
     { id: string; name: string }
   >({
@@ -144,8 +146,8 @@ export const useDuplicateDatabase = () => {
 };
 
 // Property hooks
-export const useProperties = (databaseId?: string, params?: IPropertyQueryParams) => {
-  return useQuery<IPropertyListResponse, AxiosError>({
+export const useProperties = (databaseId: string, params?: TPropertyQueryParams) => {
+  return useQuery({
     queryKey: [...DATABASE_KEYS.properties(databaseId), params?.viewId],
     queryFn: () => databaseApi.getProperties(databaseId, params),
     enabled: !!databaseId,
@@ -153,9 +155,9 @@ export const useProperties = (databaseId?: string, params?: IPropertyQueryParams
 };
 
 export const useProperty = (databaseId: string, propertyId: string) => {
-  return useQuery<IDatabaseProperty, AxiosError>({
+  return useQuery({
     queryKey: DATABASE_KEYS.property(databaseId, propertyId),
-    queryFn: () => databaseApi.getProperty(databaseId, propertyId),
+    queryFn: () => databaseApi.getPropertyById(databaseId, propertyId),
     enabled: !!databaseId && !!propertyId,
   });
 };
@@ -163,11 +165,7 @@ export const useProperty = (databaseId: string, propertyId: string) => {
 export const useCreateProperty = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    IDatabaseProperty,
-    AxiosError<ApiError>,
-    { databaseId: string; data: ICreatePropertyRequest }
-  >({
+  return useMutation({
     mutationFn: ({databaseId, data}) =>
       databaseApi.createProperty(databaseId, data),
     onSuccess: (_, variables) => {
@@ -186,9 +184,9 @@ export const useUpdateProperty = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabaseProperty,
+    TProperty,
     AxiosError<ApiError>,
-    { databaseId: string; propertyId: string; data: IUpdatePropertyRequest }
+    { databaseId: string; propertyId: string; data: TUpdateProperty }
   >({
     mutationFn: ({databaseId, propertyId, data}) =>
       databaseApi.updateProperty(databaseId, propertyId, data),
@@ -246,7 +244,7 @@ export const useReorderProperties = () => {
     AxiosError<ApiError>,
     {
       databaseId: string;
-      data: IReorderPropertiesRequest;
+      data: TReorderProperties;
     }
   >({
     mutationFn: ({databaseId, data}) =>
@@ -363,7 +361,7 @@ export const useBulkUpdateRecords = () => {
   return useMutation<
     void,
     AxiosError<ApiError>,
-    { databaseId: string; data: IBulkUpdateRecordsRequest }
+    { databaseId: string; data: TBulkUpdateRecords }
   >({
     mutationFn: ({databaseId, data}) =>
       databaseApi.bulkUpdateRecords(databaseId, data),
@@ -385,7 +383,7 @@ export const useBulkDeleteRecords = () => {
   return useMutation<
     void,
     AxiosError<ApiError>,
-    { databaseId: string; data: IBulkDeleteRecordsRequest }
+    { databaseId: string; data: TBulkDeleteRecords }
   >({
     mutationFn: ({databaseId, data}) =>
       databaseApi.bulkDeleteRecords(databaseId, data),
@@ -405,12 +403,12 @@ export const useDuplicateRecord = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabaseRecord,
+    TRecord,
     AxiosError<ApiError>,
     {
       databaseId: string;
       recordId: string;
-      data?: IDuplicateRecordRequest;
+      data?: TUpdateRecord;
     }
   >({
     mutationFn: ({databaseId, recordId, data}) =>
@@ -431,7 +429,7 @@ export const useDuplicateRecord = () => {
 
 // View hooks
 export const useViews = (databaseId: string) => {
-  return useQuery<IViewListResponse, AxiosError>({
+  return useQuery<TView[], AxiosError>({
     queryKey: DATABASE_KEYS.views(databaseId),
     queryFn: () => databaseApi.getViews(databaseId),
     enabled: !!databaseId,
@@ -450,9 +448,9 @@ export const useCreateView = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabaseView,
+    TView,
     AxiosError<ApiError>,
-    { databaseId: string; data: ICreateViewRequest }
+    { databaseId: string; data: TCreateView }
   >({
     mutationFn: ({databaseId, data}) =>
       databaseApi.createView(databaseId, data),
@@ -474,7 +472,7 @@ export const useUpdateView = () => {
   return useMutation<
     TView,
     AxiosError<ApiError>,
-    { databaseId: string; viewId: string; data: TUpdateViewRequest }
+    { databaseId: string; viewId: string; data: TUpdateView }
   >({
     mutationFn: ({databaseId, viewId, data}) =>
       databaseApi.updateView(databaseId, viewId, data),
@@ -522,7 +520,7 @@ export const useDuplicateView = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    IDatabaseView,
+    TView,
     AxiosError<ApiError>,
     { databaseId: string; viewId: string; newName?: string }
   >({
@@ -541,7 +539,7 @@ export const useDuplicateView = () => {
 };
 
 // Relation hooks
-export const useRelations = (params?: IRelationQueryParams) => {
+export const useRelations = (params?: TRelationQueryParams) => {
   return useQuery<TRelationList, AxiosError>({
     queryKey: [...DATABASE_KEYS.relations, params],
     queryFn: () => databaseApi.getRelations(params),
