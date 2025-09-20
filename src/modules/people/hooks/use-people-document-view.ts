@@ -3,7 +3,7 @@ import {
   useDatabase,
   useRecords,
   useViews,
-} from "@/modules/document-view/services/database-queries";
+} from "@/modules/database-view/services/database-queries";
 import { apiClient } from "@/services/api-client";
 
 // Query Keys

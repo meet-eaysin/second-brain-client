@@ -3,7 +3,7 @@ import { notesDocumentViewService } from '../services/notes-document-view.servic
 
 // Query keys
 export const NOTES_DOCUMENT_VIEW_QUERY_KEYS = {
-    all: ['notes-document-view'] as const,
+    all: ['notes-database-view'] as const,
     views: () => [...NOTES_DOCUMENT_VIEW_QUERY_KEYS.all, 'views'] as const,
     view: (id: string) => [...NOTES_DOCUMENT_VIEW_QUERY_KEYS.views(), id] as const,
     database: () => [...NOTES_DOCUMENT_VIEW_QUERY_KEYS.all, 'database'] as const,
@@ -94,7 +94,7 @@ export function useNotesRecordsQuery(filters?: Record<string, any>) {
 // Hook for notes with view-based filtering and sorting
 export function useNotesWithViewQuery(viewId: string, additionalFilters?: Record<string, any>) {
     return useQuery({
-        queryKey: ['notes-document-view', 'notes-with-view', viewId, additionalFilters],
+        queryKey: ['notes-database-view', 'notes-with-view', viewId, additionalFilters],
         queryFn: () => notesDocumentViewService.getNotesWithFiltersAndSorts({
             viewId,
             filters: additionalFilters
@@ -126,7 +126,7 @@ export function useUpdateNoteMutation() {
             // Invalidate and refetch notes queries
             queryClient.invalidateQueries({ queryKey: NOTES_DOCUMENT_VIEW_QUERY_KEYS.records() });
             queryClient.invalidateQueries({ queryKey: NOTES_DOCUMENT_VIEW_QUERY_KEYS.record(variables.noteId) });
-            queryClient.invalidateQueries({ queryKey: ['notes-document-view', 'notes-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['notes-database-view', 'notes-with-view'] });
         },
     });
 }
@@ -141,7 +141,7 @@ export function useDeleteNoteMutation() {
             queryClient.removeQueries({ queryKey: NOTES_DOCUMENT_VIEW_QUERY_KEYS.record(noteId) });
             // Invalidate notes list queries
             queryClient.invalidateQueries({ queryKey: NOTES_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['notes-document-view', 'notes-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['notes-database-view', 'notes-with-view'] });
         },
     });
 }
@@ -154,7 +154,7 @@ export function useCreateNoteMutation() {
         onSuccess: () => {
             // Invalidate notes queries to refetch the list
             queryClient.invalidateQueries({ queryKey: NOTES_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['notes-document-view', 'notes-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['notes-database-view', 'notes-with-view'] });
         },
     });
 }

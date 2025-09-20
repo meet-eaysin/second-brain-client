@@ -11,21 +11,21 @@ import {
   type BooksViewConfig,
   type BookRecord,
 } from "../services/books-document-view.service";
-import type { DocumentView } from "@/modules/document-view";
+import type { DatabaseView } from "@/modules/database-view";
 
 // Query Keys
 export const BOOKS_DOCUMENT_VIEW_QUERY_KEYS = {
-  config: () => ["books-document-view", "config"] as const,
+  config: () => ["books-database-view", "config"] as const,
   defaultProperties: () =>
-    ["books-document-view", "default-properties"] as const,
-  defaultViews: () => ["books-document-view", "default-views"] as const,
-  frozenConfig: () => ["books-document-view", "frozen-config"] as const,
-  views: () => ["books-document-view", "views"] as const,
-  view: (viewId: string) => ["books-document-view", "views", viewId] as const,
-  defaultView: () => ["books-document-view", "views", "default"] as const,
+    ["books-database-view", "default-properties"] as const,
+  defaultViews: () => ["books-database-view", "default-views"] as const,
+  frozenConfig: () => ["books-database-view", "frozen-config"] as const,
+  views: () => ["books-database-view", "views"] as const,
+  view: (viewId: string) => ["books-database-view", "views", viewId] as const,
+  defaultView: () => ["books-database-view", "views", "default"] as const,
   books: (filters?: any, sorts?: any) =>
-    ["books-document-view", "books", { filters, sorts }] as const,
-  book: (bookId: string) => ["books-document-view", "books", bookId] as const,
+    ["books-database-view", "books", { filters, sorts }] as const,
+  book: (bookId: string) => ["books-database-view", "books", bookId] as const,
 };
 
 // Query Hooks
@@ -144,7 +144,7 @@ export function useBooksWithFiltersAndSortsQuery(
   const { enabled = true, ...queryOptions } = options;
 
   return useQuery({
-    queryKey: ["books-document-view", "books-enhanced", queryOptions],
+    queryKey: ["books-database-view", "books-enhanced", queryOptions],
     queryFn: () =>
       booksDocumentViewService.getBooksWithFiltersAndSorts(queryOptions),
     enabled,
@@ -160,7 +160,7 @@ export function useBooksWithViewQuery(
 ) {
   return useQuery({
     queryKey: [
-      "books-document-view",
+      "books-database-view",
       "books-with-view",
       viewId,
       additionalFilters,
@@ -201,7 +201,7 @@ export function useBooksWithFiltersQuery(
   } = {}
 ) {
   return useQuery({
-    queryKey: ["books-document-view", "books-filtered", options],
+    queryKey: ["books-database-view", "books-filtered", options],
     queryFn: () =>
       booksDocumentViewService.getBooksWithFiltersAndSorts(options),
     staleTime: 2 * 60 * 1000,
@@ -211,7 +211,7 @@ export function useBooksWithFiltersQuery(
 
 export function useBooksByStatusQuery(status: string) {
   return useQuery({
-    queryKey: ["books-document-view", "books-by-status", status],
+    queryKey: ["books-database-view", "books-by-status", status],
     queryFn: () =>
       booksDocumentViewService.getBooksWithFiltersAndSorts({
         status: [status],
@@ -224,7 +224,7 @@ export function useBooksByStatusQuery(status: string) {
 
 export function useBooksByGenreQuery(genre: string) {
   return useQuery({
-    queryKey: ["books-document-view", "books-by-genre", genre],
+    queryKey: ["books-database-view", "books-by-genre", genre],
     queryFn: () =>
       booksDocumentViewService.getBooksWithFiltersAndSorts({ genre: [genre] }),
     enabled: !!genre,
@@ -235,7 +235,7 @@ export function useBooksByGenreQuery(genre: string) {
 
 export function useFavoriteBooksQuery() {
   return useQuery({
-    queryKey: ["books-document-view", "books-favorites"],
+    queryKey: ["books-database-view", "books-favorites"],
     queryFn: () =>
       booksDocumentViewService.getBooksWithFiltersAndSorts({ favorite: true }),
     staleTime: 2 * 60 * 1000,
@@ -248,7 +248,7 @@ export function useCreateBooksViewMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (viewData: Partial<DocumentView>) =>
+    mutationFn: (viewData: Partial<DatabaseView>) =>
       booksDocumentViewService.createBooksView(viewData),
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -267,7 +267,7 @@ export function useUpdateBooksViewMutation() {
       updates,
     }: {
       viewId: string;
-      updates: Partial<DocumentView>;
+      updates: Partial<DatabaseView>;
     }) => booksDocumentViewService.updateBooksView(viewId, updates),
     onSuccess: (_, { viewId }) => {
       queryClient.invalidateQueries({
@@ -351,13 +351,13 @@ export function useUpdateBooksViewFiltersMutation() {
 
       // Invalidate ALL books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books"],
+        queryKey: ["books-database-view", "books"],
         exact: false,
       });
 
       // Also invalidate the enhanced books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books-enhanced"],
+        queryKey: ["books-database-view", "books-enhanced"],
         exact: false,
       });
     },
@@ -377,13 +377,13 @@ export function useUpdateBooksViewSortsMutation() {
 
       // Invalidate ALL books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books"],
+        queryKey: ["books-database-view", "books"],
         exact: false,
       });
 
       // Also invalidate the enhanced books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books-enhanced"],
+        queryKey: ["books-database-view", "books-enhanced"],
         exact: false,
       });
     },
@@ -399,13 +399,13 @@ export function useCreateBookMutation() {
     onSuccess: () => {
       // Invalidate ALL books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books"],
+        queryKey: ["books-database-view", "books"],
         exact: false,
       });
 
       // Also invalidate the enhanced books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books-enhanced"],
+        queryKey: ["books-database-view", "books-enhanced"],
         exact: false,
       });
     },
@@ -429,17 +429,17 @@ export function useUpdateBookMutation() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view"],
+        queryKey: ["books-database-view"],
         exact: false,
       });
 
       queryClient.refetchQueries({
-        queryKey: ["books-document-view", "books"],
+        queryKey: ["books-database-view", "books"],
         exact: false,
       });
 
       queryClient.refetchQueries({
-        queryKey: ["books-document-view", "books-enhanced"],
+        queryKey: ["books-database-view", "books-enhanced"],
         exact: false,
       });
     },
@@ -462,13 +462,13 @@ export function useDeleteBookMutation() {
 
       // Invalidate ALL books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books"],
+        queryKey: ["books-database-view", "books"],
         exact: false,
       });
 
       // Also invalidate the enhanced books queries
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view", "books-enhanced"],
+        queryKey: ["books-database-view", "books-enhanced"],
         exact: false,
       });
     },
@@ -496,7 +496,7 @@ export function useAddBooksPropertyMutation() {
     }) => booksDocumentViewService.addBooksProperty(viewId, property),
     onSuccess: (updatedView, { viewId }) => {
       queryClient.invalidateQueries({
-        queryKey: ["books-document-view"],
+        queryKey: ["books-database-view"],
         exact: false,
       });
 

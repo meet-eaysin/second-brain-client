@@ -2,7 +2,7 @@ import { Main } from '@/layout/main';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clipboard, Star, Clock, TrendingUp } from 'lucide-react';
-import { DocumentView } from '@/modules/document-view';
+import { DatabaseView } from '@/modules/database-view';
 import {
     useProjectViewsQuery,
     useDefaultProjectViewQuery,
@@ -147,7 +147,7 @@ export function ProjectsPage() {
                 </div>
 
                 {/* Projects Document View */}
-                <DocumentView
+                <DatabaseView
                     database={projectsDatabase}
                     records={projectsRecords}
                     moduleType="projects"

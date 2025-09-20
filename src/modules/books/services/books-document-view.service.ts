@@ -7,7 +7,7 @@
  */
 
 import { apiClient } from '@/services/api-client';
-import { transformPropertyToServer } from '@/modules/document-view/utils/property-transform';
+import { transformPropertyToServer } from '@/modules/database-view/utils/property-transform';
 import type {
     BookRecord,
     BookRecordsResponse,
@@ -26,7 +26,7 @@ import type {
     PropertyApiData
 } from '../types/books-api.types';
 
-const BOOKS_DOCUMENT_VIEW_BASE_URL = '/second-brain/books/document-view';
+const BOOKS_DOCUMENT_VIEW_BASE_URL = '/second-brain/books/database-view';
 
 export class BooksDocumentViewService {
     // Configuration

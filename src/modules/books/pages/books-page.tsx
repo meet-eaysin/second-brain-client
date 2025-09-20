@@ -4,11 +4,11 @@ import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Star, Clock, TrendingUp, Plus } from 'lucide-react';
-import { DocumentView } from '@/modules/document-view';
+import { DatabaseView } from '@/modules/database-view';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { BooksService } from '../services/books.service';
 import { BooksDocumentViewService } from '../services/books-document-view.service';
-import { transformBooksProperties } from '@/modules/document-view/utils/property-transform';
+import { transformBooksProperties } from '@/modules/database-view/utils/property-transform';
 import type { Book, BookQueryOptions } from '../types/books.types';
 
 export function BooksPage() {
@@ -27,21 +27,21 @@ export function BooksPage() {
 
     // Document View Configuration from APIs with fallbacks
     const { data: viewConfig, isLoading: configLoading, error: configError } = useQuery({
-        queryKey: ['books-document-view-config'],
+        queryKey: ['books-database-view-config'],
         queryFn: () => BooksDocumentViewService.getConfig(),
         retry: false,
         staleTime: 5 * 60 * 1000, // 5 minutes
     });
 
     const { data: views, isLoading: viewsLoading, error: viewsError } = useQuery({
-        queryKey: ['books-document-view-views'],
+        queryKey: ['books-database-view-views'],
         queryFn: () => BooksDocumentViewService.getViews(),
         retry: false,
         staleTime: 5 * 60 * 1000,
     });
 
     const { data: properties, isLoading: propertiesLoading, error: propertiesError } = useQuery({
-        queryKey: ['books-document-view-properties'],
+        queryKey: ['books-database-view-properties'],
         queryFn: () => BooksDocumentViewService.getProperties(),
         retry: false,
         staleTime: 5 * 60 * 1000,
@@ -66,7 +66,7 @@ export function BooksPage() {
         mutationFn: ({ id, data }: { id: string; data: any }) => BooksService.updateBook(id, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['books'] });
-            queryClient.invalidateQueries({ queryKey: ['books-document-view'] });
+            queryClient.invalidateQueries({ queryKey: ['books-database-view'] });
         },
     });
 
@@ -99,7 +99,7 @@ export function BooksPage() {
         }
     };
 
-    // DocumentView create handler - called when user clicks create in DocumentView
+    // DatabaseView create handler - called when user clicks create in DatabaseView
     const handleDocumentViewCreate = async () => {
         await handleCreateBook();
     };
@@ -226,7 +226,7 @@ export function BooksPage() {
                 ) : (
                     <Card className={"py-0"}>
                         <CardContent className="p-6">
-                            <DocumentView
+                            <DatabaseView
                                 database={{
                                     id: (viewConfig)?.services?.databaseId || 'books-database',
                                     name: (viewConfig)?.displayNamePlural || 'Books',

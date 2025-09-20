@@ -8,7 +8,7 @@ import type {
   GetWorkspacesQuery,
   WorkspaceStatsResponse,
 } from "@/types/workspace.types";
-import {EDatabaseType} from "@/modules/document-view";
+import {EDatabaseType} from "@/modules/database-view";
 import type {IWorkspaceInitResponse, TModuleInitializeRequest} from "@/modules/workspaces/types/workspaces.types.ts";
 
 export const workspaceApi = {

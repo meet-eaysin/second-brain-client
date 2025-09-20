@@ -124,7 +124,7 @@ export function NotesPage() {
                 </div>
 
                 {/* Notes Document View */}
-                {/*<DocumentView*/}
+                {/*<DatabaseView*/}
                 {/*    database={notesDatabase}*/}
                 {/*    records={notesRecords}*/}
                 {/*    moduleType="notes"*/}

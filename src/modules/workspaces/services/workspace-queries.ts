@@ -13,7 +13,7 @@ import type {
 } from "@/types/workspace.types";
 import { toast } from "sonner";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import {EDatabaseType} from "@/modules/document-view";
+import {EDatabaseType} from "@/modules/database-view";
 import type {TModuleInitializeRequest} from "@/modules/workspaces/types/workspaces.types.ts";
 
 export const WORKSPACE_KEYS = {

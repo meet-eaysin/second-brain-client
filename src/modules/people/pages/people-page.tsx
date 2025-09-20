@@ -1,7 +1,7 @@
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import { DocumentView } from "@/modules/document-view";
-import { EDatabaseType } from "@/modules/document-view";
+import { DatabaseView } from "@/modules/database-view";
+import { EDatabaseType } from "@/modules/database-view";
 
 export function PeoplePage() {
   return (
@@ -9,7 +9,7 @@ export function PeoplePage() {
       <EnhancedHeader />
 
       <Main className="space-y-8">
-        <DocumentView moduleType={EDatabaseType.PEOPLE}/>
+        <DatabaseView moduleType={EDatabaseType.PEOPLE}/>
       </Main>
     </>
   );

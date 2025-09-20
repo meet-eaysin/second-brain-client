@@ -3,7 +3,7 @@ import { goalsDocumentViewService } from '../services/goals-document-view.servic
 
 // Query keys
 export const GOALS_DOCUMENT_VIEW_QUERY_KEYS = {
-    all: ['goals-document-view'] as const,
+    all: ['goals-database-view'] as const,
     views: () => [...GOALS_DOCUMENT_VIEW_QUERY_KEYS.all, 'views'] as const,
     view: (id: string) => [...GOALS_DOCUMENT_VIEW_QUERY_KEYS.views(), id] as const,
     database: () => [...GOALS_DOCUMENT_VIEW_QUERY_KEYS.all, 'database'] as const,
@@ -94,7 +94,7 @@ export function useGoalRecordsQuery(filters?: Record<string, any>) {
 // Hook for goals with view-based filtering and sorting
 export function useGoalWithViewQuery(viewId: string, additionalFilters?: Record<string, any>) {
     return useQuery({
-        queryKey: ['goals-document-view', 'goals-with-view', viewId, additionalFilters],
+        queryKey: ['goals-database-view', 'goals-with-view', viewId, additionalFilters],
         queryFn: () => goalsDocumentViewService.getGoalWithFiltersAndSorts({
             viewId,
             filters: additionalFilters
@@ -125,7 +125,7 @@ export function useUpdateGoalMutation() {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: GOALS_DOCUMENT_VIEW_QUERY_KEYS.records() });
             queryClient.invalidateQueries({ queryKey: GOALS_DOCUMENT_VIEW_QUERY_KEYS.record(variables.goalsId) });
-            queryClient.invalidateQueries({ queryKey: ['goals-document-view', 'goals-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['goals-database-view', 'goals-with-view'] });
         },
     });
 }
@@ -138,7 +138,7 @@ export function useDeleteGoalMutation() {
         onSuccess: (data, goalsId) => {
             queryClient.removeQueries({ queryKey: GOALS_DOCUMENT_VIEW_QUERY_KEYS.record(goalsId) });
             queryClient.invalidateQueries({ queryKey: GOALS_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['goals-document-view', 'goals-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['goals-database-view', 'goals-with-view'] });
         },
     });
 }
@@ -150,7 +150,7 @@ export function useCreateGoalMutation() {
         mutationFn: (goalsData: Record<string, any>) => goalsDocumentViewService.createRecord(goalsData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: GOALS_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['goals-document-view', 'goals-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['goals-database-view', 'goals-with-view'] });
         },
     });
 }

@@ -3,7 +3,7 @@ import { habitsDocumentViewService } from '../services/habits-document-view.serv
 
 // Query keys
 export const HABITS_DOCUMENT_VIEW_QUERY_KEYS = {
-    all: ['habits-document-view'] as const,
+    all: ['habits-database-view'] as const,
     views: () => [...HABITS_DOCUMENT_VIEW_QUERY_KEYS.all, 'views'] as const,
     view: (id: string) => [...HABITS_DOCUMENT_VIEW_QUERY_KEYS.views(), id] as const,
     database: () => [...HABITS_DOCUMENT_VIEW_QUERY_KEYS.all, 'database'] as const,
@@ -94,7 +94,7 @@ export function useHabitRecordsQuery(filters?: Record<string, any>) {
 // Hook for habits with view-based filtering and sorting
 export function useHabitWithViewQuery(viewId: string, additionalFilters?: Record<string, any>) {
     return useQuery({
-        queryKey: ['habits-document-view', 'habits-with-view', viewId, additionalFilters],
+        queryKey: ['habits-database-view', 'habits-with-view', viewId, additionalFilters],
         queryFn: () => habitsDocumentViewService.getHabitWithFiltersAndSorts({
             viewId,
             filters: additionalFilters
@@ -125,7 +125,7 @@ export function useUpdateHabitMutation() {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: HABITS_DOCUMENT_VIEW_QUERY_KEYS.records() });
             queryClient.invalidateQueries({ queryKey: HABITS_DOCUMENT_VIEW_QUERY_KEYS.record(variables.habitsId) });
-            queryClient.invalidateQueries({ queryKey: ['habits-document-view', 'habits-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['habits-database-view', 'habits-with-view'] });
         },
     });
 }
@@ -138,7 +138,7 @@ export function useDeleteHabitMutation() {
         onSuccess: (data, habitsId) => {
             queryClient.removeQueries({ queryKey: HABITS_DOCUMENT_VIEW_QUERY_KEYS.record(habitsId) });
             queryClient.invalidateQueries({ queryKey: HABITS_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['habits-document-view', 'habits-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['habits-database-view', 'habits-with-view'] });
         },
     });
 }
@@ -150,7 +150,7 @@ export function useCreateHabitMutation() {
         mutationFn: (habitsData: Record<string, any>) => habitsDocumentViewService.createRecord(habitsData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: HABITS_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['habits-document-view', 'habits-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['habits-database-view', 'habits-with-view'] });
         },
     });
 }

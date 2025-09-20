@@ -3,7 +3,7 @@ import { projectsDocumentViewService } from '../services/projects-document-view.
 
 // Query keys
 export const PROJECTS_DOCUMENT_VIEW_QUERY_KEYS = {
-    all: ['projects-document-view'] as const,
+    all: ['projects-database-view'] as const,
     views: () => [...PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.all, 'views'] as const,
     view: (id: string) => [...PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.views(), id] as const,
     database: () => [...PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.all, 'database'] as const,
@@ -94,7 +94,7 @@ export function useProjectRecordsQuery(filters?: Record<string, any>) {
 // Hook for projects with view-based filtering and sorting
 export function useProjectWithViewQuery(viewId: string, additionalFilters?: Record<string, any>) {
     return useQuery({
-        queryKey: ['projects-document-view', 'projects-with-view', viewId, additionalFilters],
+        queryKey: ['projects-database-view', 'projects-with-view', viewId, additionalFilters],
         queryFn: () => projectsDocumentViewService.getProjectWithFiltersAndSorts({
             viewId,
             filters: additionalFilters
@@ -125,7 +125,7 @@ export function useUpdateProjectMutation() {
         onSuccess: (data, variables) => {
             queryClient.invalidateQueries({ queryKey: PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.records() });
             queryClient.invalidateQueries({ queryKey: PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.record(variables.projectsId) });
-            queryClient.invalidateQueries({ queryKey: ['projects-document-view', 'projects-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['projects-database-view', 'projects-with-view'] });
         },
     });
 }
@@ -138,7 +138,7 @@ export function useDeleteProjectMutation() {
         onSuccess: (data, projectsId) => {
             queryClient.removeQueries({ queryKey: PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.record(projectsId) });
             queryClient.invalidateQueries({ queryKey: PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['projects-document-view', 'projects-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['projects-database-view', 'projects-with-view'] });
         },
     });
 }
@@ -150,7 +150,7 @@ export function useCreateProjectMutation() {
         mutationFn: (projectsData: Record<string, any>) => projectsDocumentViewService.createRecord(projectsData),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: PROJECTS_DOCUMENT_VIEW_QUERY_KEYS.records() });
-            queryClient.invalidateQueries({ queryKey: ['projects-document-view', 'projects-with-view'] });
+            queryClient.invalidateQueries({ queryKey: ['projects-database-view', 'projects-with-view'] });
         },
     });
 }

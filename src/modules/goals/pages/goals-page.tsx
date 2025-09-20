@@ -2,7 +2,7 @@ import { Main } from '@/layout/main';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Target, Star, Clock, TrendingUp } from 'lucide-react';
-import { DocumentView } from '@/modules/document-view';
+import { DatabaseView } from '@/modules/database-view';
 import {
     useGoalViewsQuery,
     useDefaultGoalViewQuery,
@@ -147,7 +147,7 @@ export function GoalsPage() {
                 </div>
 
                 {/* Goals Document View */}
-                <DocumentView
+                <DatabaseView
                     database={goalsDatabase}
                     records={goalsRecords}
                     moduleType="goals"

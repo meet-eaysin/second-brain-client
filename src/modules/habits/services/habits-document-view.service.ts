@@ -1,6 +1,6 @@
 import { apiClient } from '@/services/api-client';
-import { documentViewService } from '@/services/document-view.service';
-import type { DocumentView } from '@/modules/document-view';
+import { documentViewService } from '@/services/database-view.service';
+import type { DatabaseView } from '@/modules/database-view';
 
 // Habits-specific document view configuration
 export interface HabitsViewConfig {
@@ -62,7 +62,7 @@ class HabitsDocumentViewService {
     private readonly documentType = 'HABITS';
 
     // Get all views for habits
-    async getViews(): Promise<DocumentView[]> {
+    async getViews(): Promise<DatabaseView[]> {
         try {
             const response = await apiClient.get(`/document-views/${this.moduleType}`);
             return response.data;
@@ -73,7 +73,7 @@ class HabitsDocumentViewService {
     }
 
     // Get a specific view
-    async getView(viewId: string): Promise<DocumentView | null> {
+    async getView(viewId: string): Promise<DatabaseView | null> {
         try {
             const response = await apiClient.get(`/document-views/${this.moduleType}/${viewId}`);
             return response.data;
@@ -185,7 +185,7 @@ class HabitsDocumentViewService {
     }
 
     // Default configurations
-    private getDefaultViews(): DocumentView[] {
+    private getDefaultViews(): DatabaseView[] {
         return [
             {
                 id: 'default-habits-table',

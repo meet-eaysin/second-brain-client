@@ -1,4 +1,4 @@
-import {EDatabaseType} from "@/modules/document-view";
+import {EDatabaseType} from "@/modules/database-view";
 
 export interface IWorkspaceInitResponse {
     workspaceId: string;

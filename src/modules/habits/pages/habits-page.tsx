@@ -2,7 +2,7 @@ import { Main } from '@/layout/main';
 import { EnhancedHeader } from '@/components/enhanced-header';
 import { Card, CardContent } from '@/components/ui/card';
 import { RotateCcw, Star, Clock, TrendingUp } from 'lucide-react';
-import { DocumentView } from '@/modules/document-view';
+import { DatabaseView } from '@/modules/database-view';
 import {
     useHabitViewsQuery,
     useDefaultHabitViewQuery,
@@ -147,7 +147,7 @@ export function HabitsPage() {
                 </div>
 
                 {/* Habits Document View */}
-                <DocumentView
+                <DatabaseView
                     database={habitsDatabase}
                     records={habitsRecords}
                     moduleType="habits"

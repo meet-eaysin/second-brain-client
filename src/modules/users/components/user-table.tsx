@@ -1,5 +1,5 @@
 import React from 'react';
-import { DocumentDataTable } from '@/modules/document-view';
+import { DataTable } from '@/modules/database-view';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Shield, ShieldCheck, User as UserIcon, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
@@ -288,7 +288,7 @@ export const UserTable: React.FC<UserTableProps> = ({
 
     if (isLoading) {
         return (
-            <DocumentDataTable
+            <DataTable
                 data={[]}
                 columns={columns}
             />
@@ -296,7 +296,7 @@ export const UserTable: React.FC<UserTableProps> = ({
     }
 
     return (
-        <DocumentDataTable
+        <DataTable
             data={users}
             columns={columns}
         />
