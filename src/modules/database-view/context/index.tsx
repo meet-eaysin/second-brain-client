@@ -77,8 +77,8 @@ interface DatabaseViewContextValue {
 
   onDialogOpen: (dialog: DatabaseDialogType | null) => void;
   onViewChange: (viewId: string) => void;
-  onCurrentRecordChange: (record: TRecord | null) => void;
-  onCurrentPropertyChange: (property: TProperty | null) => void;
+  onRecordChange: (record: TRecord | null) => void;
+  onPropertyChange: (property: TProperty | null) => void;
   onSelectedRecordsChange: (records: Set<string>) => void;
   onSearchQueryChange: (query: string) => void;
   onFiltersChange: (filters: TFilterCondition[]) => void;
@@ -116,24 +116,6 @@ export function DatabaseViewProvider({
   const [filters, setFilters] = useState<TFilterCondition[]>([]);
   const [sorts, setSorts] = useState<TSortConfig[]>([]);
 
-  // Sync filters with current view
-  useEffect(() => {
-    if (currentView?.filters) {
-      setFilters(currentView.filters);
-    } else {
-      setFilters([]);
-    }
-  }, [currentView?.filters]);
-
-  // Sync sorts with current view
-  useEffect(() => {
-    if (currentView?.sorts) {
-      setSorts(currentView.sorts);
-    } else {
-      setSorts([]);
-    }
-  }, [currentView?.sorts]);
-
   const { currentWorkspace } = useWorkspace();
 
   const { data: databaseIdResponse, isLoading: isDatabaseIdLoading } =
@@ -142,8 +124,7 @@ export function DatabaseViewProvider({
       moduleType || EDatabaseType.CUSTOM
     );
 
-  let currentDatabaseId =
-    databaseId || databaseIdResponse?.data.databaseId || "";
+  let currentDatabaseId = databaseId || databaseIdResponse?.data.databaseId || "";
   const moduleInitializedPayload = {
     workspaceId: currentWorkspace?._id || "",
     moduleTypes: [moduleType || EDatabaseType.CUSTOM],
@@ -161,13 +142,11 @@ export function DatabaseViewProvider({
   const { data: database, isLoading: isDatabaseLoading } =
     useDatabase(currentDatabaseId);
 
-  const { data: views = [], isLoading: isViewsLoading } =
+  const { data: viewsResponse, isLoading: isViewsLoading } =
     useViews(currentDatabaseId);
 
-  const { data: currentView, isLoading: isCurrentViewLoading } = useView(
-    currentDatabaseId,
-    currentViewId
-  );
+  const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
+    useView(currentDatabaseId, currentViewId);
 
   const propertiesQueryParams: TPropertyQueryParams = {
     viewId: currentViewId || "",
@@ -175,7 +154,7 @@ export function DatabaseViewProvider({
   };
 
   const { data: properties = [], isLoading: isPropertiesLoading } =
-    useProperties(databaseId, propertiesQueryParams);
+    useProperties(databaseId || "", propertiesQueryParams);
 
   const recordQueryParams = {
     viewId: currentViewId,
@@ -191,12 +170,30 @@ export function DatabaseViewProvider({
     recordQueryParams
   );
 
+  useEffect(() => {
+    if (currentViewResponse?.data?.filters) {
+      setFilters(currentViewResponse.data.filters);
+    } else {
+      setFilters([]);
+    }
+  }, [currentViewResponse?.data?.filters]);
+
+  useEffect(() => {
+    if (currentViewResponse?.data?.sorts) {
+      setSorts(currentViewResponse.data.sorts);
+    } else {
+      setSorts([]);
+    }
+  }, [currentViewResponse?.data?.sorts]);
+
   const visibleProperties = properties.filter((property: TProperty) => {
     if (
-      currentView?.data.settings.visibleProperties &&
-      currentView?.data.settings.visibleProperties.length > 0
+      currentViewResponse?.data?.settings.visibleProperties &&
+      currentViewResponse.data.settings.visibleProperties.length > 0
     ) {
-      return currentView?.data.settings.visibleProperties.includes(property.id);
+      return currentViewResponse.data.settings.visibleProperties.includes(
+        property.id
+      );
     }
     return property.isVisible;
   });
@@ -204,9 +201,8 @@ export function DatabaseViewProvider({
   const onDialogOpen = (dialog: DatabaseDialogType | null) =>
     setDialogOpen(dialog);
   const onViewChange = (viewId: string) => setCurrentViewId(viewId);
-  const onCurrentRecordChange = (record: TRecord | null) =>
-    setCurrentRecord(record);
-  const onCurrentPropertyChange = (property: TProperty | null) =>
+  const onRecordChange = (record: TRecord | null) => setCurrentRecord(record);
+  const onPropertyChange = (property: TProperty | null) =>
     setCurrentProperty(property);
   const onSelectedRecordsChange = (records: Set<string>) =>
     setSelectedRecords(records);
@@ -220,8 +216,8 @@ export function DatabaseViewProvider({
     workspace: currentWorkspace,
     dialogOpen,
     database: database || null,
-    views,
-    currentView: currentView?.data || null,
+    views: viewsResponse?.data || [],
+    currentView: currentViewResponse?.data || null,
     properties,
     records: records?.data,
     currentRecord,
@@ -243,8 +239,8 @@ export function DatabaseViewProvider({
 
     onDialogOpen,
     onViewChange,
-    onCurrentRecordChange,
-    onCurrentPropertyChange,
+    onRecordChange,
+    onPropertyChange,
     onSelectedRecordsChange,
     onSearchQueryChange,
     onFiltersChange,

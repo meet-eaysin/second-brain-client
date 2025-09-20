@@ -6,6 +6,10 @@ import {
   useReactTable,
   getPaginationRowModel,
   type RowSelectionState,
+  getSortedRowModel,
+  getFilteredRowModel,
+  type SortingState,
+  type ColumnFiltersState,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -35,37 +39,73 @@ import {
   Copy,
   Edit,
 } from "lucide-react";
-import {useDatabaseView} from "@/modules/database-view/context";
-import type {TRecord} from "@/modules/database-view/types";
-import {NoDataMessage} from "@/components/no-data-message.tsx";
+import { useDatabaseView } from "@/modules/database-view/context";
+import type { TRecord } from "@/modules/database-view/types";
+import { NoDataMessage } from "@/components/no-data-message.tsx";
+import {
+  useDeleteRecord,
+  useBulkDeleteRecords,
+  useDuplicateRecord,
+} from "@/modules/database-view/services/database-queries";
+import { toast } from "sonner";
 
 interface DocumentDataTableProps {
   columns: ColumnDef<TRecord, string>[];
   data: TRecord[];
+  enablePagination?: boolean;
+  enableSorting?: boolean;
+  enableFiltering?: boolean;
+  pageSize?: number;
 }
 
 export function DataTable({
   columns,
   data,
+  enablePagination = true,
+  enableSorting = true,
+  enableFiltering = true,
+  pageSize = 25,
 }: DocumentDataTableProps) {
-  const { isPropertiesLoading, isRecordsLoading } = useDatabaseView();
+  const {
+    database,
+    isPropertiesLoading,
+    isRecordsLoading,
+    onDialogOpen,
+    onCurrentRecordChange,
+  } = useDatabaseView();
+
   const [columnStats, setColumnStats] = useState<Record<string, string>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Database operation hooks
+  const deleteRecordMutation = useDeleteRecord();
+  const bulkDeleteMutation = useBulkDeleteRecords();
+  const duplicateRecordMutation = useDuplicateRecord();
 
   const table = useReactTable({
     data,
     columns,
     state: {
       rowSelection,
+      sorting,
+      columnFilters,
       pagination: {
         pageIndex: 0,
-        pageSize: 25,
+        pageSize,
       },
     },
     enableRowSelection: true,
+    enableSorting,
+    enableFilters: enableFiltering,
     onRowSelectionChange: setRowSelection,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     getRowId: (row) => row.id,
   });
 
@@ -111,16 +151,67 @@ export function DataTable({
   const selectedRows = table.getFilteredSelectedRowModel().rows;
   const selectedRecords = selectedRows.map((row) => row.original);
 
-  const handleBulkDelete = () => {
-    if (selectedRecords?.length > 0 && onBulkDelete) {
+  const handleBulkDelete = async () => {
+    if (!database?.id || selectedRecords.length === 0) return;
+
+    try {
       const recordIds = selectedRecords.map((record) => record.id);
-      onBulkDelete(recordIds);
+      await bulkDeleteMutation.mutateAsync({
+        databaseId: database.id,
+        data: { recordIds, permanent: false },
+      });
       setRowSelection({});
+      toast.success(`${selectedRecords.length} records deleted successfully`);
+    } catch {
+      toast.error("Failed to delete records");
     }
   };
 
   const handleBulkEdit = () => {
-    if (selectedRecords.length > 0 && onBulkEdit) onBulkEdit(selectedRecords);
+    if (selectedRecords.length > 0) {
+      onDialogOpen?.("bulk-edit");
+    }
+  };
+
+  const handleRecordEdit = (record: TRecord) => {
+    onCurrentRecordChange?.(record);
+    onDialogOpen?.("edit-record");
+  };
+
+  const handleRecordDelete = async (recordId: string) => {
+    if (!database?.id) return;
+
+    try {
+      await deleteRecordMutation.mutateAsync({
+        databaseId: database.id,
+        recordId,
+      });
+      toast.success("Record deleted successfully");
+    } catch {
+      toast.error("Failed to delete record");
+    }
+  };
+
+  const handleRecordDuplicate = async (recordId: string) => {
+    if (!database?.id) return;
+
+    try {
+      await duplicateRecordMutation.mutateAsync({
+        databaseId: database.id,
+        recordId,
+      });
+      toast.success("Record duplicated successfully");
+    } catch {
+      toast.error("Failed to duplicate record");
+    }
+  };
+
+  const handleRecordCreate = () => {
+    onDialogOpen?.("create-record");
+  };
+
+  const handleAddProperty = () => {
+    onDialogOpen?.("create-property");
   };
 
   return (
@@ -149,22 +240,19 @@ export function DataTable({
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              {onBulkEdit && (
-                <Button variant="outline" size="sm" onClick={handleBulkEdit}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Edit Selected
-                </Button>
-              )}
-              {onBulkDelete && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={handleBulkDelete}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Selected
-                </Button>
-              )}
+              <Button variant="outline" size="sm" onClick={handleBulkEdit}>
+                <Plus className="h-4 w-4 mr-2" />
+                Edit Selected
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Selected
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -199,20 +287,18 @@ export function DataTable({
                         )}
                   </TableHead>
                 ))}
-                {onAddProperty && (
-                  <TableHead className="w-12">
-                    <div className="flex items-center justify-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onAddProperty}
-                        className="h-8 w-8 p-0 hover:bg-muted/50"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableHead>
-                )}
+                <TableHead className="w-12">
+                  <div className="flex items-center justify-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleAddProperty}
+                      className="h-8 w-8 p-0 hover:bg-muted/50"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableHead>
               </TableRow>
             ))}
           </TableHeader>
@@ -232,50 +318,54 @@ export function DataTable({
                       )}
                     </TableCell>
                   ))}
-                  {onAddProperty && (
-                    <TableCell className="w-12">
-                      <div className="flex items-center justify-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
+                  <TableCell className="w-12">
+                    <div className="flex items-center justify-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
 
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => onRecordEdit?.(row.original)}
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Record
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => {}}>
-                              <Copy className="h-4 w-4 mr-2" />
-                              Duplicate
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              onClick={() => onRecordDelete?.(row.original.id)}
-                              className="text-destructive focus:text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  )}
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleRecordEdit(row.original)}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit Record
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleRecordDuplicate(row.original.id)
+                            }
+                            disabled={duplicateRecordMutation.isPending}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Duplicate
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleRecordDelete(row.original.id)}
+                            className="text-destructive focus:text-destructive"
+                            disabled={deleteRecordMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length + (onAddProperty ? 1 : 0)}
+                  colSpan={columns.length + 1}
                   className="h-24 text-center"
                 >
                   <NoDataMessage message="No results." compact />
@@ -283,20 +373,18 @@ export function DataTable({
               </TableRow>
             )}
 
-            {onRecordCreate && (
-              <TableRow className="hover:bg-muted/50 border-t-2">
-                <TableCell
-                  colSpan={columns.length + (onAddProperty ? 1 : 0)}
-                  className="text-center py-2 cursor-pointer text-muted-foreground hover:text-foreground"
-                  onClick={onRecordCreate}
-                >
-                  <div className="flex items-center justify-start gap-2">
-                    <Plus className="h-4 w-4" />
-                    <span>New Record</span>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
+            <TableRow className="hover:bg-muted/50 border-t-2">
+              <TableCell
+                colSpan={columns.length + 1}
+                className="text-center py-2 cursor-pointer text-muted-foreground hover:text-foreground"
+                onClick={handleRecordCreate}
+              >
+                <div className="flex items-center justify-start gap-2">
+                  <Plus className="h-4 w-4" />
+                  <span>New Record</span>
+                </div>
+              </TableCell>
+            </TableRow>
           </TableBody>
 
           <tfoot>
@@ -457,7 +545,7 @@ export function DataTable({
                   </div>
                 </td>
               ))}
-              {onAddProperty && <td className="border-t p-1 w-12"></td>}
+              <td className="border-t p-1 w-12"></td>
             </tr>
           </tfoot>
         </Table>

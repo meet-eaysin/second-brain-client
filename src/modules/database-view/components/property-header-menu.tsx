@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import {type ReactNode, useState} from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
 import {
   Edit3,
   Type,
@@ -43,66 +43,29 @@ import {
   Copy,
   Trash2,
 } from "lucide-react";
-import { toast } from "sonner";
-import type { DocumentProperty, PropertyType } from "@/modules/database-view";
+import {toast} from "sonner";
 import {
   canEditProperty,
   canHideProperty,
   canDeleteProperty,
-  type ViewFrozenConfig,
 } from "./columns.tsx";
-
-interface PropertyHeaderMenuProps {
-  property: DocumentProperty;
-  frozenConfig?: ViewFrozenConfig | null;
-  disablePropertyManagement?: boolean;
-  moduleType?: string;
-  onEditName?: (property: DocumentProperty, newName: string) => void;
-  onChangeType?: (property: DocumentProperty, newType: PropertyType) => void;
-  onFilter?: (property: DocumentProperty) => void;
-  onSort?: (property: DocumentProperty, direction: "asc" | "desc") => void;
-  onFreeze?: (property: DocumentProperty) => void;
-  onHide?: (property: DocumentProperty) => void;
-  onInsertLeft?: (property: DocumentProperty) => void;
-  onInsertRight?: (property: DocumentProperty) => void;
-  onDuplicate?: (property: DocumentProperty) => void;
-  onDelete?: (property: DocumentProperty) => void;
-  onRefresh?: () => void;
-  children: React.ReactNode;
-}
+import {EPropertyType} from "@/modules/database-view/types";
+import {useDatabaseView} from "@/modules/database-view/context";
 
 const PROPERTY_TYPES = [
-  { value: "TEXT", label: "Text", icon: Type },
-  { value: "NUMBER", label: "Number", icon: Hash },
-  { value: "EMAIL", label: "Email", icon: Mail },
-  { value: "URL", label: "URL", icon: Link },
-  { value: "PHONE", label: "Phone", icon: Phone },
-  { value: "CHECKBOX", label: "Checkbox", icon: CheckSquare },
-  { value: "DATE", label: "Date", icon: Calendar },
-  { value: "SELECT", label: "Select", icon: List },
-  { value: "MULTI_SELECT", label: "Multi-select", icon: Tags },
+  {value: "TEXT", label: "Text", icon: Type},
+  {value: "NUMBER", label: "Number", icon: Hash},
+  {value: "EMAIL", label: "Email", icon: Mail},
+  {value: "URL", label: "URL", icon: Link},
+  {value: "PHONE", label: "Phone", icon: Phone},
+  {value: "CHECKBOX", label: "Checkbox", icon: CheckSquare},
+  {value: "DATE", label: "Date", icon: Calendar},
+  {value: "SELECT", label: "Select", icon: List},
+  {value: "MULTI_SELECT", label: "Multi-select", icon: Tags},
 ] as const;
 
-export function PropertyHeaderMenu({
-  property,
-  frozenConfig,
-  disablePropertyManagement = false,
-  onEditName,
-  onChangeType,
-  onFilter,
-  onSort,
-  onFreeze,
-  onHide,
-  onInsertLeft,
-  onInsertRight,
-  onDuplicate,
-  onDelete,
-  onRefresh,
-  children,
-}: PropertyHeaderMenuProps) {
-  const frozenProp = frozenConfig?.frozenProperties?.find(
-    (fp) => fp.propertyId === property.id
-  );
+export const PropertyHeaderMenu =({children,}: { children: ReactNode }) => {
+  const { currentProperty, onPropertyChange } = useDatabaseView();
   const isFrozen = frozenProp !== undefined;
   const [isEditNameOpen, setIsEditNameOpen] = useState(false);
   const [newName, setNewName] = useState(property.name);
@@ -115,7 +78,6 @@ export function PropertyHeaderMenu({
 
   const handleEditName = async () => {
     if (newName.trim() && newName !== property.name) {
-      // Simple validation for property name
       if (newName.trim().length < 1) {
         toast.error("Property name cannot be empty");
         return;
@@ -162,9 +124,8 @@ export function PropertyHeaderMenu({
     }
   };
 
-  const handleChangeType = async (newType: PropertyType) => {
+  const handleChangeType = async (newType: EPropertyType) => {
     if (newType !== property.type) {
-      // Simple validation for property type
       const validTypes = [
         "TEXT",
         "NUMBER",
@@ -320,7 +281,7 @@ export function PropertyHeaderMenu({
               onClick={() => setIsEditNameOpen(true)}
               disabled={!canEdit}
             >
-              <Edit3 className="mr-2 h-4 w-4 flex-shrink-0" />
+              <Edit3 className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Edit Name</span>
               {!canEdit && (
                 <span className="ml-auto text-xs text-muted-foreground">
@@ -333,7 +294,7 @@ export function PropertyHeaderMenu({
           {onChangeType && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger disabled={!canEdit}>
-                <Type className="mr-4 h-4 w-4 flex-shrink-0" />
+                <Type className="mr-4 h-4 w-4 flex-shrink-0"/>
                 <span className="flex-1">Change Type</span>
                 <Badge variant="outline" className="ml-2 text-xs">
                   {PROPERTY_TYPES.find((t) => t.value === property.type)?.label}
@@ -355,7 +316,7 @@ export function PropertyHeaderMenu({
                       disabled={isSelected || isLoading}
                       className={isSelected ? "bg-muted" : ""}
                     >
-                      <Icon className="mr-2 h-4 w-4 flex-shrink-0" />
+                      <Icon className="mr-2 h-4 w-4 flex-shrink-0"/>
                       <span className="flex-1">{type.label}</span>
                       {isSelected && (
                         <Badge variant="secondary" className="ml-2 text-xs">
@@ -369,11 +330,11 @@ export function PropertyHeaderMenu({
             </DropdownMenuSub>
           )}
 
-          {(onFilter || onSort) && <DropdownMenuSeparator />}
+          {(onFilter || onSort) && <DropdownMenuSeparator/>}
 
           {onFilter && (
             <DropdownMenuItem onClick={() => onFilter(property)}>
-              <Filter className="mr-2 h-4 w-4 flex-shrink-0" />
+              <Filter className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Filter</span>
             </DropdownMenuItem>
           )}
@@ -381,16 +342,16 @@ export function PropertyHeaderMenu({
           {onSort && (
             <DropdownMenuSub>
               <DropdownMenuSubTrigger>
-                <ArrowUpDown className="mr-4 h-4 w-4 flex-shrink-0" />
+                <ArrowUpDown className="mr-4 h-4 w-4 flex-shrink-0"/>
                 <span>Sort</span>
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 <DropdownMenuItem onClick={() => onSort(property, "asc")}>
-                  <ArrowUp className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <ArrowUp className="mr-2 h-4 w-4 flex-shrink-0"/>
                   <span>Ascending</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onSort(property, "desc")}>
-                  <ArrowDown className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <ArrowDown className="mr-2 h-4 w-4 flex-shrink-0"/>
                   <span>Descending</span>
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
@@ -402,18 +363,18 @@ export function PropertyHeaderMenu({
             onInsertLeft ||
             onInsertRight ||
             onDuplicate ||
-            onDelete) && <DropdownMenuSeparator />}
+            onDelete) && <DropdownMenuSeparator/>}
 
           {onFreeze && (
             <DropdownMenuItem onClick={handleFreeze} disabled={isLoading}>
               {isFrozen ? (
                 <>
-                  <Unlock className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <Unlock className="mr-2 h-4 w-4 flex-shrink-0"/>
                   <span>Unfreeze Column</span>
                 </>
               ) : (
                 <>
-                  <Lock className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <Lock className="mr-2 h-4 w-4 flex-shrink-0"/>
                   <span>Freeze Column</span>
                 </>
               )}
@@ -425,7 +386,7 @@ export function PropertyHeaderMenu({
               onClick={() => onHide(property)}
               disabled={!canHide}
             >
-              <EyeOff className="mr-2 h-4 w-4 flex-shrink-0" />
+              <EyeOff className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Hide Column</span>
               {!canHide && (
                 <span className="ml-auto text-xs text-muted-foreground">
@@ -437,21 +398,21 @@ export function PropertyHeaderMenu({
 
           {onInsertLeft && (
             <DropdownMenuItem onClick={handleInsertLeft} disabled={isLoading}>
-              <ChevronLeft className="mr-2 h-4 w-4 flex-shrink-0" />
+              <ChevronLeft className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Insert Left</span>
             </DropdownMenuItem>
           )}
 
           {onInsertRight && (
             <DropdownMenuItem onClick={handleInsertRight} disabled={isLoading}>
-              <ChevronRight className="mr-2 h-4 w-4 flex-shrink-0" />
+              <ChevronRight className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Insert Right</span>
             </DropdownMenuItem>
           )}
 
           {onDuplicate && (
             <DropdownMenuItem onClick={handleDuplicate} disabled={isLoading}>
-              <Copy className="mr-2 h-4 w-4 flex-shrink-0" />
+              <Copy className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Duplicate</span>
             </DropdownMenuItem>
           )}
@@ -462,7 +423,7 @@ export function PropertyHeaderMenu({
               disabled={!canDelete}
               className="text-destructive focus:text-destructive"
             >
-              <Trash2 className="mr-2 h-4 w-4 flex-shrink-0" />
+              <Trash2 className="mr-2 h-4 w-4 flex-shrink-0"/>
               <span>Delete</span>
               {!canDelete && (
                 <span className="ml-auto text-xs text-muted-foreground">

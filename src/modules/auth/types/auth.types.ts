@@ -49,27 +49,3 @@ export interface ResetPasswordCredentials {
     newPassword: string
 }
 
-export interface ApiResponse<T = any> {
-    success: boolean
-    message: string
-    data: T
-    errors?: Record<string, string[]>
-}
-
-export interface AuthError {
-    message: string
-    code?: string
-    field?: string
-}
-
-export interface GoogleAuthResult {
-    accessToken: string
-    refreshToken: string
-    user: User
-}
-
-export interface PopupMessage {
-    type: 'GOOGLE_AUTH_SUCCESS' | 'GOOGLE_AUTH_ERROR'
-    data?: GoogleAuthResult
-    error?: string
-}

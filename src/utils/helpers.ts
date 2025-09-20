@@ -1,3 +1,5 @@
+import type {TPropertyValue} from "@/modules/database-view/types";
+
 export const formatDate = (date: string | Date): string => {
     return new Intl.DateTimeFormat('en-US', {
         year: 'numeric',
@@ -39,3 +41,38 @@ export const debounce = <T extends (...args: unknown[]) => void>(
         timeoutId = setTimeout(() => func(...args), delay)
     }
 }
+
+export const getStringValue = (val: TPropertyValue): string => {
+  if (typeof val === "string") return val;
+  if (val === null || val === undefined) return "";
+  return String(val);
+};
+
+export const getNumberValue = (val: TPropertyValue): number | "" => {
+  if (typeof val === "number") return val;
+  if (typeof val === "string" && val !== "") {
+    const num = Number(val);
+    return isNaN(num) ? "" : num;
+  }
+  return "";
+};
+
+export const getDateValue = (val: TPropertyValue): Date | undefined => {
+  if (val instanceof Date) return val;
+  if (typeof val === "string" && val !== "") {
+    const date = new Date(val);
+    return isNaN(date.getTime()) ? undefined : date;
+  }
+  return undefined;
+};
+
+export const getBooleanValue = (val: TPropertyValue): boolean => {
+  if (typeof val === "boolean") return val;
+  if (typeof val === "string") return val === "true";
+  return false;
+};
+
+export const getMultiSelectValues = (val: TPropertyValue): string[] => {
+  if (Array.isArray(val)) return val as string[];
+  return [];
+};

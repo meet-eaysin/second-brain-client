@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -25,28 +25,53 @@ import {
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type {TProperty, TPropertyOption, TRecord} from "@/modules/database-view/types";
+import type {
+  TProperty,
+  TRecord,
+  TPropertyValue,
+} from "@/modules/database-view/types";
+import { EPropertyType } from "@/modules/database-view/types";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import { toast } from "sonner";
+import {getBooleanValue, getDateValue, getMultiSelectValues, getNumberValue, getStringValue} from "@/utils/helpers.ts";
 
 interface EditableCellProps {
-  property: TProperty;
-  value: unknown;
   record: TRecord;
+  property: TProperty;
+  value: TPropertyValue;
 }
 
-export function EditableCell({
-  property,
-  value,
-  record,
-}: EditableCellProps) {
+export function EditableCell({ record, property, value }: EditableCellProps) {
+  const { database } = useDatabaseView();
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const currentSelectedValues = Array.isArray(editValue) ? editValue : [];
-  const option: TProperty = property?.config?.options?.find((opt: TPropertyOption) => opt.id === value);
+  const [editValue, setEditValue] = useState<TPropertyValue>(value);
 
+  const currentSelectedValues = getMultiSelectValues(editValue);
 
-  const handleSave = () => {
-    if (editValue !== value) onSave(record.id, property.id, editValue);
-    setIsEditing(false);
+  useEffect(() => {
+    setEditValue(value);
+  }, [value]);
+
+  const updateRecordMutation = useUpdateRecord();
+
+  const handleSave = async (newValue: TPropertyValue) => {
+    if (!database?.id) return;
+
+    try {
+      await updateRecordMutation.mutateAsync({
+        databaseId: database.id,
+        recordId: record.id,
+        payload: {
+          [property.id]: newValue,
+        },
+      });
+      setIsEditing(false);
+      toast.success("Cell updated successfully");
+    } catch {
+      toast.error("Failed to update cell");
+      setEditValue(value);
+    }
   };
 
   const handleCancel = () => {
@@ -56,7 +81,7 @@ export function EditableCell({
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      handleSave();
+      handleSave(editValue);
     } else if (e.key === "Escape") {
       handleCancel();
     }
@@ -78,33 +103,29 @@ export function EditableCell({
     }
 
     switch (property.type) {
-      case "CHECKBOX":
+      case EPropertyType.CHECKBOX:
         return (
           <Checkbox
-            checked={editValue}
+            checked={getBooleanValue(editValue)}
             onCheckedChange={(checked) => {
-              setEditValue(checked);
-              onSave(record.id, property.id, checked);
-              setIsEditing(false);
+              handleSave(checked);
             }}
           />
         );
 
-      case "SELECT":
+      case EPropertyType.SELECT:
         return (
           <Select
-            value={editValue}
+            value={getStringValue(editValue)}
             onValueChange={(newValue) => {
-              setEditValue(newValue);
-              onSave(record.id, property.id, newValue);
-              setIsEditing(false);
+              handleSave(newValue);
             }}
           >
             <SelectTrigger className="h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {property.selectOptions?.map((option) => (
+              {property.config?.options?.map((option) => (
                 <SelectItem key={option.id} value={option.id}>
                   <div className="flex items-center space-x-2">
                     {option.color && (
@@ -113,7 +134,7 @@ export function EditableCell({
                         style={{ backgroundColor: option.color }}
                       />
                     )}
-                    <span>{option.name}</span>
+                    <span>{option.label}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -121,7 +142,7 @@ export function EditableCell({
           </Select>
         );
 
-      case "MULTI_SELECT":
+      case EPropertyType.MULTI_SELECT:
         return (
           <DropdownMenu
             onOpenChange={(open) => {
@@ -133,7 +154,7 @@ export function EditableCell({
                 {currentSelectedValues.length > 0 ? (
                   <div className="flex flex-wrap gap-1 max-w-full">
                     {currentSelectedValues.slice(0, 2).map((selectedId) => {
-                      const option = property.selectOptions?.find(
+                      const option = property.config?.options?.find(
                         (opt) => opt.id === selectedId
                       );
                       return option ? (
@@ -146,7 +167,7 @@ export function EditableCell({
                             color: option.color,
                           }}
                         >
-                          {option.name}
+                          {option.label}
                         </Badge>
                       ) : null;
                     })}
@@ -164,7 +185,7 @@ export function EditableCell({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56">
-              {property.selectOptions?.map((option) => {
+              {property.config?.options?.map((option) => {
                 const isSelected = currentSelectedValues.includes(option.id);
                 return (
                   <DropdownMenuCheckboxItem
@@ -176,9 +197,7 @@ export function EditableCell({
                         : currentSelectedValues.filter(
                             (id) => id !== option.id
                           );
-                      setEditValue(newValues);
-                      // Immediately save the change (like Notion)
-                      onSave(record.id, property.id, newValues);
+                      handleSave(newValues);
                     }}
                   >
                     <div className="flex items-center space-x-2">
@@ -188,7 +207,7 @@ export function EditableCell({
                           style={{ backgroundColor: option.color }}
                         />
                       )}
-                      <span>{option.name}</span>
+                      <span>{option.label}</span>
                     </div>
                   </DropdownMenuCheckboxItem>
                 );
@@ -197,7 +216,8 @@ export function EditableCell({
           </DropdownMenu>
         );
 
-      case "DATE":
+      case EPropertyType.DATE: {
+        const dateValue = getDateValue(editValue);
         return (
           <Popover>
             <PopoverTrigger asChild>
@@ -205,62 +225,57 @@ export function EditableCell({
                 variant="outline"
                 className={cn(
                   "h-8 w-full justify-start text-left font-normal",
-                  !editValue && "text-muted-foreground"
+                  !dateValue && "text-muted-foreground"
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {editValue ? format(new Date(editValue), "PPP") : "Pick a date"}
+                {dateValue ? format(dateValue, "PPP") : "Pick a date"}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={editValue ? new Date(editValue) : undefined}
+                selected={dateValue}
                 onSelect={(date) => {
-                  setEditValue(date ? date.toISOString() : null);
-                  onSave(
-                    record.id,
-                    property.id,
-                    date ? date.toISOString() : null
-                  );
-                  setIsEditing(false);
+                  handleSave(date ? date.toISOString() : null);
                 }}
                 initialFocus
               />
             </PopoverContent>
           </Popover>
         );
+      }
 
-      case "EMAIL":
-      case "URL":
-      case "PHONE":
+      case EPropertyType.EMAIL:
+      case EPropertyType.URL:
+      case EPropertyType.PHONE:
         return (
           <Input
             type={
-              property.type === "EMAIL"
+              property.type === EPropertyType.EMAIL
                 ? "email"
-                : property.type === "URL"
+                : property.type === EPropertyType.URL
                 ? "url"
                 : "tel"
             }
-            value={editValue || ""}
+            value={getStringValue(editValue)}
             onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleSave}
+            onBlur={() => handleSave(editValue)}
             onKeyDown={handleKeyDown}
             className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1"
             autoFocus
           />
         );
 
-      case "NUMBER":
+      case EPropertyType.NUMBER:
         return (
           <Input
             type="number"
-            value={editValue || ""}
+            value={getNumberValue(editValue)}
             onChange={(e) =>
               setEditValue(e.target.value ? Number(e.target.value) : null)
             }
-            onBlur={handleSave}
+            onBlur={() => handleSave(editValue)}
             onKeyDown={handleKeyDown}
             className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1"
             autoFocus
@@ -270,9 +285,9 @@ export function EditableCell({
       default:
         return (
           <Input
-            value={editValue || ""}
+            value={getStringValue(editValue)}
             onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleSave}
+            onBlur={() => handleSave(editValue)}
             onKeyDown={handleKeyDown}
             className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1"
             autoFocus
@@ -287,32 +302,38 @@ export function EditableCell({
     }
 
     switch (property.type) {
-      case "CHECKBOX":
-        return <Checkbox checked={value} disabled />;
+      case EPropertyType.CHECKBOX:
+        return <Checkbox checked={Boolean(value)} disabled />;
 
-      case "SELECT":
-        return option ? (
-          <Badge
-            variant="secondary"
-            style={{
-              backgroundColor: option.color + "20",
-              color: option.color,
-            }}
-          >
-            {option.name}
-          </Badge>
-        ) : (
-          value
-        );
+      case EPropertyType.SELECT:
+        if (typeof value === "string" && property.config?.options) {
+          const option = property.config.options.find(
+            (opt) => opt.id === value
+          );
+          return option ? (
+            <Badge
+              variant="secondary"
+              style={{
+                backgroundColor: option.color + "20",
+                color: option.color,
+              }}
+            >
+              {option.label}
+            </Badge>
+          ) : (
+            <span>{value}</span>
+          );
+        }
+        return <span>{String(value)}</span>;
 
-      case "MULTI_SELECT":
+      case EPropertyType.MULTI_SELECT:
         if (!Array.isArray(value) || value.length === 0) {
           return <span className="text-muted-foreground">—</span>;
         }
         return (
           <div className="flex flex-wrap gap-1">
-            {value.map((val) => {
-              const option = property.selectOptions?.find(
+            {(value as string[]).map((val) => {
+              const option = property.config?.options?.find(
                 (opt) => opt.id === val
               );
               return option ? (
@@ -325,7 +346,7 @@ export function EditableCell({
                   }}
                   className="text-xs"
                 >
-                  {option.name}
+                  {option.label}
                 </Badge>
               ) : (
                 <Badge key={val} variant="outline" className="text-xs">
@@ -336,42 +357,46 @@ export function EditableCell({
           </div>
         );
 
-      case "DATE":
-        if (!value) return <span className="text-muted-foreground">—</span>;
-        try {
-          const date = new Date(value);
-          return format(date, "MMM d, yyyy");
-        } catch {
-          return <span className="text-muted-foreground">Invalid date</span>;
-        }
+      case EPropertyType.DATE: {
+        const displayDateValue = getDateValue(value);
+        if (!displayDateValue)
+          return <span className="text-muted-foreground">—</span>;
+        return format(displayDateValue, "MMM d, yyyy");
+      }
 
-      case "EMAIL":
+      case EPropertyType.EMAIL: {
+        const emailValue = getStringValue(value);
         return (
-          <a href={`mailto:${value}`} className="hover:underline">
-            {value}
+          <a href={`mailto:${emailValue}`} className="hover:underline">
+            {emailValue}
           </a>
         );
+      }
 
-      case "URL":
+      case EPropertyType.URL: {
+        const urlValue = getStringValue(value);
         return (
           <a
-            href={value}
+            href={urlValue}
             target="_blank"
             rel="noopener noreferrer"
             className="hover:underline"
           >
-            {value}
+            {urlValue}
           </a>
         );
+      }
 
-      case "PHONE":
+      case EPropertyType.PHONE: {
+        const phoneValue = getStringValue(value);
         return (
-          <a href={`tel:${value}`} className="hover:underline">
-            {value}
+          <a href={`tel:${phoneValue}`} className="hover:underline">
+            {phoneValue}
           </a>
         );
+      }
 
-      case "NUMBER":
+      case EPropertyType.NUMBER:
         return typeof value === "number"
           ? value.toLocaleString()
           : String(value);
