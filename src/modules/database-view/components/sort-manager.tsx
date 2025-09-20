@@ -30,69 +30,152 @@ import {
   Mail,
   Link,
   Phone,
+  FileText,
+  DollarSign,
+  Percent,
+  Circle,
+  AlertTriangle,
+  File,
+  Calculator,
+  Clock,
+  User,
+  Smile,
+  Repeat,
+  Search,
+  Files,
 } from "lucide-react";
-import type {TSortConfig} from "@/modules/database-view/types";
-import {useDatabaseView} from "@/modules/database-view/context";
+import type { TSortConfig } from "@/modules/database-view/types";
+import { useDatabaseView } from "@/modules/database-view/context";
+import {
+  useCreateDatabaseSort,
+  useDatabaseSorts,
+  useDeleteDatabaseSort,
+} from "@/modules/database-view/services/database-queries.ts";
 
 const PROPERTY_TYPE_ICONS = {
-  TEXT: Type,
-  NUMBER: Hash,
-  EMAIL: Mail,
-  URL: Link,
-  PHONE: Phone,
-  DATE: Calendar,
-  CHECKBOX: CheckSquare,
-  SELECT: List,
-  MULTI_SELECT: Tags,
+  text: Type,
+  rich_text: FileText,
+  number: Hash,
+  date: Calendar,
+  checkbox: CheckSquare,
+  url: Link,
+  email: Mail,
+  phone: Phone,
+  currency: DollarSign,
+  percent: Percent,
+  select: List,
+  multi_select: Tags,
+  status: Circle,
+  priority: AlertTriangle,
+  file: File,
+  relation: Link,
+  rollup: Calculator,
+  formula: Calculator,
+  created_time: Clock,
+  last_edited_time: Clock,
+  created_by: User,
+  last_edited_by: User,
+  mood_scale: Smile,
+  frequency: Repeat,
+  content_type: FileText,
+  finance_type: DollarSign,
+  finance_category: Tags,
+  FILES: Files,
+  LOOKUP: Search,
 } as const;
 
 export function SortManager() {
-  const { currentView, properties } = useDatabaseView();
+  const { database, properties } = useDatabaseView();
   const [open, setOpen] = useState(false);
-  const [sorts, setSorts] = useState<TSortConfig[]>([]);
+  const [localSorts, setLocalSorts] = useState<TSortConfig[]>([]);
+
+  const { data: databaseSorts = [] } = useDatabaseSorts(database?.id || "", {
+    databaseId: database?.id || "",
+    isActive: true,
+  });
+
+  const createSortMutation = useCreateDatabaseSort();
+  const deleteSortMutation = useDeleteDatabaseSort();
 
   useEffect(() => {
-    setSorts(currentView?.sorts ?? []);
-  }, [currentView]);
+    if (databaseSorts.length > 0) {
+      setLocalSorts(
+        databaseSorts.map((sort) => ({
+          propertyId: sort.sorts[0]?.propertyId || "",
+          direction: sort.sorts[0]?.direction || "asc",
+        }))
+      );
+    } else {
+      setLocalSorts([]);
+    }
+  }, [databaseSorts]);
 
   const addSort = () => {
     const available = properties.filter(
-      (prop) => !sorts.some((s) => s.propertyId === prop.id)
+      (prop) => !localSorts.some((s) => s.propertyId === prop.id)
     );
     if (available.length > 0) {
-      setSorts([...sorts, { propertyId: available[0].id, direction: "asc" }]);
+      setLocalSorts([
+        ...localSorts,
+        { propertyId: available[0].id, direction: "asc" },
+      ]);
     }
   };
 
   const updateSort = (i: number, field: keyof TSortConfig, value: string) => {
-    const next = [...sorts];
+    const next = [...localSorts];
     next[i] = { ...next[i], [field]: value };
-    setSorts(next);
+    setLocalSorts(next);
   };
 
   const removeSort = (i: number) => {
-    setSorts(sorts.filter((_, idx) => idx !== i));
+    setLocalSorts(localSorts.filter((_, idx) => idx !== i));
   };
 
   const moveSort = (i: number, dir: "up" | "down") => {
-    const next = [...sorts];
+    const next = [...localSorts];
     const t = dir === "up" ? i - 1 : i + 1;
     if (t >= 0 && t < next.length) {
       [next[i], next[t]] = [next[t], next[i]];
-      setSorts(next);
+      setLocalSorts(next);
     }
   };
 
   const handleSave = async () => {
+    if (!database?.id) return;
+
     try {
-      await onSave(sorts);
+      for (const dbSort of databaseSorts) {
+        await deleteSortMutation.mutateAsync({
+          databaseId: database.id,
+          sortId: dbSort.id,
+        });
+      }
+
+      for (const localSort of localSorts) {
+        if (localSort.propertyId) {
+          await createSortMutation.mutateAsync({
+            databaseId: database.id,
+            data: {
+              name: `Sort by ${
+                properties.find((p) => p.id === localSort.propertyId)?.name ||
+                "Property"
+              }`,
+              sorts: [localSort],
+              isActive: true,
+              isDefault: false,
+            },
+          });
+        }
+      }
+
       setOpen(false);
     } catch (err) {
       console.error("Failed to save sorts:", err);
     }
   };
 
-  const handleReset = () => setSorts([]);
+  const handleReset = () => setLocalSorts([]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -107,12 +190,12 @@ export function SortManager() {
         className="w-[420px] flex flex-col gap-2 p-3 text-sm"
       >
         <h4 className="font-medium text-sm">
-          {sorts.length > 0 ? "Sort by" : "No sorting applied"}
+          {localSorts.length > 0 ? "Sort by" : "No sorting applied"}
         </h4>
 
-        {sorts.length > 0 ? (
+        {localSorts.length > 0 ? (
           <div className="space-y-1.5 max-h-[250px] overflow-y-auto pr-1">
-            {sorts.map((sort, i) => {
+            {localSorts.map((sort, i) => {
               return (
                 <Card key={i} className="p-1.5">
                   <div className="flex flex-row gap-1.5 items-center">
@@ -187,7 +270,7 @@ export function SortManager() {
                         variant="ghost"
                         size="sm"
                         onClick={() => moveSort(i, "down")}
-                        disabled={i === sorts.length - 1}
+                        disabled={i === localSorts.length - 1}
                         className="h-7 w-7 p-0"
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
@@ -218,7 +301,7 @@ export function SortManager() {
             onClick={addSort}
             variant="outline"
             className="h-8 text-sm"
-            disabled={sorts.length >= properties.length}
+            disabled={localSorts.length >= properties.length}
           >
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add Sort
@@ -229,7 +312,7 @@ export function SortManager() {
               variant="outline"
               onClick={handleReset}
               className="h-8 text-sm"
-              disabled={sorts.length === 0}
+              disabled={localSorts.length === 0}
             >
               Reset
             </Button>

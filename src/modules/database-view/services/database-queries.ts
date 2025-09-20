@@ -126,8 +126,12 @@ export const useDatabaseStats = (id: string) => {
 export const useCreateDatabase = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<TDatabase, AxiosError<ApiError>, TCreateDatabase>({
-    mutationFn: databaseApi.createDatabase,
+  return useMutation<
+    TDatabase,
+    AxiosError<ApiError>,
+    { data: TCreateDatabase }
+  >({
+    mutationFn: ({ data }) => databaseApi.createDatabase(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
       toast.success("Database created successfully");
@@ -163,11 +167,13 @@ export const useUpdateDatabase = () => {
 export const useDeleteDatabase = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, AxiosError<ApiError>, string>({
-    mutationFn: databaseApi.deleteDatabase,
-    onSuccess: (_, id) => {
+  return useMutation<void, AxiosError<ApiError>, { id: string }>({
+    mutationFn: ({ id }) => databaseApi.deleteDatabase(id),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
-      queryClient.removeQueries({ queryKey: DATABASE_KEYS.detail(id) });
+      queryClient.removeQueries({
+        queryKey: DATABASE_KEYS.detail(variables.id),
+      });
       toast.success("Database deleted successfully");
     },
     onError: (error) => {
@@ -622,8 +628,12 @@ export const useRelation = (relationId: string) => {
 export const useCreateRelation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<IRelation, AxiosError<ApiError>, TCreateRelation>({
-    mutationFn: databaseApi.createRelation,
+  return useMutation<
+    IRelation,
+    AxiosError<ApiError>,
+    { data: TCreateRelation }
+  >({
+    mutationFn: ({ data }) => databaseApi.createRelation(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.relations });
       toast.success("Relation created successfully");
@@ -660,12 +670,12 @@ export const useUpdateRelation = () => {
 export const useDeleteRelation = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, AxiosError<ApiError>, string>({
-    mutationFn: databaseApi.deleteRelation,
-    onSuccess: (_, relationId) => {
+  return useMutation<void, AxiosError<ApiError>, { id: string }>({
+    mutationFn: ({ id }) => databaseApi.deleteRelation(id),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.relations });
       queryClient.removeQueries({
-        queryKey: DATABASE_KEYS.relation(relationId),
+        queryKey: DATABASE_KEYS.relation(variables.id),
       });
       toast.success("Relation deleted successfully");
     },
@@ -690,9 +700,9 @@ export const useCreateRelationConnection = () => {
   return useMutation<
     TRelationConnection,
     AxiosError<ApiError>,
-    TCreateRelationConnection
+    { data: TCreateRelationConnection }
   >({
-    mutationFn: databaseApi.createRelationConnection,
+    mutationFn: ({ data }) => databaseApi.createRelationConnection(data),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [...DATABASE_KEYS.relations, "connections"],
@@ -710,8 +720,8 @@ export const useCreateRelationConnection = () => {
 export const useDeleteRelationConnection = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<void, AxiosError<ApiError>, string>({
-    mutationFn: databaseApi.deleteRelationConnection,
+  return useMutation<void, AxiosError<ApiError>, { id: string }>({
+    mutationFn: ({ id }) => databaseApi.deleteRelationConnection(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [...DATABASE_KEYS.relations, "connections"],
@@ -927,439 +937,6 @@ export const useDuplicateBlock = () => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to duplicate block");
-    },
-  });
-};
-
-// Database-level filter and sort hooks
-export const useDatabaseFilters = (
-  databaseId: string,
-  params?: TDatabaseFilterQueryParams
-) => {
-  return useQuery<TDatabaseFilter[], AxiosError>({
-    queryKey: [...DATABASE_KEYS.detail(databaseId), "filters", params],
-    queryFn: () => databaseApi.getDatabaseFilters(databaseId, params),
-    enabled: !!databaseId,
-  });
-};
-
-export const useDatabaseFilter = (databaseId: string, filterId: string) => {
-  return useQuery<TDatabaseFilter, AxiosError>({
-    queryKey: [...DATABASE_KEYS.detail(databaseId), "filters", filterId],
-    queryFn: () => databaseApi.getDatabaseFilterById(databaseId, filterId),
-    enabled: !!databaseId && !!filterId,
-  });
-};
-
-export const useCreateDatabaseFilter = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseFilter,
-    AxiosError<ApiError>,
-    { databaseId: string; data: TCreateDatabaseFilter }
-  >({
-    mutationFn: ({ databaseId, data }) =>
-      databaseApi.createDatabaseFilter(databaseId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "filters"],
-      });
-      toast.success("Database filter created successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to create database filter"
-      );
-    },
-  });
-};
-
-export const useUpdateDatabaseFilter = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseFilter,
-    AxiosError<ApiError>,
-    { databaseId: string; filterId: string; data: TUpdateDatabaseFilter }
-  >({
-    mutationFn: ({ databaseId, filterId, data }) =>
-      databaseApi.updateDatabaseFilter(databaseId, filterId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "filters"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filters",
-          variables.filterId,
-        ],
-      });
-      toast.success("Database filter updated successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update database filter"
-      );
-    },
-  });
-};
-
-export const useDeleteDatabaseFilter = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    AxiosError<ApiError>,
-    { databaseId: string; filterId: string }
-  >({
-    mutationFn: ({ databaseId, filterId }) =>
-      databaseApi.deleteDatabaseFilter(databaseId, filterId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "filters"],
-      });
-      queryClient.removeQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filters",
-          variables.filterId,
-        ],
-      });
-      toast.success("Database filter deleted successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to delete database filter"
-      );
-    },
-  });
-};
-
-export const useDuplicateDatabaseFilter = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseFilter,
-    AxiosError<ApiError>,
-    { databaseId: string; filterId: string; name?: string }
-  >({
-    mutationFn: ({ databaseId, filterId, name }) =>
-      databaseApi.duplicateDatabaseFilter(databaseId, filterId, name),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "filters"],
-      });
-      toast.success("Database filter duplicated successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to duplicate database filter"
-      );
-    },
-  });
-};
-
-export const useDatabaseSorts = (
-  databaseId: string,
-  params?: TDatabaseSortQueryParams
-) => {
-  return useQuery<TDatabaseSort[], AxiosError>({
-    queryKey: [...DATABASE_KEYS.detail(databaseId), "sorts", params],
-    queryFn: () => databaseApi.getDatabaseSorts(databaseId, params),
-    enabled: !!databaseId,
-  });
-};
-
-export const useDatabaseSort = (databaseId: string, sortId: string) => {
-  return useQuery<TDatabaseSort, AxiosError>({
-    queryKey: [...DATABASE_KEYS.detail(databaseId), "sorts", sortId],
-    queryFn: () => databaseApi.getDatabaseSortById(databaseId, sortId),
-    enabled: !!databaseId && !!sortId,
-  });
-};
-
-export const useCreateDatabaseSort = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseSort,
-    AxiosError<ApiError>,
-    { databaseId: string; data: TCreateDatabaseSort }
-  >({
-    mutationFn: ({ databaseId, data }) =>
-      databaseApi.createDatabaseSort(databaseId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "sorts"],
-      });
-      toast.success("Database sort created successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to create database sort"
-      );
-    },
-  });
-};
-
-export const useUpdateDatabaseSort = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseSort,
-    AxiosError<ApiError>,
-    { databaseId: string; sortId: string; data: TUpdateDatabaseSort }
-  >({
-    mutationFn: ({ databaseId, sortId, data }) =>
-      databaseApi.updateDatabaseSort(databaseId, sortId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "sorts"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "sorts",
-          variables.sortId,
-        ],
-      });
-      toast.success("Database sort updated successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to update database sort"
-      );
-    },
-  });
-};
-
-export const useDeleteDatabaseSort = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    AxiosError<ApiError>,
-    { databaseId: string; sortId: string }
-  >({
-    mutationFn: ({ databaseId, sortId }) =>
-      databaseApi.deleteDatabaseSort(databaseId, sortId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "sorts"],
-      });
-      queryClient.removeQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "sorts",
-          variables.sortId,
-        ],
-      });
-      toast.success("Database sort deleted successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to delete database sort"
-      );
-    },
-  });
-};
-
-export const useDuplicateDatabaseSort = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseSort,
-    AxiosError<ApiError>,
-    { databaseId: string; sortId: string; name?: string }
-  >({
-    mutationFn: ({ databaseId, sortId, name }) =>
-      databaseApi.duplicateDatabaseSort(databaseId, sortId, name),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [...DATABASE_KEYS.detail(variables.databaseId), "sorts"],
-      });
-      toast.success("Database sort duplicated successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message || "Failed to duplicate database sort"
-      );
-    },
-  });
-};
-
-export const useDatabaseFilterPresets = (
-  databaseId: string,
-  params?: TDatabaseFilterPresetQueryParams
-) => {
-  return useQuery<TDatabaseFilterPreset[], AxiosError>({
-    queryKey: [...DATABASE_KEYS.detail(databaseId), "filter-presets", params],
-    queryFn: () => databaseApi.getDatabaseFilterPresets(databaseId, params),
-    enabled: !!databaseId,
-  });
-};
-
-export const useDatabaseFilterPreset = (
-  databaseId: string,
-  presetId: string
-) => {
-  return useQuery<TDatabaseFilterPreset, AxiosError>({
-    queryKey: [...DATABASE_KEYS.detail(databaseId), "filter-presets", presetId],
-    queryFn: () =>
-      databaseApi.getDatabaseFilterPresetById(databaseId, presetId),
-    enabled: !!databaseId && !!presetId,
-  });
-};
-
-export const useCreateDatabaseFilterPreset = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseFilterPreset,
-    AxiosError<ApiError>,
-    { databaseId: string; data: TCreateDatabaseFilterPreset }
-  >({
-    mutationFn: ({ databaseId, data }) =>
-      databaseApi.createDatabaseFilterPreset(databaseId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filter-presets",
-        ],
-      });
-      toast.success("Database filter preset created successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to create database filter preset"
-      );
-    },
-  });
-};
-
-export const useUpdateDatabaseFilterPreset = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseFilterPreset,
-    AxiosError<ApiError>,
-    { databaseId: string; presetId: string; data: TUpdateDatabaseFilterPreset }
-  >({
-    mutationFn: ({ databaseId, presetId, data }) =>
-      databaseApi.updateDatabaseFilterPreset(databaseId, presetId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filter-presets",
-        ],
-      });
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filter-presets",
-          variables.presetId,
-        ],
-      });
-      toast.success("Database filter preset updated successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to update database filter preset"
-      );
-    },
-  });
-};
-
-export const useDeleteDatabaseFilterPreset = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    AxiosError<ApiError>,
-    { databaseId: string; presetId: string }
-  >({
-    mutationFn: ({ databaseId, presetId }) =>
-      databaseApi.deleteDatabaseFilterPreset(databaseId, presetId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filter-presets",
-        ],
-      });
-      queryClient.removeQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filter-presets",
-          variables.presetId,
-        ],
-      });
-      toast.success("Database filter preset deleted successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to delete database filter preset"
-      );
-    },
-  });
-};
-
-export const useDuplicateDatabaseFilterPreset = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    TDatabaseFilterPreset,
-    AxiosError<ApiError>,
-    { databaseId: string; presetId: string; name?: string }
-  >({
-    mutationFn: ({ databaseId, presetId, name }) =>
-      databaseApi.duplicateDatabaseFilterPreset(databaseId, presetId, name),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: [
-          ...DATABASE_KEYS.detail(variables.databaseId),
-          "filter-presets",
-        ],
-      });
-      toast.success("Database filter preset duplicated successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to duplicate database filter preset"
-      );
-    },
-  });
-};
-
-export const useApplyDatabaseFilterPreset = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    AxiosError<ApiError>,
-    { databaseId: string; presetId: string }
-  >({
-    mutationFn: ({ databaseId, presetId }) =>
-      databaseApi.applyDatabaseFilterPreset(databaseId, presetId),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: DATABASE_KEYS.records(variables.databaseId),
-      });
-      toast.success("Database filter preset applied successfully");
-    },
-    onError: (error) => {
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to apply database filter preset"
-      );
     },
   });
 };

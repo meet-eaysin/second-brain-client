@@ -300,6 +300,7 @@ export enum EFilterOperator {
   NOT_EQUALS = "not_equals",
   CONTAINS = "contains",
   NOT_CONTAINS = "not_contains",
+  CONTAINS_ALL = "contains_all",
   STARTS_WITH = "starts_with",
   ENDS_WITH = "ends_with",
   IS_EMPTY = "is_empty",
@@ -332,9 +333,11 @@ export enum EFilterOperator {
 }
 
 export type TFilterCondition = {
-  propertyId: string;
-  operator: EFilterOperator;
+  id?: string;
+  property: string; // Changed from propertyId for backend compatibility
+  condition: EFilterOperator; // Changed from operator for backend compatibility
   value?: TPropertyValue;
+  operator?: "and" | "or";
 };
 
 export type TSortConfig = {
@@ -343,9 +346,11 @@ export type TSortConfig = {
 };
 
 export type TViewFilter = {
-  propertyId: string;
-  operator: EFilterOperator;
+  id?: string;
+  property: string;
+  condition: EFilterOperator;
   value?: TPropertyValue;
+  operator?: "and" | "or";
 };
 
 export type TViewSort = {

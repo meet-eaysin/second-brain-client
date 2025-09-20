@@ -1,10 +1,10 @@
-import {useState, useEffect} from "react";
+import { useState, useEffect } from "react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {Button} from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -12,72 +12,88 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {Input} from "@/components/ui/input";
-import {Checkbox} from "@/components/ui/checkbox";
-import {GripVertical, Plus, Trash2, Filter as FilterIcon} from "lucide-react";
-import type {TFilterCondition, TPropertyOption} from "@/modules/database-view/types";
-import {useDatabaseView} from "@/modules/database-view/context";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { GripVertical, Plus, Trash2, Filter as FilterIcon } from "lucide-react";
+import { EFilterOperator } from "@/modules/database-view/types";
+import type { TFilterCondition } from "@/modules/database-view/types";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { useUpdateView } from "@/modules/database-view/services/database-queries.ts";
 
-const FILTER_OPERATORS = {
+const FILTER_OPERATORS: Record<
+  string,
+  Array<{ value: EFilterOperator; label: string }>
+> = {
   text: [
-    {value: "contains", label: "Contains"},
-    {value: "not_contains", label: "Does not contain"},
-    {value: "equals", label: "Equals"},
-    {value: "not_equals", label: "Does not equal"},
-    {value: "starts_with", label: "Starts with"},
-    {value: "ends_with", label: "Ends with"},
-    {value: "is_empty", label: "Is empty"},
-    {value: "is_not_empty", label: "Is not empty"},
+    { value: EFilterOperator.CONTAINS, label: "Contains" },
+    { value: EFilterOperator.NOT_CONTAINS, label: "Does not contain" },
+    { value: EFilterOperator.EQUALS, label: "Equals" },
+    { value: EFilterOperator.NOT_EQUALS, label: "Does not equal" },
+    { value: EFilterOperator.STARTS_WITH, label: "Starts with" },
+    { value: EFilterOperator.ENDS_WITH, label: "Ends with" },
+    { value: EFilterOperator.IS_EMPTY, label: "Is empty" },
+    { value: EFilterOperator.IS_NOT_EMPTY, label: "Is not empty" },
   ],
   number: [
-    {value: "equals", label: "Equals"},
-    {value: "not_equals", label: "Does not equal"},
-    {value: "greater_than", label: "Greater than"},
-    {value: "less_than", label: "Less than"},
-    {value: "greater_than_or_equal", label: "Greater than or equal"},
-    {value: "less_than_or_equal", label: "Less than or equal"},
-    {value: "is_empty", label: "Is empty"},
-    {value: "is_not_empty", label: "Is not empty"},
+    { value: EFilterOperator.EQUALS, label: "Equals" },
+    { value: EFilterOperator.NOT_EQUALS, label: "Does not equal" },
+    { value: EFilterOperator.GREATER_THAN, label: "Greater than" },
+    { value: EFilterOperator.LESS_THAN, label: "Less than" },
+    {
+      value: EFilterOperator.GREATER_THAN_OR_EQUAL,
+      label: "Greater than or equal",
+    },
+    { value: EFilterOperator.LESS_THAN_OR_EQUAL, label: "Less than or equal" },
+    { value: EFilterOperator.IS_EMPTY, label: "Is empty" },
+    { value: EFilterOperator.IS_NOT_EMPTY, label: "Is not empty" },
   ],
   date: [
-    {value: "equals", label: "Is"},
-    {value: "not_equals", label: "Is not"},
-    {value: "before", label: "Before"},
-    {value: "after", label: "After"},
-    {value: "on_or_before", label: "On or before"},
-    {value: "on_or_after", label: "On or after"},
-    {value: "is_empty", label: "Is empty"},
-    {value: "is_not_empty", label: "Is not empty"},
+    { value: EFilterOperator.EQUALS, label: "Is" },
+    { value: EFilterOperator.NOT_EQUALS, label: "Is not" },
+    { value: EFilterOperator.BEFORE, label: "Before" },
+    { value: EFilterOperator.AFTER, label: "After" },
+    { value: EFilterOperator.ON_OR_BEFORE, label: "On or before" },
+    { value: EFilterOperator.ON_OR_AFTER, label: "On or after" },
+    { value: EFilterOperator.IS_EMPTY, label: "Is empty" },
+    { value: EFilterOperator.IS_NOT_EMPTY, label: "Is not empty" },
   ],
   checkbox: [
-    {value: "checked", label: "Is checked"},
-    {value: "unchecked", label: "Is unchecked"},
+    { value: EFilterOperator.IS_CHECKED, label: "Is checked" },
+    { value: EFilterOperator.IS_UNCHECKED, label: "Is unchecked" },
   ],
   select: [
-    {value: "equals", label: "Is"},
-    {value: "not_equals", label: "Is not"},
-    {value: "is_empty", label: "Is empty"},
-    {value: "is_not_empty", label: "Is not empty"},
+    { value: EFilterOperator.IS, label: "Is" },
+    { value: EFilterOperator.IS_NOT, label: "Is not" },
+    { value: EFilterOperator.IS_EMPTY, label: "Is empty" },
+    { value: EFilterOperator.IS_NOT_EMPTY, label: "Is not empty" },
   ],
   multi_select: [
-    {value: "contains", label: "Contains"},
-    {value: "not_contains", label: "Does not contain"},
-    {value: "contains_all", label: "Contains all"},
-    {value: "is_empty", label: "Is empty"},
-    {value: "is_not_empty", label: "Is not empty"},
+    { value: EFilterOperator.CONTAINS, label: "Contains" },
+    { value: EFilterOperator.NOT_CONTAINS, label: "Does not contain" },
+    { value: EFilterOperator.CONTAINS_ALL, label: "Contains all" },
+    { value: EFilterOperator.IS_EMPTY, label: "Is empty" },
+    { value: EFilterOperator.IS_NOT_EMPTY, label: "Is not empty" },
   ],
 };
 
 export function FilterManager() {
-  const {currentView, properties} = useDatabaseView();
-  const [filters, setFilters] = useState<TFilterCondition[]>([]);
+  const {
+    database,
+    currentView,
+    properties,
+    filters: contextFilters,
+    onFiltersChange,
+  } = useDatabaseView();
+  const [localFilters, setLocalFilters] = useState<TFilterCondition[]>([]);
   const [open, setOpen] = useState(false);
 
+  const updateViewMutation = useUpdateView();
+
   useEffect(() => {
-    if (open && currentView?.filters) {
-      setFilters(currentView.filters);
+    if (open && contextFilters) {
+      setLocalFilters(contextFilters);
     }
-  }, [open, currentView?.filters]);
+  }, [open, contextFilters]);
 
   const addFilter = () => {
     if (properties.length > 0) {
@@ -85,49 +101,65 @@ export function FilterManager() {
       const operators =
         FILTER_OPERATORS[firstProperty.type] || FILTER_OPERATORS.text;
 
-      setFilters([
-        ...filters,
+      setLocalFilters([
+        ...localFilters,
         {
-          propertyId: firstProperty.id,
-          operator: operators[0].value,
+          property: firstProperty.id,
+          condition: operators[0].value,
           value: "",
+          operator: "and",
         },
       ]);
     }
   };
 
   const removeFilter = (index: number) => {
-    setFilters(filters.filter((_, i) => i !== index));
+    setLocalFilters(localFilters.filter((_, i) => i !== index));
   };
 
   const updateFilter = (
     index: number,
-    field: keyof TFilterCondition,
+    field: "property" | "condition" | "value" | "operator",
     value: unknown
   ) => {
-    const newFilters = [...filters];
-    newFilters[index] = {...newFilters[index], [field]: value};
+    const newFilters = [...localFilters];
+    newFilters[index] = { ...newFilters[index], [field]: value };
 
-    if (field === "propertyId") {
-      const property = properties.find((p) => p.id === value);
+    if (field === "property") {
+      const property = properties.find((p) => p.id === (value as string));
       if (property) {
         const operators =
           FILTER_OPERATORS[property.type] || FILTER_OPERATORS.text;
-        newFilters[index].operator = operators[0].value;
+        newFilters[index].condition = operators[0].value;
         newFilters[index].value = "";
       }
     }
 
-    setFilters(newFilters);
+    setLocalFilters(newFilters);
   };
 
   const handleSave = async () => {
-    await onSave(filters);
-    setOpen(false);
+    if (!database?.id || !currentView?.id) return;
+
+    try {
+      await updateViewMutation.mutateAsync({
+        databaseId: database.id,
+        viewId: currentView.id,
+        data: {
+          filters: localFilters,
+        },
+      });
+
+      onFiltersChange(localFilters);
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to save filters:", error);
+    }
   };
 
   const handleReset = () => {
-    setFilters([]);
+    setLocalFilters([]);
+    onFiltersChange([]);
   };
 
   const getProperty = (propertyId: string) =>
@@ -137,12 +169,12 @@ export function FilterManager() {
     FILTER_OPERATORS[propertyType] || FILTER_OPERATORS.text;
 
   const renderValueInput = (filter: TFilterCondition, index: number) => {
-    const property = getProperty(filter.propertyId);
+    const property = getProperty(filter.property);
     if (!property) return null;
 
     if (
       ["is_empty", "is_not_empty", "checked", "unchecked"].includes(
-        filter.operator
+        filter.condition
       )
     ) {
       return null;
@@ -156,7 +188,7 @@ export function FilterManager() {
             onValueChange={(value) => updateFilter(index, "value", value)}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Select option..."/>
+              <SelectValue placeholder="Select option..." />
             </SelectTrigger>
             <SelectContent>
               {property.config?.options?.map((option) => (
@@ -177,11 +209,11 @@ export function FilterManager() {
                   id={`${index}-${option.id}`}
                   checked={
                     Array.isArray(filter.value) &&
-                    filter.value.includes(option.id)
+                    (filter.value as string[]).includes(option.id)
                   }
                   onCheckedChange={(checked) => {
                     const currentValues = Array.isArray(filter.value)
-                      ? filter.value
+                      ? (filter.value as string[])
                       : [];
                     const newValues = checked
                       ? [...currentValues, option.id]
@@ -211,7 +243,7 @@ export function FilterManager() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm">
-          <FilterIcon/>
+          <FilterIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent
@@ -221,25 +253,25 @@ export function FilterManager() {
       >
         <p className="text-xs font-medium text-muted-foreground">Where</p>
 
-        {filters.length > 0 ? (
+        {localFilters.length > 0 ? (
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
-            {filters.map((filter, index) => {
-              const property = getProperty(filter.propertyId);
+            {localFilters.map((filter, index) => {
+              const property = getProperty(filter.property);
               return (
                 <div
                   key={index}
                   className="flex items-center gap-2 border rounded-md px-2 py-1"
                 >
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-move"/>
+                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-move" />
 
                   <Select
-                    value={filter.propertyId}
+                    value={filter.property}
                     onValueChange={(value) =>
-                      updateFilter(index, "propertyId", value)
+                      updateFilter(index, "property", value)
                     }
                   >
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Property"/>
+                      <SelectValue placeholder="Property" />
                     </SelectTrigger>
                     <SelectContent>
                       {properties.map((p) => (
@@ -251,17 +283,17 @@ export function FilterManager() {
                   </Select>
 
                   <Select
-                    value={filter.operator}
+                    value={filter.condition}
                     onValueChange={(value) =>
-                      updateFilter(index, "operator", value)
+                      updateFilter(index, "condition", value)
                     }
                   >
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue placeholder="Operator"/>
+                      <SelectValue placeholder="Operator" />
                     </SelectTrigger>
                     <SelectContent>
                       {property &&
-                        getOperators(property.type).map((op: TPropertyOption) => (
+                        getOperators(property.type).map((op) => (
                           <SelectItem key={op.value} value={op.value}>
                             {op.label}
                           </SelectItem>
@@ -277,7 +309,7 @@ export function FilterManager() {
                     size="icon"
                     onClick={() => removeFilter(index)}
                   >
-                    <Trash2 className="h-4 w-4"/>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               );
@@ -291,10 +323,10 @@ export function FilterManager() {
 
         <div className="flex items-center gap-2 pt-1">
           <Button size="sm" onClick={addFilter}>
-            <Plus className="mr-1 h-4 w-4"/>
+            <Plus className="mr-1 h-4 w-4" />
             Add filter
           </Button>
-          {filters.length > 0 && (
+          {localFilters.length > 0 && (
             <>
               <Button size="sm" variant="outline" onClick={handleReset}>
                 Reset

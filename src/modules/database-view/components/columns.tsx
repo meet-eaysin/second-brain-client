@@ -4,7 +4,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TableHeader } from "./table-header.tsx";
 import { EditableCell } from "./editable-cell";
 import { Users } from "lucide-react";
-import type {TProperty, TPropertyOption, TRecord} from "@/modules/database-view/types";
+import type {
+  TProperty,
+  TPropertyOption,
+  TRecord,
+} from "@/modules/database-view/types";
 
 export interface FrozenPropertyConfig {
   propertyId: string;
@@ -27,8 +31,9 @@ export const isPropertyFrozen = (
 ): FrozenPropertyConfig | null => {
   if (!frozenConfig) return null;
   return (
-    frozenConfig?.frozenProperties?.find((fp) => fp.propertyId === propertyId) ||
-    null
+    frozenConfig?.frozenProperties?.find(
+      (fp) => fp.propertyId === propertyId
+    ) || null
   );
 };
 
@@ -99,7 +104,9 @@ const renderCellValue = (property: TProperty, value: unknown) => {
       }
 
       if (typeof value === "string" && property.config?.options) {
-        const option = property.config?.options?.find((opt: TPropertyOption) => opt.id === value);
+        const option = property.config?.options?.find(
+          (opt: TPropertyOption) => opt.id === value
+        );
         if (option) {
           return (
             <Badge
@@ -112,7 +119,9 @@ const renderCellValue = (property: TProperty, value: unknown) => {
         }
       }
 
-      return <Badge className="bg-gray-100 text-gray-800">{value as string}</Badge>;
+      return (
+        <Badge className="bg-gray-100 text-gray-800">{value as string}</Badge>
+      );
     }
 
     case "multi_select":
@@ -246,7 +255,7 @@ export const generateDocumentColumns = (
     recordId: string,
     propertyId: string,
     newValue: string
-  ) => void,
+  ) => void
 ): ColumnDef<TRecord>[] => {
   const columns: ColumnDef<TRecord>[] = [
     {
@@ -310,19 +319,23 @@ export const generateDocumentColumns = (
         const cellValue = row.original.properties[property.id];
 
         if (property.type === "multi_select" && Array.isArray(cellValue)) {
+          const cellArray = cellValue as (
+            | string
+            | { id: string; name?: string; label?: string; color?: string }
+          )[];
           return value.some((v: string) => {
-            return cellValue.some(
-              (option: string | { id: string; name: string; color: string }) => {
-                if (
-                  typeof option === "object" &&
-                  option !== null &&
-                  "id" in option
-                ) {
-                  return option.id === v || option.name === v;
-                }
-                return option === v;
+            return cellArray.some((option) => {
+              if (
+                typeof option === "object" &&
+                option !== null &&
+                "id" in option
+              ) {
+                return (
+                  option.id === v || option.name === v || option.label === v
+                );
               }
-            );
+              return option === v;
+            });
           });
         }
 
@@ -332,10 +345,15 @@ export const generateDocumentColumns = (
             cellValue !== null &&
             "id" in cellValue
           ) {
-            const option = cellValue as { id: string; name?: string };
+            const option = cellValue as {
+              id: string;
+              name?: string;
+              label?: string;
+            };
             return (
               value.includes(option.id) ||
-              (option.name && value.includes(option.name))
+              (option.name && value.includes(option.name)) ||
+              (option.label && value.includes(option.label))
             );
           }
           return value.includes(cellValue);

@@ -25,9 +25,16 @@ import {
   type IRelationConnectionQueryParams,
   type TCreateRelation,
   type TCreateRelationConnection,
-  type TUpdateRelation, type TDatabaseSortQueryParams, type TDatabaseFilterQueryParams, type TCreateDatabaseFilter,
-  type TUpdateDatabaseFilter, type TUpdateDatabaseSort, type TCreateDatabaseSort, type TDatabaseFilterPresetQueryParams,
-  type TCreateDatabaseFilterPreset, type TUpdateDatabaseFilterPreset,
+  type TUpdateRelation,
+  type TDatabaseSortQueryParams,
+  type TDatabaseFilterQueryParams,
+  type TCreateDatabaseFilter,
+  type TUpdateDatabaseFilter,
+  type TUpdateDatabaseSort,
+  type TCreateDatabaseSort,
+  type TDatabaseFilterPresetQueryParams,
+  type TCreateDatabaseFilterPreset,
+  type TUpdateDatabaseFilterPreset,
 } from "@/modules/database-view/types";
 
 export const databaseApi = {
@@ -355,11 +362,24 @@ export const databaseApi = {
   updateViewFilters: async (
     databaseId: string,
     viewId: string,
-    filters: Array<{ propertyId: string; operator: string; value: unknown }>
+    filters: Array<{
+      property: string;
+      condition: string;
+      value?: unknown;
+      operator?: string;
+    }>
   ) => {
+    // Transform client format to backend format
+    const backendFilters = filters.map((filter) => ({
+      property: filter.property,
+      condition: filter.condition,
+      value: filter.value,
+      operator: filter.operator || "and",
+    }));
+
     const response = await apiClient.patch(
       API_ENDPOINTS.VIEW.UPDATE_FILTERS(databaseId, viewId),
-      { filters }
+      { filters: backendFilters }
     );
     return response.data;
   },

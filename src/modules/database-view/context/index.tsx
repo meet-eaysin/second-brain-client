@@ -1,13 +1,25 @@
-import {createContext, type ReactNode, useContext, useState} from "react";
 import {
-  EDatabaseType, type TDatabase, type TFilterCondition, type TProperty, type TPropertyQueryParams, type TRecord,
-  type TSortConfig, type TView,
+  createContext,
+  type ReactNode,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
+import {
+  EDatabaseType,
+  type TDatabase,
+  type TFilterCondition,
+  type TProperty,
+  type TPropertyQueryParams,
+  type TRecord,
+  type TSortConfig,
+  type TView,
 } from "@/modules/database-view/types";
 import {
   useGetModuleDatabaseId,
   useInitializeModules,
 } from "@/modules/workspaces/services/workspace-queries";
-import {useWorkspace} from "@/modules/workspaces/context/workspace-context";
+import { useWorkspace } from "@/modules/workspaces/context/workspace-context";
 import {
   useDatabase,
   useProperties,
@@ -15,7 +27,7 @@ import {
   useView,
   useViews,
 } from "@/modules/database-view/services/database-queries";
-import type {Workspace} from "@/types/workspace.types.ts";
+import type { Workspace } from "@/types/workspace.types.ts";
 
 export type DatabaseDialogType =
   | "create-database"
@@ -84,52 +96,75 @@ const DatabaseViewContext = createContext<DatabaseViewContextValue | null>(
 );
 
 export function DatabaseViewProvider({
-    children,
-    moduleType = EDatabaseType.CUSTOM,
-    databaseId,
-  }: DatabaseViewProviderProps) {
+  children,
+  moduleType = EDatabaseType.CUSTOM,
+  databaseId,
+}: DatabaseViewProviderProps) {
   const [dialogOpen, setDialogOpen] = useState<DatabaseDialogType | null>(null);
 
   const [currentRecord, setCurrentRecord] = useState<TRecord | null>(null);
-  const [currentProperty, setCurrentProperty] = useState<TProperty | null>(null);
+  const [currentProperty, setCurrentProperty] = useState<TProperty | null>(
+    null
+  );
   const [currentViewId, setCurrentViewId] = useState<string>("");
 
-  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
+  const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
+    new Set()
+  );
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<TFilterCondition[]>([]);
   const [sorts, setSorts] = useState<TSortConfig[]>([]);
 
-  const {currentWorkspace} = useWorkspace();
+  // Sync filters with current view
+  useEffect(() => {
+    if (currentView?.filters) {
+      setFilters(currentView.filters);
+    } else {
+      setFilters([]);
+    }
+  }, [currentView?.filters]);
 
-  const {data: databaseIdResponse, isLoading: isDatabaseIdLoading} =
+  // Sync sorts with current view
+  useEffect(() => {
+    if (currentView?.sorts) {
+      setSorts(currentView.sorts);
+    } else {
+      setSorts([]);
+    }
+  }, [currentView?.sorts]);
+
+  const { currentWorkspace } = useWorkspace();
+
+  const { data: databaseIdResponse, isLoading: isDatabaseIdLoading } =
     useGetModuleDatabaseId(
       currentWorkspace?._id || "",
       moduleType || EDatabaseType.CUSTOM
     );
 
-  let currentDatabaseId = databaseId || databaseIdResponse?.data.databaseId || "";
+  let currentDatabaseId =
+    databaseId || databaseIdResponse?.data.databaseId || "";
   const moduleInitializedPayload = {
     workspaceId: currentWorkspace?._id || "",
     moduleTypes: [moduleType || EDatabaseType.CUSTOM],
     createSampleData: false,
     isInitialized: !!databaseId,
   };
-  const {data: initialized} = useInitializeModules(moduleInitializedPayload);
-  const {data: currentDatabaseIdResponse} = useGetModuleDatabaseId(
+  const { data: initialized } = useInitializeModules(moduleInitializedPayload);
+  const { data: currentDatabaseIdResponse } = useGetModuleDatabaseId(
     currentWorkspace?._id || "",
     moduleType || EDatabaseType.CUSTOM,
     initialized?.success
   );
   currentDatabaseId = currentDatabaseIdResponse?.data.databaseId || "";
 
-  const {data: database, isLoading: isDatabaseLoading} =
+  const { data: database, isLoading: isDatabaseLoading } =
     useDatabase(currentDatabaseId);
 
-  const {data: views = [], isLoading: isViewsLoading} =
+  const { data: views = [], isLoading: isViewsLoading } =
     useViews(currentDatabaseId);
 
-  const {data: currentView, isLoading: isCurrentViewLoading} = useView(
+  const { data: currentView, isLoading: isCurrentViewLoading } = useView(
     currentDatabaseId,
     currentViewId
   );
@@ -139,7 +174,7 @@ export function DatabaseViewProvider({
     includeHidden: false,
   };
 
-  const {data: properties = [], isLoading: isPropertiesLoading} =
+  const { data: properties = [], isLoading: isPropertiesLoading } =
     useProperties(databaseId, propertiesQueryParams);
 
   const recordQueryParams = {
@@ -151,7 +186,7 @@ export function DatabaseViewProvider({
     isTemplate: false,
   };
 
-  const {data: records, isLoading: isRecordsLoading} = useRecords(
+  const { data: records, isLoading: isRecordsLoading } = useRecords(
     databaseId || "",
     recordQueryParams
   );
@@ -166,13 +201,18 @@ export function DatabaseViewProvider({
     return property.isVisible;
   });
 
-  const onDialogOpen = (dialog: DatabaseDialogType | null) => setDialogOpen(dialog);
+  const onDialogOpen = (dialog: DatabaseDialogType | null) =>
+    setDialogOpen(dialog);
   const onViewChange = (viewId: string) => setCurrentViewId(viewId);
-  const onCurrentRecordChange = (record: TRecord | null) => setCurrentRecord(record);
-  const onCurrentPropertyChange = (property: TProperty | null) => setCurrentProperty(property);
-  const onSelectedRecordsChange = (records: Set<string>) => setSelectedRecords(records);
+  const onCurrentRecordChange = (record: TRecord | null) =>
+    setCurrentRecord(record);
+  const onCurrentPropertyChange = (property: TProperty | null) =>
+    setCurrentProperty(property);
+  const onSelectedRecordsChange = (records: Set<string>) =>
+    setSelectedRecords(records);
   const onSearchQueryChange = (query: string) => setSearchQuery(query);
-  const onFiltersChange = (newFilters: TFilterCondition[]) => setFilters(newFilters);
+  const onFiltersChange = (newFilters: TFilterCondition[]) =>
+    setFilters(newFilters);
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
   const contextValue: DatabaseViewContextValue = {
