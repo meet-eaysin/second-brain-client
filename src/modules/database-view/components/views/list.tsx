@@ -1,268 +1,324 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MoreHorizontal, GripVertical } from "lucide-react";
+import { useMemo } from "react";
+import type { DragEndEvent } from "@/components/ui/kibo-ui/list";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import type {
-  IDatabaseView,
-  IDatabaseProperty,
-  DatabaseRecord,
-} from "@/modules/database-view";
-import type { DocumentViewConfig } from "../../types/database-view.types";
-import { NoDataMessage } from "../../../../components/no-data-message.tsx";
+  ListGroup,
+  ListHeader,
+  ListItem,
+  ListItems,
+  ListProvider,
+} from "@/components/ui/kibo-ui/list";
+import { Badge } from "@/components/ui/badge";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import { NoDataMessage } from "@/components/no-data-message.tsx";
+import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
+import { EPropertyType } from "@/modules/database-view/types";
 
-interface DocumentListViewProps {
-  view: IDatabaseView;
-  properties: IDatabaseProperty[];
-  records: DatabaseRecord[];
-  onRecordSelect?: (record: DatabaseRecord) => void;
-  onRecordEdit?: (record: DatabaseRecord) => void;
-  onRecordDelete?: (recordId: string) => void;
-  onRecordUpdate?: (recordId: string, updates: Record<string, unknown>) => void;
-  dataSourceId?: string;
-  config?: DocumentViewConfig;
+interface ListProps {
+  className?: string;
 }
 
-export function List({
-  properties,
-  records,
-  onRecordSelect,
-  onRecordEdit,
-  onRecordDelete,
-  config = {},
-}: DocumentListViewProps) {
-  const [selectedRecords, setSelectedRecords] = React.useState<string[]>([]);
+export function List({ className = "" }: ListProps) {
+  const {
+    database,
+    properties,
+    records,
+    currentView,
+    isRecordsLoading,
+    isPropertiesLoading,
+    onRecordEdit,
+  } = useDatabaseView();
 
-  const handleRecordClick = (record: DatabaseRecord) => {
-    if (onRecordSelect) {
-      onRecordSelect(record);
-    }
-  };
+  const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
-  const handleRecordEdit = (e: React.MouseEvent, record: DatabaseRecord) => {
-    e.stopPropagation();
-    if (onRecordEdit) {
-      onRecordEdit(record);
-    }
-  };
-
-  const handleRecordDelete = (e: React.MouseEvent, recordId: string) => {
-    e.stopPropagation();
-    if (onRecordDelete) {
-      onRecordDelete(recordId);
-    }
-  };
-
-  const handleSelectRecord = (recordId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedRecords((prev) => [...prev, recordId]);
-    } else {
-      setSelectedRecords((prev) => prev.filter((id) => id !== recordId));
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedRecords(records.map((r) => r.id));
-    } else {
-      setSelectedRecords([]);
-    }
-  };
-
-  // Get key properties to display
-  const titleProperty =
-    properties.find((p) => p.name.toLowerCase() === "title") ||
-    properties.find((p) => p.type === "text");
-  const statusProperty = properties.find((p) =>
-    p.name.toLowerCase().includes("status")
-  );
-  const priorityProperty = properties.find((p) =>
-    p.name.toLowerCase().includes("priority")
-  );
-
-  // Render a single record row
-  const renderRecordRow = (record: DatabaseRecord, index: number) => {
-    const title = titleProperty
-      ? record.properties?.[titleProperty.id]
-      : record.id;
-    const status = statusProperty
-      ? record.properties?.[statusProperty.id]
-      : null;
-    const priority = priorityProperty
-      ? record.properties?.[priorityProperty.id]
-      : null;
-    const isSelected = selectedRecords.includes(record.id);
-
+  // Find grouping property (SELECT or STATUS)
+  const groupingProperty = useMemo(() => {
     return (
-      <div
-        key={record.id}
-        className={`
-                    group flex items-center gap-3 p-3 border-b hover:bg-muted/50 cursor-pointer transition-colors
-                    ${isSelected ? "bg-muted/30" : ""}
-                `}
-        onClick={() => handleRecordClick(record)}
-      >
-        {/* Drag handle */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-        </div>
+      properties.find((p) => p.type === EPropertyType.SELECT) ||
+      properties.find((p) => p.type === EPropertyType.STATUS)
+    );
+  }, [properties]);
 
-        {/* Selection checkbox */}
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={(checked) =>
-            handleSelectRecord(record.id, !!checked)
-          }
-          onClick={(e) => e.stopPropagation()}
-        />
+  // Create status groups from grouping property options
+  const statuses = useMemo(() => {
+    if (!groupingProperty?.config?.options) {
+      return [{ id: "ungrouped", name: "Ungrouped", color: "#6b7280" }];
+    }
 
-        {/* Record number */}
-        <div className="w-8 text-sm text-muted-foreground">{index + 1}</div>
+    const statusList = groupingProperty.config.options.map((option) => ({
+      id: option.id,
+      name: option.label,
+      color: option.color || "#6b7280",
+    }));
 
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            {/* Title */}
-            <div className="flex-1 min-w-0">
-              <h4 className="font-medium truncate">{title || "Untitled"}</h4>
-            </div>
+    // Add ungrouped if view settings allow it
+    if (currentView?.settings?.showUngrouped !== false) {
+      statusList.push({ id: "ungrouped", name: "Ungrouped", color: "#6b7280" });
+    }
 
-            {/* Status badge */}
-            {status && (
-              <Badge variant="secondary" className="text-xs">
-                {String(status)}
-              </Badge>
-            )}
+    return statusList;
+  }, [groupingProperty, currentView?.settings?.showUngrouped]);
 
-            {/* Priority badge */}
-            {priority && (
+  // Find title property
+  const titleProperty = useMemo(() => {
+    return (
+      properties.find((p) => p.type === EPropertyType.TEXT) ||
+      properties.find((p) => p.name.toLowerCase().includes("title")) ||
+      properties.find((p) => p.name.toLowerCase().includes("name")) ||
+      properties[0]
+    );
+  }, [properties]);
+
+  // Find display properties (excluding title and grouping properties)
+  const displayProperties = useMemo(() => {
+    const excludedIds = new Set(
+      [titleProperty?.id, groupingProperty?.id].filter(Boolean)
+    );
+
+    return properties
+      .filter((p) => !excludedIds.has(p.id) && p.isVisible)
+      .slice(0, 3); // Show max 3 additional properties
+  }, [properties, titleProperty?.id, groupingProperty?.id]);
+
+  // Helper function to render property values
+  const renderPropertyValue = (
+    property: (typeof properties)[0],
+    value: TPropertyValue
+  ) => {
+    if (value === null || value === undefined || value === "") return null;
+
+    switch (property.type) {
+      case EPropertyType.SELECT:
+        if (property.config?.options) {
+          const option = property.config.options.find(
+            (opt) => opt.id === value
+          );
+          if (option) {
+            return (
               <Badge
-                variant={
-                  String(priority).toLowerCase() === "high"
-                    ? "destructive"
-                    : String(priority).toLowerCase() === "medium"
-                    ? "default"
-                    : "secondary"
-                }
-                className="text-xs"
+                variant="outline"
+                className="text-xs text-white border-0"
+                style={{ backgroundColor: option.color || "#6b7280" }}
               >
-                {String(priority)}
+                {option.label}
               </Badge>
-            )}
+            );
+          }
+        }
+        return (
+          <Badge variant="secondary" className="text-xs">
+            {String(value)}
+          </Badge>
+        );
 
-            {/* Additional properties */}
-            <div className="flex items-center gap-2">
-              {properties
-                .filter(
-                  (p) =>
-                    p.id !== titleProperty?.id &&
-                    p.id !== statusProperty?.id &&
-                    p.id !== priorityProperty?.id &&
-                    record.properties?.[p.id]
-                )
-                .slice(0, 2)
-                .map((property) => {
-                  const value = record.properties?.[property.id];
-                  if (!value) return null;
-
-                  return (
-                    <div
-                      key={property.id}
-                      className="text-xs text-muted-foreground"
-                    >
-                      <span className="font-medium">{property.name}:</span>{" "}
-                      {String(value)}
-                    </div>
-                  );
-                })}
-            </div>
-
-            {/* Actions */}
-            {(config.canEdit || config.canDelete) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => e.stopPropagation()}
+      case EPropertyType.MULTI_SELECT:
+        if (Array.isArray(value) && property.config?.options) {
+          return (
+            <div className="flex flex-wrap gap-1">
+              {value.slice(0, 2).map((val, index) => {
+                const option = property?.config?.options?.find(
+                  (opt) => opt.id === val
+                );
+                return (
+                  <Badge
+                    key={String(val) || index}
+                    variant="outline"
+                    className="text-xs text-white border-0"
+                    style={{ backgroundColor: option?.color || "#6b7280" }}
                   >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {config.canEdit && (
-                    <DropdownMenuItem
-                      onClick={(e) => handleRecordEdit(e, record)}
-                    >
-                      Edit
-                    </DropdownMenuItem>
-                  )}
-                  {config.canDelete && (
-                    <DropdownMenuItem
-                      onClick={(e) => handleRecordDelete(e, record.id)}
-                      className="text-destructive"
-                    >
-                      Delete
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+                    {option?.label || String(val)}
+                  </Badge>
+                );
+              })}
+              {value.length > 2 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{value.length - 2}
+                </Badge>
+              )}
+            </div>
+          );
+        }
+        return null;
+
+      case EPropertyType.CHECKBOX:
+        return (
+          <Badge variant={value ? "default" : "secondary"} className="text-xs">
+            {value ? "Yes" : "No"}
+          </Badge>
+        );
+
+      case EPropertyType.DATE:
+        return (
+          <span className="text-xs text-muted-foreground">
+            {value ? new Date(String(value)).toLocaleDateString() : "-"}
+          </span>
+        );
+
+      case EPropertyType.NUMBER:
+        return <span className="text-xs font-medium">{String(value)}</span>;
+
+      default:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            {String(value)}
+          </span>
+        );
+    }
+  };
+
+  // Transform records for List format
+  const listFeatures = useMemo(() => {
+    if (!records || !Array.isArray(records)) return [];
+
+    return records.map((record: TRecord) => {
+      const titleValue = titleProperty
+        ? record.properties[titleProperty.id] ?? "Untitled"
+        : "Untitled";
+      const title = String(titleValue);
+
+      // Get status/grouping value
+      const statusValue = groupingProperty
+        ? record.properties[groupingProperty.id]
+        : "ungrouped";
+      const statusId = String(statusValue || "ungrouped");
+
+      // Find the status object
+      const status = statuses.find((s) => s.id === statusId) || statuses[0];
+
+      return {
+        id: record.id,
+        name: title,
+        status,
+        record, // Keep original record for access
+      };
+    });
+  }, [records, titleProperty, groupingProperty, statuses]);
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || !database?.id || !groupingProperty) {
+      return;
+    }
+
+    const status = statuses.find((status) => status.name === over.id);
+
+    if (!status) {
+      return;
+    }
+
+    // Update the record in the database
+    const payload: Record<string, TPropertyValue> = {
+      [groupingProperty.id]: status.id === "ungrouped" ? null : status.id,
+    };
+
+    try {
+      await updateRecordMutation({
+        databaseId: database.id,
+        recordId: String(active.id),
+        payload,
+      });
+    } catch (error) {
+      console.error("Failed to update record position:", error);
+    }
+  };
+
+  // Show loading state
+  if (isPropertiesLoading || isRecordsLoading) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">
+            {isPropertiesLoading
+              ? "Loading properties..."
+              : "Loading records..."}
+          </p>
         </div>
       </div>
     );
-  };
+  }
+
+  // Show empty state if no records
+  if (!records || records.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <NoDataMessage message="No records to display" />
+      </div>
+    );
+  }
+
+  // Show message if no grouping property
+  if (!groupingProperty) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <NoDataMessage message="List view requires a SELECT property for grouping" />
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full overflow-auto">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-3 border-b bg-muted/30 sticky top-0 z-10">
-        <div className="w-4" /> {/* Drag handle space */}
-        {/* Select all checkbox */}
-        <Checkbox
-          checked={
-            selectedRecords.length === records.length && records.length > 0
-          }
-          indeterminate={
-            selectedRecords.length > 0 &&
-            selectedRecords.length < records.length
-          }
-          onCheckedChange={handleSelectAll}
-        />
-        <div className="w-8 text-sm font-medium text-muted-foreground">#</div>
-        <div className="flex-1 text-sm font-medium">
-          Items ({records.length})
-        </div>
-        {selectedRecords.length > 0 && (
-          <div className="text-sm text-muted-foreground">
-            {selectedRecords.length} selected
-          </div>
-        )}
-      </div>
+    <div className={`w-full h-full overflow-auto ${className}`}>
+      <ListProvider onDragEnd={handleDragEnd}>
+        {statuses.map((status) => (
+          <ListGroup id={status.name} key={status.name}>
+            <ListHeader color={status.color} name={status.name} />
+            <ListItems>
+              {listFeatures
+                .filter((feature) => feature.status.name === status.name)
+                .map((feature, index) => (
+                  <ListItem
+                    id={feature.id}
+                    index={index}
+                    key={feature.id}
+                    name={feature.name}
+                    parent={feature.status.name}
+                  >
+                    <div
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: feature.status.color }}
+                    />
+                    <div
+                      className="flex-1 cursor-pointer"
+                      onClick={() => onRecordEdit?.(feature.record)}
+                    >
+                      <p className="m-0 font-medium text-sm">{feature.name}</p>
+                      {/* Display additional properties */}
+                      {displayProperties.length > 0 && (
+                        <div className="mt-1 space-y-1">
+                          {displayProperties.map((property) => {
+                            const value =
+                              feature.record.properties[property.id];
+                            if (
+                              value === null ||
+                              value === undefined ||
+                              value === ""
+                            )
+                              return null;
 
-      {/* Records */}
-      <div className="divide-y">
-        {records.length === 0 ? (
-          <NoDataMessage
-            title="No items to display"
-            message={
-              config.canCreate
-                ? "Create your first item to see it in the list view."
-                : "No items are available to display."
-            }
-          />
-        ) : (
-          records.map((record, index) => renderRecordRow(record, index))
-        )}
-      </div>
+                            return (
+                              <div
+                                key={property.id}
+                                className="flex items-center justify-between"
+                              >
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  {property.name}:
+                                </span>
+                                <div className="ml-2">
+                                  {renderPropertyValue(property, value)}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </ListItem>
+                ))}
+            </ListItems>
+          </ListGroup>
+        ))}
+      </ListProvider>
     </div>
   );
 }

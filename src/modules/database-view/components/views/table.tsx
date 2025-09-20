@@ -1,105 +1,102 @@
-import {DataTable} from "../data-table.tsx";
-import {generateDocumentColumns} from "../columns.tsx";
-import {useMemo} from "react";
-import {useUpdateRecord} from "@/modules/database-view/services/database-queries.ts";
-import {useDatabaseView} from "@/modules/database-view/context";
+import { useMemo } from "react";
+import { DataTable } from "../data-table.tsx";
+import { generateDocumentColumns } from "../columns.tsx";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import type { TPropertyValue } from "@/modules/database-view/types";
 
-export function Table() {
-  const {database, currentView: view, visibleProperties, properties, records, searchQuery} = useDatabaseView();
-  const {mutateAsync: onRecordUpdate} = useUpdateRecord()
+interface TableProps {
+  className?: string;
+}
 
+export function Table({ className = "" }: TableProps) {
+  const {
+    database,
+    properties,
+    records,
+    isRecordsLoading,
+    isPropertiesLoading,
+    onBulkEdit,
+    onBulkDelete,
+    onRecordEdit,
+    onRecordDelete,
+    onRecordDuplicate,
+    onRecordCreate,
+    onAddProperty,
+  } = useDatabaseView();
 
-  const handleUpdateRecord = async (recordId: string, propertyId: string, newValue: unknown) => {
-    if (!database?.id) return;
-    const payload = {[propertyId]: newValue};
-    await onRecordUpdate({databaseId: database?.id, recordId, payload});
-  };
+  const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
-  const columns = generateDocumentColumns(properties, handleUpdateRecord);
+  const columns = useMemo(() => {
+    const handleUpdateRecord = async (
+      recordId: string,
+      propertyId: string,
+      newValue: TPropertyValue
+    ) => {
+      if (!database?.id) return;
 
-  const filteredRecords = useMemo(() => {
-    if (!records || !Array.isArray(records)) return [];
-
-    let result = [...records];
-
-    if (searchQuery && searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      result = result.filter((record) => {
-        return visibleProperties.some((property) => {
-          const value = record.properties[property.id];
-          if (value == null) return false;
-
-          const stringValue = String(value).toLowerCase();
-          return stringValue.includes(query);
-        });
+      const payload: Record<string, TPropertyValue> = {
+        [propertyId]: newValue,
+      };
+      await updateRecordMutation({
+        databaseId: database.id,
+        recordId,
+        payload,
       });
-    }
+    };
 
-    if (view?.filters && view.filters.length > 0) {
-      result = result.filter((record) => {
-        return view.filters!.every((filter) => {
-          const value = record.properties[filter.propertyId];
+    return generateDocumentColumns(properties, handleUpdateRecord);
+  }, [properties, database?.id, updateRecordMutation]);
 
-          switch (filter.operator) {
-            case "equals":
-              return value === filter.value;
-            case "not_equals":
-              return value !== filter.value;
-            case "contains":
-              return String(value)
-                .toLowerCase()
-                .includes(String(filter.value).toLowerCase());
-            case "starts_with":
-              return String(value)
-                .toLowerCase()
-                .startsWith(String(filter.value).toLowerCase());
-            case "ends_with":
-              return String(value)
-                .toLowerCase()
-                .endsWith(String(filter.value).toLowerCase());
-            case "is_empty":
-              return !value || value === "";
-            case "is_not_empty":
-              return value && value !== "";
-            case "greater_than":
-              return Number(value) > Number(filter.value);
-            case "less_than":
-              return Number(value) < Number(filter.value);
-            default:
-              return true;
-          }
-        });
-      });
-    }
+  // Show loading state
+  if (isPropertiesLoading || isRecordsLoading) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">
+            {isPropertiesLoading
+              ? "Loading properties..."
+              : "Loading records..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
-    // Apply sorts
-    if (view?.sorts && view.sorts.length > 0) {
-      result.sort((a, b) => {
-        for (const sort of view.sorts!) {
-          const aValue = a.properties[sort.propertyId];
-          const bValue = b.properties[sort.propertyId];
-
-          let comparison = 0;
-
-          if (aValue < bValue) comparison = -1;
-          else if (aValue > bValue) comparison = 1;
-
-          if (comparison !== 0) {
-            return sort.direction === "desc" ? -comparison : comparison;
-          }
-        }
-        return 0;
-      });
-    }
-
-    return result;
-  }, [records, view?.filters, view?.sorts, searchQuery, visibleProperties]);
+  // Show empty state if no records
+  if (!records || records.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">No records found</p>
+          <button
+            onClick={onRecordCreate}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+          >
+            Create First Record
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       <DataTable
         columns={columns}
-        data={filteredRecords}
+        data={records}
+        enablePagination={true}
+        enableSorting={true}
+        enableFiltering={true}
+        pageSize={25}
+        onBulkEdit={onBulkEdit}
+        onBulkDelete={onBulkDelete}
+        onRecordEdit={onRecordEdit}
+        onRecordDelete={onRecordDelete}
+        onRecordDuplicate={onRecordDuplicate}
+        onRecordCreate={onRecordCreate}
+        onAddProperty={onAddProperty}
       />
     </div>
   );

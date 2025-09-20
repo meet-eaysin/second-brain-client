@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Copy, Mail, FileText } from "lucide-react";
-import { useDocumentView } from "../../context";
 import {
   useCreateProperty,
   useUpdateProperty,
@@ -21,19 +20,13 @@ import {
   useCreateView,
   useUpdateView,
 } from "../../services/database-queries.ts";
+import type { TPropertyValue } from "../../types";
+import {useDatabaseView} from "@/modules/database-view/context";
 
 export function DatabaseDialogs() {
   const {
     dialogOpen: open,
-    setDialogOpen: setOpen,
-    currentSchema,
-    currentRecord,
-    currentProperty,
-    currentView,
-    setCurrentRecord,
-    setCurrentProperty,
-    setCurrentView,
-  } = useDocumentView();
+  } = useDatabaseView();
 
   const createPropertyMutation = useCreateProperty();
   const updatePropertyMutation = useUpdateProperty();
@@ -258,7 +251,7 @@ export function DatabaseDialogs() {
             updateRecordMutation.mutate({
               databaseId: currentSchema.id,
               recordId: currentRecord.id,
-              data,
+              payload: data as Record<string, TPropertyValue>,
             });
           }
           setOpen(null);

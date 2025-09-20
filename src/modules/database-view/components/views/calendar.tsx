@@ -1,245 +1,195 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useMemo } from "react";
 import {
-  ChevronLeft,
-  ChevronRight,
-  Calendar as CalendarIcon,
-} from "lucide-react";
-import type {
-  IDatabaseView,
-  IDatabaseProperty,
-  DatabaseRecord,
-} from "@/modules/database-view";
-import type { DocumentViewConfig } from "../../types/database-view.types";
-import { NoDataMessage } from "../../../../components/no-data-message.tsx";
+  CalendarBody,
+  CalendarDate,
+  CalendarDatePagination,
+  CalendarDatePicker,
+  CalendarHeader,
+  CalendarItem,
+  CalendarMonthPicker,
+  CalendarProvider,
+  CalendarYearPicker,
+} from "@/components/ui/kibo-ui/calendar";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { NoDataMessage } from "@/components/no-data-message.tsx";
+import type { TRecord } from "@/modules/database-view/types";
+import { EPropertyType } from "@/modules/database-view/types";
 
-interface DocumentCalendarViewProps {
-  view: IDatabaseView;
-  properties: IDatabaseProperty[];
-  records: DatabaseRecord[];
-  onRecordSelect?: (record: DatabaseRecord) => void;
-  onRecordEdit?: (record: DatabaseRecord) => void;
-  onRecordDelete?: (recordId: string) => void;
-  onRecordUpdate?: (recordId: string, updates: Record<string, unknown>) => void;
-  dataSourceId?: string;
-  config?: DocumentViewConfig;
+interface CalendarProps {
+  className?: string;
 }
 
-export function Calendar({
-  properties,
-  records,
-  onRecordSelect,
-}: DocumentCalendarViewProps) {
-  const [currentDate, setCurrentDate] = React.useState(new Date());
+export function Calendar({ className = "" }: CalendarProps) {
+  const {
+    properties,
+    records,
+    isRecordsLoading,
+    isPropertiesLoading,
+    onRecordEdit,
+  } = useDatabaseView();
 
-  // Find date properties
-  const dateProperty =
-    properties.find((p) => p.type === "date") ||
-    properties.find((p) => p.name.toLowerCase().includes("date")) ||
-    properties.find((p) => p.name.toLowerCase().includes("due"));
+  // Find date properties for calendar display
+  const dateProperties = useMemo(() => {
+    return properties.filter((p) => p.type === EPropertyType.DATE);
+  }, [properties]);
 
-  const titleProperty =
-    properties.find((p) => p.name.toLowerCase() === "title") ||
-    properties.find((p) => p.type === "text");
+  // Find title property for display
+  const titleProperty = useMemo(() => {
+    return (
+      properties.find((p) => p.type === EPropertyType.TEXT) ||
+      properties.find((p) => p.name.toLowerCase().includes("title")) ||
+      properties.find((p) => p.name.toLowerCase().includes("name")) ||
+      properties[0]
+    );
+  }, [properties]);
 
-  // Get calendar data
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const firstDayOfMonth = new Date(year, month, 1);
-  const lastDayOfMonth = new Date(year, month + 1, 0);
-  const firstDayOfWeek = firstDayOfMonth.getDay();
-  const daysInMonth = lastDayOfMonth.getDate();
+  // Transform records for calendar format
+  const calendarFeatures = useMemo(() => {
+    if (!records || !Array.isArray(records) || dateProperties.length === 0) {
+      return [];
+    }
 
-  // Group records by date
-  const recordsByDate = React.useMemo(() => {
-    if (!dateProperty) return {};
+    const features: Array<{
+      id: string;
+      name: string;
+      startAt: Date;
+      endAt: Date;
+      status: { id: string; name: string; color: string };
+    }> = [];
 
-    const grouped: Record<string, DatabaseRecord[]> = {};
+    records.forEach((record: TRecord) => {
+      dateProperties.forEach((dateProperty) => {
+        const dateValue = record.properties[dateProperty.id];
 
-    records.forEach((record) => {
-      const dateValue = record.properties?.[dateProperty.id];
-      if (dateValue) {
-        const date = new Date(String(dateValue));
-        if (!isNaN(date.getTime())) {
-          const dateKey = date.toISOString().split("T")[0];
-          if (!grouped[dateKey]) {
-            grouped[dateKey] = [];
-          }
-          grouped[dateKey].push(record);
+        if (dateValue) {
+          const startDate = new Date(dateValue as string);
+          const endDate = new Date(dateValue as string); // Single day event
+
+          // Use title property for name
+          const titleValue = titleProperty
+            ? record.properties[titleProperty.id] ?? "Untitled"
+            : "Untitled";
+          const name = String(titleValue);
+
+          // Create status based on date property
+          const status = {
+            id: dateProperty.id,
+            name: dateProperty.name,
+            color: "#3B82F6", // Default blue color
+          };
+
+          features.push({
+            id: `${record.id}-${dateProperty.id}`,
+            name,
+            startAt: startDate,
+            endAt: endDate,
+            status,
+          });
         }
-      }
+      });
     });
 
-    return grouped;
-  }, [records, dateProperty]);
+    return features;
+  }, [records, dateProperties, titleProperty]);
 
-  const handlePreviousMonth = () => {
-    setCurrentDate(new Date(year, month - 1, 1));
-  };
-
-  const handleNextMonth = () => {
-    setCurrentDate(new Date(year, month + 1, 1));
-  };
-
-  const handleToday = () => {
-    setCurrentDate(new Date());
-  };
-
-  const handleRecordClick = (record: DatabaseRecord) => {
-    if (onRecordSelect) {
-      onRecordSelect(record);
+  // Create a map to store record data for click handling
+  const recordMap = useMemo(() => {
+    const map = new Map<string, TRecord>();
+    if (!records || !Array.isArray(records) || dateProperties.length === 0) {
+      return map;
     }
-  };
 
-  // Generate calendar days
-  const calendarDays = [];
+    records.forEach((record: TRecord) => {
+      dateProperties.forEach((dateProperty) => {
+        const dateValue = record.properties[dateProperty.id];
+        if (dateValue) {
+          const featureId = `${record.id}-${dateProperty.id}`;
+          map.set(featureId, record);
+        }
+      });
+    });
 
-  // Add empty cells for days before the first day of the month
-  for (let i = 0; i < firstDayOfWeek; i++) {
-    calendarDays.push(null);
-  }
+    return map;
+  }, [records, dateProperties]);
 
-  // Add days of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarDays.push(day);
-  }
+  // Calculate year range for the date picker
+  const yearRange = useMemo(() => {
+    if (calendarFeatures.length === 0) {
+      const currentYear = new Date().getFullYear();
+      return { start: currentYear, end: currentYear };
+    }
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+    const years = calendarFeatures.flatMap((feature) => [
+      feature.startAt.getFullYear(),
+      feature.endAt.getFullYear(),
+    ]);
 
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const start = Math.min(...years);
+    const end = Math.max(...years);
 
-  if (!dateProperty) {
+    return { start, end };
+  }, [calendarFeatures]);
+
+  // Show loading state
+  if (isPropertiesLoading || isRecordsLoading) {
     return (
-      <NoDataMessage
-        title="No Date Property Found"
-        message="Add a date property to your data to use the calendar view."
-        icon={CalendarIcon}
-      />
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">
+            {isPropertiesLoading
+              ? "Loading properties..."
+              : "Loading records..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no records
+  if (!records || records.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <NoDataMessage message="No records to display" />
+      </div>
+    );
+  }
+
+  // Show message if no date properties
+  if (dateProperties.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <NoDataMessage message="Calendar view requires at least one DATE property" />
+      </div>
     );
   }
 
   return (
-    <div className="w-full h-full overflow-auto p-4">
-      {/* Calendar header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-semibold">
-            {monthNames[month]} {year}
-          </h2>
-          <Button variant="outline" size="sm" onClick={handleToday}>
-            Today
-          </Button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handlePreviousMonth}>
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleNextMonth}>
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1">
-        {/* Day headers */}
-        {dayNames.map((day) => (
-          <div
-            key={day}
-            className="p-2 text-center text-sm font-medium text-muted-foreground"
-          >
-            {day}
-          </div>
-        ))}
-
-        {/* Calendar days */}
-        {calendarDays.map((day, index) => {
-          if (day === null) {
-            return <div key={index} className="p-2 h-32" />;
-          }
-
-          const dateKey = new Date(year, month, day)
-            .toISOString()
-            .split("T")[0];
-          const dayRecords = recordsByDate[dateKey] || [];
-          const isToday =
-            new Date().toDateString() ===
-            new Date(year, month, day).toDateString();
-
-          return (
-            <Card
-              key={day}
-              className={`h-32 overflow-hidden ${
-                isToday ? "ring-2 ring-primary" : ""
-              }`}
-            >
-              <CardContent className="p-2 h-full flex flex-col">
-                {/* Day number */}
-                <div
-                  className={`text-sm font-medium mb-1 ${
-                    isToday ? "text-primary" : ""
-                  }`}
-                >
-                  {day}
-                </div>
-
-                {/* Records for this day */}
-                <div className="flex-1 overflow-hidden space-y-1">
-                  {dayRecords.slice(0, 3).map((record) => {
-                    const title = titleProperty
-                      ? record.properties?.[titleProperty.id]
-                      : record.id;
-
-                    return (
-                      <div
-                        key={record.id}
-                        className="text-xs p-1 bg-primary/10 text-primary rounded cursor-pointer hover:bg-primary/20 transition-colors truncate"
-                        onClick={() => handleRecordClick(record)}
-                        title={String(title)}
-                      >
-                        {String(title) || "Untitled"}
-                      </div>
-                    );
-                  })}
-
-                  {dayRecords.length > 3 && (
-                    <div className="text-xs text-muted-foreground">
-                      +{dayRecords.length - 3} more
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Legend */}
-      <div className="mt-6 flex items-center gap-4 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-primary/10 rounded" />
-          <span>Events</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 border-2 border-primary rounded" />
-          <span>Today</span>
-        </div>
-      </div>
+    <div className={`w-full h-full overflow-auto ${className}`}>
+      <CalendarProvider>
+        <CalendarDate>
+          <CalendarDatePicker>
+            <CalendarMonthPicker />
+            <CalendarYearPicker end={yearRange.end} start={yearRange.start} />
+          </CalendarDatePicker>
+          <CalendarDatePagination />
+        </CalendarDate>
+        <CalendarHeader />
+        <CalendarBody features={calendarFeatures}>
+          {({ feature }) => {
+            const record = recordMap.get(feature.id);
+            return (
+              <div
+                key={feature.id}
+                className="cursor-pointer"
+                onClick={() => record && onRecordEdit?.(record)}
+              >
+                <CalendarItem feature={feature} />
+              </div>
+            );
+          }}
+        </CalendarBody>
+      </CalendarProvider>
     </div>
   );
 }

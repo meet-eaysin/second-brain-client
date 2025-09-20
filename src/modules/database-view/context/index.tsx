@@ -83,6 +83,15 @@ interface DatabaseViewContextValue {
   onSearchQueryChange: (query: string) => void;
   onFiltersChange: (filters: TFilterCondition[]) => void;
   onSortsChange: (sorts: TSortConfig[]) => void;
+
+  // CRUD operations
+  onBulkEdit: () => void;
+  onBulkDelete: () => void;
+  onRecordEdit: (record: TRecord) => void;
+  onRecordDelete: (recordId: string) => void;
+  onRecordDuplicate: (recordId: string) => void;
+  onRecordCreate: () => void;
+  onAddProperty: () => void;
 }
 
 interface DatabaseViewProviderProps {
@@ -124,7 +133,8 @@ export function DatabaseViewProvider({
       moduleType || EDatabaseType.CUSTOM
     );
 
-  let currentDatabaseId = databaseId || databaseIdResponse?.data.databaseId || "";
+  let currentDatabaseId =
+    databaseId || databaseIdResponse?.data.databaseId || "";
   const moduleInitializedPayload = {
     workspaceId: currentWorkspace?._id || "",
     moduleTypes: [moduleType || EDatabaseType.CUSTOM],
@@ -211,6 +221,38 @@ export function DatabaseViewProvider({
     setFilters(newFilters);
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
+  // CRUD operation handlers
+  const onBulkEdit = () => {
+    onDialogOpen("bulk-edit");
+  };
+
+  const onBulkDelete = () => {
+    onDialogOpen("bulk-delete");
+  };
+
+  const onRecordEdit = (record: TRecord) => {
+    onRecordChange(record);
+    onDialogOpen("edit-record");
+  };
+
+  const onRecordDelete = (recordId: string) => {
+    // This will be handled by individual components
+    console.log("Delete record:", recordId);
+  };
+
+  const onRecordDuplicate = (recordId: string) => {
+    // This will be handled by individual components
+    console.log("Duplicate record:", recordId);
+  };
+
+  const onRecordCreate = () => {
+    onDialogOpen("create-record");
+  };
+
+  const onAddProperty = () => {
+    onDialogOpen("create-property");
+  };
+
   const contextValue: DatabaseViewContextValue = {
     moduleType,
     workspace: currentWorkspace,
@@ -245,6 +287,15 @@ export function DatabaseViewProvider({
     onSearchQueryChange,
     onFiltersChange,
     onSortsChange,
+
+    // CRUD operations
+    onBulkEdit,
+    onBulkDelete,
+    onRecordEdit,
+    onRecordDelete,
+    onRecordDuplicate,
+    onRecordCreate,
+    onAddProperty,
   };
 
   return (

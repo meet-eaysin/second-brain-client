@@ -8,6 +8,7 @@ import type {
   TProperty,
   TPropertyOption,
   TRecord,
+  TPropertyValue,
 } from "@/modules/database-view/types";
 
 export interface FrozenPropertyConfig {
@@ -254,7 +255,7 @@ export const generateDocumentColumns = (
   onUpdateRecord?: (
     recordId: string,
     propertyId: string,
-    newValue: string
+    newValue: TPropertyValue
   ) => void
 ): ColumnDef<TRecord>[] => {
   const columns: ColumnDef<TRecord>[] = [

@@ -1,4 +1,4 @@
-import React from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,52 +8,49 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { MoreHorizontal, Plus, Edit, Trash2, GripVertical } from "lucide-react";
-import { useDocumentView } from "../../context";
-import type {
-  IDatabaseView,
-  IDatabaseProperty,
-  DatabaseRecord,
-} from "@/modules/database-view";
 import {
-  normalizeSelectValue,
-  getSelectOptionDisplay,
-  getSelectOptionId,
-  getSelectOptionColor,
-} from "@/modules/database-view/utils/select-option-utils";
-import { NoDataMessage } from "../../../../components/no-data-message.tsx";
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+} from "@hello-pangea/dnd";
+import { MoreHorizontal, Plus, Edit, Trash2, GripVertical } from "lucide-react";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import { NoDataMessage } from "@/components/no-data-message.tsx";
+import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
+import { EPropertyType } from "@/modules/database-view/types";
 
-interface DocumentBoardViewProps {
-  view: IDatabaseView;
-  properties: IDatabaseProperty[];
-  records: DatabaseRecord[];
-  onRecordSelect?: (record: DatabaseRecord) => void;
-  onRecordEdit?: (record: DatabaseRecord) => void;
-  onRecordDelete?: (recordId: string) => void;
-  onRecordCreate?: (groupValue?: string) => void;
-  onRecordUpdate?: (recordId: string, updates: Record<string, unknown>) => void;
+interface BoardProps {
+  className?: string;
 }
 
-export function Board({
-  view,
-  properties,
-  records,
-  onRecordEdit,
-  onRecordDelete,
-  onRecordCreate,
-  onRecordUpdate,
-}: DocumentBoardViewProps) {
-  const { setDialogOpen } = useDocumentView();
+export function Board({ className = "" }: BoardProps) {
+  const {
+    database,
+    properties,
+    records,
+    currentView,
+    isRecordsLoading,
+    isPropertiesLoading,
+    onRecordEdit,
+    onRecordDelete,
+    onRecordCreate,
+    onDialogOpen,
+  } = useDatabaseView();
+
+  const { mutateAsync: updateRecordMutation } = useUpdateRecord();
   // Find the grouping property (usually a SELECT property)
-  const groupingProperty =
-    properties.find(
-      (p) => p.type === "SELECT" && view.visibleProperties?.includes(p.id)
-    ) || properties.find((p) => p.type === "SELECT");
+  const groupingProperty = useMemo(() => {
+    return (
+      properties.find((p) => p.type === EPropertyType.SELECT) ||
+      properties.find((p) => p.type === EPropertyType.STATUS)
+    );
+  }, [properties]);
 
   // Handle drag and drop
-  const handleDragEnd = (result) => {
-    if (!result.destination || !onRecordUpdate || !groupingProperty) {
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination || !database?.id || !groupingProperty) {
       return;
     }
 
@@ -71,37 +68,45 @@ export function Board({
     const recordId = draggableId;
     const newGroupId = destination.droppableId;
 
-    // Update the record's grouping property
-    const updates = {
-      [groupingProperty.id]: newGroupId === "ungrouped" ? null : newGroupId,
-    };
+    try {
+      // Update the record's grouping property
+      const payload: Record<string, TPropertyValue> = {
+        [groupingProperty.id]: newGroupId === "ungrouped" ? null : newGroupId,
+      };
 
-    onRecordUpdate(recordId, updates);
+      await updateRecordMutation({
+        databaseId: database.id,
+        recordId,
+        payload,
+      });
+    } catch (error) {
+      console.error("Failed to update record position:", error);
+    }
   };
 
   // Get all possible groups from the grouping property
-  const groups = React.useMemo(() => {
-    if (!groupingProperty?.selectOptions) {
-      return [{ id: "ungrouped", name: "Ungrouped", color: "#gray" }];
+  const groups = useMemo(() => {
+    if (!groupingProperty?.config?.options) {
+      return [{ id: "ungrouped", name: "Ungrouped", color: "#6b7280" }];
     }
 
-    const groups = groupingProperty.selectOptions.map((option) => ({
+    const groups = groupingProperty.config.options.map((option) => ({
       id: option.id,
-      name: option.name,
-      color: option.color,
+      name: option.label,
+      color: option.color || "#6b7280",
     }));
 
     // Add ungrouped if board settings allow it
-    if (view.boardSettings?.showUngrouped !== false) {
-      groups.push({ id: "ungrouped", name: "Ungrouped", color: "#gray" });
+    if (currentView?.settings?.showUngrouped !== false) {
+      groups.push({ id: "ungrouped", name: "Ungrouped", color: "#6b7280" });
     }
 
     return groups;
-  }, [groupingProperty, view.boardSettings]);
+  }, [groupingProperty, currentView?.settings?.showUngrouped]);
 
   // Group records by the grouping property
-  const groupedRecords = React.useMemo(() => {
-    const grouped: Record<string, DatabaseRecord[]> = {};
+  const groupedRecords = useMemo(() => {
+    const grouped: Record<string, TRecord[]> = {};
 
     // Initialize all groups
     groups.forEach((group) => {
@@ -109,34 +114,33 @@ export function Board({
     });
 
     // Group records
-    records.forEach((record) => {
-      const groupValue = groupingProperty
-        ? record.properties[groupingProperty.id]
-        : "ungrouped";
+    if (records && Array.isArray(records)) {
+      records.forEach((record: TRecord) => {
+        const groupValue = groupingProperty
+          ? record.properties[groupingProperty.id]
+          : "ungrouped";
 
-      const groupId = groupValue || "ungrouped";
+        const groupId = String(groupValue || "ungrouped");
 
-      if (grouped[groupId]) {
-        grouped[groupId].push(record);
-      } else {
-        grouped["ungrouped"].push(record);
-      }
-    });
+        if (grouped[groupId]) {
+          grouped[groupId].push(record);
+        } else {
+          grouped["ungrouped"].push(record);
+        }
+      });
+    }
 
     return grouped;
   }, [records, groupingProperty, groups]);
 
-  const renderRecordCard = (record: DatabaseRecord, index: number) => {
+  const renderRecordCard = (record: TRecord, index: number) => {
     // Get the title property (first text property or first property)
     const titleProperty =
-      properties.find((p) => p.type === "TEXT") || properties[0];
+      properties.find((p) => p.type === EPropertyType.TEXT) || properties[0];
     const titleValue = titleProperty
-      ? record.properties[titleProperty.id]
+      ? record.properties[titleProperty.id] ?? "Untitled"
       : "Untitled";
-    const title =
-      typeof titleValue === "object"
-        ? getSelectOptionDisplay(titleValue)
-        : String(titleValue || "Untitled");
+    const title = String(titleValue);
 
     // Get other visible properties
     const visibleProperties = properties
@@ -144,7 +148,7 @@ export function Board({
         (p) =>
           p.id !== groupingProperty?.id &&
           p.id !== titleProperty?.id &&
-          view.visibleProperties?.includes(p.id)
+          currentView?.settings?.visibleProperties?.includes(p.id)
       )
       .slice(0, 3); // Show max 3 additional properties
 
@@ -219,7 +223,8 @@ export function Board({
                 <div className="space-y-1">
                   {visibleProperties.map((property) => {
                     const value = record.properties[property.id];
-                    if (!value) return null;
+                    if (value === null || value === undefined || value === "")
+                      return null;
 
                     return (
                       <div
@@ -227,37 +232,43 @@ export function Board({
                         className="text-xs text-muted-foreground"
                       >
                         <span className="font-medium">{property.name}:</span>{" "}
-                        {property.type === "SELECT" ? (
+                        {property.type === EPropertyType.SELECT ? (
                           <Badge
                             variant="outline"
                             className="text-xs text-white border-0"
                             style={{
-                              backgroundColor: getSelectOptionColor(
-                                normalizeSelectValue(value, false)
-                              ),
+                              backgroundColor:
+                                property.config?.options?.find(
+                                  (opt) => opt.id === value
+                                )?.color || "#6b7280",
                             }}
                           >
-                            {getSelectOptionDisplay(
-                              normalizeSelectValue(value, false)
-                            )}
+                            {property.config?.options?.find(
+                              (opt) => opt.id === value
+                            )?.label || String(value)}
                           </Badge>
-                        ) : property.type === "MULTI_SELECT" ? (
+                        ) : property.type === EPropertyType.MULTI_SELECT ? (
                           <div className="flex flex-wrap gap-1">
-                            {normalizeSelectValue(value, true).map(
-                              (option: unknown, index: number) => (
-                                <Badge
-                                  key={getSelectOptionId(option) || index}
-                                  variant="outline"
-                                  className="text-xs text-white border-0"
-                                  style={{
-                                    backgroundColor:
-                                      getSelectOptionColor(option),
-                                  }}
-                                >
-                                  {getSelectOptionDisplay(option)}
-                                </Badge>
-                              )
-                            )}
+                            {Array.isArray(value) &&
+                              value.map((val: unknown, index: number) => {
+                                const stringVal = String(val);
+                                const option = property.config?.options?.find(
+                                  (opt) => opt.id === stringVal
+                                );
+                                return (
+                                  <Badge
+                                    key={stringVal || index}
+                                    variant="outline"
+                                    className="text-xs text-white border-0"
+                                    style={{
+                                      backgroundColor:
+                                        option?.color || "#6b7280",
+                                    }}
+                                  >
+                                    {option?.label || stringVal}
+                                  </Badge>
+                                );
+                              })}
                           </div>
                         ) : (
                           <span>{String(value)}</span>
@@ -274,80 +285,106 @@ export function Board({
     );
   };
 
+  // Show loading state
+  if (isPropertiesLoading || isRecordsLoading) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-sm text-muted-foreground">
+            {isPropertiesLoading
+              ? "Loading properties..."
+              : "Loading records..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no records
+  if (!records || records.length === 0) {
+    return (
+      <div className={`flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">No records found</p>
+          <Button onClick={onRecordCreate}>Create First Record</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!groupingProperty) {
     return (
       <NoDataMessage
         message="Board view requires a SELECT property for grouping"
         action={{
           label: "Add SELECT Property",
-          onClick: () => setDialogOpen("create-property"),
+          onClick: () => onDialogOpen?.("create-property"),
         }}
       />
     );
   }
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {groups.map((group) => (
-          <div key={group.id} className="flex-shrink-0 w-80">
-            <div className="bg-muted/50 rounded-lg p-4">
-              {/* Group Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: group.color }}
-                  />
-                  <h3 className="font-medium">{group.name}</h3>
-                  <Badge variant="secondary" className="text-xs">
-                    {groupedRecords[group.id]?.length || 0}
-                  </Badge>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 w-6 p-0"
-                  onClick={() =>
-                    onRecordCreate?.(
-                      group.id === "ungrouped" ? undefined : group.id
-                    )
-                  }
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              </div>
-
-              {/* Records */}
-              <Droppable droppableId={group.id}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`space-y-2 min-h-[200px] transition-all duration-200 rounded-md ${
-                      snapshot.isDraggingOver
-                        ? "bg-primary/10 border-2 border-dashed border-primary/30 scale-[1.02]"
-                        : "border-2 border-transparent"
-                    }`}
-                  >
-                    {groupedRecords[group.id]?.map((record, index) =>
-                      renderRecordCard(record, index)
-                    )}
-
-                    {groupedRecords[group.id]?.length === 0 && (
-                      <NoDataMessage
-                        message="No records in this group"
-                        compact
-                      />
-                    )}
-                    {provided.placeholder}
+    <div className={`space-y-4 ${className}`}>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {groups.map((group) => (
+            <div key={group.id} className="flex-shrink-0 w-80">
+              <div className="bg-muted/50 rounded-lg p-4">
+                {/* Group Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: group.color }}
+                    />
+                    <h3 className="font-medium">{group.name}</h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {groupedRecords[group.id]?.length || 0}
+                    </Badge>
                   </div>
-                )}
-              </Droppable>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={onRecordCreate}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+
+                {/* Records */}
+                <Droppable droppableId={group.id}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`space-y-2 min-h-[200px] transition-all duration-200 rounded-md ${
+                        snapshot.isDraggingOver
+                          ? "bg-primary/10 border-2 border-dashed border-primary/30 scale-[1.02]"
+                          : "border-2 border-transparent"
+                      }`}
+                    >
+                      {groupedRecords[group.id]?.map((record, index) =>
+                        renderRecordCard(record, index)
+                      )}
+
+                      {groupedRecords[group.id]?.length === 0 && (
+                        <NoDataMessage
+                          message="No records in this group"
+                          compact
+                        />
+                      )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </DragDropContext>
+          ))}
+        </div>
+      </DragDropContext>
+    </div>
   );
 }

@@ -56,6 +56,13 @@ interface DocumentDataTableProps {
   enableSorting?: boolean;
   enableFiltering?: boolean;
   pageSize?: number;
+  onBulkEdit?: () => void;
+  onBulkDelete?: () => void;
+  onRecordEdit?: (record: TRecord) => void;
+  onRecordDelete?: (recordId: string) => void;
+  onRecordDuplicate?: (recordId: string) => void;
+  onRecordCreate?: () => void;
+  onAddProperty?: () => void;
 }
 
 export function DataTable({
@@ -65,14 +72,37 @@ export function DataTable({
   enableSorting = true,
   enableFiltering = true,
   pageSize = 25,
+  onBulkEdit: propOnBulkEdit,
+  onBulkDelete: propOnBulkDelete,
+  onRecordEdit: propOnRecordEdit,
+  onRecordDelete: propOnRecordDelete,
+  onRecordDuplicate: propOnRecordDuplicate,
+  onRecordCreate: propOnRecordCreate,
+  onAddProperty: propOnAddProperty,
 }: DocumentDataTableProps) {
   const {
     database,
     isPropertiesLoading,
     isRecordsLoading,
     onDialogOpen,
-    onCurrentRecordChange,
+    onBulkEdit: contextOnBulkEdit,
+    onBulkDelete: contextOnBulkDelete,
+    onRecordEdit: contextOnRecordEdit,
+    onRecordDelete: contextOnRecordDelete,
+    onRecordDuplicate: contextOnRecordDuplicate,
+    onRecordCreate: contextOnRecordCreate,
+    onAddProperty: contextOnAddProperty,
+    onRecordChange
   } = useDatabaseView();
+
+  // Use prop handlers if provided, otherwise use context handlers
+  const onBulkEdit = propOnBulkEdit || contextOnBulkEdit;
+  const onBulkDelete = propOnBulkDelete || contextOnBulkDelete;
+  const onRecordEdit = propOnRecordEdit || contextOnRecordEdit;
+  const onRecordDelete = propOnRecordDelete || contextOnRecordDelete;
+  const onRecordDuplicate = propOnRecordDuplicate || contextOnRecordDuplicate;
+  const onRecordCreate = propOnRecordCreate || contextOnRecordCreate;
+  const onAddProperty = propOnAddProperty || contextOnAddProperty;
 
   const [columnStats, setColumnStats] = useState<Record<string, string>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -152,66 +182,93 @@ export function DataTable({
   const selectedRecords = selectedRows.map((row) => row.original);
 
   const handleBulkDelete = async () => {
-    if (!database?.id || selectedRecords.length === 0) return;
-
-    try {
-      const recordIds = selectedRecords.map((record) => record.id);
-      await bulkDeleteMutation.mutateAsync({
-        databaseId: database.id,
-        data: { recordIds, permanent: false },
-      });
-      setRowSelection({});
-      toast.success(`${selectedRecords.length} records deleted successfully`);
-    } catch {
-      toast.error("Failed to delete records");
+    if (onBulkDelete) {
+      onBulkDelete();
+    } else if (!database?.id || selectedRecords.length === 0) {
+      return;
+    } else {
+      // Fallback to internal implementation
+      try {
+        const recordIds = selectedRecords.map((record) => record.id);
+        await bulkDeleteMutation.mutateAsync({
+          databaseId: database.id,
+          data: { recordIds, permanent: false },
+        });
+        setRowSelection({});
+        toast.success(`${selectedRecords.length} records deleted successfully`);
+      } catch {
+        toast.error("Failed to delete records");
+      }
     }
   };
 
   const handleBulkEdit = () => {
-    if (selectedRecords.length > 0) {
+    if (onBulkEdit) {
+      onBulkEdit();
+    } else {
       onDialogOpen?.("bulk-edit");
     }
   };
 
   const handleRecordEdit = (record: TRecord) => {
-    onCurrentRecordChange?.(record);
-    onDialogOpen?.("edit-record");
+    if (onRecordEdit) {
+      onRecordEdit(record);
+    } else {
+      onRecordChange?.(record);
+      onDialogOpen?.("edit-record");
+    }
   };
 
   const handleRecordDelete = async (recordId: string) => {
-    if (!database?.id) return;
-
-    try {
-      await deleteRecordMutation.mutateAsync({
-        databaseId: database.id,
-        recordId,
-      });
-      toast.success("Record deleted successfully");
-    } catch {
-      toast.error("Failed to delete record");
+    if (onRecordDelete) {
+      onRecordDelete(recordId);
+    } else if (!database?.id) {
+      return;
+    } else {
+      try {
+        await deleteRecordMutation.mutateAsync({
+          databaseId: database.id,
+          recordId,
+        });
+        toast.success("Record deleted successfully");
+      } catch {
+        toast.error("Failed to delete record");
+      }
     }
   };
 
   const handleRecordDuplicate = async (recordId: string) => {
-    if (!database?.id) return;
-
-    try {
-      await duplicateRecordMutation.mutateAsync({
-        databaseId: database.id,
-        recordId,
-      });
-      toast.success("Record duplicated successfully");
-    } catch {
-      toast.error("Failed to duplicate record");
+    if (onRecordDuplicate) {
+      onRecordDuplicate(recordId);
+    } else if (!database?.id) {
+      return;
+    } else {
+      try {
+        await duplicateRecordMutation.mutateAsync({
+          databaseId: database.id,
+          recordId,
+        });
+        toast.success("Record duplicated successfully");
+      } catch {
+        toast.error("Failed to duplicate record");
+      }
     }
   };
 
   const handleRecordCreate = () => {
-    onDialogOpen?.("create-record");
+    if (onRecordCreate) {
+      onRecordCreate();
+    } else {
+      onDialogOpen?.("create-record");
+    }
   };
 
   const handleAddProperty = () => {
-    onDialogOpen?.("create-property");
+    if (onAddProperty) {
+      onAddProperty();
+    } else {
+      onDialogOpen?.("create-property");
+    }
   };
 
   return (
