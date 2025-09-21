@@ -14,7 +14,7 @@ import {
   useDeleteRecord,
   useDuplicateRecord,
 } from "../services/database-queries";
-import { useWorkspace } from "@/modules/workspaces/context/workspace-context";
+import { useAuthStore } from "@/modules/auth/store/authStore";
 import {
   useDatabase,
   useProperties,
@@ -118,7 +118,7 @@ export function DatabaseViewProvider({
   const [filters, setFilters] = useState<TFilterCondition[]>([]);
   const [sorts, setSorts] = useState<TSortConfig[]>([]);
 
-  const { currentWorkspace } = useWorkspace();
+  const { currentWorkspace } = useAuthStore();
 
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();

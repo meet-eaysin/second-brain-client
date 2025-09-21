@@ -1,14 +1,13 @@
 import { apiClient } from "@/services/api-client.ts";
-import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
-import type { ApiResponse } from "@/types/api.types";
+import type { ApiResponse } from "@/modules/auth/types/auth.types.ts";
 import type {
   Workspace,
-  WorkspaceWithUserInfo,
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
   GetWorkspacesQuery,
   WorkspaceStatsResponse,
 } from "@/types/workspace.types";
+import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
 import { EDatabaseType } from "@/modules/database-view";
 import type {
   IWorkspaceInitResponse,
@@ -33,8 +32,8 @@ export const workspaceApi = {
     return response.data.data;
   },
 
-  getWorkspaceById: async (id: string): Promise<WorkspaceWithUserInfo> => {
-    const response = await apiClient.get<ApiResponse<WorkspaceWithUserInfo>>(
+  getWorkspaceById: async (id: string): Promise<Workspace> => {
+    const response = await apiClient.get<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.BY_ID(id)
     );
     return response.data.data;
@@ -70,7 +69,6 @@ export const workspaceApi = {
     return response.data.data;
   },
 
-  // Workspace stats and access
   getWorkspaceStats: async (id: string): Promise<WorkspaceStatsResponse> => {
     const response = await apiClient.get<ApiResponse<WorkspaceStatsResponse>>(
       API_ENDPOINTS.WORKSPACES.STATS_BY_ID(id)

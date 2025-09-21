@@ -1,6 +1,7 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { User } from "@/modules/auth/types/auth.types.ts";
+import type { Workspace } from "@/types/workspace.types";
 
 interface AuthState {
   user: User | null;
@@ -10,6 +11,13 @@ interface AuthState {
   error: string | null;
   intendedPath: string | null;
 
+  // Workspace state
+  workspaces: Workspace[];
+  currentWorkspace: Workspace | null;
+  workspaceLoading: boolean;
+  needsWorkspaceSetup: boolean;
+  showWorkspaceSetupWizard: boolean;
+
   // Actions
   setUser: (user: User) => void;
   clearUser: () => void;
@@ -17,12 +25,24 @@ interface AuthState {
   setError: (error: string | null) => void;
   setIntendedPath: (path: string | null) => void;
   clearError: () => void;
-  setInitialized: (initialized: boolean) => void; // ✅ New action
+  setInitialized: (initialized: boolean) => void;
+
+  // Workspace actions
+  setWorkspaces: (workspaces: Workspace[]) => void;
+  setCurrentWorkspace: (workspace: Workspace | null) => void;
+  setWorkspaceLoading: (loading: boolean) => void;
+  setNeedsWorkspaceSetup: (needsSetup: boolean) => void;
+  setShowWorkspaceSetupWizard: (show: boolean) => void;
+  addWorkspace: (workspace: Workspace) => void;
+  updateWorkspace: (id: string, workspace: Workspace) => void;
+  removeWorkspace: (id: string) => void;
+  completeWorkspaceSetup: (workspace: Workspace) => void;
+  skipWorkspaceSetup: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, _get) => ({
       user: null,
       isAuthenticated: false,
       isLoading: false,
@@ -30,37 +50,120 @@ export const useAuthStore = create<AuthState>()(
       error: null,
       intendedPath: null,
 
-      setUser: (user) => set({
-        user,
-        isAuthenticated: true,
-        error: null,
-        isInitialized: true
-      }),
+      // Workspace state
+      workspaces: [],
+      currentWorkspace: null,
+      workspaceLoading: false,
+      needsWorkspaceSetup: false,
+      showWorkspaceSetupWizard: false,
 
-      clearUser: () => set({
-        user: null,
-        isAuthenticated: false,
-        error: null,
-        isInitialized: true
-      }),
+      setUser: (user) =>
+        set({
+          user,
+          isAuthenticated: true,
+          error: null,
+          isInitialized: true,
+        }),
+
+      clearUser: () =>
+        set({
+          user: null,
+          isAuthenticated: false,
+          error: null,
+          isInitialized: true,
+          workspaces: [],
+          currentWorkspace: null,
+          needsWorkspaceSetup: false,
+          showWorkspaceSetupWizard: false,
+        }),
 
       setLoading: (loading) => set({ isLoading: loading }),
 
-      setError: (error) => set({
-        error,
-        isInitialized: true
-      }),
+      setError: (error) =>
+        set({
+          error,
+          isInitialized: true,
+        }),
 
       clearError: () => set({ error: null }),
 
       setIntendedPath: (path) => set({ intendedPath: path }),
 
       setInitialized: (initialized) => set({ isInitialized: initialized }),
+
+      // Workspace actions
+      setWorkspaces: (workspaces) =>
+        set({
+          workspaces,
+          needsWorkspaceSetup: workspaces.length === 0,
+          showWorkspaceSetupWizard: workspaces.length === 0,
+        }),
+
+      setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
+
+      setWorkspaceLoading: (loading) => set({ workspaceLoading: loading }),
+
+      setNeedsWorkspaceSetup: (needsSetup) =>
+        set({ needsWorkspaceSetup: needsSetup }),
+
+      setShowWorkspaceSetupWizard: (show) =>
+        set({ showWorkspaceSetupWizard: show }),
+
+      addWorkspace: (workspace) =>
+        set((state) => ({
+          workspaces: [...state.workspaces, workspace],
+          currentWorkspace: workspace,
+          needsWorkspaceSetup: false,
+        })),
+
+      updateWorkspace: (id, workspace) =>
+        set((state) => ({
+          workspaces: state.workspaces.map((w) =>
+            w.id === id ? workspace : w
+          ),
+          currentWorkspace:
+            state.currentWorkspace?.id === id
+              ? workspace
+              : state.currentWorkspace,
+        })),
+
+      removeWorkspace: (id) =>
+        set((state) => {
+          const filteredWorkspaces = state.workspaces.filter(
+            (w) => w.id !== id
+          );
+          const newCurrentWorkspace =
+            state.currentWorkspace?.id === id
+              ? filteredWorkspaces.length > 0
+                ? filteredWorkspaces[0]
+                : null
+              : state.currentWorkspace;
+
+          return {
+            workspaces: filteredWorkspaces,
+            currentWorkspace: newCurrentWorkspace,
+            needsWorkspaceSetup: filteredWorkspaces.length === 0,
+          };
+        }),
+
+      completeWorkspaceSetup: (workspace) =>
+        set({
+          currentWorkspace: workspace,
+          showWorkspaceSetupWizard: false,
+          needsWorkspaceSetup: false,
+        }),
+
+      skipWorkspaceSetup: () =>
+        set({
+          showWorkspaceSetupWizard: false,
+          needsWorkspaceSetup: false,
+        }),
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       partialize: (state) => ({
-        intendedPath: state.intendedPath
+        intendedPath: state.intendedPath,
+        currentWorkspace: state.currentWorkspace,
       }),
     }
   )

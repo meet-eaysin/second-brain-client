@@ -12,9 +12,18 @@ import type {
   SearchWorkspacesQuery,
 } from "@/types/workspace.types";
 import { toast } from "sonner";
-import { useAuth } from "@/modules/auth/hooks/useAuth";
+import { useAuthStore } from "@/modules/auth/store/authStore";
 import { EDatabaseType } from "@/modules/database-view";
 import type { TModuleInitializeRequest } from "@/modules/workspaces/types/workspaces.types.ts";
+
+// Helper function to extract error message from unknown error
+const getErrorMessage = (error: unknown, defaultMessage: string): string => {
+  if (error instanceof Error && "response" in error) {
+    const axiosError = error as { response?: { data?: { message?: string } } };
+    return axiosError.response?.data?.message || defaultMessage;
+  }
+  return defaultMessage;
+};
 
 export const WORKSPACE_KEYS = {
   all: ["workspaces"] as const,
@@ -75,7 +84,7 @@ export const useGetWorkspaceById = (id: string) => {
 };
 
 export const useGetPrimaryWorkspace = () => {
-  const { isAuthenticated, isInitialized } = useAuth();
+  const { isAuthenticated, isInitialized } = useAuthStore();
 
   return useQuery({
     queryKey: WORKSPACE_KEYS.primary(),
@@ -152,10 +161,13 @@ export const useCreateWorkspace = () => {
 
       toast.success("Workspace created successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to create workspace"
-      );
+    onError: (error: unknown) => {
+      const message =
+        error instanceof Error && "response" in error
+          ? (error as { response?: { data?: { message?: string } } }).response
+              ?.data?.message
+          : "Failed to create workspace";
+      toast.error(message);
     },
   });
 };
@@ -175,10 +187,8 @@ export const useUpdateWorkspace = () => {
 
       toast.success("Workspace updated successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update workspace"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to update workspace"));
     },
   });
 };
@@ -197,10 +207,8 @@ export const useDeleteWorkspace = () => {
 
       toast.success("Workspace deleted successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to delete workspace"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to delete workspace"));
     },
   });
 };
@@ -218,10 +226,8 @@ export const useDuplicateWorkspace = () => {
 
       toast.success("Workspace duplicated successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to duplicate workspace"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to duplicate workspace"));
     },
   });
 };
@@ -239,10 +245,8 @@ export const useLeaveWorkspace = () => {
 
       toast.success("Left workspace successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to leave workspace"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to leave workspace"));
     },
   });
 };
@@ -265,8 +269,8 @@ export const useInviteMember = () => {
 
       toast.success("Member invited successfully");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to invite member");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to invite member"));
     },
   });
 };
@@ -291,10 +295,8 @@ export const useUpdateMemberRole = () => {
 
       toast.success("Member role updated successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to update member role"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to update member role"));
     },
   });
 };
@@ -317,8 +319,8 @@ export const useRemoveMember = () => {
 
       toast.success("Member removed successfully");
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || "Failed to remove member");
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to remove member"));
     },
   });
 };
@@ -345,10 +347,8 @@ export const useTransferOwnership = () => {
 
       toast.success("Ownership transferred successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to transfer ownership"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to transfer ownership"));
     },
   });
 };
@@ -372,10 +372,8 @@ export const useBulkMemberOperation = () => {
 
       toast.success("Bulk operation completed successfully");
     },
-    onError: (error: any) => {
-      toast.error(
-        error?.response?.data?.message || "Failed to complete bulk operation"
-      );
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to complete bulk operation"));
     },
   });
 };
