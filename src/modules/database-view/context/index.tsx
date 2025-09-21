@@ -1,10 +1,5 @@
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useState,
-  useEffect,
-} from "react";
+import { createContext, type ReactNode, useContext, useState } from "react";
+import { toast } from "sonner";
 import {
   EDatabaseType,
   type TDatabase,
@@ -15,10 +10,6 @@ import {
   type TSortConfig,
   type TView,
 } from "@/modules/database-view/types";
-import {
-  useGetModuleDatabaseId,
-  useInitializeModules,
-} from "@/modules/workspaces/services/workspace-queries";
 import {
   useDeleteRecord,
   useDuplicateRecord,
@@ -132,46 +123,7 @@ export function DatabaseViewProvider({
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
 
-  let currentDatabaseId = databaseId || "";
-
-  const { data: databaseIdResponse, isLoading: isDatabaseIdLoading } =
-    useGetModuleDatabaseId(
-      currentWorkspace?._id || "",
-      moduleType || EDatabaseType.CUSTOM,
-      !currentDatabaseId
-    );
-
-  if (!currentDatabaseId && databaseIdResponse?.data.databaseId) {
-    currentDatabaseId = databaseIdResponse.data.databaseId;
-  }
-
-  const needsInitialization = !currentDatabaseId && !isDatabaseIdLoading;
-
-  const initializePayload = needsInitialization
-    ? {
-        workspaceId: currentWorkspace?._id || "",
-        moduleTypes: [moduleType || EDatabaseType.CUSTOM],
-        createSampleData: false,
-        isInitialized: false,
-      }
-    : {
-        workspaceId: "",
-        moduleTypes: [],
-        createSampleData: false,
-        isInitialized: true,
-      };
-
-  const { data: initialized } = useInitializeModules(initializePayload);
-
-  const { data: postInitDatabaseIdResponse } = useGetModuleDatabaseId(
-    currentWorkspace?._id || "",
-    moduleType || EDatabaseType.CUSTOM,
-    initialized?.success
-  );
-
-  if (!currentDatabaseId && postInitDatabaseIdResponse?.data.databaseId) {
-    currentDatabaseId = postInitDatabaseIdResponse.data.databaseId;
-  }
+  const currentDatabaseId = databaseId || "";
 
   const { data: database, isLoading: isDatabaseLoading } =
     useDatabase(currentDatabaseId);
@@ -188,7 +140,7 @@ export function DatabaseViewProvider({
   };
 
   const { data: properties = [], isLoading: isPropertiesLoading } =
-    useProperties(databaseId || "", propertiesQueryParams);
+    useProperties(currentDatabaseId || "", propertiesQueryParams);
 
   const recordQueryParams = {
     viewId: currentViewId,
@@ -200,37 +152,22 @@ export function DatabaseViewProvider({
   };
 
   const { data: records, isLoading: isRecordsLoading } = useRecords(
-    databaseId || "",
+    currentDatabaseId || "",
     recordQueryParams
   );
 
-  useEffect(() => {
-    if (currentViewResponse?.data?.filters) {
-      setFilters(currentViewResponse.data.filters);
-    } else {
-      setFilters([]);
-    }
-  }, [currentViewResponse?.data?.filters]);
-
-  useEffect(() => {
-    if (currentViewResponse?.data?.sorts) {
-      setSorts(currentViewResponse.data.sorts);
-    } else {
-      setSorts([]);
-    }
-  }, [currentViewResponse?.data?.sorts]);
-
-  const visibleProperties = properties.filter((property: TProperty) => {
-    if (
-      currentViewResponse?.data?.settings.visibleProperties &&
-      currentViewResponse.data.settings.visibleProperties.length > 0
-    ) {
-      return currentViewResponse.data.settings.visibleProperties.includes(
-        property.id
-      );
-    }
-    return property.isVisible;
-  });
+  const visibleProperties =
+    properties?.filter((property: TProperty) => {
+      if (
+        currentViewResponse?.data?.settings?.visibleProperties &&
+        currentViewResponse.data.settings.visibleProperties.length > 0
+      ) {
+        return currentViewResponse.data.settings.visibleProperties.includes(
+          property.id
+        );
+      }
+      return property?.isVisible ?? false;
+    }) || [];
 
   const onDialogOpen = (dialog: DatabaseDialogType | null) =>
     setDialogOpen(dialog);
@@ -255,19 +192,45 @@ export function DatabaseViewProvider({
 
   const onRecordDelete = (recordId: string) => {
     if (currentDatabaseId) {
-      deleteRecordMutation.mutate({
-        databaseId: currentDatabaseId,
-        recordId,
-      });
+      deleteRecordMutation.mutate(
+        {
+          databaseId: currentDatabaseId,
+          recordId,
+        },
+        {
+          onError: () => {
+            if (!navigator.onLine) {
+              toast.error("You're offline. Cannot delete record.");
+            } else {
+              toast.error("Failed to delete record. Please try again.");
+            }
+          },
+        }
+      );
+    } else {
+      toast.error("Database not available. Please refresh the page.");
     }
   };
 
   const onRecordDuplicate = (recordId: string) => {
     if (currentDatabaseId) {
-      duplicateRecordMutation.mutate({
-        databaseId: currentDatabaseId,
-        recordId,
-      });
+      duplicateRecordMutation.mutate(
+        {
+          databaseId: currentDatabaseId,
+          recordId,
+        },
+        {
+          onError: () => {
+            if (!navigator.onLine) {
+              toast.error("You're offline. Cannot duplicate record.");
+            } else {
+              toast.error("Failed to duplicate record. Please try again.");
+            }
+          },
+        }
+      );
+    } else {
+      toast.error("Database not available. Please refresh the page.");
     }
   };
 
@@ -278,15 +241,15 @@ export function DatabaseViewProvider({
     moduleType,
     workspace: currentWorkspace,
     dialogOpen,
-    database: database || null,
+    database: database?.data || null,
     views: viewsResponse?.data || [],
     currentView: currentViewResponse?.data || null,
-    properties,
-    records: records?.data,
+    properties: properties || [],
+    records: records?.data || undefined,
     currentRecord,
     currentProperty,
 
-    isDatabaseIdLoading,
+    isDatabaseIdLoading: false,
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,

@@ -109,7 +109,7 @@ export const useDatabases = (params?: TDatabaseQueryParams) => {
 };
 
 export const useDatabase = (id: string) => {
-  return useQuery<TDatabase, AxiosError>({
+  return useQuery<ApiResponse<TDatabase>, AxiosError>({
     queryKey: DATABASE_KEYS.detail(id),
     queryFn: () => databaseApi.getDatabaseById(id),
     enabled: !!id,

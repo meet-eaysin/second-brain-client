@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Popover,
   PopoverContent,
@@ -84,31 +84,28 @@ const PROPERTY_TYPE_ICONS = {
   LOOKUP: Search,
 } as const;
 
+const SORT_QUERY_PARAMS = { isActive: true };
+
 export function SortManager() {
   const { database, properties } = useDatabaseView();
   const [open, setOpen] = useState(false);
-  const [localSorts, setLocalSorts] = useState<TSortConfig[]>([]);
+  const databaseId = database?.id || "";
+  const { data: databaseSorts = [] } = useDatabaseSorts(
+    databaseId,
+    SORT_QUERY_PARAMS
+  );
 
-  const { data: databaseSorts = [] } = useDatabaseSorts(database?.id || "", {
-    databaseId: database?.id || "",
-    isActive: true,
-  });
-
-  const createSortMutation = useCreateDatabaseSort();
-  const deleteSortMutation = useDeleteDatabaseSort();
-
-  useEffect(() => {
-    if (databaseSorts.length > 0) {
-      setLocalSorts(
-        databaseSorts.map((sort) => ({
+  const [localSorts, setLocalSorts] = useState<TSortConfig[]>(
+    databaseSorts.length > 0
+      ? databaseSorts.map((sort) => ({
           propertyId: sort.sorts[0]?.propertyId || "",
           direction: sort.sorts[0]?.direction || "asc",
         }))
-      );
-    } else {
-      setLocalSorts([]);
-    }
-  }, [databaseSorts]);
+      : []
+  );
+
+  const createSortMutation = useCreateDatabaseSort();
+  const deleteSortMutation = useDeleteDatabaseSort();
 
   const addSort = () => {
     const available = properties.filter(

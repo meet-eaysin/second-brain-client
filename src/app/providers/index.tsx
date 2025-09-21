@@ -1,4 +1,4 @@
-import { QueryProvider } from './QueryProvider';
+import { QueryProvider } from './query-provider.tsx';
 import { ErrorBoundary } from './error-boundary.tsx';
 import type { ReactNode } from "react";
 import { ThemeProvider } from "@/context/theme-context.tsx";
