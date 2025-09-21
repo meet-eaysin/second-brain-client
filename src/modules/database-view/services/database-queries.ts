@@ -45,6 +45,7 @@ import type {
   IUpdateBlock,
   IBulkBlockOperation,
   TUpdateView,
+  EPropertyType,
   TPropertyValue,
   TCreateRecord,
   TCreateProperty,

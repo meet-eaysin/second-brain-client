@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,39 +46,26 @@ import {
   Check,
   Shuffle,
 } from "lucide-react";
-import type { IDatabaseProperty, EPropertyType, SelectOption } from "../../types";
+import type { TPropertyOption } from "../../types";
+import { EPropertyType } from "../../types";
+import {
+  useCreateProperty,
+  useUpdateProperty,
+} from "../../services/database-queries";
+import { useDatabaseView } from "../../context";
 
-interface PropertyFormProps {
-  property?: IDatabaseProperty | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Partial<IDatabaseProperty>) => Promise<void>;
-  mode?: "create" | "edit";
-  isLoading?: boolean;
-}
-
-// Property form schema
 const propertyFormSchema = z.object({
   name: z.string().min(1, "Property name is required"),
-  type: z.enum([
-    "TEXT",
-    "NUMBER",
-    "EMAIL",
-    "URL",
-    "PHONE",
-    "CHECKBOX",
-    "DATE",
-    "SELECT",
-    "MULTI_SELECT",
-  ]),
+  type: z.nativeEnum(EPropertyType),
   description: z.string().optional(),
-  required: z.boolean().default(false),
-  isVisible: z.boolean().default(true),
+  isRequired: z.boolean(),
+  isVisible: z.boolean(),
   selectOptions: z
     .array(
       z.object({
         id: z.string(),
-        name: z.string(),
+        value: z.string(),
+        label: z.string(),
         color: z.string(),
       })
     )
@@ -87,58 +74,57 @@ const propertyFormSchema = z.object({
 
 type PropertyFormData = z.infer<typeof propertyFormSchema>;
 
-// Property type options with icons and descriptions
 const PROPERTY_TYPES = [
   {
-    value: "TEXT" as EPropertyType,
+    value: "text",
     label: "Text",
     icon: Type,
     description: "Plain text content",
   },
   {
-    value: "NUMBER" as EPropertyType,
+    value: "number",
     label: "Number",
     icon: Hash,
     description: "Numeric values",
   },
   {
-    value: "EMAIL" as EPropertyType,
+    value: "email",
     label: "Email",
     icon: Mail,
     description: "Email addresses",
   },
   {
-    value: "URL" as EPropertyType,
+    value: "url",
     label: "URL",
     icon: Link,
     description: "Web links",
   },
   {
-    value: "PHONE" as EPropertyType,
+    value: "phone",
     label: "Phone",
     icon: Phone,
     description: "Phone numbers",
   },
   {
-    value: "CHECKBOX" as EPropertyType,
+    value: "checkbox",
     label: "Checkbox",
     icon: CheckSquare,
     description: "True/false values",
   },
   {
-    value: "DATE" as EPropertyType,
+    value: "date",
     label: "Date",
     icon: Calendar,
     description: "Date values",
   },
   {
-    value: "SELECT" as EPropertyType,
+    value: "select",
     label: "Select",
     icon: List,
     description: "Single choice from options",
   },
   {
-    value: "MULTI_SELECT" as EPropertyType,
+    value: "multi_select",
     label: "Multi-select",
     icon: Tags,
     description: "Multiple choices from options",
@@ -173,37 +159,66 @@ const getRandomColor = () => {
 };
 
 const PROPERTY_SUGGESTIONS = {
-  TEXT: ["Title", "Description", "Notes", "Summary", "Content", "Comments"],
-  NUMBER: ["Price", "Quantity", "Score", "Rating", "Count", "Amount"],
-  EMAIL: ["Email", "Contact Email", "Work Email", "Personal Email"],
-  URL: ["Website", "Link", "Reference", "Source", "Documentation"],
-  PHONE: ["Phone", "Mobile", "Work Phone", "Contact Number"],
-  CHECKBOX: ["Completed", "Active", "Published", "Verified", "Approved"],
-  DATE: ["Due Date", "Created Date", "Start Date", "End Date", "Deadline"],
-  SELECT: ["Status", "Priority", "Category", "Type", "Stage"],
-  MULTI_SELECT: ["Tags", "Labels", "Categories", "Skills", "Technologies"],
+  text: ["Title", "Description", "Notes", "Summary", "Content", "Comments"],
+  rich_text: ["Content", "Description", "Notes", "Details", "Summary"],
+  number: ["Price", "Quantity", "Score", "Rating", "Count", "Amount"],
+  date: ["Due Date", "Created Date", "Start Date", "End Date", "Deadline"],
+  checkbox: ["Completed", "Active", "Published", "Verified", "Approved"],
+  url: ["Website", "Link", "Reference", "Source", "Documentation"],
+  email: ["Email", "Contact Email", "Work Email", "Personal Email"],
+  phone: ["Phone", "Mobile", "Work Phone", "Contact Number"],
+  currency: ["Price", "Cost", "Budget", "Salary", "Revenue"],
+  percent: ["Progress", "Completion", "Rate", "Percentage"],
+  select: ["Status", "Priority", "Category", "Type", "Stage"],
+  multi_select: ["Tags", "Labels", "Categories", "Skills", "Technologies"],
+  status: ["Status", "State", "Phase", "Progress"],
+  priority: ["Priority", "Urgency", "Importance", "Level"],
+  file: ["Attachment", "Document", "File", "Upload"],
+  relation: ["Related To", "Linked", "Connected", "Reference"],
+  rollup: ["Total", "Sum", "Count", "Average", "Summary"],
+  formula: ["Calculated", "Formula", "Computed", "Derived"],
+  created_time: ["Created At", "Date Created", "Creation Date"],
+  last_edited_time: ["Updated At", "Modified Date", "Last Modified"],
+  created_by: ["Creator", "Author", "Created By"],
+  last_edited_by: ["Editor", "Modified By", "Last Edited By"],
+  mood_scale: ["Mood", "Feeling", "Emotion", "State"],
+  frequency: ["Frequency", "Rate", "Occurrence", "Interval"],
+  content_type: ["Type", "Category", "Content Type", "Format"],
+  finance_type: ["Transaction Type", "Payment Type", "Finance Type"],
+  finance_category: ["Category", "Expense Type", "Income Type"],
+  FILES: ["Files", "Attachments", "Documents"],
+  LOOKUP: ["Lookup", "Reference", "Linked Value"],
 };
 
-export function PropertyForm({
-  property,
-  open,
-  onOpenChange,
-  onSubmit,
-  mode = "create",
-  isLoading = false,
-}: PropertyFormProps) {
-  const [selectOptions, setSelectOptions] = useState<SelectOption[]>([]);
+export function PropertyForm() {
+  const {
+    database,
+    currentProperty,
+    dialogOpen,
+    onDialogOpen,
+    onPropertyChange,
+  } = useDatabaseView();
+
+  const createPropertyMutation = useCreateProperty();
+  const updatePropertyMutation = useUpdateProperty();
+
+  const isOpen =
+    dialogOpen === "create-property" || dialogOpen === "edit-property";
+  const mode = dialogOpen === "create-property" ? "create" : "edit";
+  const databaseId = database?.id || "";
+  const property = currentProperty;
+
+  const [selectOptions, setSelectOptions] = useState<TPropertyOption[]>([]);
   const [newOptionName, setNewOptionName] = useState("");
   const [useAutoColors, setUseAutoColors] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const form = useForm<PropertyFormData>({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       name: "",
-      type: "TEXT",
+      type: EPropertyType.TEXT,
       description: "",
-      required: false,
+      isRequired: false,
       isVisible: true,
       selectOptions: [],
     },
@@ -215,7 +230,7 @@ export function PropertyForm({
         name: property.name,
         type: property.type,
         description: property.description || "",
-        required: property.required,
+        isRequired: property.required,
         isVisible: property.isVisible,
         selectOptions: property.config?.options || [],
       });
@@ -223,9 +238,9 @@ export function PropertyForm({
     } else if (mode === "create") {
       form.reset({
         name: "",
-        type: "TEXT",
+        type: EPropertyType.TEXT,
         description: "",
-        required: false,
+        isRequired: false,
         isVisible: true,
         selectOptions: [],
       });
@@ -237,33 +252,40 @@ export function PropertyForm({
 
   const handleSubmit = async (data: PropertyFormData) => {
     try {
-      // Prepare select options - remove color if auto-colors is enabled
-      const processedSelectOptions = ["SELECT", "MULTI_SELECT"].includes(
+      const processedSelectOptions = ["select", "multi_select"].includes(
         data.type
       )
-        ? selectOptions.map(
-            (option) =>
-              useAutoColors
-                ? { id: option.id, name: option.name } // Omit color for auto-generation
-                : option // Include color
+        ? selectOptions.map((option) =>
+            useAutoColors ? { id: option.id, label: option.label } : option
           )
         : undefined;
 
-      const propertyData: Partial<IDatabaseProperty> = {
+      const propertyData = {
         name: data.name,
         type: data.type,
         description: data.description,
-        required: data.required,
+        required: data.isRequired,
         isVisible: data.isVisible,
-        config: {
-          ...property.config,
-          options: processedSelectOptions,
-        },
+        config: processedSelectOptions
+          ? { options: processedSelectOptions }
+          : undefined,
       };
 
-      await onSubmit(propertyData);
-      // Only close the dialog if the submission was successful
-      // The parent component (database-dialog-forms.tsx) will handle closing on success
+      if (mode === "create") {
+        await createPropertyMutation.mutateAsync({
+          databaseId,
+          data: propertyData,
+        });
+      } else if (mode === "edit" && property) {
+        await updatePropertyMutation.mutateAsync({
+          databaseId,
+          propertyId: property.id,
+          data: propertyData,
+        });
+      }
+
+      onDialogOpen(null);
+      onPropertyChange(null);
     } catch (error) {
       console.error("Failed to submit property:", error);
       // Don't close the dialog on error - let the user see the error and fix it
@@ -272,9 +294,11 @@ export function PropertyForm({
 
   const addSelectOption = (customColor?: string) => {
     if (newOptionName.trim()) {
-      const newOption: SelectOption = {
+      const label = newOptionName.trim();
+      const newOption: TPropertyOption = {
         id: `option_${Date.now()}`,
-        name: newOptionName.trim(),
+        value: label.toLowerCase().replace(/\s+/g, "-"),
+        label,
         color: customColor || getRandomColor(),
       };
       setSelectOptions((prev) => [...prev, newOption]);
@@ -295,7 +319,7 @@ export function PropertyForm({
   };
 
   const renderSelectOptionsEditor = () => {
-    if (!["SELECT", "MULTI_SELECT"].includes(selectedType)) return null;
+    if (!["select", "multi_select"].includes(selectedType)) return null;
 
     return (
       <div className="space-y-4">
@@ -308,7 +332,6 @@ export function PropertyForm({
             </Badge>
           </div>
 
-          {/* Auto-color toggle */}
           <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
             <div className="flex flex-col">
               <span className="text-sm font-medium">Auto-generate colors</span>
@@ -336,7 +359,6 @@ export function PropertyForm({
             className="flex-1"
           />
 
-          {/* Color picker for new option - hidden when auto-colors is enabled */}
           {!useAutoColors && (
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
@@ -411,7 +433,6 @@ export function PropertyForm({
                 className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30"
               >
                 <div className="flex items-center gap-2 flex-1">
-                  {/* Color Picker Dropdown - hidden when auto-colors is enabled */}
                   {!useAutoColors ? (
                     <DropdownMenu modal={false}>
                       <DropdownMenuTrigger asChild>
@@ -473,7 +494,7 @@ export function PropertyForm({
                       <Shuffle className="h-3 w-3 text-muted-foreground" />
                     </div>
                   )}
-                  <span className="text-sm font-medium">{option.name}</span>
+                  <span className="text-sm font-medium">{option.label}</span>
                 </div>
                 <Button
                   type="button"
@@ -493,7 +514,7 @@ export function PropertyForm({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
       <SheetContent className="overflow-y-auto w-[500px] sm:w-[700px] lg:w-[800px] px-6">
         <SheetHeader className="space-y-4 pb-3 px-2">
           <div>
@@ -522,32 +543,27 @@ export function PropertyForm({
                   <FormLabel>Property Name</FormLabel>
                   <FormControl>
                     <div className="space-y-3">
-                      <Input
-                        placeholder="Enter property name..."
-                        {...field}
-                      />
-                      {selectedType &&
-                        PROPERTY_SUGGESTIONS[selectedType] && (
-                          <div className="flex flex-wrap gap-2">
-                            {PROPERTY_SUGGESTIONS[selectedType].map(
-                              (suggestion) => (
-                                <Button
-                                  key={suggestion}
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 text-xs"
-                                  onClick={() => {
-                                    field.onChange(suggestion);
-                                    setShowSuggestions(false);
-                                  }}
-                                >
-                                  {suggestion}
-                                </Button>
-                              )
-                            )}
-                          </div>
-                        )}
+                      <Input placeholder="Enter property name..." {...field} />
+                      {selectedType && PROPERTY_SUGGESTIONS[selectedType] && (
+                        <div className="flex flex-wrap gap-2">
+                          {PROPERTY_SUGGESTIONS[selectedType].map(
+                            (suggestion) => (
+                              <Button
+                                key={suggestion}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => {
+                                  field.onChange(suggestion);
+                                }}
+                              >
+                                {suggestion}
+                              </Button>
+                            )
+                          )}
+                        </div>
+                      )}
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -628,7 +644,7 @@ export function PropertyForm({
             <div className="flex gap-4">
               <FormField
                 control={form.control}
-                name="required"
+                name="isRequired"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
@@ -674,14 +690,25 @@ export function PropertyForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
+                onClick={() => onDialogOpen(null)}
+                disabled={
+                  createPropertyMutation.isPending ||
+                  updatePropertyMutation.isPending
+                }
                 className="flex-1"
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading} className="flex-1">
-                {isLoading ? (
+              <Button
+                type="submit"
+                disabled={
+                  createPropertyMutation.isPending ||
+                  updatePropertyMutation.isPending
+                }
+                className="flex-1"
+              >
+                {createPropertyMutation.isPending ||
+                updatePropertyMutation.isPending ? (
                   <>
                     <Settings className="mr-2 h-4 w-4 animate-spin" />
                     Saving...

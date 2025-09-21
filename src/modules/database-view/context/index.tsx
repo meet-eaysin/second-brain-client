@@ -133,8 +133,7 @@ export function DatabaseViewProvider({
       moduleType || EDatabaseType.CUSTOM
     );
 
-  let currentDatabaseId =
-    databaseId || databaseIdResponse?.data.databaseId || "";
+  let currentDatabaseId = databaseId || databaseIdResponse?.data.databaseId || "";
   const moduleInitializedPayload = {
     workspaceId: currentWorkspace?._id || "",
     moduleTypes: [moduleType || EDatabaseType.CUSTOM],
