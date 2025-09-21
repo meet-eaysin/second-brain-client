@@ -34,7 +34,13 @@ import { EPropertyType } from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 import { toast } from "sonner";
-import {getBooleanValue, getDateValue, getMultiSelectValues, getNumberValue, getStringValue} from "@/utils/helpers.ts";
+import {
+  getBooleanValue,
+  getDateValue,
+  getMultiSelectValues,
+  getNumberValue,
+  getStringValue,
+} from "@/utils/helpers.ts";
 
 interface EditableCellProps {
   record: TRecord;
@@ -298,7 +304,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const renderDisplayValue = () => {
     if (value === null || value === undefined || value === "") {
-      return <span className="text-muted-foreground">—</span>;
+      return null;
     }
 
     switch (property.type) {
@@ -328,7 +334,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.MULTI_SELECT:
         if (!Array.isArray(value) || value.length === 0) {
-          return <span className="text-muted-foreground">—</span>;
+          return null;
         }
         return (
           <div className="flex flex-wrap gap-1">
@@ -359,8 +365,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.DATE: {
         const displayDateValue = getDateValue(value);
-        if (!displayDateValue)
-          return <span className="text-muted-foreground">—</span>;
+        if (!displayDateValue) return null;
         return format(displayDateValue, "MMM d, yyyy");
       }
 

@@ -187,7 +187,6 @@ export function DataTable({
     } else if (!database?.id || selectedRecords.length === 0) {
       return;
     } else {
-      // Fallback to internal implementation
       try {
         const recordIds = selectedRecords.map((record) => record.id);
         await bulkDeleteMutation.mutateAsync({
