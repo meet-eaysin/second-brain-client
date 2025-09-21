@@ -19,6 +19,10 @@ import {
   useGetModuleDatabaseId,
   useInitializeModules,
 } from "@/modules/workspaces/services/workspace-queries";
+import {
+  useDeleteRecord,
+  useDuplicateRecord,
+} from "../services/database-queries";
 import { useWorkspace } from "@/modules/workspaces/context/workspace-context";
 import {
   useDatabase,
@@ -46,7 +50,8 @@ export type DatabaseDialogType =
   | "import-data"
   | "export-data"
   | "configure-frozen"
-  | "bulk-edit";
+  | "bulk-edit"
+  | "bulk-delete";
 
 interface DatabaseViewContextValue {
   moduleType: EDatabaseType;
@@ -84,7 +89,6 @@ interface DatabaseViewContextValue {
   onFiltersChange: (filters: TFilterCondition[]) => void;
   onSortsChange: (sorts: TSortConfig[]) => void;
 
-  // CRUD operations
   onBulkEdit: () => void;
   onBulkDelete: () => void;
   onRecordEdit: (record: TRecord) => void;
@@ -110,13 +114,11 @@ export function DatabaseViewProvider({
   databaseId,
 }: DatabaseViewProviderProps) {
   const [dialogOpen, setDialogOpen] = useState<DatabaseDialogType | null>(null);
-
   const [currentRecord, setCurrentRecord] = useState<TRecord | null>(null);
   const [currentProperty, setCurrentProperty] = useState<TProperty | null>(
     null
   );
   const [currentViewId, setCurrentViewId] = useState<string>("");
-
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
     new Set()
   );
@@ -127,26 +129,49 @@ export function DatabaseViewProvider({
 
   const { currentWorkspace } = useWorkspace();
 
+  const deleteRecordMutation = useDeleteRecord();
+  const duplicateRecordMutation = useDuplicateRecord();
+
+  let currentDatabaseId = databaseId || "";
+
   const { data: databaseIdResponse, isLoading: isDatabaseIdLoading } =
     useGetModuleDatabaseId(
       currentWorkspace?._id || "",
-      moduleType || EDatabaseType.CUSTOM
+      moduleType || EDatabaseType.CUSTOM,
+      !currentDatabaseId
     );
 
-  let currentDatabaseId = databaseId || databaseIdResponse?.data.databaseId || "";
-  const moduleInitializedPayload = {
-    workspaceId: currentWorkspace?._id || "",
-    moduleTypes: [moduleType || EDatabaseType.CUSTOM],
-    createSampleData: false,
-    isInitialized: !!databaseId,
-  };
-  const { data: initialized } = useInitializeModules(moduleInitializedPayload);
-  const { data: currentDatabaseIdResponse } = useGetModuleDatabaseId(
+  if (!currentDatabaseId && databaseIdResponse?.data.databaseId) {
+    currentDatabaseId = databaseIdResponse.data.databaseId;
+  }
+
+  const needsInitialization = !currentDatabaseId && !isDatabaseIdLoading;
+
+  const initializePayload = needsInitialization
+    ? {
+        workspaceId: currentWorkspace?._id || "",
+        moduleTypes: [moduleType || EDatabaseType.CUSTOM],
+        createSampleData: false,
+        isInitialized: false,
+      }
+    : {
+        workspaceId: "",
+        moduleTypes: [],
+        createSampleData: false,
+        isInitialized: true,
+      };
+
+  const { data: initialized } = useInitializeModules(initializePayload);
+
+  const { data: postInitDatabaseIdResponse } = useGetModuleDatabaseId(
     currentWorkspace?._id || "",
     moduleType || EDatabaseType.CUSTOM,
     initialized?.success
   );
-  currentDatabaseId = currentDatabaseIdResponse?.data.databaseId || "";
+
+  if (!currentDatabaseId && postInitDatabaseIdResponse?.data.databaseId) {
+    currentDatabaseId = postInitDatabaseIdResponse.data.databaseId;
+  }
 
   const { data: database, isLoading: isDatabaseLoading } =
     useDatabase(currentDatabaseId);
@@ -220,14 +245,8 @@ export function DatabaseViewProvider({
     setFilters(newFilters);
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
-  // CRUD operation handlers
-  const onBulkEdit = () => {
-    onDialogOpen("bulk-edit");
-  };
-
-  const onBulkDelete = () => {
-    onDialogOpen("bulk-delete");
-  };
+  const onBulkEdit = () => onDialogOpen("bulk-edit");
+  const onBulkDelete = () => onDialogOpen("bulk-delete");
 
   const onRecordEdit = (record: TRecord) => {
     onRecordChange(record);
@@ -235,22 +254,25 @@ export function DatabaseViewProvider({
   };
 
   const onRecordDelete = (recordId: string) => {
-    // This will be handled by individual components
-    console.log("Delete record:", recordId);
+    if (currentDatabaseId) {
+      deleteRecordMutation.mutate({
+        databaseId: currentDatabaseId,
+        recordId,
+      });
+    }
   };
 
   const onRecordDuplicate = (recordId: string) => {
-    // This will be handled by individual components
-    console.log("Duplicate record:", recordId);
+    if (currentDatabaseId) {
+      duplicateRecordMutation.mutate({
+        databaseId: currentDatabaseId,
+        recordId,
+      });
+    }
   };
 
-  const onRecordCreate = () => {
-    onDialogOpen("create-record");
-  };
-
-  const onAddProperty = () => {
-    onDialogOpen("create-property");
-  };
+  const onRecordCreate = () => onDialogOpen("create-record");
+  const onAddProperty = () => onDialogOpen("create-property");
 
   const contextValue: DatabaseViewContextValue = {
     moduleType,
