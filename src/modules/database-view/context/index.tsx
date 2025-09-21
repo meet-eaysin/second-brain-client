@@ -11,6 +11,7 @@ import {
   type TView,
 } from "@/modules/database-view/types";
 import {
+  useCreateRecord,
   useDeleteRecord,
   useDuplicateRecord,
 } from "../services/database-queries";
@@ -122,25 +123,32 @@ export function DatabaseViewProvider({
 
   const { currentWorkspace } = useAuthStore();
 
+  const createRecordMutation = useCreateRecord();
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
 
-  const { data: databasesByType, isLoading: isDatabasesByTypeLoading } = useDatabaseByModuleType(moduleType);
+  const { data: databasesByType, isLoading: isDatabasesByTypeLoading } =
+    useDatabaseByModuleType(moduleType);
   const currentDatabaseId = databaseId || databasesByType?.data[0]?.id || "";
 
-  const { data: database, isLoading: isDatabaseLoading } = useDatabase(currentDatabaseId);
-  const { data: viewsResponse, isLoading: isViewsLoading } = useViews(currentDatabaseId);
+  const { data: database, isLoading: isDatabaseLoading } =
+    useDatabase(currentDatabaseId);
+  const { data: viewsResponse, isLoading: isViewsLoading } =
+    useViews(currentDatabaseId);
 
-  const defaultViewId = viewsResponse?.data?.find((view) => view?.isDefault)?.id || "";
+  const defaultViewId =
+    viewsResponse?.data?.find((view) => view?.isDefault)?.id || "";
   const effectiveViewId = currentViewId || defaultViewId || "";
 
-  const { data: currentViewResponse, isLoading: isCurrentViewLoading } = useView(currentDatabaseId, effectiveViewId);
+  const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
+    useView(currentDatabaseId, effectiveViewId);
 
   const propertiesQueryParams: TPropertyQueryParams = {
     viewId: effectiveViewId,
     includeHidden: false,
   };
-  const { data: properties, isLoading: isPropertiesLoading } = useProperties(currentDatabaseId, propertiesQueryParams);
+  const { data: propertiesResponse, isLoading: isPropertiesLoading } =
+    useProperties(currentDatabaseId, propertiesQueryParams);
 
   const recordQueryParams = {
     viewId: effectiveViewId,
@@ -151,29 +159,36 @@ export function DatabaseViewProvider({
     isTemplate: false,
   };
 
-  const { data: records, isLoading: isRecordsLoading } = useRecords(
+  const { data: recordsResponse, isLoading: isRecordsLoading } = useRecords(
     currentDatabaseId,
     recordQueryParams
   );
+  console.log("## RECORDS", recordsResponse);
 
   const visibleProperties =
-    properties?.data?.filter((property: TProperty) => {
+    propertiesResponse?.data?.filter((property: TProperty) => {
       if (
         currentViewResponse?.data?.settings?.visibleProperties &&
         currentViewResponse?.data.settings?.visibleProperties?.length > 0
       ) {
-        return currentViewResponse?.data?.settings?.visibleProperties?.includes(property?.id);
+        return currentViewResponse?.data?.settings?.visibleProperties?.includes(
+          property?.id
+        );
       }
       return property?.isVisible ?? false;
     }) || [];
 
-  const onDialogOpen = (dialog: DatabaseDialogType | null) => setDialogOpen(dialog);
+  const onDialogOpen = (dialog: DatabaseDialogType | null) =>
+    setDialogOpen(dialog);
   const onViewChange = (viewId: string) => setCurrentViewId(viewId);
   const onRecordChange = (record: TRecord | null) => setCurrentRecord(record);
-  const onPropertyChange = (property: TProperty | null) => setCurrentProperty(property);
-  const onSelectedRecordsChange = (records: Set<string>) => setSelectedRecords(records);
+  const onPropertyChange = (property: TProperty | null) =>
+    setCurrentProperty(property);
+  const onSelectedRecordsChange = (records: Set<string>) =>
+    setSelectedRecords(records);
   const onSearchQueryChange = (query: string) => setSearchQuery(query);
-  const onFiltersChange = (newFilters: TFilterCondition[]) => setFilters(newFilters);
+  const onFiltersChange = (newFilters: TFilterCondition[]) =>
+    setFilters(newFilters);
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
   const onBulkEdit = () => onDialogOpen("bulk-edit");
@@ -220,7 +235,23 @@ export function DatabaseViewProvider({
     }
   };
 
-  const onRecordCreate = () => onDialogOpen("create-record");
+  const onRecordCreate = () => {
+    if (currentDatabaseId && !isDatabasesByTypeLoading) {
+      createRecordMutation.mutate(
+        {
+          databaseId: currentDatabaseId,
+          data: { properties: {} },
+        },
+        {
+          onError: () => {
+            toast.error("Failed to create record. Please try again.");
+          },
+        }
+      );
+    } else {
+      toast.error("Database not available. Please wait for it to load.");
+    }
+  };
   const onAddProperty = () => onDialogOpen("create-property");
 
   const contextValue: DatabaseViewContextValue = {
@@ -230,8 +261,8 @@ export function DatabaseViewProvider({
     database: database?.data || null,
     views: viewsResponse?.data || [],
     currentView: currentViewResponse?.data || null,
-    properties: properties?.data || [],
-    records: records?.data || undefined,
+    properties: propertiesResponse?.data || [],
+    records: recordsResponse?.data || undefined,
     currentRecord,
     currentProperty,
 

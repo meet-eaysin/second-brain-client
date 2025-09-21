@@ -9,10 +9,11 @@ export interface PaginationMeta {
 
 export interface ApiResponse<T> {
   success: boolean;
-  data: T;
-  message?: string;
+  message: string;
+  data?: T;
   meta?: PaginationMeta;
   timestamp: string;
+  requestId?: string;
   error?: {
     code: string;
     message: string;

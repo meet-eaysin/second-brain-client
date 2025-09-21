@@ -286,14 +286,14 @@ export type TUpdateRecord = {
 };
 
 export enum EViewType {
-  TABLE = "table",
-  BOARD = "board",
-  LIST = "list",
-  CALENDAR = "calendar",
-  GALLERY = "gallery",
-  TIMELINE = "timeline",
-  GANTT = "gantt",
-  CHART='chart'
+  TABLE = "TABLE",
+  BOARD = "BOARD",
+  LIST = "LIST",
+  CALENDAR = "CALENDAR",
+  GALLERY = "GALLERY",
+  TIMELINE = "TIMELINE",
+  GANTT = "GANTT",
+  CHART='CHART'
 }
 
 export enum EFilterOperator {

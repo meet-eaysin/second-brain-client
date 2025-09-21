@@ -53,7 +53,8 @@ import {
   type TUpdateRelation,
   type TRelationConnection,
   type TCreateRelationConnection,
-  type TContentBlock, EDatabaseType,
+  type TContentBlock,
+  EDatabaseType,
 } from "@/modules/database-view/types";
 
 export const DATABASE_KEYS = {
@@ -109,9 +110,7 @@ export const useDatabases = (params?: TDatabaseQueryParams) => {
 };
 
 export const useDatabaseByModuleType = (moduleType: EDatabaseType) => {
-  return useQuery<ApiResponse<TDatabase[]>,
-    AxiosError
-  >({
+  return useQuery<ApiResponse<TDatabase[]>, AxiosError>({
     queryKey: DATABASE_KEYS.list({ type: moduleType }),
     queryFn: () => databaseApi.getDatabases({ type: moduleType }),
   });
@@ -218,9 +217,12 @@ export const useProperties = (
   databaseId: string,
   params?: TPropertyQueryParams
 ) => {
-  return useQuery({
+  return useQuery<ApiResponse<TProperty[]>, AxiosError>({
     queryKey: [...DATABASE_KEYS.properties(databaseId), params?.viewId],
-    queryFn: () => databaseApi.getProperties(databaseId, params),
+    queryFn: async () => {
+      const response = await databaseApi.getProperties(databaseId, params);
+      return response;
+    },
     enabled: !!databaseId,
   });
 };
@@ -398,9 +400,9 @@ export const useReorderProperties = () => {
 };
 
 export const useRecords = (databaseId: string, params?: TRecordQueryParams) => {
-  return useQuery<ApiResponse<TRecord[]>, AxiosError>({
+  return useQuery({
     queryKey: [...DATABASE_KEYS.records(databaseId), params],
-    queryFn: () => databaseApi.getRecords(databaseId, params),
+    queryFn: async () =>  databaseApi.getRecords(databaseId, params),
     enabled: !!databaseId && !!params?.viewId,
   });
 };

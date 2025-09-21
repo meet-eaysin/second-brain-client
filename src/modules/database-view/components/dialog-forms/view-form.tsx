@@ -41,6 +41,7 @@ import {
 import { EViewType } from "../../types";
 import { useDatabaseView } from "../../context";
 import { useCreateView, useUpdateView } from "../../services/database-queries";
+import { useQueryClient } from "@tanstack/react-query";
 
 // View form validation schema
 const viewFormSchema = z.object({
@@ -140,6 +141,7 @@ export function ViewForm() {
 
   const createViewMutation = useCreateView();
   const updateViewMutation = useUpdateView();
+  const queryClient = useQueryClient();
 
   const isOpen = dialogOpen === "create-view" || dialogOpen === "edit-view";
   const mode = dialogOpen === "create-view" ? "create" : "edit";
@@ -192,10 +194,15 @@ export function ViewForm() {
         isPublic: data.isPublic,
         settings: {
           visibleProperties: data.visibleProperties,
+          hiddenProperties: [],
           filters: [],
           sorts: [],
+          groups: [],
           frozenColumns: [],
+          propertyWidths: {},
+          wrapCells: false,
           pageSize: 25,
+          cardSize: "medium",
         },
       };
 
@@ -206,10 +213,22 @@ export function ViewForm() {
         });
         onViewChange(result.data.id);
       } else if (mode === "edit" && view) {
+        const updateData = {
+          ...viewData,
+          settings: {
+            ...viewData.settings,
+            ...view.settings,
+            visibleProperties: data.visibleProperties,
+          },
+        };
         await updateViewMutation.mutateAsync({
           databaseId,
           viewId: view.id,
-          data: viewData,
+          data: updateData,
+        });
+        // Invalidate properties query to refetch with updated view settings
+        queryClient.invalidateQueries({
+          queryKey: ["properties", databaseId, view.id],
         });
       }
 
@@ -383,7 +402,8 @@ export function ViewForm() {
                     <FormItem>
                       <div className="flex items-center justify-between">
                         <FormLabel className="text-sm font-medium">
-                          Visible Properties ({field.value.length}/{properties.length})
+                          Visible Properties ({field.value.length}/
+                          {properties.length})
                         </FormLabel>
                         <div className="flex gap-1">
                           <Button
@@ -427,16 +447,16 @@ export function ViewForm() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {properties.map((property) => (
                                 <div
-                                  key={property._id}
+                                  key={property.id}
                                   className="flex items-center space-x-2 p-2 rounded hover:bg-background/80 transition-colors"
                                 >
                                   <Checkbox
-                                    id={`property-${property._id}`}
-                                    checked={field.value.includes(property._id)}
+                                    id={`property-${property.id}`}
+                                    checked={field.value.includes(property.id)}
                                     onCheckedChange={(checked) =>
                                       field.onChange(
                                         handlePropertyToggle(
-                                          property._id,
+                                          property.id,
                                           checked as boolean,
                                           field.value
                                         )

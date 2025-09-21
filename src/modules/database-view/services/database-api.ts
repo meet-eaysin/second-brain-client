@@ -34,9 +34,11 @@ import {
   type TCreateDatabaseSort,
   type TDatabaseFilterPresetQueryParams,
   type TCreateDatabaseFilterPreset,
-  type TUpdateDatabaseFilterPreset, type TProperty,
+  type TUpdateDatabaseFilterPreset,
+  type TProperty,
+  type TRecord,
 } from "@/modules/database-view/types";
-import type {ApiResponse} from "@/types/api.types.ts";
+import type { ApiResponse } from "@/types/api.types.ts";
 
 export const databaseApi = {
   // DATABASE
@@ -85,7 +87,10 @@ export const databaseApi = {
   },
 
   // PROPERTY
-  getProperties: async (databaseId: string, params?: TPropertyQueryParams): Promise<ApiResponse<TProperty[]>> => {
+  getProperties: async (
+    databaseId: string,
+    params?: TPropertyQueryParams
+  ): Promise<ApiResponse<TProperty[]>> => {
     const response = await apiClient.get(
       API_ENDPOINTS.PROPERTY.GET_ALL(databaseId),
       { params }
@@ -179,8 +184,14 @@ export const databaseApi = {
   },
 
   // RECORD
-  getRecords: async (databaseId: string, params?: TRecordQueryParams) => {
-    const response = await apiClient.get(API_ENDPOINTS.RECORD.GET_ALL(databaseId), { params });
+  getRecords: async (
+    databaseId: string,
+    params?: TRecordQueryParams
+  ): Promise<ApiResponse<TRecord[]>> => {
+    const response = await apiClient.get(
+      API_ENDPOINTS.RECORD.GET_ALL(databaseId),
+      { params }
+    );
     return response.data;
   },
 
