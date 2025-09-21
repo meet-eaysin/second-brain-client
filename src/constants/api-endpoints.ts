@@ -83,6 +83,11 @@ export const API_ENDPOINTS = {
       `/workspaces/${workspaceId}/members/${userId}/role`,
     TRANSFER_OWNERSHIP: (id: string) => `/workspaces/${id}/transfer-ownership`,
     BULK_MEMBER_OPERATION: (id: string) => `/workspaces/${id}/members/bulk`,
+    // Added missing endpoints from workspace service
+    PRIMARY: "/workspaces/primary",
+    DEFAULT: "/workspaces/default",
+    STATS_BY_ID: (id: string) => `/workspaces/${id}/stats`,
+    ACCESS: (id: string) => `/workspaces/${id}/access`,
   },
   SYSTEM: {
     HEALTH: "/health",

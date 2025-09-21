@@ -1,4 +1,5 @@
 import { apiClient } from "@/services/api-client.ts";
+import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
 import type { ApiResponse } from "@/types/api.types";
 import type {
   Workspace,
@@ -8,23 +9,25 @@ import type {
   GetWorkspacesQuery,
   WorkspaceStatsResponse,
 } from "@/types/workspace.types";
-import {EDatabaseType} from "@/modules/database-view";
-import type {IWorkspaceInitResponse, TModuleInitializeRequest} from "@/modules/workspaces/types/workspaces.types.ts";
+import { EDatabaseType } from "@/modules/database-view";
+import type {
+  IWorkspaceInitResponse,
+  TModuleInitializeRequest,
+} from "@/modules/workspaces/types/workspaces.types.ts";
 
 export const workspaceApi = {
   getWorkspaces: async (
     params?: GetWorkspacesQuery
   ): Promise<ApiResponse<Workspace[]>> => {
-    const response = await apiClient.get(
-      "/workspaces",
-      { params }
-    );
+    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.LIST, {
+      params,
+    });
     return response.data;
   },
 
   createWorkspace: async (data: CreateWorkspaceRequest): Promise<Workspace> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
-      "/workspaces",
+      API_ENDPOINTS.WORKSPACES.CREATE,
       data
     );
     return response.data.data;
@@ -32,7 +35,7 @@ export const workspaceApi = {
 
   getWorkspaceById: async (id: string): Promise<WorkspaceWithUserInfo> => {
     const response = await apiClient.get<ApiResponse<WorkspaceWithUserInfo>>(
-      `/workspaces/${id}`
+      API_ENDPOINTS.WORKSPACES.BY_ID(id)
     );
     return response.data.data;
   },
@@ -42,21 +45,18 @@ export const workspaceApi = {
     data: UpdateWorkspaceRequest
   ): Promise<Workspace> => {
     const response = await apiClient.put<ApiResponse<Workspace>>(
-      `/workspaces/${id}`,
+      API_ENDPOINTS.WORKSPACES.UPDATE(id),
       data
     );
     return response.data.data;
   },
 
   deleteWorkspace: async (id: string): Promise<void> => {
-    await apiClient.delete(`/workspaces/${id}`);
+    await apiClient.delete(API_ENDPOINTS.WORKSPACES.DELETE(id));
   },
 
   getPrimaryWorkspace: async (): Promise<ApiResponse<Workspace>> => {
-    const response = await apiClient.get(
-      "/workspaces/primary"
-    );
-
+    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.PRIMARY);
     return response?.data;
   },
 
@@ -64,7 +64,7 @@ export const workspaceApi = {
     userInfo?: Record<string, unknown>
   ): Promise<Workspace> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
-      "/workspaces/default",
+      API_ENDPOINTS.WORKSPACES.DEFAULT,
       userInfo
     );
     return response.data.data;
@@ -73,7 +73,7 @@ export const workspaceApi = {
   // Workspace stats and access
   getWorkspaceStats: async (id: string): Promise<WorkspaceStatsResponse> => {
     const response = await apiClient.get<ApiResponse<WorkspaceStatsResponse>>(
-      `/workspaces/${id}/stats`
+      API_ENDPOINTS.WORKSPACES.STATS_BY_ID(id)
     );
     return response.data.data;
   },
@@ -91,7 +91,7 @@ export const workspaceApi = {
         canManage: boolean;
         canManageMembers: boolean;
       }>
-    >(`/workspaces/${id}/access`);
+    >(API_ENDPOINTS.WORKSPACES.ACCESS(id));
     return response.data.data;
   },
 
@@ -100,17 +100,26 @@ export const workspaceApi = {
     moduleType: EDatabaseType
   ): Promise<ApiResponse<{ databaseId: string }>> => {
     const response = await apiClient.get(
-      `/modules/workspace/${workspaceId}/${moduleType}/database-id`
+      API_ENDPOINTS.MODULES.WORKSPACE_DATABASE_ID(workspaceId, moduleType)
     );
     return response.data;
   },
 
-  initializeWorkspaceModules: async ({ workspaceId, moduleTypes, createSampleData }: TModuleInitializeRequest): Promise<ApiResponse<IWorkspaceInitResponse>> => {
-    const response = await apiClient.post(`/modules/workspace/${workspaceId}/initialize`, {
-      moduleTypes,
-      createSampleData,
-    });
+  initializeWorkspaceModules: async ({
+    workspaceId,
+    moduleTypes,
+    createSampleData,
+  }: TModuleInitializeRequest): Promise<
+    ApiResponse<IWorkspaceInitResponse>
+  > => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.MODULES.INITIALIZE(workspaceId),
+      {
+        modules: moduleTypes,
+        createSampleData,
+      }
+    );
 
-    return response.data
+    return response.data;
   },
 };
