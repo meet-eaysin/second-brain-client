@@ -13,23 +13,23 @@ import {
   Tags,
 } from "lucide-react";
 import { PropertyHeaderMenu } from "./property-header-menu";
-import type { DocumentProperty } from "@/modules/database-view";
+import type {TProperty} from "@/modules/database-view/types";
 
 interface DocumentTableHeaderProps {
-  property: DocumentProperty;
+  property: TProperty;
   sortDirection?: "asc" | "desc" | null;
 }
 
 const PROPERTY_TYPE_ICONS = {
-  TEXT: Type,
-  NUMBER: Hash,
-  EMAIL: Mail,
-  URL: Link,
-  PHONE: Phone,
-  CHECKBOX: CheckSquare,
-  DATE: Calendar,
-  SELECT: List,
-  MULTI_SELECT: Tags,
+  text: Type,
+  number: Hash,
+  email: Mail,
+  url: Link,
+  phone: Phone,
+  checkbox: CheckSquare,
+  date: Calendar,
+  select: List,
+  multi_select: Tags,
 } as const;
 
 export function TableHeader({
@@ -58,7 +58,7 @@ export function TableHeader({
           {/*    isFrozen ? "text-amber-700" : ""*/}
           {/*  }`}*/}
           {/*>*/}
-          {/*  {property.name}*/}
+            {property.name}
           {/*</span>*/}
           {property.required && <span className="text-red-500 text-xs">*</span>}
           {/*{isFrozen && (*/}

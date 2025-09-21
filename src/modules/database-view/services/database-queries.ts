@@ -109,26 +109,11 @@ export const useDatabases = (params?: TDatabaseQueryParams) => {
 };
 
 export const useDatabaseByModuleType = (moduleType: EDatabaseType) => {
-  return useQuery<
-    {
-      databases: TDatabase[];
-      total: number;
-      page: number;
-      limit: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    },
+  return useQuery<ApiResponse<TDatabase[]>,
     AxiosError
   >({
     queryKey: DATABASE_KEYS.list({ type: moduleType }),
     queryFn: () => databaseApi.getDatabases({ type: moduleType }),
-    select: (data) => {
-      // Return only the first database of this type (should be the primary one)
-      return {
-        ...data,
-        databases: data.databases.slice(0, 1),
-      };
-    },
   });
 };
 
@@ -233,7 +218,7 @@ export const useProperties = (
   databaseId: string,
   params?: TPropertyQueryParams
 ) => {
-  return useQuery<TProperty[], AxiosError>({
+  return useQuery({
     queryKey: [...DATABASE_KEYS.properties(databaseId), params?.viewId],
     queryFn: () => databaseApi.getProperties(databaseId, params),
     enabled: !!databaseId,
@@ -588,18 +573,6 @@ export const useViews = (databaseId: string) => {
     queryKey: DATABASE_KEYS.views(databaseId),
     queryFn: () => databaseApi.getViews(databaseId),
     enabled: !!databaseId,
-    select: (data) => {
-      if (data?.data && data.data.length > 0) {
-        // Find default view or use first view
-        const defaultView =
-          data.data.find((view) => view.isDefault) || data.data[0];
-        return {
-          ...data,
-          defaultViewId: defaultView.id,
-        };
-      }
-      return { ...data, defaultViewId: null };
-    },
   });
 };
 

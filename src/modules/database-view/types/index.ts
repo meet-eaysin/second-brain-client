@@ -293,6 +293,7 @@ export enum EViewType {
   GALLERY = "gallery",
   TIMELINE = "timeline",
   GANTT = "gantt",
+  CHART='chart'
 }
 
 export enum EFilterOperator {

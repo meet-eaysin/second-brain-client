@@ -125,29 +125,22 @@ export function DatabaseViewProvider({
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
 
-  const { data: databasesByType, isLoading: isDatabasesByTypeLoading } =
-    useDatabaseByModuleType(moduleType);
-  const currentDatabaseId =
-    databaseId || databasesByType?.databases[0]?.id || "";
+  const { data: databasesByType, isLoading: isDatabasesByTypeLoading } = useDatabaseByModuleType(moduleType);
+  const currentDatabaseId = databaseId || databasesByType?.data[0]?.id || "";
 
-  console.log("## CURRENT currentDatabaseId: ", currentDatabaseId);
-  const { data: database, isLoading: isDatabaseLoading } =
-    useDatabase(currentDatabaseId);
-  const { data: viewsResponse, isLoading: isViewsLoading } =
-    useViews(currentDatabaseId);
+  const { data: database, isLoading: isDatabaseLoading } = useDatabase(currentDatabaseId);
+  const { data: viewsResponse, isLoading: isViewsLoading } = useViews(currentDatabaseId);
 
-  // Use default view ID from views response if no view is selected
-  const effectiveViewId = currentViewId || viewsResponse?.defaultViewId || "";
+  const defaultViewId = viewsResponse?.data?.find((view) => view?.isDefault)?.id || "";
+  const effectiveViewId = currentViewId || defaultViewId || "";
 
-  const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
-    useView(currentDatabaseId, effectiveViewId);
+  const { data: currentViewResponse, isLoading: isCurrentViewLoading } = useView(currentDatabaseId, effectiveViewId);
 
   const propertiesQueryParams: TPropertyQueryParams = {
     viewId: effectiveViewId,
     includeHidden: false,
   };
-  const { data: properties = [], isLoading: isPropertiesLoading } =
-    useProperties(currentDatabaseId, propertiesQueryParams);
+  const { data: properties, isLoading: isPropertiesLoading } = useProperties(currentDatabaseId, propertiesQueryParams);
 
   const recordQueryParams = {
     viewId: effectiveViewId,
@@ -158,36 +151,29 @@ export function DatabaseViewProvider({
     isTemplate: false,
   };
 
-  // Only fetch records when we have a database and a view is selected
   const { data: records, isLoading: isRecordsLoading } = useRecords(
     currentDatabaseId,
     recordQueryParams
   );
 
   const visibleProperties =
-    properties?.filter((property: TProperty) => {
+    properties?.data?.filter((property: TProperty) => {
       if (
         currentViewResponse?.data?.settings?.visibleProperties &&
-        currentViewResponse.data.settings.visibleProperties.length > 0
+        currentViewResponse?.data.settings?.visibleProperties?.length > 0
       ) {
-        return currentViewResponse.data.settings.visibleProperties.includes(
-          property.id
-        );
+        return currentViewResponse?.data?.settings?.visibleProperties?.includes(property?.id);
       }
       return property?.isVisible ?? false;
     }) || [];
 
-  const onDialogOpen = (dialog: DatabaseDialogType | null) =>
-    setDialogOpen(dialog);
+  const onDialogOpen = (dialog: DatabaseDialogType | null) => setDialogOpen(dialog);
   const onViewChange = (viewId: string) => setCurrentViewId(viewId);
   const onRecordChange = (record: TRecord | null) => setCurrentRecord(record);
-  const onPropertyChange = (property: TProperty | null) =>
-    setCurrentProperty(property);
-  const onSelectedRecordsChange = (records: Set<string>) =>
-    setSelectedRecords(records);
+  const onPropertyChange = (property: TProperty | null) => setCurrentProperty(property);
+  const onSelectedRecordsChange = (records: Set<string>) => setSelectedRecords(records);
   const onSearchQueryChange = (query: string) => setSearchQuery(query);
-  const onFiltersChange = (newFilters: TFilterCondition[]) =>
-    setFilters(newFilters);
+  const onFiltersChange = (newFilters: TFilterCondition[]) => setFilters(newFilters);
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
   const onBulkEdit = () => onDialogOpen("bulk-edit");
@@ -225,11 +211,7 @@ export function DatabaseViewProvider({
         },
         {
           onError: () => {
-            if (!navigator.onLine) {
-              toast.error("You're offline. Cannot duplicate record.");
-            } else {
-              toast.error("Failed to duplicate record. Please try again.");
-            }
+            toast.error("Failed to duplicate record. Please try again.");
           },
         }
       );
@@ -248,7 +230,7 @@ export function DatabaseViewProvider({
     database: database?.data || null,
     views: viewsResponse?.data || [],
     currentView: currentViewResponse?.data || null,
-    properties: properties || [],
+    properties: properties?.data || [],
     records: records?.data || undefined,
     currentRecord,
     currentProperty,

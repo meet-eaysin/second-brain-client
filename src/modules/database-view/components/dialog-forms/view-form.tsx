@@ -3,13 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet.tsx";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog.tsx";
 import {
   Form,
   FormControl,
@@ -36,6 +36,7 @@ import {
   Plus,
   Settings,
   Save,
+  ChartArea,
 } from "lucide-react";
 import { EViewType } from "../../types";
 import { useDatabaseView } from "../../context";
@@ -72,50 +73,57 @@ const viewTypes: {
   {
     value: EViewType.TABLE,
     label: "Table",
-    icon: <TableIcon className="h-5 w-5" />,
-    description: "Display records in rows and columns",
+    icon: <TableIcon className="h-4 w-4" />,
+    description: "Grid view",
     isAvailable: true,
   },
   {
     value: EViewType.BOARD,
     label: "Board",
-    icon: <Columns className="h-5 w-5" />,
-    description: "Group records by a select property",
+    icon: <Columns className="h-4 w-4" />,
+    description: "Grouped cards",
     isAvailable: true,
   },
   {
     value: EViewType.GALLERY,
     label: "Gallery",
-    icon: <Grid className="h-5 w-5" />,
-    description: "Display records as cards in a grid",
+    icon: <Grid className="h-4 w-4" />,
+    description: "Card grid",
     isAvailable: true,
   },
   {
     value: EViewType.LIST,
     label: "List",
-    icon: <List className="h-5 w-5" />,
-    description: "Show records in a simple list format",
+    icon: <List className="h-4 w-4" />,
+    description: "Simple list",
     isAvailable: true,
   },
   {
     value: EViewType.CALENDAR,
     label: "Calendar",
-    icon: <Calendar className="h-5 w-5" />,
-    description: "Display records on a calendar (coming soon)",
-    isAvailable: false,
+    icon: <Calendar className="h-4 w-4" />,
+    description: "Date view",
+    isAvailable: true,
   },
   {
     value: EViewType.TIMELINE,
     label: "Timeline",
-    icon: <Clock className="h-5 w-5" />,
-    description: "Show records on a timeline (coming soon)",
-    isAvailable: false,
+    icon: <Clock className="h-4 w-4" />,
+    description: "Time view",
+    isAvailable: true,
   },
   {
     value: EViewType.GANTT,
     label: "Gantt",
-    icon: <Clock className="h-5 w-5" />,
-    description: "Project timeline with dependencies (coming soon)",
+    icon: <Clock className="h-4 w-4" />,
+    description: "Tasks flow",
+    isAvailable: true,
+  },
+  {
+    value: EViewType.CHART,
+    label: "Chart",
+    icon: <ChartArea className="h-4 w-4" />,
+    description: "Chart View",
     isAvailable: false,
   },
 ];
@@ -233,295 +241,313 @@ export function ViewForm() {
     form.setValue("type", newViewType);
   };
 
-  const handlePropertyToggle = (propertyId: string, checked: boolean) => {
-    const currentVisible = form.getValues("visibleProperties");
+  const handlePropertyToggle = (
+    propertyId: string,
+    checked: boolean,
+    currentVisible: string[]
+  ) => {
     const newVisible = checked
       ? [...currentVisible, propertyId]
       : currentVisible.filter((id) => id !== propertyId);
-    form.setValue("visibleProperties", newVisible);
+    return newVisible;
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
-      <SheetContent className="overflow-y-auto w-[500px] sm:w-[700px] lg:w-[800px] px-6">
-        <SheetHeader className="space-y-4 pb-3 px-2">
-          <div>
-            <SheetTitle className="text-xl">
-              {mode === "edit" ? "Edit View" : "Create View"}
-            </SheetTitle>
-            <SheetDescription className="text-muted-foreground">
-              {mode === "edit"
-                ? "Modify the view settings to change how your data is displayed."
-                : "Create a new view to organize and display your data in different ways."}
-            </SheetDescription>
-          </div>
-        </SheetHeader>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+        {/* Fixed Header */}
+        <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b">
+          <DialogTitle className="text-xl">
+            {mode === "edit" ? "Edit View" : "Create View"}
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            {mode === "edit"
+              ? "Modify view settings to change how data is displayed."
+              : "Create a new view to organize and display data."}
+          </DialogDescription>
+        </DialogHeader>
 
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6 pb-6 px-1"
-          >
-            {/* View Name */}
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>View Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter view name..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        {/* Scrollable Form Content */}
+        <div className="flex-1 overflow-y-auto px-6">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="py-4 space-y-5"
+            >
+              {/* Basic Info Section */}
+              <div className="space-y-4">
+                {/* View Name & Description in 2 columns on larger screens */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>View Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter view name..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-            {/* View Type */}
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>View Type</FormLabel>
-                  <FormControl>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {viewTypes.map((viewType) => {
-                        const Icon = viewType.icon;
-                        const isSelected = field.value === viewType.value;
-                        return (
-                          <Card
-                            key={viewType.value}
-                            className={`cursor-pointer transition-colors p-0 ${
-                              isSelected
-                                ? "border-primary bg-primary/5"
-                                : "hover:border-muted-foreground/50"
-                            } ${!viewType.isAvailable ? "opacity-50" : ""}`}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Describe this view..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* View Type - Compact Grid */}
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>View Type</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {viewTypes.map((viewType) => {
+                            const isSelected = field.value === viewType.value;
+                            return (
+                              <Card
+                                key={viewType.value}
+                                className={`cursor-pointer transition-all duration-200 p-0 hover:scale-105 ${
+                                  isSelected
+                                    ? "border-primary bg-primary/10 shadow-sm"
+                                    : "hover:border-muted-foreground/50"
+                                } ${
+                                  !viewType.isAvailable
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : ""
+                                }`}
+                                onClick={() =>
+                                  viewType.isAvailable &&
+                                  handleViewTypeChange(viewType.value)
+                                }
+                              >
+                                <CardContent className="p-3 text-center">
+                                  <div
+                                    className={`inline-flex p-2 rounded-md mb-2 ${
+                                      isSelected
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted"
+                                    }`}
+                                  >
+                                    {viewType.icon}
+                                  </div>
+                                  <div className="space-y-1">
+                                    <div className="font-medium text-sm flex items-center justify-center gap-1">
+                                      {viewType.label}
+                                      {!viewType.isAvailable && (
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs px-1 py-0"
+                                        >
+                                          Soon
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {viewType.description}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Visible Properties - Compact */}
+                <FormField
+                  control={form.control}
+                  name="visibleProperties"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-sm font-medium">
+                          Visible Properties ({field.value.length}/{properties.length})
+                        </FormLabel>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
                             onClick={() =>
-                              viewType.isAvailable &&
-                              handleViewTypeChange(viewType.value)
+                              field.onChange(properties.map((p) => p.id))
                             }
+                            disabled={properties.length === 0}
                           >
-                            <CardContent className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`p-2 rounded-md ${
-                                    isSelected
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted"
-                                  }`}
-                                >
-                                  {Icon}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="font-medium flex items-center gap-2">
-                                    {viewType.label}
-                                    {!viewType.isAvailable && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-xs"
-                                      >
-                                        Soon
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {viewType.description}
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description (Optional)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Describe what this view is for..."
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Visible Properties */}
-            <FormField
-              control={form.control}
-              name="visibleProperties"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Visible Properties</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          field.onChange(properties.map((p) => p.id))
-                        }
-                        disabled={properties.length === 0}
-                      >
-                        <Eye className="h-3 w-3 mr-1" />
-                        All
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => field.onChange([])}
-                      >
-                        <EyeOff className="h-3 w-3 mr-1" />
-                        None
-                      </Button>
-                    </div>
-                  </div>
-                  <FormControl>
-                    {properties.length === 0 ? (
-                      <div className="border rounded-md p-6 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="p-3 rounded-full bg-muted">
-                            <Plus className="h-6 w-6 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-muted-foreground">
-                              No Properties Available
-                            </h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Create some properties first to configure this
-                              view.
-                            </p>
-                          </div>
+                            <Eye className="h-3 w-3 mr-1" />
+                            All
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => field.onChange([])}
+                          >
+                            <EyeOff className="h-3 w-3 mr-1" />
+                            None
+                          </Button>
                         </div>
                       </div>
-                    ) : (
-                      <>
-                        <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3 bg-muted/20">
-                          {properties.map((property) => (
-                            <div
-                              key={property.id}
-                              className="flex items-center space-x-2 p-2 rounded hover:bg-background/80 transition-colors"
-                            >
-                              <Checkbox
-                                id={`property-${property.id}`}
-                                checked={field.value.includes(property.id)}
-                                onCheckedChange={(checked) =>
-                                  handlePropertyToggle(
-                                    property.id,
-                                    checked as boolean
-                                  )
-                                }
-                              />
-                              <label
-                                htmlFor={`property-${property.id}`}
-                                className="flex items-center gap-2 cursor-pointer flex-1"
-                              >
-                                <span className="font-medium">
-                                  {property.name}
-                                </span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {property.type.replace("_", " ")}
-                                </Badge>
-                              </label>
+
+                      <FormControl>
+                        {properties.length === 0 ? (
+                          <div className="border rounded-lg p-4 text-center">
+                            <div className="inline-flex p-2 rounded-full bg-muted mb-2">
+                              <Plus className="h-4 w-4 text-muted-foreground" />
                             </div>
-                          ))}
-                        </div>
+                            <p className="text-sm text-muted-foreground">
+                              No properties available. Create properties first.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="border rounded-lg p-3 bg-muted/20 max-h-40 overflow-y-auto">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {properties.map((property) => (
+                                <div
+                                  key={property._id}
+                                  className="flex items-center space-x-2 p-2 rounded hover:bg-background/80 transition-colors"
+                                >
+                                  <Checkbox
+                                    id={`property-${property._id}`}
+                                    checked={field.value.includes(property._id)}
+                                    onCheckedChange={(checked) =>
+                                      field.onChange(
+                                        handlePropertyToggle(
+                                          property._id,
+                                          checked as boolean,
+                                          field.value
+                                        )
+                                      )
+                                    }
+                                  />
+                                  <label
+                                    htmlFor={`property-${property.id}`}
+                                    className="flex items-center gap-1 cursor-pointer flex-1 min-w-0"
+                                  >
+                                    <span className="font-medium text-sm truncate">
+                                      {property.name}
+                                    </span>
+                                    <Badge
+                                      variant="secondary"
+                                      className="text-xs px-1 py-0 flex-shrink-0"
+                                    >
+                                      {property.type.replace("_", " ")}
+                                    </Badge>
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
 
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">
-                            Selected: {field.value.length} of{" "}
-                            {properties.length} properties
-                          </span>
-                          {field.value.length === 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                              At least one property required
-                            </Badge>
-                          )}
+                            {field.value.length === 0 && (
+                              <div className="mt-2 pt-2 border-t">
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs"
+                                >
+                                  At least one property required
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Options - Compact */}
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name="isDefault"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 p-3 border rounded-lg">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm font-medium">
+                            Set as default view
+                          </FormLabel>
+                          <FormDescription className="text-xs">
+                            This view will be shown by default when opening the
+                            database
+                          </FormDescription>
                         </div>
-                      </>
+                      </FormItem>
                     )}
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  />
+                </div>
+              </div>
+            </form>
+          </Form>
+        </div>
 
-            {/* Default View Checkbox */}
-            <FormField
-              control={form.control}
-              name="isDefault"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Set as default view</FormLabel>
-                    <FormDescription>
-                      This view will be shown by default when opening the
-                      database
-                    </FormDescription>
-                  </div>
-                </FormItem>
+        {/* Fixed Footer */}
+        <DialogFooter className="flex-shrink-0 px-6 py-4 border-t bg-muted/20">
+          <div className="flex gap-2 w-full">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onDialogOpen(null)}
+              disabled={
+                createViewMutation.isPending || updateViewMutation.isPending
+              }
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={form.handleSubmit(handleSubmit)}
+              disabled={
+                createViewMutation.isPending ||
+                updateViewMutation.isPending ||
+                properties.length === 0
+              }
+              className="flex-1"
+            >
+              {createViewMutation.isPending || updateViewMutation.isPending ? (
+                <>
+                  <Settings className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  {mode === "create" ? "Create View" : "Update View"}
+                </>
               )}
-            />
-
-            <SheetFooter className="flex gap-3 pt-6 border-t px-1">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onDialogOpen(null)}
-                disabled={
-                  createViewMutation.isPending || updateViewMutation.isPending
-                }
-                className="flex-1"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={
-                  createViewMutation.isPending ||
-                  updateViewMutation.isPending ||
-                  properties.length === 0
-                }
-                className="flex-1"
-              >
-                {createViewMutation.isPending ||
-                updateViewMutation.isPending ? (
-                  <>
-                    <Settings className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    {mode === "create" ? "Create View" : "Update View"}
-                  </>
-                )}
-              </Button>
-            </SheetFooter>
-          </form>
-        </Form>
-      </SheetContent>
-    </Sheet>
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
