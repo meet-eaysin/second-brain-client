@@ -402,7 +402,7 @@ export const useReorderProperties = () => {
 export const useRecords = (databaseId: string, params?: TRecordQueryParams) => {
   return useQuery({
     queryKey: [...DATABASE_KEYS.records(databaseId), params],
-    queryFn: async () =>  databaseApi.getRecords(databaseId, params),
+    queryFn: async () => databaseApi.getRecords(databaseId, params),
     enabled: !!databaseId && !!params?.viewId,
   });
 };

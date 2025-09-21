@@ -258,6 +258,7 @@ export const generateDocumentColumns = (
     newValue: TPropertyValue
   ) => void
 ): ColumnDef<TRecord>[] => {
+  console.log("$$ P$OPEDKF", properties)
   const columns: ColumnDef<TRecord>[] = [
     {
       id: "select",
