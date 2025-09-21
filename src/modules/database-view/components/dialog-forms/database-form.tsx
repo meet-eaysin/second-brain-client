@@ -76,7 +76,7 @@ export function DatabaseForm({
     watch,
   } = useForm<CreateDatabaseFormData | UpdateDatabaseFormData>({
     resolver: zodResolver(schema),
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",
     defaultValues: {
       name: "",
       description: "",
@@ -95,7 +95,6 @@ export function DatabaseForm({
     enableSmartSuggestions: true,
   });
 
-  // Initialize form data when database prop changes
   useEffect(() => {
     if (database && mode === "edit") {
       reset({
@@ -137,32 +136,25 @@ export function DatabaseForm({
   const onSubmit = async (
     data: CreateDatabaseFormData | UpdateDatabaseFormData
   ) => {
-    if (!currentWorkspace?._id) {
-      return;
+    if (!currentWorkspace?._id) return;
+
+    if (mode === "create") {
+      const createData: TCreateDatabase = {
+        ...(data as TCreateDatabase),
+        workspaceId: currentWorkspace._id,
+      };
+
+      await createDatabaseMutation.mutateAsync({ data: createData });
+    } else if (database) {
+      const updateData: TUpdateDatabase = data as TUpdateDatabase;
+      await updateDatabaseMutation.mutateAsync({
+        id: database.id,
+        data: updateData,
+      });
     }
 
-    try {
-      if (mode === "create") {
-        const createData: TCreateDatabase = {
-          ...(data as TCreateDatabase),
-          workspaceId: currentWorkspace._id,
-        };
-
-        await createDatabaseMutation.mutateAsync({ data: createData });
-      } else if (database) {
-        const updateData: TUpdateDatabase = data as TUpdateDatabase;
-        await updateDatabaseMutation.mutateAsync({
-          id: database.id,
-          data: updateData,
-        });
-      }
-
-      onSuccess?.();
-      onOpenChange?.(false);
-    } catch (error) {
-      // Error handling is done in the mutation hooks
-      console.error("Database operation failed:", error);
-    }
+    onSuccess?.();
+    onOpenChange?.(false);
   };
 
   const handleCancel = () => {
@@ -193,7 +185,6 @@ export function DatabaseForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Form Validation Status */}
           {Object.keys(errors).length > 0 && (
             <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
               <p className="text-sm text-destructive font-medium">
@@ -209,7 +200,7 @@ export function DatabaseForm({
               </ul>
             </div>
           )}
-          {/* Basic Information */}
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -290,7 +281,6 @@ export function DatabaseForm({
             </CardContent>
           </Card>
 
-          {/* Appearance */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -343,7 +333,6 @@ export function DatabaseForm({
             </CardContent>
           </Card>
 
-          {/* Privacy & Access */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -370,7 +359,6 @@ export function DatabaseForm({
             </CardContent>
           </Card>
 
-          {/* Advanced Settings */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">

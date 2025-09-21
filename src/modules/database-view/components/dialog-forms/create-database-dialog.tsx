@@ -17,9 +17,7 @@ export function CreateDatabaseDialog({
     onOpenChange(false);
   };
 
-  const handleCancel = () => {
-    onOpenChange(false);
-  };
+  const handleCancel = () => onOpenChange(false);
 
   return (
     <DatabaseForm

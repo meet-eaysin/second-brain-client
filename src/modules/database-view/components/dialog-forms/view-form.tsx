@@ -25,9 +25,10 @@ import {
   Plus,
 } from "lucide-react";
 import type {
-    IDatabaseProperty,
-    EViewType,
-    ICreateViewRequest, IDatabaseView,
+  IDatabaseProperty,
+  EViewType,
+  ICreateViewRequest,
+  IDatabaseView,
 } from "../../types";
 import { toast } from "sonner";
 
@@ -116,7 +117,6 @@ export function ViewForm({
           sorts: view.sorts || [],
         });
       } else {
-        // Reset to default for create mode
         setFormData({
           name: "Table",
           type: "TABLE",
@@ -149,24 +149,17 @@ export function ViewForm({
       return;
     }
 
-    try {
-      await onSubmit?.(formData);
-      // Only close and reset form if submission was successful
-      onOpenChange(false);
+    await onSubmit?.(formData);
+    onOpenChange(false);
 
-      // Reset form with default view type name
-      setFormData({
-        name: "Table", // Auto-fill with default view type
-        type: "TABLE",
-        isDefault: false,
-        visibleProperties: properties?.map((p) => p.id) || [],
-        filters: [],
-        sorts: [],
-      });
-    } catch (error) {
-      console.error("Failed to submit view:", error);
-      // Don't close the dialog on error - let the user see the error and fix it
-    }
+    setFormData({
+      name: "Table",
+      type: "TABLE",
+      isDefault: false,
+      visibleProperties: properties?.map((p) => p.id) || [],
+      filters: [],
+      sorts: [],
+    });
   };
 
   const handlePropertyToggle = (propertyId: string, checked: boolean) => {
@@ -183,7 +176,6 @@ export function ViewForm({
       viewTypes.find((vt) => vt.value === newViewType)?.label || newViewType;
 
     setFormData((prev) => {
-      // Auto-fill name if it's empty or contains a previous view type name
       const shouldAutoFillName =
         !prev.name.trim() ||
         viewTypes.some(
@@ -197,7 +189,6 @@ export function ViewForm({
       return {
         ...prev,
         type: newViewType,
-        // Use just the label (e.g., "Timeline", "Board") for cleaner names
         name: shouldAutoFillName ? viewTypeLabel : prev.name,
       };
     });
@@ -218,7 +209,6 @@ export function ViewForm({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* View Name */}
           <div className="space-y-2">
             <Label htmlFor="viewName">View Name</Label>
             <Input
@@ -232,7 +222,6 @@ export function ViewForm({
             />
           </div>
 
-          {/* View Type Selection */}
           <div className="space-y-3">
             <Label>View Type</Label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -270,7 +259,6 @@ export function ViewForm({
             </div>
           </div>
 
-          {/* Visible Properties */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>Visible Properties</Label>
@@ -368,7 +356,6 @@ export function ViewForm({
             )}
           </div>
 
-          {/* Default View Option */}
           <div className="flex items-center space-x-2">
             <Checkbox
               id="isDefault"
