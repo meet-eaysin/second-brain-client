@@ -3,57 +3,57 @@ import { databaseApi } from "./database-api";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import type { ApiError, ApiResponse } from "@/types/api.types.ts";
-import type {
-  TBulkDeleteRecords,
-  TBulkUpdateRecords,
-  TCreateDatabase,
-  TCreateView,
-  TDatabase,
-  TDatabaseQueryParams,
-  TDatabaseStats,
-  TProperty,
-  TPropertyQueryParams,
-  TRecord,
-  TRecordQueryParams,
-  TReorderProperties,
-  TUpdateDatabase,
-  TUpdateProperty,
-  TView,
+import {
+  type TBulkDeleteRecords,
+  type TBulkUpdateRecords,
+  type TCreateDatabase,
+  type TCreateView,
+  type TDatabase,
+  type TDatabaseQueryParams,
+  type TDatabaseStats,
+  type TProperty,
+  type TPropertyQueryParams,
+  type TRecord,
+  type TRecordQueryParams,
+  type TReorderProperties,
+  type TUpdateDatabase,
+  type TUpdateProperty,
+  type TView,
   // Database-level filter and sort types
-  TDatabaseFilter,
-  TDatabaseSort,
-  TDatabaseFilterPreset,
-  TCreateDatabaseFilter,
-  TUpdateDatabaseFilter,
-  TCreateDatabaseSort,
-  TUpdateDatabaseSort,
-  TCreateDatabaseFilterPreset,
-  TUpdateDatabaseFilterPreset,
-  TDatabaseFilterQueryParams,
-  TDatabaseSortQueryParams,
-  TDatabaseFilterPresetQueryParams,
+  type TDatabaseFilter,
+  type TDatabaseSort,
+  type TDatabaseFilterPreset,
+  type TCreateDatabaseFilter,
+  type TUpdateDatabaseFilter,
+  type TCreateDatabaseSort,
+  type TUpdateDatabaseSort,
+  type TCreateDatabaseFilterPreset,
+  type TUpdateDatabaseFilterPreset,
+  type TDatabaseFilterQueryParams,
+  type TDatabaseSortQueryParams,
+  type TDatabaseFilterPresetQueryParams,
   // Relation types
-  TRelationQueryParams,
-  TRelationList,
-  IRelation,
-  IRelationConnectionQueryParams,
-  TRelationConnectionList,
+  type TRelationQueryParams,
+  type TRelationList,
+  type IRelation,
+  type IRelationConnectionQueryParams,
+  type TRelationConnectionList,
   // Block types
-  IBlockSearchOptions,
-  IBlockList,
-  ICreateBlock,
-  IUpdateBlock,
-  IBulkBlockOperation,
-  TUpdateView,
-  EPropertyType,
-  TPropertyValue,
-  TCreateRecord,
-  TCreateProperty,
-  TCreateRelation,
-  TUpdateRelation,
-  TRelationConnection,
-  TCreateRelationConnection,
-  TContentBlock,
+  type IBlockSearchOptions,
+  type IBlockList,
+  type ICreateBlock,
+  type IUpdateBlock,
+  type IBulkBlockOperation,
+  type TUpdateView,
+  type EPropertyType,
+  type TPropertyValue,
+  type TCreateRecord,
+  type TCreateProperty,
+  type TCreateRelation,
+  type TUpdateRelation,
+  type TRelationConnection,
+  type TCreateRelationConnection,
+  type TContentBlock, EDatabaseType,
 } from "@/modules/database-view/types";
 
 export const DATABASE_KEYS = {
@@ -105,6 +105,30 @@ export const useDatabases = (params?: TDatabaseQueryParams) => {
   >({
     queryKey: DATABASE_KEYS.list(params || {}),
     queryFn: () => databaseApi.getDatabases(params),
+  });
+};
+
+export const useDatabaseByModuleType = (moduleType: EDatabaseType) => {
+  return useQuery<
+    {
+      databases: TDatabase[];
+      total: number;
+      page: number;
+      limit: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    },
+    AxiosError
+  >({
+    queryKey: DATABASE_KEYS.list({ type: moduleType }),
+    queryFn: () => databaseApi.getDatabases({ type: moduleType }),
+    select: (data) => {
+      // Return only the first database of this type (should be the primary one)
+      return {
+        ...data,
+        databases: data.databases.slice(0, 1),
+      };
+    },
   });
 };
 
@@ -392,7 +416,7 @@ export const useRecords = (databaseId: string, params?: TRecordQueryParams) => {
   return useQuery<ApiResponse<TRecord[]>, AxiosError>({
     queryKey: [...DATABASE_KEYS.records(databaseId), params],
     queryFn: () => databaseApi.getRecords(databaseId, params),
-    enabled: !!databaseId,
+    enabled: !!databaseId && !!params?.viewId,
   });
 };
 
@@ -564,6 +588,18 @@ export const useViews = (databaseId: string) => {
     queryKey: DATABASE_KEYS.views(databaseId),
     queryFn: () => databaseApi.getViews(databaseId),
     enabled: !!databaseId,
+    select: (data) => {
+      if (data?.data && data.data.length > 0) {
+        // Find default view or use first view
+        const defaultView =
+          data.data.find((view) => view.isDefault) || data.data[0];
+        return {
+          ...data,
+          defaultViewId: defaultView.id,
+        };
+      }
+      return { ...data, defaultViewId: null };
+    },
   });
 };
 

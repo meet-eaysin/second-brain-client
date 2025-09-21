@@ -21,6 +21,7 @@ import {
   useRecords,
   useView,
   useViews,
+  useDatabaseByModuleType,
 } from "@/modules/database-view/services/database-queries";
 import type { Workspace } from "@/types/workspace.types.ts";
 
@@ -63,6 +64,7 @@ interface DatabaseViewContextValue {
   isPropertiesLoading: boolean;
   isRecordsLoading: boolean;
   isCurrentViewLoading: boolean;
+  isDatabasesByTypeLoading: boolean;
 
   selectedRecords: Set<string>;
   visibleProperties: TProperty[];
@@ -123,27 +125,32 @@ export function DatabaseViewProvider({
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
 
-  const currentDatabaseId = databaseId || "";
+  const { data: databasesByType, isLoading: isDatabasesByTypeLoading } =
+    useDatabaseByModuleType(moduleType);
+  const currentDatabaseId =
+    databaseId || databasesByType?.databases[0]?.id || "";
 
+  console.log("## CURRENT currentDatabaseId: ", currentDatabaseId);
   const { data: database, isLoading: isDatabaseLoading } =
     useDatabase(currentDatabaseId);
-
   const { data: viewsResponse, isLoading: isViewsLoading } =
     useViews(currentDatabaseId);
 
+  // Use default view ID from views response if no view is selected
+  const effectiveViewId = currentViewId || viewsResponse?.defaultViewId || "";
+
   const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
-    useView(currentDatabaseId, currentViewId);
+    useView(currentDatabaseId, effectiveViewId);
 
   const propertiesQueryParams: TPropertyQueryParams = {
-    viewId: currentViewId || "",
+    viewId: effectiveViewId,
     includeHidden: false,
   };
-
   const { data: properties = [], isLoading: isPropertiesLoading } =
-    useProperties(currentDatabaseId || "", propertiesQueryParams);
+    useProperties(currentDatabaseId, propertiesQueryParams);
 
   const recordQueryParams = {
-    viewId: currentViewId,
+    viewId: effectiveViewId,
     search: searchQuery,
     page: 1,
     limit: 50,
@@ -151,8 +158,9 @@ export function DatabaseViewProvider({
     isTemplate: false,
   };
 
+  // Only fetch records when we have a database and a view is selected
   const { data: records, isLoading: isRecordsLoading } = useRecords(
-    currentDatabaseId || "",
+    currentDatabaseId,
     recordQueryParams
   );
 
@@ -191,7 +199,7 @@ export function DatabaseViewProvider({
   };
 
   const onRecordDelete = (recordId: string) => {
-    if (currentDatabaseId) {
+    if (currentDatabaseId && !isDatabasesByTypeLoading) {
       deleteRecordMutation.mutate(
         {
           databaseId: currentDatabaseId,
@@ -199,21 +207,17 @@ export function DatabaseViewProvider({
         },
         {
           onError: () => {
-            if (!navigator.onLine) {
-              toast.error("You're offline. Cannot delete record.");
-            } else {
-              toast.error("Failed to delete record. Please try again.");
-            }
+            toast.error("Failed to delete record. Please try again.");
           },
         }
       );
     } else {
-      toast.error("Database not available. Please refresh the page.");
+      toast.error("Database not available. Please wait for it to load.");
     }
   };
 
   const onRecordDuplicate = (recordId: string) => {
-    if (currentDatabaseId) {
+    if (currentDatabaseId && !isDatabasesByTypeLoading) {
       duplicateRecordMutation.mutate(
         {
           databaseId: currentDatabaseId,
@@ -230,7 +234,7 @@ export function DatabaseViewProvider({
         }
       );
     } else {
-      toast.error("Database not available. Please refresh the page.");
+      toast.error("Database not available. Please wait for it to load.");
     }
   };
 
@@ -249,12 +253,13 @@ export function DatabaseViewProvider({
     currentRecord,
     currentProperty,
 
-    isDatabaseIdLoading: false,
+    isDatabaseIdLoading: isDatabasesByTypeLoading,
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,
     isRecordsLoading,
     isCurrentViewLoading,
+    isDatabasesByTypeLoading,
 
     selectedRecords,
     visibleProperties,
