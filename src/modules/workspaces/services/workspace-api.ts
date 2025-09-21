@@ -94,29 +94,24 @@ export const workspaceApi = {
   },
 
   getModuleDatabaseId: async (
-    workspaceId: string,
     moduleType: EDatabaseType
   ): Promise<ApiResponse<{ databaseId: string }>> => {
     const response = await apiClient.get(
-      API_ENDPOINTS.MODULES.WORKSPACE_DATABASE_ID(workspaceId, moduleType)
+      API_ENDPOINTS.MODULES.WORKSPACE_DATABASE_ID(moduleType)
     );
     return response.data;
   },
 
   initializeWorkspaceModules: async ({
-    workspaceId,
     moduleTypes,
     createSampleData,
   }: TModuleInitializeRequest): Promise<
     ApiResponse<IWorkspaceInitResponse>
   > => {
-    const response = await apiClient.post(
-      API_ENDPOINTS.MODULES.INITIALIZE(workspaceId),
-      {
-        modules: moduleTypes,
-        createSampleData,
-      }
-    );
+    const response = await apiClient.post(API_ENDPOINTS.MODULES.INITIALIZE, {
+      modules: moduleTypes,
+      createSampleData,
+    });
 
     return response.data;
   },

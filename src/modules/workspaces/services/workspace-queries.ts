@@ -65,10 +65,9 @@ export const useGetModuleDatabaseId = (
   moduleType: EDatabaseType,
   initialized: boolean = false
 ) => {
-  console.log("## moduleType", moduleType);
   return useQuery({
     queryKey: WORKSPACE_KEYS.all,
-    queryFn: () => workspaceApi.getModuleDatabaseId(workspaceId, moduleType),
+    queryFn: () => workspaceApi.getModuleDatabaseId(moduleType),
     staleTime: 5 * 60 * 1000,
     enabled: !initialized,
   });
@@ -255,13 +254,8 @@ export const useInviteMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      workspaceId,
-      data,
-    }: {
-      workspaceId: string;
-      data: InviteMemberRequest;
-    }) => workspaceApi.inviteMember(workspaceId, data),
+    mutationFn: ({ data }: { data: InviteMemberRequest }) =>
+      workspaceApi.inviteMember(data),
     onSuccess: (_, { workspaceId }) => {
       queryClient.invalidateQueries({
         queryKey: WORKSPACE_KEYS.members(workspaceId),

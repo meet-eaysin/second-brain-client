@@ -65,24 +65,24 @@ export const API_ENDPOINTS = {
   WORKSPACES: {
     LIST: "/workspaces",
     CREATE: "/workspaces",
-    BY_ID: (id: string) => `/workspaces/${id}`,
-    UPDATE: (id: string) => `/workspaces/${id}`,
-    DELETE: (id: string) => `/workspaces/${id}`,
-    DUPLICATE: (id: string) => `/workspaces/${id}/duplicate`,
-    LEAVE: (id: string) => `/workspaces/${id}/leave`,
-    PERMISSIONS: (id: string) => `/workspaces/${id}/permissions`,
-    ACTIVITY: (id: string) => `/workspaces/${id}/activity`,
+    BY_ID: "/workspaces/current",
+    UPDATE: "/workspaces/current",
+    DELETE: "/workspaces/current",
+    DUPLICATE: "/workspaces/current/duplicate",
+    LEAVE: "/workspaces/current/leave",
+    PERMISSIONS: "/workspaces/current/permissions",
+    ACTIVITY: "/workspaces/current/activity",
     STATS: "/workspaces/stats",
     PUBLIC: "/workspaces/public",
     SEARCH: "/workspaces/search",
-    MEMBERS: (id: string) => `/workspaces/${id}/members`,
+    MEMBERS: "/workspaces/current/members",
     MEMBER: (id: string, userId: string) =>
       `/workspaces/${id}/members/${userId}`,
-    INVITE: (id: string) => `/workspaces/${id}/members`,
-    MEMBER_ROLE: (workspaceId: string, userId: string) =>
-      `/workspaces/${workspaceId}/members/${userId}/role`,
-    TRANSFER_OWNERSHIP: (id: string) => `/workspaces/${id}/transfer-ownership`,
-    BULK_MEMBER_OPERATION: (id: string) => `/workspaces/${id}/members/bulk`,
+    INVITE: "/workspaces/current/members",
+    MEMBER_ROLE: (userId: string) =>
+      `/workspaces/current/members/${userId}/role`,
+    TRANSFER_OWNERSHIP: "/workspaces/current/transfer-ownership",
+    BULK_MEMBER_OPERATION: "/workspaces/current/members/bulk",
     // Added missing endpoints from workspace service
     PRIMARY: "/workspaces/primary",
     DEFAULT: "/workspaces/default",
@@ -289,26 +289,19 @@ export const API_ENDPOINTS = {
     AVAILABILITY: (moduleId: string) => `/modules/availability/${moduleId}`,
     DEPENDENCIES: (moduleId: string) => `/modules/dependencies/${moduleId}`,
     VALIDATE: "/modules/validate",
-    WORKSPACE_OVERVIEW: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}`,
-    WORKSPACE_INITIALIZED: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}/initialized`,
-    WORKSPACE_RECOMMENDATIONS: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}/recommendations`,
-    WORKSPACE_VALIDATE: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}/validate`,
-    WORKSPACE_STATUS: (workspaceId: string, moduleId: string) =>
-      `/modules/workspace/${workspaceId}/${moduleId}/status`,
-    WORKSPACE_DATABASE_ID: (workspaceId: string, moduleId: string) =>
-      `/modules/workspace/${workspaceId}/${moduleId}/database-id`,
-    WORKSPACE_DETAILS: (workspaceId: string, moduleId: string) =>
-      `/modules/workspace/${workspaceId}/${moduleId}/details`,
-    INITIALIZE: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}/initialize`,
-    INITIALIZE_CORE: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}/initialize/core`,
-    INITIALIZE_SPECIFIC: (workspaceId: string) =>
-      `/modules/workspace/${workspaceId}/initialize/specific`,
+    WORKSPACE_OVERVIEW: "/modules/workspace",
+    WORKSPACE_INITIALIZED: "/modules/workspace/initialized",
+    WORKSPACE_RECOMMENDATIONS: "/modules/workspace/recommendations",
+    WORKSPACE_VALIDATE: "/modules/workspace/validate",
+    WORKSPACE_STATUS: (moduleId: string) =>
+      `/modules/workspace/${moduleId}/status`,
+    WORKSPACE_DATABASE_ID: (moduleId: string) =>
+      `/modules/workspace/${moduleId}/database-id`,
+    WORKSPACE_DETAILS: (moduleId: string) =>
+      `/modules/workspace/${moduleId}/details`,
+    INITIALIZE: "/modules/workspace/initialize",
+    INITIALIZE_CORE: "/modules/workspace/initialize/core",
+    INITIALIZE_SPECIFIC: "/modules/workspace/initialize/specific",
   },
   CROSS_MODULE: {
     INITIALIZE_RELATIONS: "/cross-module/relations/initialize",
