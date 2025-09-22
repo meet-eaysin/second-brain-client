@@ -12,17 +12,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Chrome } from "lucide-react";
+import { Chrome, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils.ts";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type UserAuthFormProps = HTMLAttributes<HTMLFormElement>;
 
 export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   const { form, handleLogin, isLoading, error } = useLogin();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleGoogleLogin = async () => {
     try {
@@ -45,61 +48,98 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleLogin)}
-        className={cn("grid gap-3", className)}
+        className={cn("grid gap-4", className)}
         {...props}
+        aria-label="Sign in form"
       >
+        {error && (
+          <Alert variant="destructive" className="text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error instanceof Error
+                ? error.message
+                : "An error occurred during sign in"}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email address</FormLabel>
               <FormControl>
                 <Input
+                  type="email"
                   placeholder="name@example.com"
+                  autoComplete="email"
                   {...field}
                   disabled={isLoading}
+                  aria-describedby="email-error"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage id="email-error" />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem className="relative">
+            <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <PasswordInput
-                  placeholder="********"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
                   {...field}
                   disabled={isLoading}
+                  aria-describedby="password-error"
                 />
               </FormControl>
-              <FormMessage />
-              <Link
-                to="/auth/forgot-password"
-                className="text-muted-foreground absolute -top-0.5 right-0 text-sm font-medium hover:opacity-75"
-              >
-                Forgot password?
-              </Link>
+              <FormMessage id="password-error" />
+              <div className="flex justify-end">
+                <Link
+                  to="/auth/forgot-password"
+                  className="text-sm text-muted-foreground hover:text-primary underline underline-offset-4"
+                  tabIndex={isLoading ? -1 : 0}
+                >
+                  Forgot password?
+                </Link>
+              </div>
             </FormItem>
           )}
         />
 
-        {error && (
-          <div className="text-sm text-red-600">
-            {error instanceof Error ? error.message : String(error)}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="remember-me"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+              disabled={isLoading}
+            />
+            <label
+              htmlFor="remember-me"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Remember me
+            </label>
           </div>
-        )}
+        </div>
 
-        <Button className="mt-2" disabled={isFormLoading}>
-          {isLoading ? "Signing in..." : "Sign In"}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isFormLoading}
+          aria-describedby={error ? "form-error" : undefined}
+        >
+          {isLoading ? "Signing in..." : "Sign in to your account"}
         </Button>
 
-        <div className="relative my-2">
+        <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
           </div>
@@ -116,6 +156,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
           disabled={isFormLoading}
           onClick={handleGoogleLogin}
           className="w-full"
+          aria-label="Continue with Google"
         >
           <Chrome className="h-4 w-4 mr-2" />
           {googleLoading ? "Authenticating..." : "Continue with Google"}

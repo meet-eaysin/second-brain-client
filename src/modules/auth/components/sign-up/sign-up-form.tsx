@@ -1,5 +1,5 @@
 import { type HTMLAttributes } from "react";
-import { Chrome } from "lucide-react";
+import { Chrome, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PasswordStrength } from "../password-strength";
 import { authApi } from "../../services/auth-api";
 import { useRegister } from "../../hooks/useRegister.ts";
 import { toast } from "sonner";
@@ -21,7 +23,7 @@ import { useAuthService } from "../../hooks/useAuthService.ts";
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
-  const { form, handleRegister, isLoading } = useRegister();
+  const { form, handleRegister, isLoading, error } = useRegister();
   const [googleLoading, setGoogleLoading] = useState(false);
   const { handleGoogleTokens } = useAuthService();
 
@@ -54,14 +56,27 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   };
 
   const isFormLoading = isLoading || googleLoading;
+  const passwordValue = form.watch("password");
 
   return (
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleRegister)}
-        className={cn("grid gap-3", className)}
+        className={cn("grid gap-4", className)}
         {...props}
+        aria-label="Sign up form"
       >
+        {error && (
+          <Alert variant="destructive" className="text-sm">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error instanceof Error
+                ? error.message
+                : "An error occurred during registration"}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <FormField
           control={form.control}
           name="username"
@@ -69,30 +84,41 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             <FormItem>
               <FormLabel>Username</FormLabel>
               <FormControl>
-                <Input placeholder="username" {...field} disabled={isLoading} />
+                <Input
+                  placeholder="Choose a unique username"
+                  autoComplete="username"
+                  {...field}
+                  disabled={isLoading}
+                  aria-describedby="username-error"
+                />
               </FormControl>
-              <FormMessage />
+              <FormMessage id="username-error" />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel>Email address</FormLabel>
               <FormControl>
                 <Input
+                  type="email"
                   placeholder="name@example.com"
+                  autoComplete="email"
                   {...field}
                   disabled={isLoading}
+                  aria-describedby="email-error"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage id="email-error" />
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-2 gap-2">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="firstName"
@@ -100,9 +126,15 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
               <FormItem>
                 <FormLabel>First Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John" {...field} disabled={isLoading} />
+                  <Input
+                    placeholder="John"
+                    autoComplete="given-name"
+                    {...field}
+                    disabled={isLoading}
+                    aria-describedby="firstName-error"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage id="firstName-error" />
               </FormItem>
             )}
           />
@@ -113,13 +145,20 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
               <FormItem>
                 <FormLabel>Last Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Doe" {...field} disabled={isLoading} />
+                  <Input
+                    placeholder="Doe"
+                    autoComplete="family-name"
+                    {...field}
+                    disabled={isLoading}
+                    aria-describedby="lastName-error"
+                  />
                 </FormControl>
-                <FormMessage />
+                <FormMessage id="lastName-error" />
               </FormItem>
             )}
           />
         </div>
+
         <FormField
           control={form.control}
           name="password"
@@ -128,21 +167,31 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <PasswordInput
-                  placeholder="********"
+                  placeholder="Create a strong password"
+                  autoComplete="new-password"
                   {...field}
                   disabled={isLoading}
+                  aria-describedby="password-error"
                 />
               </FormControl>
-              <FormMessage />
+              <FormMessage id="password-error" />
+              {passwordValue && (
+                <PasswordStrength password={passwordValue} className="mt-2" />
+              )}
             </FormItem>
           )}
         />
 
-        <Button className="mt-2" disabled={isLoading}>
-          Create Account
+        <Button
+          type="submit"
+          className="w-full mt-2"
+          disabled={isFormLoading}
+          aria-describedby={error ? "form-error" : undefined}
+        >
+          {isLoading ? "Creating account..." : "Create your account"}
         </Button>
 
-        <div className="relative my-2">
+        <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t" />
           </div>
@@ -152,12 +201,14 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             </span>
           </div>
         </div>
+
         <Button
           variant="outline"
           type="button"
           disabled={isFormLoading}
           onClick={handleGoogleSignUp}
           className="w-full"
+          aria-label="Continue with Google"
         >
           <Chrome className="h-4 w-4 mr-2" />
           {googleLoading ? "Authenticating..." : "Continue with Google"}
