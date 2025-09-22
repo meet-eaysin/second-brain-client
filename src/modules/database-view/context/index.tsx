@@ -210,9 +210,7 @@ export function DatabaseViewProvider({
 
   const { data: recordsResponse, isLoading: isRecordsLoading } = useRecords(
     currentDatabaseId,
-    recordQueryParams,
-    tempFilters,
-    tempSorts
+    recordQueryParams
   );
 
   const visibleProperties =
