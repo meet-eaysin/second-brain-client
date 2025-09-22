@@ -37,8 +37,6 @@ import {
   Trash2,
   MoreHorizontal,
   Copy,
-  Edit,
-  ExternalLink,
 } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import type { TRecord } from "@/modules/database-view/types";
@@ -59,12 +57,10 @@ interface DocumentDataTableProps {
   pageSize?: number;
   onBulkEdit?: () => void;
   onBulkDelete?: () => void;
-  onRecordEdit?: (record: TRecord) => void;
   onRecordDelete?: (recordId: string) => void;
   onRecordDuplicate?: (recordId: string) => void;
   onRecordCreate?: () => void;
   onAddProperty?: () => void;
-  onRecordOpen?: (record: TRecord) => void;
 }
 
 export function DataTable({
@@ -76,12 +72,10 @@ export function DataTable({
   pageSize = 25,
   onBulkEdit: propOnBulkEdit,
   onBulkDelete: propOnBulkDelete,
-  onRecordEdit: propOnRecordEdit,
   onRecordDelete: propOnRecordDelete,
   onRecordDuplicate: propOnRecordDuplicate,
   onRecordCreate: propOnRecordCreate,
   onAddProperty: propOnAddProperty,
-  onRecordOpen: propOnRecordOpen,
 }: DocumentDataTableProps) {
   const {
     database,
@@ -90,25 +84,20 @@ export function DataTable({
     onDialogOpen,
     onBulkEdit: contextOnBulkEdit,
     onBulkDelete: contextOnBulkDelete,
-    onRecordEdit: contextOnRecordEdit,
     onRecordDelete: contextOnRecordDelete,
     onRecordDuplicate: contextOnRecordDuplicate,
     onRecordCreate: contextOnRecordCreate,
     onAddProperty: contextOnAddProperty,
-    onRecordChange,
   } = useDatabaseView();
 
   const isFrozen = database?.isFrozen;
 
-  // Use prop handlers if provided, otherwise use context handlers
   const onBulkEdit = propOnBulkEdit || contextOnBulkEdit;
   const onBulkDelete = propOnBulkDelete || contextOnBulkDelete;
-  const onRecordEdit = propOnRecordEdit || contextOnRecordEdit;
   const onRecordDelete = propOnRecordDelete || contextOnRecordDelete;
   const onRecordDuplicate = propOnRecordDuplicate || contextOnRecordDuplicate;
   const onRecordCreate = propOnRecordCreate || contextOnRecordCreate;
   const onAddProperty = propOnAddProperty || contextOnAddProperty;
-  const onRecordOpen = propOnRecordOpen || contextOnRecordEdit; // Fallback to edit if no open handler
 
   const [columnStats, setColumnStats] = useState<Record<string, string>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -212,15 +201,6 @@ export function DataTable({
       onBulkEdit();
     } else {
       onDialogOpen?.("bulk-edit");
-    }
-  };
-
-  const handleRecordEdit = (record: TRecord) => {
-    if (onRecordEdit) {
-      onRecordEdit(record);
-    } else {
-      onRecordChange?.(record);
-      onDialogOpen?.("edit-record");
     }
   };
 
@@ -391,19 +371,6 @@ export function DataTable({
                         cell.column.columnDef.cell,
                         cell.getContext()
                       )}
-                      {/* Hover icon to open record editor */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover/cell:opacity-100 hover:bg-muted/80 transition-opacity"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRecordOpen?.(row.original);
-                        }}
-                        title="Open record editor"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                      </Button>
                     </TableCell>
                   ))}
                   <TableCell className="w-12">
@@ -420,18 +387,6 @@ export function DataTable({
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => handleRecordEdit(row.original)}
-                            disabled={isFrozen}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Record
-                            {isFrozen && (
-                              <span className="ml-auto text-xs text-muted-foreground">
-                                (Frozen)
-                              </span>
-                            )}
-                          </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               handleRecordDuplicate(row.original.id)

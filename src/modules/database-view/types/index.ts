@@ -509,6 +509,7 @@ export type TCreateProperty = {
   selectOptions?: Omit<TSelectOption, "id">[];
   relationConfig?: Record<string, unknown>;
   order?: number;
+  viewId: string;
 };
 
 export type TUpdateProperty = {

@@ -249,6 +249,10 @@ export const useCreateProperty = () => {
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.properties(variables.databaseId),
       });
+      // Invalidate view queries since visibleProperties may have been updated
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.views(variables.databaseId),
+      });
       toast.success("Property created successfully");
     },
     onError: (error: AxiosError<ApiError>) => {

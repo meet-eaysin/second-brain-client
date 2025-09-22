@@ -194,6 +194,7 @@ export function PropertyForm() {
   const {
     database,
     currentProperty,
+    currentView,
     dialogOpen,
     onDialogOpen,
     onPropertyChange,
@@ -207,6 +208,7 @@ export function PropertyForm() {
   const mode = dialogOpen === "create-property" ? "create" : "edit";
   const databaseId = database?.id || "";
   const property = currentProperty;
+  const currentViewId = currentView?.id;
 
   const [selectOptions, setSelectOptions] = useState<TPropertyOption[]>([]);
   const [newOptionName, setNewOptionName] = useState("");
@@ -251,6 +253,11 @@ export function PropertyForm() {
   const selectedType = form.watch("type");
 
   const handleSubmit = async (data: PropertyFormData) => {
+    if (mode === "create" && !currentViewId) {
+      console.error("Cannot create property: No current view selected");
+      return;
+    }
+
     try {
       const processedSelectOptions = ["select", "multi_select"].includes(
         data.type
@@ -269,6 +276,7 @@ export function PropertyForm() {
         config: processedSelectOptions
           ? { options: processedSelectOptions }
           : undefined,
+        viewId: currentViewId,
       };
 
       if (mode === "create") {
@@ -703,7 +711,8 @@ export function PropertyForm() {
                 type="submit"
                 disabled={
                   createPropertyMutation.isPending ||
-                  updatePropertyMutation.isPending
+                  updatePropertyMutation.isPending ||
+                  (mode === "create" && !currentViewId)
                 }
                 className="flex-1"
               >

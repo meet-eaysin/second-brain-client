@@ -303,7 +303,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             onChange={(e) => setEditValue(e.target.value)}
             onBlur={() => handleSave(editValue)}
             onKeyDown={handleKeyDown}
-            className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1"
+            className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1 w-auto"
             autoFocus
           />
         );

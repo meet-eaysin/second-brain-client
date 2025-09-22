@@ -12,23 +12,23 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import {useDatabaseView} from "@/modules/database-view/context";
-import type {TProperty} from "@/modules/database-view/types";
-import {useColumnVisibility} from "@/modules/database-view/hooks/use-column-visibility.ts";
+import { useDatabaseView } from "@/modules/database-view/context";
+import type { TProperty } from "@/modules/database-view/types";
+import { useColumnVisibility } from "@/modules/database-view/hooks/use-column-visibility.ts";
 
 export function ColumnVisibilityMenu() {
-  const { currentView, properties } = useDatabaseView();
-  const { toggleProperty, showAll, hideAll  } = useColumnVisibility()
+  const { currentView, allProperties } = useDatabaseView();
+  const { toggleProperty, showAll, hideAll } = useColumnVisibility();
   const [isLoading, setIsLoading] = React.useState(false);
 
   const visiblePropertyIds = currentView?.settings?.visibleProperties || [];
   const hiddenPropertyIds = currentView?.settings?.hiddenProperties || [];
 
-  const visibleProperties = properties.filter((prop) =>
+  const visibleProperties = allProperties.filter((prop) =>
     visiblePropertyIds.includes(prop.id)
   );
 
-  const hiddenProperties = properties.filter(
+  const hiddenProperties = allProperties.filter(
     (prop) =>
       hiddenPropertyIds.includes(prop.id) ||
       (!visiblePropertyIds.includes(prop.id) &&
@@ -44,7 +44,7 @@ export function ColumnVisibilityMenu() {
   ) => {
     if (isLoading) return;
 
-    const property = properties.find((p) => p.id === propertyId);
+    const property = allProperties.find((p) => p.id === propertyId);
     if (!property) return;
 
     if (currentlyVisible && !canHideProperty(property)) {
@@ -56,7 +56,9 @@ export function ColumnVisibilityMenu() {
 
     try {
       await toggleProperty(propertyId, !currentlyVisible);
-      toast.success(`${property.name} ${currentlyVisible ? "hidden" : "shown"}`);
+      toast.success(
+        `${property.name} ${currentlyVisible ? "hidden" : "shown"}`
+      );
     } catch (error) {
       console.log(error);
 
@@ -112,7 +114,7 @@ export function ColumnVisibilityMenu() {
         >
           <Eye className="h-4 w-4" />
           <Badge variant="secondary" className="ml-1">
-            {visiblePropertyIds.length}/{properties.length}
+            {visiblePropertyIds.length}/{allProperties.length}
           </Badge>
         </Button>
       </DropdownMenuTrigger>
@@ -193,7 +195,7 @@ export function ColumnVisibilityMenu() {
           </>
         )}
 
-        {properties.length === 0 && (
+        {allProperties.length === 0 && (
           <DropdownMenuItem disabled>No properties available</DropdownMenuItem>
         )}
       </DropdownMenuContent>

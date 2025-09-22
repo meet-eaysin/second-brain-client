@@ -55,6 +55,7 @@ interface DatabaseViewContextValue {
   views: TView[];
   currentView: TView | null;
   properties: TProperty[];
+  allProperties: TProperty[];
   records: TRecord[] | undefined;
   currentRecord: TRecord | null;
   currentProperty: TProperty | null;
@@ -63,6 +64,7 @@ interface DatabaseViewContextValue {
   isDatabaseLoading: boolean;
   isViewsLoading: boolean;
   isPropertiesLoading: boolean;
+  isAllPropertiesLoading: boolean;
   isRecordsLoading: boolean;
   isCurrentViewLoading: boolean;
   isDatabasesByTypeLoading: boolean;
@@ -86,7 +88,6 @@ interface DatabaseViewContextValue {
   onBulkEdit: () => void;
   onBulkDelete: () => void;
   onRecordEdit: (record: TRecord) => void;
-  onRecordOpen: (record: TRecord) => void;
   onRecordDelete: (recordId: string) => void;
   onRecordDuplicate: (recordId: string) => void;
   onRecordCreate: () => void;
@@ -151,6 +152,13 @@ export function DatabaseViewProvider({
   const { data: propertiesResponse, isLoading: isPropertiesLoading } =
     useProperties(currentDatabaseId, propertiesQueryParams);
 
+  // Query for all properties (not filtered by view) for column visibility menu
+  const allPropertiesQueryParams: TPropertyQueryParams = {
+    includeHidden: true,
+  };
+  const { data: allPropertiesResponse, isLoading: isAllPropertiesLoading } =
+    useProperties(currentDatabaseId, allPropertiesQueryParams);
+
   const recordQueryParams = {
     viewId: effectiveViewId,
     search: searchQuery,
@@ -198,11 +206,6 @@ export function DatabaseViewProvider({
   const onRecordEdit = (record: TRecord) => {
     onRecordChange(record);
     onDialogOpen("edit-record");
-  };
-
-  const onRecordOpen = (record: TRecord) => {
-    onRecordChange(record);
-    onDialogOpen("view-record");
   };
 
   const onRecordDelete = (recordId: string) => {
@@ -268,6 +271,7 @@ export function DatabaseViewProvider({
     views: viewsResponse?.data || [],
     currentView: currentViewResponse?.data || null,
     properties: propertiesResponse?.data || [],
+    allProperties: allPropertiesResponse?.data || [],
     records: recordsResponse?.data || undefined,
     currentRecord,
     currentProperty,
@@ -276,6 +280,7 @@ export function DatabaseViewProvider({
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,
+    isAllPropertiesLoading,
     isRecordsLoading,
     isCurrentViewLoading,
     isDatabasesByTypeLoading,
@@ -300,7 +305,6 @@ export function DatabaseViewProvider({
     onBulkEdit,
     onBulkDelete,
     onRecordEdit,
-    onRecordOpen,
     onRecordDelete,
     onRecordDuplicate,
     onRecordCreate,

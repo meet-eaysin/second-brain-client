@@ -134,7 +134,7 @@ export function ViewForm() {
     database,
     currentView,
     dialogOpen,
-    properties,
+    allProperties,
     onDialogOpen,
     onViewChange,
   } = useDatabaseView();
@@ -178,11 +178,11 @@ export function ViewForm() {
           description: "",
           isDefault: false,
           isPublic: false,
-          visibleProperties: properties.map((p) => p.id),
+          visibleProperties: allProperties.map((p) => p.id),
         });
       }
     }
-  }, [isOpen, properties, view, mode, form]);
+  }, [isOpen, allProperties, view, mode, form]);
 
   const handleSubmit = async (data: ViewFormData) => {
     try {
@@ -403,7 +403,7 @@ export function ViewForm() {
                       <div className="flex items-center justify-between">
                         <FormLabel className="text-sm font-medium">
                           Visible Properties ({field.value.length}/
-                          {properties.length})
+                          {allProperties.length})
                         </FormLabel>
                         <div className="flex gap-1">
                           <Button
@@ -412,9 +412,9 @@ export function ViewForm() {
                             size="sm"
                             className="h-7 px-2 text-xs"
                             onClick={() =>
-                              field.onChange(properties.map((p) => p.id))
+                              field.onChange(allProperties.map((p) => p.id))
                             }
-                            disabled={properties.length === 0}
+                            disabled={allProperties.length === 0}
                           >
                             <Eye className="h-3 w-3 mr-1" />
                             All
@@ -433,7 +433,7 @@ export function ViewForm() {
                       </div>
 
                       <FormControl>
-                        {properties.length === 0 ? (
+                        {allProperties.length === 0 ? (
                           <div className="border rounded-lg p-4 text-center">
                             <div className="inline-flex p-2 rounded-full bg-muted mb-2">
                               <Plus className="h-4 w-4 text-muted-foreground" />
@@ -445,7 +445,7 @@ export function ViewForm() {
                         ) : (
                           <div className="border rounded-lg p-3 bg-muted/20 max-h-40 overflow-y-auto">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {properties.map((property) => (
+                              {allProperties.map((property) => (
                                 <div
                                   key={property.id}
                                   className="flex items-center space-x-2 p-2 rounded hover:bg-background/80 transition-colors"
@@ -549,7 +549,7 @@ export function ViewForm() {
               disabled={
                 createViewMutation.isPending ||
                 updateViewMutation.isPending ||
-                properties.length === 0
+                allProperties.length === 0
               }
               className="flex-1"
             >
