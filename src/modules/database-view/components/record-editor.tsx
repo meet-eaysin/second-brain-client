@@ -51,7 +51,7 @@ import { Button } from "@/components/ui/button";
 import { Save, Loader2, X } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import {
-  useGetRecord,
+  useRecord,
   useUpdateRecord,
 } from "@/modules/database-view/services/database-queries";
 import { toast } from "sonner";
@@ -133,7 +133,7 @@ export function RecordEditor({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // API hooks - use records API instead of blocks
-  const { data: recordData, isLoading: isLoadingRecord } = useGetRecord(
+  const { data: recordData, isLoading: isLoadingRecord } = useRecord(
     databaseId!,
     recordId!
   );
