@@ -1,63 +1,48 @@
-import {useQueryClient} from "@tanstack/react-query";
-import {useDatabaseView} from "@/modules/database-view/context";
-import type {TProperty} from "@/modules/database-view/types";
-import {useUpdateView} from "@/modules/database-view/services/database-queries.ts";
+import { useQueryClient } from "@tanstack/react-query";
+import { useDatabaseView } from "@/modules/database-view/context";
+import type { TProperty } from "@/modules/database-view/types";
+import { databaseApi } from "@/modules/database-view/services/database-api";
+import { useUpdateView } from "@/modules/database-view/services/database-queries.ts";
+import { DATABASE_KEYS } from "@/modules/database-view/services/database-queries.ts";
 
 export function useColumnVisibility() {
-  const {moduleType, currentView, properties, database} = useDatabaseView()
+  const { moduleType, currentView, allProperties, database } =
+    useDatabaseView();
   const queryClient = useQueryClient();
-  const {mutateAsync: onUpdateView} = useUpdateView()
+  const { mutateAsync: onUpdateView } = useUpdateView();
 
   const invalidateQueries = () => {
-    queryClient.invalidateQueries({queryKey: [moduleType]});
-    queryClient.invalidateQueries({queryKey: ["second-brain"]});
+    queryClient.invalidateQueries({ queryKey: [moduleType] });
+    queryClient.invalidateQueries({ queryKey: ["second-brain"] });
+
+    // Invalidate properties queries
+    queryClient.invalidateQueries({
+      queryKey: DATABASE_KEYS.properties(database?.id || ""),
+    });
+
+    // Invalidate current view query
+    if (currentView?.id) {
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.view(database?.id || "", currentView.id),
+      });
+    }
 
     if (moduleType === "people") {
-      queryClient.invalidateQueries({queryKey: ["people-database-view"]});
-      queryClient.invalidateQueries({queryKey: ["people-views"]});
+      queryClient.invalidateQueries({ queryKey: ["people-database-view"] });
+      queryClient.invalidateQueries({ queryKey: ["people-views"] });
     }
   };
 
-  const toggleProperty = async (
-    propertyId: string,
-    visible: boolean
-  ): Promise<void> => {
-    const currentVisible = currentView?.settings?.visibleProperties || [];
-    const currentHidden = currentView?.settings?.hiddenProperties || [];
-
-    let updatedVisible: string[];
-    let updatedHidden: string[];
-
-    if (visible) {
-      updatedVisible = [
-        ...currentVisible.filter((id) => id !== propertyId),
-        propertyId,
-      ];
-      updatedHidden = currentHidden.filter((id) => id !== propertyId);
-    } else {
-      updatedHidden = [
-        ...currentHidden.filter((id) => id !== propertyId),
-        propertyId,
-      ];
-      updatedVisible = currentVisible.filter((id) => id !== propertyId);
-    }
-
-    await onUpdateView({
-      databaseId: database?.id || "",
+  const toggleProperty = async (propertyId: string): Promise<void> => {
+    await databaseApi.togglePropertyVisibility(database?.id || "", propertyId, {
       viewId: currentView?.id || "",
-      data: {
-        settings: {
-          visibleProperties: updatedVisible,
-          hiddenProperties: updatedHidden,
-        },
-      }
-    })
+    });
 
     invalidateQueries();
   };
 
   const showAll = async (): Promise<void> => {
-    const allPropertyIds = properties.map((prop) => prop.id);
+    const allPropertyIds = allProperties.map((prop) => prop.id);
 
     await onUpdateView({
       databaseId: database?.id || "",
@@ -67,17 +52,17 @@ export function useColumnVisibility() {
           visibleProperties: allPropertyIds,
           hiddenProperties: [],
         },
-      }
-    })
+      },
+    });
 
     invalidateQueries();
   };
 
   const hideAll = async (): Promise<void> => {
-    const requiredPropertyIds = properties
+    const requiredPropertyIds = allProperties
       .filter((prop) => prop.isSystem || prop.required)
       .map((prop) => prop.id);
-    const optionalPropertyIds = properties
+    const optionalPropertyIds = allProperties
       .filter((prop) => !prop.isSystem && !prop.required)
       .map((prop) => prop.id);
 
@@ -89,14 +74,14 @@ export function useColumnVisibility() {
           visibleProperties: requiredPropertyIds,
           hiddenProperties: optionalPropertyIds,
         },
-      }
-    })
+      },
+    });
 
     invalidateQueries();
   };
 
   const resetToDefault = async (): Promise<void> => {
-    const defaultVisibleProperties = properties
+    const defaultVisibleProperties = allProperties
       .filter(
         (prop) =>
           prop.isSystem ||
@@ -105,7 +90,7 @@ export function useColumnVisibility() {
       )
       .map((prop) => prop.id);
 
-    const defaultHiddenProperties = properties
+    const defaultHiddenProperties = allProperties
       .filter(
         (prop) =>
           !prop.isSystem &&
@@ -122,8 +107,8 @@ export function useColumnVisibility() {
           visibleProperties: defaultVisibleProperties,
           hiddenProperties: defaultHiddenProperties,
         },
-      }
-    })
+      },
+    });
 
     invalidateQueries();
   };
@@ -133,7 +118,7 @@ export function useColumnVisibility() {
     const hiddenIds = currentView?.settings?.hiddenProperties || [];
     const visibleCount = visibleIds.length;
     const hiddenCount = hiddenIds.length;
-    const totalCount = properties.length;
+    const totalCount = allProperties.length;
     const unassignedCount = totalCount - visibleCount - hiddenCount;
 
     return {
@@ -155,14 +140,16 @@ export function useColumnVisibility() {
     const hiddenIds = currentView?.settings?.hiddenProperties || [];
 
     return {
-      visible: properties.filter((prop) => visibleIds.includes(prop.id)),
-      hidden: properties.filter(
+      visible: allProperties.filter((prop) => visibleIds.includes(prop.id)),
+      hidden: allProperties.filter(
         (prop) =>
           hiddenIds.includes(prop.id) ||
           (!visibleIds.includes(prop.id) && !hiddenIds.includes(prop.id))
       ),
-      required: properties.filter((prop) => prop.isSystem || prop.required),
-      optional: properties.filter((prop) => !prop.isSystem && !prop.required),
+      required: allProperties.filter((prop) => prop.isSystem || prop.required),
+      optional: allProperties.filter(
+        (prop) => !prop.isSystem && !prop.required
+      ),
     };
   };
 
@@ -177,6 +164,6 @@ export function useColumnVisibility() {
     getPropertiesByVisibility,
 
     currentView,
-    properties,
+    properties: allProperties,
   };
 }

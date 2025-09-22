@@ -172,7 +172,6 @@ export function DatabaseViewProvider({
     currentDatabaseId,
     recordQueryParams
   );
-  console.log("## RECORDS", recordsResponse);
 
   const visibleProperties =
     propertiesResponse?.data?.filter((property: TProperty) => {

@@ -97,7 +97,6 @@ export const ViewTabs = () => {
     }
   };
 
-  console.log("## views", views);
   return (
     <>
       <div className="border-b">

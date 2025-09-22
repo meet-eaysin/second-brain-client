@@ -38,14 +38,13 @@ export function ColumnVisibilityMenu() {
   const canHideProperty = (property: TProperty): boolean =>
     !property.isSystem && !property.required;
 
-  const handleToggleProperty = async (
-    propertyId: string,
-    currentlyVisible: boolean
-  ) => {
+  const handleToggleProperty = async (propertyId: string) => {
     if (isLoading) return;
 
     const property = allProperties.find((p) => p.id === propertyId);
     if (!property) return;
+
+    const currentlyVisible = visiblePropertyIds.includes(propertyId);
 
     if (currentlyVisible && !canHideProperty(property)) {
       toast.error(`Cannot hide ${property.name} - it's a required property`);
@@ -55,16 +54,10 @@ export function ColumnVisibilityMenu() {
     setIsLoading(true);
 
     try {
-      await toggleProperty(propertyId, !currentlyVisible);
-      toast.success(
-        `${property.name} ${currentlyVisible ? "hidden" : "shown"}`
-      );
+      await toggleProperty(propertyId);
+      toast.success(`Property visibility updated`);
     } catch (error) {
-      console.log(error);
-
-      toast.error(
-        `Failed to ${currentlyVisible ? "hide" : "show"} ${property.name}`
-      );
+      toast.error(`Failed to update property visibility`);
     } finally {
       setIsLoading(false);
     }
@@ -79,8 +72,6 @@ export function ColumnVisibilityMenu() {
       await showAll();
       toast.success("All properties are now visible");
     } catch (error) {
-      console.log(error);
-
       toast.error("Failed to show all properties");
     } finally {
       setIsLoading(false);
@@ -95,8 +86,6 @@ export function ColumnVisibilityMenu() {
       await hideAll();
       toast.success("Non-required properties hidden");
     } catch (error) {
-      console.log(error);
-
       toast.error("Failed to hide properties");
     } finally {
       setIsLoading(false);
@@ -155,7 +144,7 @@ export function ColumnVisibilityMenu() {
               <DropdownMenuCheckboxItem
                 key={property.id}
                 checked={true}
-                onCheckedChange={() => handleToggleProperty(property.id, true)}
+                onCheckedChange={() => handleToggleProperty(property.id)}
                 disabled={isLoading || !canHideProperty(property)}
                 className="flex items-center justify-between"
               >
@@ -182,7 +171,7 @@ export function ColumnVisibilityMenu() {
               <DropdownMenuCheckboxItem
                 key={property.id}
                 checked={false}
-                onCheckedChange={() => handleToggleProperty(property.id, false)}
+                onCheckedChange={() => handleToggleProperty(property.id)}
                 disabled={isLoading}
                 className="flex items-center justify-between opacity-60"
               >

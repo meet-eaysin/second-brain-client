@@ -176,9 +176,15 @@ export const databaseApi = {
     return response.data;
   },
 
-  togglePropertyVisibility: async (databaseId: string, propertyId: string) => {
+  togglePropertyVisibility: async (
+    databaseId: string,
+    propertyId: string,
+    params?: { viewId?: string }
+  ) => {
     const response = await apiClient.patch(
-      API_ENDPOINTS.PROPERTY.TOGGLE_VISIBILITY(databaseId, propertyId)
+      API_ENDPOINTS.PROPERTY.TOGGLE_VISIBILITY(databaseId, propertyId),
+      {},
+      { params }
     );
     return response.data;
   },

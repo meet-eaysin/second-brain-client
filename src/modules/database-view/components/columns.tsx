@@ -258,7 +258,6 @@ export const generateDocumentColumns = (
     newValue: TPropertyValue
   ) => void
 ): ColumnDef<TRecord>[] => {
-  console.log("$$ P$OPEDKF", properties)
   const columns: ColumnDef<TRecord>[] = [
     {
       id: "select",
@@ -306,6 +305,7 @@ export const generateDocumentColumns = (
         if (onUpdateRecord) {
           return (
             <EditableCell
+              key={`${row.original.id}-${property.id}`}
               property={property}
               value={value}
               record={row.original}
