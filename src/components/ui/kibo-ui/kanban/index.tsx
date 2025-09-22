@@ -1,5 +1,3 @@
-"use client";
-
 import type {
   Announcements,
   DndContextProps,
@@ -50,7 +48,7 @@ type KanbanColumnProps = {
 
 type KanbanContextProps<
   T extends KanbanItemProps = KanbanItemProps,
-  C extends KanbanColumnProps = KanbanColumnProps,
+  C extends KanbanColumnProps = KanbanColumnProps
 > = {
   columns: C[];
   data: T[];
@@ -184,7 +182,7 @@ export const KanbanHeader = ({ className, ...props }: KanbanHeaderProps) => (
 
 export type KanbanProviderProps<
   T extends KanbanItemProps = KanbanItemProps,
-  C extends KanbanColumnProps = KanbanColumnProps,
+  C extends KanbanColumnProps = KanbanColumnProps
 > = Omit<DndContextProps, "children"> & {
   children: (column: C) => ReactNode;
   className?: string;
@@ -198,7 +196,7 @@ export type KanbanProviderProps<
 
 export const KanbanProvider = <
   T extends KanbanItemProps = KanbanItemProps,
-  C extends KanbanColumnProps = KanbanColumnProps,
+  C extends KanbanColumnProps = KanbanColumnProps
 >({
   children,
   onDragStart,

@@ -45,7 +45,7 @@ export function Calendar({ className = "" }: CalendarProps) {
 
   // Transform records for calendar format
   const calendarFeatures = useMemo(() => {
-    if (!records || !Array.isArray(records) || dateProperties.length === 0) {
+    if (!records || !Array.isArray(records)) {
       return [];
     }
 
@@ -58,12 +58,26 @@ export function Calendar({ className = "" }: CalendarProps) {
     }> = [];
 
     records.forEach((record: TRecord) => {
-      dateProperties.forEach((dateProperty) => {
-        const dateValue = record.properties[dateProperty.id];
+      // Use date properties if available, otherwise fall back to createdAt
+      const dateSources =
+        dateProperties.length > 0
+          ? dateProperties
+          : [{ id: "createdAt", name: "Created Date", type: "date" }];
+
+      dateSources.forEach((dateSource) => {
+        let dateValue: string | null = null;
+
+        if (dateProperties.length > 0) {
+          // Use actual date property
+          dateValue = record.properties[dateSource.id] as string;
+        } else {
+          // Fall back to createdAt timestamp
+          dateValue = record.createdAt || record.created_at;
+        }
 
         if (dateValue) {
-          const startDate = new Date(dateValue as string);
-          const endDate = new Date(dateValue as string); // Single day event
+          const startDate = new Date(dateValue);
+          const endDate = new Date(dateValue); // Single day event
 
           // Use title property for name
           const titleValue = titleProperty
@@ -71,15 +85,15 @@ export function Calendar({ className = "" }: CalendarProps) {
             : "Untitled";
           const name = String(titleValue);
 
-          // Create status based on date property
+          // Create status based on date source
           const status = {
-            id: dateProperty.id,
-            name: dateProperty.name,
-            color: "#3B82F6", // Default blue color
+            id: dateSource.id,
+            name: dateSource.name,
+            color: dateProperties.length > 0 ? "#3B82F6" : "#10B981", // Blue for date props, green for created
           };
 
           features.push({
-            id: `${record.id}-${dateProperty.id}`,
+            id: `${record.id}-${dateSource.id}`,
             name,
             startAt: startDate,
             endAt: endDate,
@@ -95,15 +109,30 @@ export function Calendar({ className = "" }: CalendarProps) {
   // Create a map to store record data for click handling
   const recordMap = useMemo(() => {
     const map = new Map<string, TRecord>();
-    if (!records || !Array.isArray(records) || dateProperties.length === 0) {
+    if (!records || !Array.isArray(records)) {
       return map;
     }
 
     records.forEach((record: TRecord) => {
-      dateProperties.forEach((dateProperty) => {
-        const dateValue = record.properties[dateProperty.id];
+      // Use date properties if available, otherwise fall back to createdAt
+      const dateSources =
+        dateProperties.length > 0
+          ? dateProperties
+          : [{ id: "createdAt", name: "Created Date", type: "date" }];
+
+      dateSources.forEach((dateSource) => {
+        let dateValue: string | null = null;
+
+        if (dateProperties.length > 0) {
+          // Use actual date property
+          dateValue = record.properties[dateSource.id] as string;
+        } else {
+          // Fall back to createdAt timestamp
+          dateValue = record.createdAt || record.created_at;
+        }
+
         if (dateValue) {
-          const featureId = `${record.id}-${dateProperty.id}`;
+          const featureId = `${record.id}-${dateSource.id}`;
           map.set(featureId, record);
         }
       });
@@ -155,11 +184,11 @@ export function Calendar({ className = "" }: CalendarProps) {
     );
   }
 
-  // Show message if no date properties
-  if (dateProperties.length === 0) {
+  // Show message if no records (fallback to createdAt should work if records exist)
+  if (dateProperties.length === 0 && (!records || records.length === 0)) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="Calendar view requires at least one DATE property" />
+        <NoDataMessage message="Calendar view requires records with creation dates or DATE properties" />
       </div>
     );
   }

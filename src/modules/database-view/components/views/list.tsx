@@ -75,9 +75,7 @@ export function List({ className = "" }: ListProps) {
       [titleProperty?.id, groupingProperty?.id].filter(Boolean)
     );
 
-    return properties
-      .filter((p) => !excludedIds.has(p.id) && p.isVisible)
-      .slice(0, 3); // Show max 3 additional properties
+    return properties.filter((p) => !excludedIds.has(p.id) && p.isVisible);
   }, [properties, titleProperty?.id, groupingProperty?.id]);
 
   // Helper function to render property values

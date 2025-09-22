@@ -1,5 +1,3 @@
-"use client";
-
 import {
   DndContext,
   MouseSensor,
@@ -103,7 +101,7 @@ export type GanttContextProps = {
   rowHeight: number;
   onAddItem: ((date: Date) => void) | undefined;
   placeholderLength: number;
-  ganttData: GanttData;
+  timelineData: GanttData;
   ref: RefObject<HTMLDivElement | null> | null;
   scrollToFeature?: (feature: GanttFeature) => void;
 };
@@ -170,7 +168,11 @@ const getAddRange = (range: Range) => {
 };
 
 const getDateByMousePosition = (context: GanttContextProps, mouseX: number) => {
-  const ganttStartDate = new Date(context.ganttData[0].year, 0, 1);
+  if (!context.timelineData || context.timelineData.length === 0) {
+    return new Date();
+  }
+
+  const ganttStartDate = new Date(context.timelineData[0].year, 0, 1);
   const columnWidth = (context.columnWidth * context.zoom) / 100;
   const offset = Math.floor(mouseX / columnWidth);
   const daysIn = getsDaysIn(context.range);
@@ -184,7 +186,7 @@ const getDateByMousePosition = (context: GanttContextProps, mouseX: number) => {
   return actualDate;
 };
 
-const createInitialGanttData = (today: Date) => {
+const createInitialTimelineData = (today: Date) => {
   const data: GanttData = [];
 
   data.push(

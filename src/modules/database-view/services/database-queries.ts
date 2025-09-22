@@ -666,6 +666,9 @@ export const useUpdateViewFilters = () => {
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
       });
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.records(variables.databaseId),
+      });
       toast.success("View filters updated successfully");
     },
     onError: (error) => {
@@ -696,6 +699,9 @@ export const useUpdateViewSorts = () => {
       });
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.records(variables.databaseId),
       });
       toast.success("View sorts updated successfully");
     },

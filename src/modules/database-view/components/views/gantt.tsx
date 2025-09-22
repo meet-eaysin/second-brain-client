@@ -14,7 +14,19 @@ import {
   GanttTimeline,
   GanttToday,
 } from "@/components/ui/kibo-ui/gantt";
-// Native groupBy implementation
+import { EyeIcon, LinkIcon, TrashIcon } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { useDatabaseView } from "@/modules/database-view/context";
+import { NoDataMessage } from "@/components/no-data-message.tsx";
+import type { TRecord } from "@/modules/database-view/types";
+import { EPropertyType } from "@/modules/database-view/types";
+import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+
 const groupBy = <T, K extends string | number | symbol>(
   array: T[],
   keyFn: (item: T) => K
@@ -28,18 +40,6 @@ const groupBy = <T, K extends string | number | symbol>(
     return result;
   }, {} as Record<K, T[]>);
 };
-import { EyeIcon, LinkIcon, TrashIcon } from "lucide-react";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { useDatabaseView } from "@/modules/database-view/context";
-import { NoDataMessage } from "@/components/no-data-message.tsx";
-import type { TRecord } from "@/modules/database-view/types";
-import { EPropertyType } from "@/modules/database-view/types";
-import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 
 export function Gantt({ className = "" }: { className?: string }) {
   const {
@@ -78,7 +78,7 @@ export function Gantt({ className = "" }: { className?: string }) {
 
   // Transform records for Gantt format
   const ganttFeatures = useMemo(() => {
-    if (!records || !Array.isArray(records) || dateProperties.length === 0) {
+    if (!records || !Array.isArray(records)) {
       return [];
     }
 
@@ -93,8 +93,22 @@ export function Gantt({ className = "" }: { className?: string }) {
     }> = [];
 
     records.forEach((record: TRecord) => {
-      dateProperties.forEach((dateProperty) => {
-        const dateValue = record.properties?.[dateProperty.id];
+      // Use date properties if available, otherwise fall back to createdAt
+      const dateSources =
+        dateProperties.length > 0
+          ? dateProperties
+          : [{ id: "createdAt", name: "Created Date", type: "date" }];
+
+      dateSources.forEach((dateSource) => {
+        let dateValue: string | null = null;
+
+        if (dateProperties.length > 0) {
+          // Use actual date property
+          dateValue = record.properties?.[dateSource.id] as string;
+        } else {
+          // Fall back to createdAt timestamp
+          dateValue = record.createdAt || record.created_at;
+        }
 
         if (dateValue && typeof dateValue === "string") {
           const startDate = new Date(dateValue);
@@ -106,11 +120,11 @@ export function Gantt({ className = "" }: { className?: string }) {
             : "Untitled";
           const name = String(titleValue);
 
-          // Create status based on date property
+          // Create status based on date source
           const status = {
-            id: dateProperty.id,
-            name: dateProperty.name,
-            color: "#3B82F6",
+            id: dateSource.id,
+            name: dateSource.name,
+            color: dateProperties.length > 0 ? "#3B82F6" : "#10B981", // Different color for created date
           };
 
           // Create group based on grouping property or default
@@ -124,7 +138,7 @@ export function Gantt({ className = "" }: { className?: string }) {
           };
 
           features.push({
-            id: `${record.id}-${dateProperty.id}`,
+            id: `${record.id}-${dateSource.id}`,
             name,
             startAt: startDate,
             endAt: endDate,
@@ -185,6 +199,13 @@ export function Gantt({ className = "" }: { className?: string }) {
 
     // Find the date property used for this feature
     const datePropertyId = id.split("-").slice(1).join("-");
+
+    // If using createdAt (fallback), don't allow moving
+    if (datePropertyId === "createdAt") {
+      console.log("Cannot move features based on creation date");
+      return;
+    }
+
     const dateProperty = properties.find((p) => p.id === datePropertyId);
     if (!dateProperty) return;
 
@@ -232,11 +253,11 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }
 
-  // Show message if no date properties
-  if (dateProperties.length === 0) {
+  // Show message if no records (fallback to createdAt should work if records exist)
+  if (dateProperties.length === 0 && (!records || records.length === 0)) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="Gantt view requires at least one DATE property" />
+        <NoDataMessage message="Gantt view requires records with creation dates or DATE properties" />
       </div>
     );
   }

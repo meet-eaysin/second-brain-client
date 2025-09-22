@@ -18,6 +18,7 @@ import { MoreHorizontal, Plus, Edit, Trash2, GripVertical } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
+import { EditableCell } from "@/modules/database-view/components/editable-cell";
 import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 
@@ -138,15 +139,13 @@ export function Gallery({ className = "" }: { className?: string }) {
       : "Untitled";
     const title = String(titleValue);
 
-    // Get other visible properties
-    const visibleProperties = properties
-      .filter(
-        (p) =>
-          p.id !== groupingProperty?.id &&
-          p.id !== titleProperty?.id &&
-          currentView?.settings?.visibleProperties?.includes(p.id)
-      )
-      .slice(0, 3); // Show max 3 additional properties
+    // Get all visible properties except the grouping property and title property
+    const visibleProperties = properties.filter(
+      (p) =>
+        p.id !== groupingProperty?.id &&
+        p.id !== titleProperty?.id &&
+        currentView?.settings?.visibleProperties?.includes(p.id)
+    );
 
     return (
       <Draggable key={record.id} draggableId={record.id} index={index}>
@@ -154,12 +153,11 @@ export function Gallery({ className = "" }: { className?: string }) {
           <Card
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`mb-3 cursor-pointer hover:shadow-md transition-all duration-200 group ${
+            className={`mb-3 hover:shadow-md transition-all duration-200 group ${
               snapshot.isDragging
                 ? "shadow-xl rotate-2 scale-105 bg-background border-primary"
                 : "hover:shadow-md"
             }`}
-            onClick={() => onRecordEdit?.(record)}
           >
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
@@ -175,9 +173,19 @@ export function Gallery({ className = "" }: { className?: string }) {
                   >
                     <GripVertical className="h-4 w-4" />
                   </div>
-                  <CardTitle className="text-sm font-medium line-clamp-2 flex-1">
-                    {title || "Untitled"}
-                  </CardTitle>
+                  <div className="flex-1 min-w-0">
+                    {titleProperty ? (
+                      <EditableCell
+                        record={record}
+                        property={titleProperty}
+                        value={record.properties[titleProperty.id]}
+                      />
+                    ) : (
+                      <CardTitle className="text-sm font-medium line-clamp-2">
+                        {title || "Untitled"}
+                      </CardTitle>
+                    )}
+                  </div>
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -216,59 +224,24 @@ export function Gallery({ className = "" }: { className?: string }) {
             </CardHeader>
             {visibleProperties.length > 0 && (
               <CardContent className="pt-0">
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {visibleProperties.map((property) => {
                     const value = record.properties[property.id];
-                    if (value === null || value === undefined || value === "")
-                      return null;
-
                     return (
                       <div
                         key={property.id}
-                        className="text-xs text-muted-foreground"
+                        className="flex items-center gap-2 min-h-[32px]"
                       >
-                        <span className="font-medium">{property.name}:</span>{" "}
-                        {property.type === EPropertyType.SELECT ? (
-                          <Badge
-                            variant="outline"
-                            className="text-xs text-white border-0"
-                            style={{
-                              backgroundColor:
-                                property.config?.options?.find(
-                                  (opt) => opt.id === value
-                                )?.color || "#6b7280",
-                            }}
-                          >
-                            {property.config?.options?.find(
-                              (opt) => opt.id === value
-                            )?.label || String(value)}
-                          </Badge>
-                        ) : property.type === EPropertyType.MULTI_SELECT ? (
-                          <div className="flex flex-wrap gap-1">
-                            {Array.isArray(value) &&
-                              value.map((val: unknown, index: number) => {
-                                const stringVal = String(val);
-                                const option = property.config?.options?.find(
-                                  (opt) => opt.id === stringVal
-                                );
-                                return (
-                                  <Badge
-                                    key={stringVal || index}
-                                    variant="outline"
-                                    className="text-xs text-white border-0"
-                                    style={{
-                                      backgroundColor:
-                                        option?.color || "#6b7280",
-                                    }}
-                                  >
-                                    {option?.label || stringVal}
-                                  </Badge>
-                                );
-                              })}
-                          </div>
-                        ) : (
-                          <span>{String(value)}</span>
-                        )}
+                        <span className="text-xs font-medium text-muted-foreground min-w-0 flex-shrink-0">
+                          {property.name}:
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <EditableCell
+                            record={record}
+                            property={property}
+                            value={value}
+                          />
+                        </div>
                       </div>
                     );
                   })}
