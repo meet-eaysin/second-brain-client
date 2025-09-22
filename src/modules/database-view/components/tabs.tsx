@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {Tabs, TabsList, TabsTrigger} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,12 +23,13 @@ import {
   Edit,
   Copy,
   Trash2,
-  ChartGanttIcon
+  ChartGanttIcon,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteView, useDuplicateView } from "../services/database-queries";
-import type {TView} from "@/modules/database-view/types";
-import {useDatabaseView} from "@/modules/database-view/context";
+import type { TView } from "@/modules/database-view/types";
+import { useDatabaseView } from "@/modules/database-view/context";
 
 const VIEW_TYPE_ICONS = {
   table: Table,
@@ -42,7 +43,8 @@ const VIEW_TYPE_ICONS = {
 } as const;
 
 export const ViewTabs = () => {
-  const { onViewChange, onDialogOpen, currentView, database, views } = useDatabaseView();
+  const { onViewChange, onDialogOpen, currentView, database, views } =
+    useDatabaseView();
 
   const deleteViewMutation = useDeleteView();
   const duplicateViewMutation = useDuplicateView();
@@ -95,7 +97,7 @@ export const ViewTabs = () => {
     }
   };
 
-    console.log("## views", views);
+  console.log("## views", views);
   return (
     <>
       <div className="border-b">
@@ -131,15 +133,15 @@ export const ViewTabs = () => {
               </TabsList>
 
               <div className="flex items-center gap-2">
-                {/*{isFrozen && (*/}
-                {/*  <Badge*/}
-                {/*    variant="destructive"*/}
-                {/*    className="flex items-center gap-1"*/}
-                {/*  >*/}
-                {/*    <Lock className="h-3 w-3" />*/}
-                {/*    Frozen*/}
-                {/*  </Badge>*/}
-                {/*)}*/}
+                {database?.isFrozen && (
+                  <Badge
+                    variant="destructive"
+                    className="flex items-center gap-1"
+                  >
+                    <Lock className="h-3 w-3" />
+                    Frozen
+                  </Badge>
+                )}
 
                 {currentView && (
                   <DropdownMenu>
@@ -169,9 +171,7 @@ export const ViewTabs = () => {
                         {/*  </Badge>*/}
                         {/*)}*/}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={handleDuplicateView}
-                      >
+                      <DropdownMenuItem onClick={handleDuplicateView}>
                         <Copy className="h-4 w-4 mr-2" />
                         Duplicate View
                       </DropdownMenuItem>
@@ -200,7 +200,11 @@ export const ViewTabs = () => {
                   </DropdownMenu>
                 )}
 
-                <Button onClick={() => onDialogOpen("create-view")} size="sm" variant="outline">
+                <Button
+                  onClick={() => onDialogOpen("create-view")}
+                  size="sm"
+                  variant="outline"
+                >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
@@ -222,4 +226,4 @@ export const ViewTabs = () => {
       />
     </>
   );
-}
+};

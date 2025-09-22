@@ -92,8 +92,10 @@ export function DataTable({
     onRecordDuplicate: contextOnRecordDuplicate,
     onRecordCreate: contextOnRecordCreate,
     onAddProperty: contextOnAddProperty,
-    onRecordChange
+    onRecordChange,
   } = useDatabaseView();
+
+  const isFrozen = database?.isFrozen;
 
   // Use prop handlers if provided, otherwise use context handlers
   const onBulkEdit = propOnBulkEdit || contextOnBulkEdit;
@@ -296,18 +298,25 @@ export function DataTable({
               </span>
             </div>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm" onClick={handleBulkEdit}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleBulkEdit}
+                disabled={isFrozen}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Edit Selected
+                {isFrozen && <span className="ml-1 text-xs">(Frozen)</span>}
               </Button>
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={handleBulkDelete}
-                disabled={bulkDeleteMutation.isPending}
+                disabled={bulkDeleteMutation.isPending || isFrozen}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Selected
+                {isFrozen && <span className="ml-1 text-xs">(Frozen)</span>}
               </Button>
               <Button
                 variant="ghost"
@@ -350,6 +359,12 @@ export function DataTable({
                       size="sm"
                       onClick={handleAddProperty}
                       className="h-8 w-8 p-0 hover:bg-muted/50"
+                      disabled={isFrozen}
+                      title={
+                        isFrozen
+                          ? "Cannot add properties to frozen database"
+                          : "Add property"
+                      }
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -390,27 +405,47 @@ export function DataTable({
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() => handleRecordEdit(row.original)}
+                            disabled={isFrozen}
                           >
                             <Edit className="h-4 w-4 mr-2" />
                             Edit Record
+                            {isFrozen && (
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                (Frozen)
+                              </span>
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               handleRecordDuplicate(row.original.id)
                             }
-                            disabled={duplicateRecordMutation.isPending}
+                            disabled={
+                              duplicateRecordMutation.isPending || isFrozen
+                            }
                           >
                             <Copy className="h-4 w-4 mr-2" />
                             Duplicate
+                            {isFrozen && (
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                (Frozen)
+                              </span>
+                            )}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => handleRecordDelete(row.original.id)}
                             className="text-destructive focus:text-destructive"
-                            disabled={deleteRecordMutation.isPending}
+                            disabled={
+                              deleteRecordMutation.isPending || isFrozen
+                            }
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
+                            {isFrozen && (
+                              <span className="ml-auto text-xs text-muted-foreground">
+                                (Frozen)
+                              </span>
+                            )}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -432,12 +467,17 @@ export function DataTable({
             <TableRow className="hover:bg-muted/50 border-t-2">
               <TableCell
                 colSpan={columns.length + 1}
-                className="text-center py-2 cursor-pointer text-muted-foreground hover:text-foreground"
-                onClick={handleRecordCreate}
+                className={`text-center py-2 text-muted-foreground ${
+                  isFrozen
+                    ? "cursor-not-allowed opacity-60"
+                    : "cursor-pointer hover:text-foreground"
+                }`}
+                onClick={isFrozen ? undefined : handleRecordCreate}
               >
                 <div className="flex items-center justify-start gap-2">
                   <Plus className="h-4 w-4" />
                   <span>New Record</span>
+                  {isFrozen && <span className="ml-2 text-xs">(Frozen)</span>}
                 </div>
               </TableCell>
             </TableRow>

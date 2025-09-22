@@ -48,10 +48,15 @@ export function DatabasePrimaryButtons() {
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => database?.id && onDialogOpen("edit-database")}
-              disabled={!database?.id}
+              disabled={!database?.id || database?.isFrozen}
             >
               <Settings className="mr-2 h-4 w-4" />
               Document Settings
+              {database?.isFrozen && (
+                <span className="ml-auto text-xs text-muted-foreground">
+                  (Frozen)
+                </span>
+              )}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

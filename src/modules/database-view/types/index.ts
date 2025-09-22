@@ -65,6 +65,8 @@ export type TDatabase = TBaseEntity & {
   isPublic: boolean;
   isTemplate: boolean;
   isArchived: boolean;
+  isFrozen: boolean;
+  frozenReason?: string;
   properties: TProperty[];
   views: TView[];
   templates: TDatabaseTemplate[];
@@ -293,7 +295,7 @@ export enum EViewType {
   GALLERY = "GALLERY",
   TIMELINE = "TIMELINE",
   GANTT = "GANTT",
-  CHART='CHART'
+  CHART = "CHART",
 }
 
 export enum EFilterOperator {
@@ -485,6 +487,8 @@ export type TCreateDatabase = {
   cover?: string;
   workspaceId?: string;
   isPublic?: boolean;
+  isFrozen?: boolean;
+  frozenReason?: string;
 };
 
 export type TUpdateDatabase = {
@@ -493,6 +497,8 @@ export type TUpdateDatabase = {
   icon?: string;
   cover?: string;
   isPublic?: boolean;
+  isFrozen?: boolean;
+  frozenReason?: string;
 };
 
 export type TCreateProperty = {

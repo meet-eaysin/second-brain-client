@@ -94,13 +94,21 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
   };
 
   const renderEditableContent = () => {
+    const isFrozen = database?.isFrozen;
+
     if (!isEditing) {
       return (
         <div
-          className="cursor-pointer hover:bg-muted/50 p-1 rounded min-h-[24px] transition-colors flex items-center"
+          className={`p-1 rounded min-h-[24px] flex items-center ${
+            isFrozen
+              ? "cursor-not-allowed opacity-60"
+              : "cursor-pointer hover:bg-muted/50 transition-colors"
+          }`}
           onClick={() => {
-            setIsEditing(true);
-            setEditValue(value);
+            if (!isFrozen) {
+              setIsEditing(true);
+              setEditValue(value);
+            }
           }}
         >
           {renderDisplayValue()}
