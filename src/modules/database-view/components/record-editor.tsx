@@ -5,6 +5,27 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import {
   EditorBubbleMenu,
   EditorCharacterCount,
@@ -48,7 +69,7 @@ import {
   EditorTableSplitCell,
 } from "@/components/ui/kibo-ui/editor";
 import { Button } from "@/components/ui/button";
-import { Save, Loader2, X } from "lucide-react";
+import { Save, Loader2 } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import {
   useRecord,
@@ -61,6 +82,10 @@ import type {
   TTextAnnotations,
   TRichText,
   ERichTextType,
+  TProperty,
+  TPropertyValue,
+  TPropertyOption,
+  TUpdateRecord,
 } from "@/modules/database-view/types";
 
 // Import the correct enum from backend record types
@@ -105,6 +130,170 @@ interface RecordEditorProps {
   className?: string;
 }
 
+interface PropertyFieldProps {
+  property: TProperty;
+  value: TPropertyValue;
+  onChange: (value: TPropertyValue) => void;
+  disabled?: boolean;
+}
+
+function PropertyField({
+  property,
+  value,
+  onChange,
+  disabled,
+}: PropertyFieldProps) {
+  const handleChange = (newValue: TPropertyValue) => {
+    onChange(newValue);
+  };
+
+  switch (property.type) {
+    case "text":
+    case "email":
+    case "url":
+    case "phone":
+      return (
+        <Input
+          type={
+            property.type === "email"
+              ? "email"
+              : property.type === "url"
+              ? "url"
+              : property.type === "phone"
+              ? "tel"
+              : "text"
+          }
+          value={value || ""}
+          onChange={(e) => handleChange(e.target.value)}
+          disabled={disabled}
+          placeholder={`Enter ${property.name.toLowerCase()}`}
+        />
+      );
+
+    case "number":
+      return (
+        <Input
+          type="number"
+          value={value || ""}
+          onChange={(e) =>
+            handleChange(e.target.value ? Number(e.target.value) : null)
+          }
+          disabled={disabled}
+          placeholder={`Enter ${property.name.toLowerCase()}`}
+        />
+      );
+
+    case "checkbox":
+      return (
+        <Checkbox
+          checked={Boolean(value)}
+          onCheckedChange={handleChange}
+          disabled={disabled}
+        />
+      );
+
+    case "select":
+      return (
+        <Select
+          value={value || ""}
+          onValueChange={handleChange}
+          disabled={disabled}
+        >
+          <SelectTrigger>
+            <SelectValue
+              placeholder={`Select ${property.name.toLowerCase()}`}
+            />
+          </SelectTrigger>
+          <SelectContent>
+            {property.config?.options?.map((option: TPropertyOption) => (
+              <SelectItem key={option.id} value={option.id}>
+                <div className="flex items-center space-x-2">
+                  {option.color && (
+                    <div
+                      className="w-3 h-3 rounded-full border border-gray-300"
+                      style={{ backgroundColor: option.color }}
+                    />
+                  )}
+                  <span>{option.label}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+
+    case "multi_select": {
+      const selectedValues = Array.isArray(value) ? value : [];
+      return (
+        <div className="flex flex-wrap gap-1 min-h-[32px] p-1 border rounded-md">
+          {selectedValues.map((val: string) => {
+            const option = property.config?.options?.find(
+              (opt: TPropertyOption) => opt.id === val
+            );
+            return option ? (
+              <Badge
+                key={option.id}
+                variant="secondary"
+                className="text-xs"
+                style={{
+                  backgroundColor: option.color + "20",
+                  color: option.color,
+                }}
+              >
+                {option.label}
+              </Badge>
+            ) : null;
+          })}
+          <span className="text-muted-foreground text-sm self-center">
+            Multi-select field (edit in table)
+          </span>
+        </div>
+      );
+    }
+
+    case "date": {
+      const dateValue = value ? new Date(value) : null;
+      return (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !dateValue && "text-muted-foreground"
+              )}
+              disabled={disabled}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateValue ? format(dateValue, "PPP") : "Pick a date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dateValue}
+              onSelect={(date) =>
+                handleChange(date ? date.toISOString() : null)
+              }
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      );
+    }
+
+    default:
+      return (
+        <Input
+          value={value || ""}
+          onChange={(e) => handleChange(e.target.value)}
+          disabled={disabled}
+          placeholder={`Enter ${property.name.toLowerCase()}`}
+        />
+      );
+  }
+}
+
 export function RecordEditor({
   databaseId,
   recordId,
@@ -131,6 +320,9 @@ export function RecordEditor({
 
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [propertyChanges, setPropertyChanges] = useState<
+    Record<string, TPropertyValue>
+  >({});
 
   // API hooks - use records API instead of blocks
   const { data: recordData, isLoading: isLoadingRecord } = useRecord(
@@ -456,29 +648,50 @@ export function RecordEditor({
     setHasUnsavedChanges(true);
   };
 
-  // Save content
+  // Handle property changes
+  const handlePropertyChange = (propertyId: string, value: TPropertyValue) => {
+    setPropertyChanges((prev) => ({
+      ...prev,
+      [propertyId]: value,
+    }));
+    setHasUnsavedChanges(true);
+  };
+
+  // Save content and properties
   const handleSave = async () => {
     if (!databaseId || !recordId || isSaving) return;
 
     setIsSaving(true);
     try {
-      // Convert editor content back to blocks
-      const blocks = convertEditorContentToBlocks(content);
+      const payload: TUpdateRecord = {};
 
-      // Update the record with the new content
-      await updateRecordMutation.mutateAsync({
-        databaseId,
-        recordId,
-        payload: {
-          content: blocks,
-        },
-      });
+      // Add content changes if any
+      if (hasUnsavedChanges) {
+        const blocks = convertEditorContentToBlocks(content);
+        payload.content = blocks;
+      }
 
-      setHasUnsavedChanges(false);
-      toast.success("Content saved successfully");
+      // Add property changes if any
+      if (Object.keys(propertyChanges).length > 0) {
+        payload.properties = propertyChanges;
+      }
+
+      // Only save if there are actual changes
+      if (Object.keys(payload).length > 0) {
+        await updateRecordMutation.mutateAsync({
+          databaseId,
+          recordId,
+          payload,
+        });
+
+        // Clear changes after successful save
+        setPropertyChanges({});
+        setHasUnsavedChanges(false);
+        toast.success("Record saved successfully");
+      }
     } catch (error) {
-      console.error("Failed to save content:", error);
-      toast.error("Failed to save content");
+      console.error("Failed to save record:", error);
+      toast.error("Failed to save record");
     } finally {
       setIsSaving(false);
     }
@@ -710,12 +923,12 @@ export function RecordEditor({
     return annotations;
   };
 
-  const handleClose = () => {
-    if (hasUnsavedChanges) {
-      const confirmed = window.confirm(
-        "You have unsaved changes. Are you sure you want to close?"
-      );
-      if (!confirmed) return;
+  const handleClose = async () => {
+    const hasChanges =
+      hasUnsavedChanges || Object.keys(propertyChanges).length > 0;
+    if (hasChanges && !isFrozen) {
+      // Auto-save on close
+      await handleSave();
     }
     onOpenChange(false);
   };
@@ -723,7 +936,16 @@ export function RecordEditor({
   const isFrozen = database?.isFrozen;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen) {
+          handleClose();
+        } else {
+          onOpenChange(newOpen);
+        }
+      }}
+    >
       <DialogContent
         className={`max-w-6xl h-[90vh] flex flex-col ${className}`}
       >
@@ -738,7 +960,8 @@ export function RecordEditor({
               )}
             </DialogTitle>
             <div className="flex items-center gap-2">
-              {hasUnsavedChanges && (
+              {(hasUnsavedChanges ||
+                Object.keys(propertyChanges).length > 0) && (
                 <span className="text-sm text-amber-600">Unsaved changes</span>
               )}
               <Button
@@ -755,18 +978,42 @@ export function RecordEditor({
                 Save
                 {isFrozen && <span className="ml-1 text-xs">(Frozen)</span>}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">Record ID: {recordId}</p>
         </DialogHeader>
+
+        {/* Properties Form */}
+        <div className="flex-shrink-0 border-b bg-muted/30 p-4">
+          <Card className="border-0 shadow-none bg-transparent">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Record Properties</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {database?.properties?.map((property) => (
+                <div
+                  key={property.id}
+                  className="grid grid-cols-3 gap-4 items-center"
+                >
+                  <Label className="text-sm font-medium">{property.name}</Label>
+                  <div className="col-span-2">
+                    <PropertyField
+                      property={property}
+                      value={
+                        propertyChanges[property.id] ??
+                        recordData?.properties?.[property.id]
+                      }
+                      onChange={(value) =>
+                        handlePropertyChange(property.id, value)
+                      }
+                      disabled={isFrozen}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Editor */}
         <div className="flex-1 overflow-hidden">

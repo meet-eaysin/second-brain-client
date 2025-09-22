@@ -38,6 +38,7 @@ import {
   MoreHorizontal,
   Copy,
   Edit,
+  ExternalLink,
 } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import type { TRecord } from "@/modules/database-view/types";
@@ -382,15 +383,27 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="group cursor-pointer hover:bg-muted/50"
-                  onClick={() => onRecordOpen?.(row.original)}
+                  className="group hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="relative group/cell">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
                       )}
+                      {/* Hover icon to open record editor */}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover/cell:opacity-100 hover:bg-muted/80 transition-opacity"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRecordOpen?.(row.original);
+                        }}
+                        title="Open record editor"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
                     </TableCell>
                   ))}
                   <TableCell className="w-12">
