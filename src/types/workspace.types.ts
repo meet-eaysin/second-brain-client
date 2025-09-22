@@ -18,7 +18,7 @@ export enum EWorkspaceMemberRole {
 export type WorkspaceRole = EWorkspaceMemberRole;
 export type WorkspacePermission = "read" | "write" | "admin";
 
-// Workspace configuration
+// Workspace configuration - matches backend IWorkspaceConfig
 export interface WorkspaceConfig {
   // Appearance
   theme?: "light" | "dark" | "auto";
@@ -45,7 +45,7 @@ export interface WorkspaceConfig {
   sessionTimeout?: number; // in minutes
 }
 
-// Workspace member permissions
+// Workspace member permissions - matches backend IWorkspaceMemberPermissions
 export interface WorkspaceMemberPermissions {
   canCreateDatabases: boolean;
   canManageMembers: boolean;
@@ -57,6 +57,7 @@ export interface WorkspaceMemberPermissions {
   canRemoveMembers: boolean;
 }
 
+// Workspace member - matches backend IWorkspaceMember
 export interface WorkspaceMember {
   id: string;
   workspaceId: string;
@@ -92,12 +93,14 @@ export interface WorkspaceMember {
   };
 }
 
+// Workspace - matches backend IWorkspace
 export interface Workspace {
-  _id: string;
-  id?: string; // For compatibility
+  id: string;
   name: string;
   description?: string;
   type: EWorkspaceType;
+
+  // Appearance
   icon?: {
     type: "emoji" | "icon" | "image";
     value: string;
@@ -106,23 +109,34 @@ export interface Workspace {
     type: "color" | "gradient" | "image";
     value: string;
   };
+
+  // Settings
   config: WorkspaceConfig;
   isPublic: boolean;
   isArchived: boolean;
+
+  // Ownership
   ownerId: string;
+
+  // Statistics
   memberCount: number;
   databaseCount: number;
   recordCount: number;
-  storageUsed: number;
+  storageUsed: number; // in bytes
+
+  // Metadata
   lastActivityAt?: string;
+
+  // Billing (for team/org workspaces)
   planType?: "free" | "pro" | "team" | "enterprise";
   billingEmail?: string;
   subscriptionId?: string;
   subscriptionStatus?: "active" | "past_due" | "canceled" | "unpaid";
   trialEndsAt?: string;
+
+  // Base entity fields
   createdAt: string;
   updatedAt: string;
-  __v?: number;
   isDeleted?: boolean;
   createdBy?: string;
   updatedBy?: string;

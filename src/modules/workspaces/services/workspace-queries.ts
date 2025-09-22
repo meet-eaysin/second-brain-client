@@ -1,16 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workspaceApi } from "./workspace-api";
-import type {
-  CreateWorkspaceRequest,
-  UpdateWorkspaceRequest,
-  InviteMemberRequest,
-  UpdateMemberRoleRequest,
-  TransferOwnershipRequest,
-  BulkMemberOperationRequest,
-  GetWorkspacesQuery,
-  GetWorkspaceMembersQuery,
-  SearchWorkspacesQuery,
-} from "@/types/workspace.types";
+import type { IUpdateWorkspaceRequest } from "@/types/workspace.types";
 import { toast } from "sonner";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { EDatabaseType } from "@/modules/database-view";
@@ -27,77 +17,149 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
 
 export const WORKSPACE_KEYS = {
   all: ["workspaces"] as const,
-  lists: () => [...WORKSPACE_KEYS.all, "list"] as const,
-  list: (params?: GetWorkspacesQuery) =>
-    [...WORKSPACE_KEYS.lists(), params] as const,
-  details: () => [...WORKSPACE_KEYS.all, "detail"] as const,
-  detail: (id: string) => [...WORKSPACE_KEYS.details(), id] as const,
-  members: (id: string) => [...WORKSPACE_KEYS.all, "members", id] as const,
-  permissions: (id: string) =>
-    [...WORKSPACE_KEYS.all, "permissions", id] as const,
-  activity: (id: string) => [...WORKSPACE_KEYS.all, "activity", id] as const,
-  stats: () => [...WORKSPACE_KEYS.all, "stats"] as const,
-  public: () => [...WORKSPACE_KEYS.all, "public"] as const,
-  search: (params: SearchWorkspacesQuery) =>
-    [...WORKSPACE_KEYS.all, "search", params] as const,
+  userWorkspaces: () => [...WORKSPACE_KEYS.all, "user"] as const,
+  current: () => [...WORKSPACE_KEYS.all, "current"] as const,
   primary: () => [...WORKSPACE_KEYS.all, "primary"] as const,
+  stats: () => [...WORKSPACE_KEYS.all, "stats"] as const,
+  access: () => [...WORKSPACE_KEYS.all, "access"] as const,
+  modules: () => [...WORKSPACE_KEYS.all, "modules"] as const,
 };
 
-export const useInitializeModules = (payload: TModuleInitializeRequest) => {
+// Get user's workspaces
+export const useUserWorkspaces = () => {
+  const { isAuthenticated } = useAuthStore();
+
   return useQuery({
-    queryKey: WORKSPACE_KEYS.all,
+    queryKey: WORKSPACE_KEYS.userWorkspaces(),
+    queryFn: () => workspaceApi.getUserWorkspaces(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Get current workspace
+export const useCurrentWorkspace = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.current(),
+    queryFn: () => workspaceApi.getCurrentWorkspace(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Get primary workspace
+export const usePrimaryWorkspace = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.primary(),
+    queryFn: () => workspaceApi.getPrimaryWorkspace(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Get or create default workspace
+export const useGetOrCreateDefaultWorkspace = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.primary(),
+    queryFn: () => workspaceApi.getOrCreateDefaultWorkspace(),
+    enabled: isAuthenticated,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Get current workspace stats
+export const useCurrentWorkspaceStats = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.stats(),
+    queryFn: () => workspaceApi.getCurrentWorkspaceStats(),
+    enabled: isAuthenticated,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Check current workspace access
+export const useCurrentWorkspaceAccess = () => {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: WORKSPACE_KEYS.access(),
+    queryFn: () => workspaceApi.checkCurrentWorkspaceAccess(),
+    enabled: isAuthenticated,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Initialize workspace modules
+export const useInitializeWorkspaceModules = (
+  payload: TModuleInitializeRequest
+) => {
+  return useQuery({
+    queryKey: [...WORKSPACE_KEYS.modules(), payload],
     queryFn: () => workspaceApi.initializeWorkspaceModules(payload),
     staleTime: 5 * 60 * 1000,
     enabled: !payload.isInitialized && !!payload.workspaceId,
   });
 };
 
-export const useGetWorkspaces = (params?: GetWorkspacesQuery) => {
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.list(params),
-    queryFn: () => workspaceApi.getWorkspaces(params),
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-export const useGetModuleDatabaseId = (
-  workspaceId: string,
+// Get module database ID
+export const useModuleDatabaseId = (
   moduleType: EDatabaseType,
   initialized: boolean = false
 ) => {
   return useQuery({
-    queryKey: WORKSPACE_KEYS.all,
+    queryKey: [...WORKSPACE_KEYS.modules(), moduleType],
     queryFn: () => workspaceApi.getModuleDatabaseId(moduleType),
     staleTime: 5 * 60 * 1000,
     enabled: !initialized,
   });
 };
 
-export const useGetWorkspaceById = (id: string) => {
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.detail(id),
-    queryFn: () => workspaceApi.getWorkspaceById(id),
-    enabled: !!id,
-    staleTime: 5 * 60 * 1000,
+// Mutations
+
+// Update current workspace
+export const useUpdateCurrentWorkspace = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: IUpdateWorkspaceRequest) =>
+      workspaceApi.updateCurrentWorkspace(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.current() });
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
+      toast.success("Workspace updated successfully");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to update workspace"));
+    },
   });
 };
 
-export const useGetPrimaryWorkspace = () => {
-  const { isAuthenticated, isInitialized } = useAuthStore();
+// Delete current workspace
+export const useDeleteCurrentWorkspace = () => {
+  const queryClient = useQueryClient();
 
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.primary(),
-    queryFn: () => workspaceApi.getPrimaryWorkspace(),
-    enabled: isAuthenticated && isInitialized,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-export const useGetWorkspaceStats = (workspaceId: string) => {
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.stats(),
-    queryFn: () => workspaceApi.getWorkspaceStats(workspaceId),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+  return useMutation({
+    mutationFn: () => workspaceApi.deleteCurrentWorkspace(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
+      queryClient.removeQueries({ queryKey: WORKSPACE_KEYS.current() });
+      toast.success("Workspace deleted successfully");
+    },
+    onError: (error: unknown) => {
+      toast.error(getErrorMessage(error, "Failed to delete workspace"));
+    },
   });
 };
 

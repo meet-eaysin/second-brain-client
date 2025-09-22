@@ -1,11 +1,10 @@
 import { apiClient } from "@/services/api-client.ts";
-import type { ApiResponse } from "@/modules/auth/types/auth.types.ts";
+import type { ApiResponse } from "@/types/api.types.ts";
 import type {
   Workspace,
-  CreateWorkspaceRequest,
-  UpdateWorkspaceRequest,
-  GetWorkspacesQuery,
-  WorkspaceStatsResponse,
+  ICreateWorkspaceRequest,
+  IUpdateWorkspaceRequest,
+  IWorkspaceStats,
 } from "@/types/workspace.types";
 import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
 import { EDatabaseType } from "@/modules/database-view";
@@ -15,70 +14,57 @@ import type {
 } from "@/modules/workspaces/types/workspaces.types.ts";
 
 export const workspaceApi = {
-  getWorkspaces: async (
-    params?: GetWorkspacesQuery
-  ): Promise<ApiResponse<Workspace[]>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.LIST, {
-      params,
-    });
+  // Get user's workspaces
+  getUserWorkspaces: async (): Promise<ApiResponse<Workspace[]>> => {
+    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.BASE);
     return response.data;
   },
 
-  createWorkspace: async (data: CreateWorkspaceRequest): Promise<Workspace> => {
+  // Create workspace
+  createWorkspace: async (
+    data: ICreateWorkspaceRequest
+  ): Promise<Workspace> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
-      API_ENDPOINTS.WORKSPACES.CREATE,
+      API_ENDPOINTS.WORKSPACES.BASE,
       data
     );
     return response.data.data;
   },
 
-  getWorkspaceById: async (id: string): Promise<Workspace> => {
+  // Get workspace by ID (current workspace)
+  getCurrentWorkspace: async (): Promise<Workspace> => {
     const response = await apiClient.get<ApiResponse<Workspace>>(
-      API_ENDPOINTS.WORKSPACES.BY_ID(id)
+      API_ENDPOINTS.WORKSPACES.CURRENT
     );
     return response.data.data;
   },
 
-  updateWorkspace: async (
-    id: string,
-    data: UpdateWorkspaceRequest
+  // Update current workspace
+  updateCurrentWorkspace: async (
+    data: IUpdateWorkspaceRequest
   ): Promise<Workspace> => {
     const response = await apiClient.put<ApiResponse<Workspace>>(
-      API_ENDPOINTS.WORKSPACES.UPDATE(id),
+      API_ENDPOINTS.WORKSPACES.CURRENT,
       data
     );
     return response.data.data;
   },
 
-  deleteWorkspace: async (id: string): Promise<void> => {
-    await apiClient.delete(API_ENDPOINTS.WORKSPACES.DELETE(id));
+  // Delete current workspace
+  deleteCurrentWorkspace: async (): Promise<void> => {
+    await apiClient.delete(API_ENDPOINTS.WORKSPACES.CURRENT);
   },
 
-  getPrimaryWorkspace: async (): Promise<ApiResponse<Workspace>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.PRIMARY);
-    return response?.data;
-  },
-
-  getOrCreateDefaultWorkspace: async (
-    userInfo?: Record<string, unknown>
-  ): Promise<Workspace> => {
-    const response = await apiClient.post<ApiResponse<Workspace>>(
-      API_ENDPOINTS.WORKSPACES.DEFAULT,
-      userInfo
+  // Get workspace statistics
+  getCurrentWorkspaceStats: async (): Promise<IWorkspaceStats> => {
+    const response = await apiClient.get<ApiResponse<IWorkspaceStats>>(
+      API_ENDPOINTS.WORKSPACES.CURRENT_STATS
     );
     return response.data.data;
   },
 
-  getWorkspaceStats: async (id: string): Promise<WorkspaceStatsResponse> => {
-    const response = await apiClient.get<ApiResponse<WorkspaceStatsResponse>>(
-      API_ENDPOINTS.WORKSPACES.STATS_BY_ID(id)
-    );
-    return response.data.data;
-  },
-
-  checkWorkspaceAccess: async (
-    id: string
-  ): Promise<{
+  // Check workspace access
+  checkCurrentWorkspaceAccess: async (): Promise<{
     hasAccess: boolean;
     canManage: boolean;
     canManageMembers: boolean;
@@ -89,10 +75,30 @@ export const workspaceApi = {
         canManage: boolean;
         canManageMembers: boolean;
       }>
-    >(API_ENDPOINTS.WORKSPACES.ACCESS(id));
+    >(API_ENDPOINTS.WORKSPACES.CURRENT_ACCESS);
     return response.data.data;
   },
 
+  // Get primary workspace
+  getPrimaryWorkspace: async (): Promise<Workspace> => {
+    const response = await apiClient.get<ApiResponse<Workspace>>(
+      API_ENDPOINTS.WORKSPACES.PRIMARY
+    );
+    return response.data.data;
+  },
+
+  // Get or create default workspace
+  getOrCreateDefaultWorkspace: async (
+    userInfo?: Record<string, unknown>
+  ): Promise<Workspace> => {
+    const response = await apiClient.post<ApiResponse<Workspace>>(
+      API_ENDPOINTS.WORKSPACES.DEFAULT,
+      userInfo
+    );
+    return response.data.data;
+  },
+
+  // Module initialization
   getModuleDatabaseId: async (
     moduleType: EDatabaseType
   ): Promise<ApiResponse<{ databaseId: string }>> => {

@@ -17,61 +17,50 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
-import { useAuthStore } from "@/modules/auth/store/authStore";
-import { workspaceApi } from "../services/workspace-api";
+import { useWorkspace } from "../context";
+import { useCreateWorkspace } from "../services/workspace-queries";
 import { WorkspaceForm } from "./workspace-form";
 import type {
-  CreateWorkspaceRequest,
+  ICreateWorkspaceRequest,
   Workspace,
 } from "@/types/workspace.types";
 import { cn } from "@/lib/utils";
 
 export const WorkspaceSelector: React.FC = () => {
   const {
-    workspaces,
+    userWorkspaces,
     currentWorkspace,
-    setCurrentWorkspace,
-    addWorkspace,
-    user,
-  } = useAuthStore();
+    switchWorkspace,
+    isWorkspaceOwner,
+  } = useWorkspace();
   const [open, setOpen] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
 
+  const createWorkspaceMutation = useCreateWorkspace();
+
   const handleWorkspaceSelect = (workspace: Workspace) => {
-    setCurrentWorkspace(workspace);
+    switchWorkspace(workspace.id);
     setOpen(false);
   };
 
-  const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
-    try {
-      const newWorkspace = await workspaceApi.createWorkspace(data);
-      addWorkspace(newWorkspace);
-      setCurrentWorkspace(newWorkspace);
-      setShowCreateForm(false);
-    } catch (error) {
-      // Error is handled by the API
-    }
+  const handleCreateWorkspace = async (data: ICreateWorkspaceRequest) => {
+    await createWorkspaceMutation.mutateAsync(data);
+    setShowCreateForm(false);
   };
 
   const getRoleColor = (workspace: Workspace) => {
-    // For now, assume user is owner if they can see the workspace
-    // This can be enhanced later with proper member role checking
-    const role = workspace.ownerId === user?.id ? "owner" : "member";
+    const isOwner = isWorkspaceOwner(workspace.id);
 
-    switch (role) {
-      case "owner":
-        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
-      case "admin":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "editor":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+    if (isOwner) {
+      return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
     }
+
+    // TODO: Add proper role checking when member management is implemented
+    return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
   };
 
   const getUserRole = (workspace: Workspace) => {
-    return workspace.ownerId === user?.id ? "owner" : "member";
+    return isWorkspaceOwner(workspace.id) ? "owner" : "member";
   };
 
   return (
@@ -114,7 +103,7 @@ export const WorkspaceSelector: React.FC = () => {
               <CommandList>
                 <CommandEmpty>No workspaces found.</CommandEmpty>
                 <CommandGroup heading="Your Workspaces">
-                  {workspaces.map((workspace) => (
+                  {userWorkspaces.map((workspace) => (
                     <CommandItem
                       key={workspace.id}
                       value={workspace.name}

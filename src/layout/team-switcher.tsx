@@ -1,6 +1,5 @@
 import * as React from "react";
-import { ChevronsUpDown, Plus, Building2 } from "lucide-react";
-import { TooltipWrapper } from "@/components/ui/tooltip-wrapper";
+import { ChevronsUpDown, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,73 +16,36 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/modules/auth/store/authStore";
-import { workspaceApi } from "@/modules/workspaces/services/workspace-api";
+import {
+  useUserWorkspaces,
+  useCreateWorkspace,
+} from "@/modules/workspaces/services/workspace-queries";
 import { WorkspaceForm } from "@/modules/workspaces/components/workspace-form";
 import type { CreateWorkspaceRequest } from "@/types/workspace.types";
 
-export function TeamSwitcher({
-  teams,
-}: {
-  teams: {
-    name: string;
-    logo: React.ElementType;
-    plan: string;
-  }[];
-}) {
+export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const { workspaces, currentWorkspace, setCurrentWorkspace, addWorkspace } =
-    useAuthStore();
+  const { currentWorkspace, setCurrentWorkspace } = useAuthStore();
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] =
     React.useState(false);
-  const [isCreatingWorkspace, setIsCreatingWorkspace] = React.useState(false);
 
-  // TODO: Remove mock workspaces when CORS issue is fixed
-  // Mock workspaces for demonstration (API calls are failing due to CORS policy)
-  const mockWorkspaces = [
-    {
-      id: "1",
-      name: "Personal Workspace",
-      description: "My personal knowledge base",
-      icon: "🧠",
-      color: "#3b82f6",
-      isPersonal: true,
-    },
-    {
-      id: "2",
-      name: "Work Projects",
-      description: "Professional work and projects",
-      icon: "💼",
-      color: "#10b981",
-      isPersonal: false,
-    },
-    {
-      id: "3",
-      name: "Learning Hub",
-      description: "Courses, books, and learning materials",
-      icon: "📚",
-      color: "#f59e0b",
-      isPersonal: false,
-    },
-  ];
+  console.log("current", currentWorkspace);
 
-  // Use mock data if no workspaces loaded (for demo purposes)
-  const displayWorkspaces = workspaces.length > 0 ? workspaces : mockWorkspaces;
-  const displayCurrentWorkspace = currentWorkspace || mockWorkspaces[0];
+  // Use React Query hooks for data fetching and mutations
+  const { data: workspacesData, isLoading: isLoadingWorkspaces } =
+    useUserWorkspaces();
+  const createWorkspaceMutation = useCreateWorkspace();
 
-  // Fallback to teams if no workspaces are available
-  const [activeTeam, setActiveTeam] = React.useState(teams[0]);
-  const hasWorkspaces = displayWorkspaces.length > 0;
+  const workspaces = workspacesData?.data || [];
+  const hasWorkspaces = workspaces.length > 0;
+  console.log("workspaces", workspaces);
 
   const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
     try {
-      setIsCreatingWorkspace(true);
-      const newWorkspace = await workspaceApi.createWorkspace(data);
-      addWorkspace(newWorkspace);
-      setCurrentWorkspace(newWorkspace);
+      await createWorkspaceMutation.mutateAsync(data);
+      setIsCreateWorkspaceOpen(false);
     } catch (error) {
       console.error("Failed to create workspace:", error);
-    } finally {
-      setIsCreatingWorkspace(false);
     }
   };
 
@@ -96,26 +58,26 @@ export function TeamSwitcher({
               <SidebarMenuButton
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                disabled={isLoadingWorkspaces}
               >
-                {hasWorkspaces && displayCurrentWorkspace ? (
+                {hasWorkspaces && currentWorkspace ? (
                   <>
                     <div
                       className="flex aspect-square size-8 items-center justify-center rounded-lg text-white"
                       style={{
-                        backgroundColor:
-                          displayCurrentWorkspace.color || "#3b82f6",
+                        backgroundColor: "#3b82f6", // Default color since Workspace type doesn't have color
                       }}
                     >
                       <span className="text-lg">
-                        {displayCurrentWorkspace.icon?.color || "🏢"}
+                        {currentWorkspace.icon?.value || "🏢"}
                       </span>
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {displayCurrentWorkspace.name}
+                        {currentWorkspace.name}
                       </span>
                       <span className="truncate text-xs">
-                        {displayCurrentWorkspace.type === "personal"
+                        {currentWorkspace.type === "personal"
                           ? "Personal"
                           : "Team Workspace"}
                       </span>
@@ -124,15 +86,13 @@ export function TeamSwitcher({
                 ) : (
                   <>
                     <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                      <activeTeam.logo className="size-4" />
+                      <Plus className="size-4" />
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">
                       <span className="truncate font-semibold">
-                        {activeTeam.name}
+                        Create Workspace
                       </span>
-                      <span className="truncate text-xs">
-                        {activeTeam.plan}
-                      </span>
+                      <span className="truncate text-xs">Get started</span>
                     </div>
                   </>
                 )}
@@ -150,24 +110,21 @@ export function TeamSwitcher({
                   <DropdownMenuLabel className="text-muted-foreground text-xs">
                     Workspaces
                   </DropdownMenuLabel>
-                  {displayWorkspaces.map((workspace, index) => (
+                  {workspaces.map((workspace, index) => (
                     <DropdownMenuItem
                       key={workspace.id}
                       onClick={() => {
-                        // Use real setCurrentWorkspace if available, otherwise just update display
-                        if (workspaces.length > 0) {
-                          setCurrentWorkspace(workspace);
-                        }
+                        setCurrentWorkspace(workspace);
                       }}
                       className="gap-2 p-2"
                     >
                       <div
                         className="flex size-6 items-center justify-center rounded-sm text-white text-xs"
                         style={{
-                          backgroundColor: workspace.color || "#3b82f6",
+                          backgroundColor: "#3b82f6", // Default color
                         }}
                       >
-                        {workspace.icon || "🏢"}
+                        {workspace.icon?.value || "🏢"}
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{workspace.name}</div>
@@ -196,22 +153,8 @@ export function TeamSwitcher({
               ) : (
                 <>
                   <DropdownMenuLabel className="text-muted-foreground text-xs">
-                    Teams
+                    Get Started
                   </DropdownMenuLabel>
-                  {teams.map((team, index) => (
-                    <DropdownMenuItem
-                      key={team.name}
-                      onClick={() => setActiveTeam(team)}
-                      className="gap-2 p-2"
-                    >
-                      <div className="flex size-6 items-center justify-center rounded-sm border">
-                        <team.logo className="size-4 shrink-0" />
-                      </div>
-                      {team.name}
-                      <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
-                    </DropdownMenuItem>
-                  ))}
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="gap-2 p-2"
                     onClick={() => setIsCreateWorkspaceOpen(true)}
@@ -219,8 +162,8 @@ export function TeamSwitcher({
                     <div className="bg-background flex size-6 items-center justify-center rounded-md border">
                       <Plus className="size-4" />
                     </div>
-                    <div className="text-muted-foreground font-medium">
-                      Create workspace
+                    <div className="font-medium">
+                      Create your first workspace
                     </div>
                   </DropdownMenuItem>
                 </>
@@ -235,7 +178,7 @@ export function TeamSwitcher({
         onOpenChange={setIsCreateWorkspaceOpen}
         onSubmit={handleCreateWorkspace}
         mode="create"
-        isLoading={isCreatingWorkspace}
+        isLoading={createWorkspaceMutation.isPending}
       />
     </>
   );
