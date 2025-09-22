@@ -2,13 +2,13 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet.tsx";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.tsx";
 import {
   Form,
   FormControl,
@@ -51,7 +51,7 @@ import {
   type CreateDatabaseFormData,
   type UpdateDatabaseFormData,
 } from "../../schemas/database.schema";
-import {Label} from "@/components/ui/label.tsx";
+import { Label } from "@/components/ui/label.tsx";
 
 export function DatabaseForm() {
   const { database, dialogOpen, onDialogOpen, workspace } = useDatabaseView();
@@ -158,23 +158,23 @@ export function DatabaseForm() {
     createDatabaseMutation.isPending || updateDatabaseMutation.isPending;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
-      <SheetContent className="overflow-y-auto w-[500px] sm:w-[700px] lg:w-[800px] px-6">
-        <SheetHeader className="space-y-4 pb-3 px-2">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
+      <DialogContent className="overflow-y-auto max-w-4xl max-h-[90vh] px-6">
+        <DialogHeader className="space-y-4 pb-3 px-2">
           <div>
-            <SheetTitle className="text-xl flex items-center gap-2">
+            <DialogTitle className="text-xl flex items-center gap-2">
               <Database className="h-5 w-5" />
               {mode === "create"
                 ? "Create Custom Database"
                 : "Edit Custom Database"}
-            </SheetTitle>
-            <SheetDescription className="text-muted-foreground">
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               {mode === "create"
                 ? "Create a custom database to organize your data with advanced features and customization options."
                 : "Update your custom database settings and configuration."}
-            </SheetDescription>
+            </DialogDescription>
           </div>
-        </SheetHeader>
+        </DialogHeader>
 
         <Form {...form}>
           <form
@@ -461,7 +461,7 @@ export function DatabaseForm() {
               </CardContent>
             </Card>
 
-            <SheetFooter className="flex gap-3 pt-6 border-t px-1">
+            <DialogFooter className="flex gap-3 pt-6 border-t px-1">
               <div className="flex items-center gap-2">
                 {mode === "edit" && database && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -509,10 +509,10 @@ export function DatabaseForm() {
                   )}
                 </Button>
               </div>
-            </SheetFooter>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

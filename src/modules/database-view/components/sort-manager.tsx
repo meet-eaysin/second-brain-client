@@ -167,6 +167,10 @@ export function SortManager() {
 
   const isFrozen = database?.isFrozen;
 
+  if (isFrozen) {
+    return null; // Don't show sort manager for frozen databases
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>

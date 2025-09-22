@@ -167,6 +167,10 @@ export function FilterManager() {
   const getOperators = (propertyType: string) =>
     FILTER_OPERATORS[propertyType] || FILTER_OPERATORS.text;
 
+  if (isFrozen) {
+    return null; // Don't show filter manager for frozen databases
+  }
+
   const renderValueInput = (
     filter: TFilterCondition,
     index: number,
