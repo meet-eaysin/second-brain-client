@@ -63,6 +63,7 @@ interface DocumentDataTableProps {
   onRecordDuplicate?: (recordId: string) => void;
   onRecordCreate?: () => void;
   onAddProperty?: () => void;
+  onRecordOpen?: (record: TRecord) => void;
 }
 
 export function DataTable({
@@ -79,6 +80,7 @@ export function DataTable({
   onRecordDuplicate: propOnRecordDuplicate,
   onRecordCreate: propOnRecordCreate,
   onAddProperty: propOnAddProperty,
+  onRecordOpen: propOnRecordOpen,
 }: DocumentDataTableProps) {
   const {
     database,
@@ -105,6 +107,7 @@ export function DataTable({
   const onRecordDuplicate = propOnRecordDuplicate || contextOnRecordDuplicate;
   const onRecordCreate = propOnRecordCreate || contextOnRecordCreate;
   const onAddProperty = propOnAddProperty || contextOnAddProperty;
+  const onRecordOpen = propOnRecordOpen || contextOnRecordEdit; // Fallback to edit if no open handler
 
   const [columnStats, setColumnStats] = useState<Record<string, string>>({});
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -379,7 +382,8 @@ export function DataTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="group"
+                  className="group cursor-pointer hover:bg-muted/50"
+                  onClick={() => onRecordOpen?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>

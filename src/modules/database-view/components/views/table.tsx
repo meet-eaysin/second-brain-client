@@ -23,6 +23,7 @@ export function Table({ className = "" }: TableProps) {
     onRecordDuplicate,
     onRecordCreate,
     onAddProperty,
+    onRecordOpen,
   } = useDatabaseView();
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
@@ -97,6 +98,7 @@ export function Table({ className = "" }: TableProps) {
         onRecordDuplicate={onRecordDuplicate}
         onRecordCreate={onRecordCreate}
         onAddProperty={onAddProperty}
+        onRecordOpen={onRecordOpen}
       />
     </div>
   );

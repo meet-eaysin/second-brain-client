@@ -86,6 +86,7 @@ interface DatabaseViewContextValue {
   onBulkEdit: () => void;
   onBulkDelete: () => void;
   onRecordEdit: (record: TRecord) => void;
+  onRecordOpen: (record: TRecord) => void;
   onRecordDelete: (recordId: string) => void;
   onRecordDuplicate: (recordId: string) => void;
   onRecordCreate: () => void;
@@ -199,6 +200,11 @@ export function DatabaseViewProvider({
     onDialogOpen("edit-record");
   };
 
+  const onRecordOpen = (record: TRecord) => {
+    onRecordChange(record);
+    onDialogOpen("view-record");
+  };
+
   const onRecordDelete = (recordId: string) => {
     if (currentDatabaseId && !isDatabasesByTypeLoading) {
       deleteRecordMutation.mutate(
@@ -294,6 +300,7 @@ export function DatabaseViewProvider({
     onBulkEdit,
     onBulkDelete,
     onRecordEdit,
+    onRecordOpen,
     onRecordDelete,
     onRecordDuplicate,
     onRecordCreate,
