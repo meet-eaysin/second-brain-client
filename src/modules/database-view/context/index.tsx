@@ -23,6 +23,8 @@ import {
   useDuplicateRecord,
   useUpdateViewFilters,
 } from "../services/database-queries";
+import { useQueryClient } from "@tanstack/react-query";
+import { DATABASE_KEYS } from "../services/database-queries";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import {
   useDatabase,
@@ -74,8 +76,11 @@ interface DatabaseViewContextValue {
   isPropertiesLoading: boolean;
   isAllPropertiesLoading: boolean;
   isRecordsLoading: boolean;
+  isInitialLoading: boolean;
   isCurrentViewLoading: boolean;
   isDatabasesByTypeLoading: boolean;
+  isLoadingMore: boolean;
+  hasMoreRecords: boolean;
 
   selectedRecords: Set<string>;
   visibleProperties: TProperty[];
@@ -104,6 +109,7 @@ interface DatabaseViewContextValue {
   onRecordDuplicate: (recordId: string) => void;
   onRecordCreate: () => void;
   onAddProperty: () => void;
+  onLoadMoreRecords: () => void;
 }
 
 interface DatabaseViewProviderProps {
@@ -126,17 +132,18 @@ export function DatabaseViewProvider({
   const [currentProperty, setCurrentProperty] = useState<TProperty | null>(
     null
   );
-  const [currentViewId, setCurrentViewId] = useState<string>("");
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(
     new Set()
   );
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [tempFilters, setTempFilters] = useState<TFilterCondition[]>([]);
-  const [tempSorts, setTempSorts] = useState<TSortConfig[]>([]);
-  const [sorts, setSorts] = useState<TSortConfig[]>([]);
+  const [currentViewId, setCurrentViewId] = useState<string>("");
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const [accumulatedRecords, setAccumulatedRecords] = useState<TRecord[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const { currentWorkspace } = useAuthStore();
+  const queryClient = useQueryClient();
 
   const createRecordMutation = useCreateRecord();
   const deleteRecordMutation = useDeleteRecord();
@@ -164,12 +171,13 @@ export function DatabaseViewProvider({
     return currentViewResponse?.data?.settings?.filters || [];
   }, [currentViewResponse?.data?.settings?.filters]);
 
-  // Sync temp state with view data when view changes
-  useEffect(() => {
-    const viewFilters = currentViewResponse?.data?.settings?.filters || [];
-    setTempFilters(viewFilters);
+  // Derive temp filters and sorts from view settings
+  const tempFilters = useMemo(() => {
+    return currentViewResponse?.data?.settings?.filters || [];
+  }, [currentViewResponse?.data?.settings?.filters]);
 
-    const viewSorts =
+  const tempSorts = useMemo(() => {
+    return (
       currentViewResponse?.data?.settings?.sorts?.map((sort) => ({
         propertyId: sort.property,
         direction:
@@ -178,12 +186,9 @@ export function DatabaseViewProvider({
             : sort.direction === "descending"
             ? "desc"
             : "asc",
-      })) || [];
-    setTempSorts(viewSorts);
-  }, [
-    currentViewResponse?.data?.settings?.filters,
-    currentViewResponse?.data?.settings?.sorts,
-  ]);
+      })) || []
+    );
+  }, [currentViewResponse?.data?.settings?.sorts]);
 
   const propertiesQueryParams: TPropertyQueryParams = {
     viewId: effectiveViewId,
@@ -199,11 +204,12 @@ export function DatabaseViewProvider({
   const { data: allPropertiesResponse, isLoading: isAllPropertiesLoading } =
     useProperties(currentDatabaseId, allPropertiesQueryParams);
 
+  // Records query with offset/limit for Load More pagination
   const recordQueryParams = {
     viewId: effectiveViewId,
     search: searchQuery,
-    page: 1,
-    limit: 50,
+    offset: currentOffset,
+    limit: 10,
     isArchived: false,
     isTemplate: false,
   };
@@ -212,6 +218,46 @@ export function DatabaseViewProvider({
     currentDatabaseId,
     recordQueryParams
   );
+
+  // Track initial loading vs Load More loading
+  const isInitialLoading = isRecordsLoading && currentOffset === 0;
+
+  // Reset pagination when database or view changes
+  useEffect(() => {
+    setCurrentOffset(0);
+    setAccumulatedRecords([]);
+    setIsLoadingMore(false);
+    // Invalidate records query to ensure fresh data on navigation
+    queryClient.invalidateQueries({
+      queryKey: DATABASE_KEYS.records(currentDatabaseId),
+    });
+  }, [currentDatabaseId, effectiveViewId, queryClient]);
+
+  // Update accumulated records when new data arrives
+  useEffect(() => {
+    if (recordsResponse?.data) {
+      if (currentOffset === 0) {
+        // First load or reset
+        setAccumulatedRecords(recordsResponse.data);
+      } else {
+        // Append for Load More
+        setAccumulatedRecords((prev) => [...prev, ...recordsResponse.data]);
+      }
+    }
+  }, [recordsResponse?.data, currentOffset]);
+
+  // Derive hasMoreRecords from current query response
+  const hasMoreRecords = useMemo(() => {
+    return recordsResponse?.data ? recordsResponse.data.length === 10 : false;
+  }, [recordsResponse?.data]);
+
+  const loadMoreRecords = async () => {
+    if (isLoadingMore || !hasMoreRecords) return;
+
+    setIsLoadingMore(true);
+    setCurrentOffset((prev) => prev + 10);
+    setIsLoadingMore(false);
+  };
 
   const visibleProperties =
     propertiesResponse?.data?.filter((property: TProperty) => {
@@ -323,7 +369,7 @@ export function DatabaseViewProvider({
     currentView: currentViewResponse?.data || null,
     properties: propertiesResponse?.data || [],
     allProperties: allPropertiesResponse?.data || [],
-    records: recordsResponse?.data || undefined,
+    records: accumulatedRecords,
     currentRecord,
     currentProperty,
 
@@ -333,8 +379,11 @@ export function DatabaseViewProvider({
     isPropertiesLoading,
     isAllPropertiesLoading,
     isRecordsLoading,
+    isInitialLoading,
     isCurrentViewLoading,
     isDatabasesByTypeLoading,
+    isLoadingMore,
+    hasMoreRecords,
 
     selectedRecords,
     visibleProperties,
@@ -342,10 +391,10 @@ export function DatabaseViewProvider({
     searchQuery,
     filters,
     tempFilters,
-    setTempFilters,
+    setTempFilters: () => {}, // Placeholder - not used in current implementation
     tempSorts,
-    setTempSorts,
-    sorts,
+    setTempSorts: () => {}, // Placeholder - not used in current implementation
+    sorts: [],
 
     onDialogOpen,
     onViewChange,
@@ -364,6 +413,7 @@ export function DatabaseViewProvider({
     onRecordDuplicate,
     onRecordCreate,
     onAddProperty,
+    onLoadMoreRecords: loadMoreRecords,
   };
 
   return (

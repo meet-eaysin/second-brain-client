@@ -14,11 +14,19 @@ import {
   Draggable,
   type DropResult,
 } from "@hello-pangea/dnd";
-import { MoreHorizontal, Plus, Edit, Trash2, GripVertical } from "lucide-react";
+import {
+  MoreHorizontal,
+  Plus,
+  Edit,
+  Trash2,
+  GripVertical,
+  Loader2,
+} from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
 import { EditableCell } from "@/modules/database-view/components/editable-cell";
+import { GallerySkeleton } from "../skeleton";
 import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 
@@ -28,12 +36,15 @@ export function Gallery({ className = "" }: { className?: string }) {
     properties,
     records,
     currentView,
-    isRecordsLoading,
+    isInitialLoading,
     isPropertiesLoading,
+    isLoadingMore,
+    hasMoreRecords,
     onRecordEdit,
     onRecordDelete,
     onRecordCreate,
     onDialogOpen,
+    onLoadMoreRecords,
   } = useDatabaseView();
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
@@ -114,7 +125,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     if (records && Array.isArray(records)) {
       records.forEach((record: TRecord) => {
         const groupValue = groupingProperty
-          ? record.properties[groupingProperty.id]
+          ? record.properties[groupingProperty.name]
           : "ungrouped";
 
         const groupId = String(groupValue || "ungrouped");
@@ -135,7 +146,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     const titleProperty =
       properties.find((p) => p.type === EPropertyType.TEXT) || properties[0];
     const titleValue = titleProperty
-      ? record.properties[titleProperty.id] ?? "Untitled"
+      ? record.properties[titleProperty.name] ?? "Untitled"
       : "Untitled";
     const title = String(titleValue);
 
@@ -178,7 +189,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                       <EditableCell
                         record={record}
                         property={titleProperty}
-                        value={record.properties[titleProperty.id]}
+                        value={record.properties[titleProperty.name]}
                       />
                     ) : (
                       <CardTitle className="text-sm font-medium line-clamp-2">
@@ -226,7 +237,7 @@ export function Gallery({ className = "" }: { className?: string }) {
               <CardContent className="pt-0">
                 <div className="space-y-2">
                   {visibleProperties.map((property) => {
-                    const value = record.properties[property.id];
+                    const value = record.properties[property.name];
                     return (
                       <div
                         key={property.id}
@@ -254,20 +265,9 @@ export function Gallery({ className = "" }: { className?: string }) {
     );
   };
 
-  // Show loading state
-  if (isPropertiesLoading || isRecordsLoading) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">
-            {isPropertiesLoading
-              ? "Loading properties..."
-              : "Loading records..."}
-          </p>
-        </div>
-      </div>
-    );
+  // Show loading state only for initial load
+  if (isPropertiesLoading || isInitialLoading) {
+    return <GallerySkeleton />;
   }
 
   // Show empty state if no records
@@ -354,6 +354,21 @@ export function Gallery({ className = "" }: { className?: string }) {
           ))}
         </div>
       </DragDropContext>
+
+      {/* Load More Button - Full Width like Notion */}
+      {hasMoreRecords && (
+        <div className="border-t bg-muted/20 mt-4">
+          <Button
+            onClick={onLoadMoreRecords}
+            disabled={isLoadingMore}
+            variant="ghost"
+            className="w-full h-12 rounded-none border-0 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          >
+            {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isLoadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

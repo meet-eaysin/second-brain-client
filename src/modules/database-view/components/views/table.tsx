@@ -3,6 +3,9 @@ import { DataTable } from "../data-table.tsx";
 import { generateDocumentColumns } from "../columns.tsx";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { TableSkeleton } from "../skeleton";
 import type { TPropertyValue } from "@/modules/database-view/types";
 
 interface TableProps {
@@ -14,14 +17,17 @@ export function Table({ className = "" }: TableProps) {
     database,
     properties,
     records,
-    isRecordsLoading,
+    isInitialLoading,
     isPropertiesLoading,
+    isLoadingMore,
+    hasMoreRecords,
     onBulkEdit,
     onBulkDelete,
     onRecordDelete,
     onRecordDuplicate,
     onRecordCreate,
     onAddProperty,
+    onLoadMoreRecords,
   } = useDatabaseView();
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
@@ -47,20 +53,9 @@ export function Table({ className = "" }: TableProps) {
     return generateDocumentColumns(properties, handleUpdateRecord);
   }, [properties, database?.id, updateRecordMutation]);
 
-  // Show loading state
-  if (isPropertiesLoading || isRecordsLoading) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">
-            {isPropertiesLoading
-              ? "Loading properties..."
-              : "Loading records..."}
-          </p>
-        </div>
-      </div>
-    );
+  // Show loading state only for initial load
+  if (isPropertiesLoading || isInitialLoading) {
+    return <TableSkeleton />;
   }
 
   // Show empty state if no records
@@ -85,7 +80,7 @@ export function Table({ className = "" }: TableProps) {
       <DataTable
         columns={columns}
         data={records}
-        enablePagination={true}
+        enablePagination={false}
         enableSorting={true}
         enableFiltering={true}
         pageSize={25}
@@ -96,6 +91,21 @@ export function Table({ className = "" }: TableProps) {
         onRecordCreate={onRecordCreate}
         onAddProperty={onAddProperty}
       />
+
+      {/* Load More Button - Full Width like Notion */}
+      {hasMoreRecords && (
+        <div className="border-t bg-muted/20">
+          <Button
+            onClick={onLoadMoreRecords}
+            disabled={isLoadingMore}
+            variant="ghost"
+            className="w-full h-12 rounded-none border-0 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          >
+            {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isLoadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

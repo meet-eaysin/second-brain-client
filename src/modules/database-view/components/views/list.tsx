@@ -11,22 +11,24 @@ import { Badge } from "@/components/ui/badge";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { ListSkeleton } from "../skeleton";
 import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 
-interface ListProps {
-  className?: string;
-}
-
-export function List({ className = "" }: ListProps) {
+export function List({ className = "" }: { className?: string }) {
   const {
     database,
     properties,
     records,
     currentView,
-    isRecordsLoading,
+    isInitialLoading,
     isPropertiesLoading,
+    isLoadingMore,
+    hasMoreRecords,
     onRecordEdit,
+    onLoadMoreRecords,
   } = useDatabaseView();
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
@@ -170,13 +172,13 @@ export function List({ className = "" }: ListProps) {
 
     return records.map((record: TRecord) => {
       const titleValue = titleProperty
-        ? record.properties[titleProperty.id] ?? "Untitled"
+        ? record.properties[titleProperty.name] ?? "Untitled"
         : "Untitled";
       const title = String(titleValue);
 
       // Get status/grouping value
       const statusValue = groupingProperty
-        ? record.properties[groupingProperty.id]
+        ? record.properties[groupingProperty.name]
         : "ungrouped";
       const statusId = String(statusValue || "ungrouped");
 
@@ -221,20 +223,9 @@ export function List({ className = "" }: ListProps) {
     }
   };
 
-  // Show loading state
-  if (isPropertiesLoading || isRecordsLoading) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">
-            {isPropertiesLoading
-              ? "Loading properties..."
-              : "Loading records..."}
-          </p>
-        </div>
-      </div>
-    );
+  // Show loading state only for initial load
+  if (isPropertiesLoading || isInitialLoading) {
+    return <ListSkeleton />;
   }
 
   // Show empty state if no records
@@ -286,7 +277,7 @@ export function List({ className = "" }: ListProps) {
                         <div className="mt-1 space-y-1">
                           {displayProperties.map((property) => {
                             const value =
-                              feature.record.properties[property.id];
+                              feature.record.properties[property.name];
                             if (
                               value === null ||
                               value === undefined ||
@@ -317,6 +308,21 @@ export function List({ className = "" }: ListProps) {
           </ListGroup>
         ))}
       </ListProvider>
+
+      {/* Load More Button - Full Width like Notion */}
+      {hasMoreRecords && (
+        <div className="border-t bg-muted/20">
+          <Button
+            onClick={onLoadMoreRecords}
+            disabled={isLoadingMore}
+            variant="ghost"
+            className="w-full h-12 rounded-none border-0 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          >
+            {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isLoadingMore ? "Loading..." : "Load More"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

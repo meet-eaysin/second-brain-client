@@ -406,10 +406,7 @@ export const useReorderProperties = () => {
 export const useRecords = (databaseId: string, params?: TRecordQueryParams) => {
   return useQuery({
     queryKey: [...DATABASE_KEYS.records(databaseId), params],
-    queryFn: async () => {
-      const response = await databaseApi.getRecords(databaseId, params);
-      return response;
-    },
+    queryFn: async () => await databaseApi.getRecords(databaseId, params),
     enabled: !!databaseId && !!params?.viewId,
   });
 };
@@ -460,7 +457,15 @@ export const useUpdateRecord = () => {
       databaseApi.updateRecord(databaseId, recordId, payload),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: DATABASE_KEYS.records(variables.databaseId),
+        predicate: (query) => {
+          const queryKey = query.queryKey as string[];
+          return (
+            queryKey[0] === "databases" &&
+            queryKey[1] === "detail" &&
+            queryKey[2] === variables.databaseId &&
+            queryKey[3] === "records"
+          );
+        },
       });
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.record(
@@ -666,6 +671,7 @@ export const useUpdateViewFilters = () => {
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
       });
+      // Only invalidate records for the current view, not all records for the database
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.records(variables.databaseId),
       });

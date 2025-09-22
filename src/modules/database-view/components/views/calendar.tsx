@@ -69,7 +69,7 @@ export function Calendar({ className = "" }: CalendarProps) {
 
         if (dateProperties.length > 0) {
           // Use actual date property
-          dateValue = record.properties[dateSource.id] as string;
+          dateValue = record.properties[dateSource.name] as string;
         } else {
           // Fall back to createdAt timestamp
           dateValue = record.createdAt || record.created_at;
@@ -81,7 +81,7 @@ export function Calendar({ className = "" }: CalendarProps) {
 
           // Use title property for name
           const titleValue = titleProperty
-            ? record.properties[titleProperty.id] ?? "Untitled"
+            ? record.properties[titleProperty.name] ?? "Untitled"
             : "Untitled";
           const name = String(titleValue);
 
@@ -125,7 +125,7 @@ export function Calendar({ className = "" }: CalendarProps) {
 
         if (dateProperties.length > 0) {
           // Use actual date property
-          dateValue = record.properties[dateSource.id] as string;
+          dateValue = record.properties[dateSource.name] as string;
         } else {
           // Fall back to createdAt timestamp
           dateValue = record.createdAt || record.created_at;
