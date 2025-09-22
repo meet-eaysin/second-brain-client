@@ -18,7 +18,7 @@ import { GripVertical, Plus, Trash2, Filter as FilterIcon } from "lucide-react";
 import { EFilterOperator } from "@/modules/database-view/types";
 import type { TFilterCondition } from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
-import { useUpdateView } from "@/modules/database-view/services/database-queries.ts";
+import { useUpdateViewFilters } from "@/modules/database-view/services/database-queries.ts";
 
 const FILTER_OPERATORS: Record<
   string,
@@ -87,7 +87,8 @@ export function FilterManager() {
   const [localFilters, setLocalFilters] = useState<TFilterCondition[]>([]);
   const [open, setOpen] = useState(false);
 
-  const updateViewMutation = useUpdateView();
+  const updateViewFiltersMutation = useUpdateViewFilters();
+  const isFrozen = database?.isFrozen;
 
   useEffect(() => {
     if (open && contextFilters) {
@@ -142,12 +143,10 @@ export function FilterManager() {
     if (!database?.id || !currentView?.id) return;
 
     try {
-      await updateViewMutation.mutateAsync({
+      await updateViewFiltersMutation.mutateAsync({
         databaseId: database.id,
         viewId: currentView.id,
-        data: {
-          filters: localFilters,
-        },
+        filters: localFilters,
       });
 
       onFiltersChange(localFilters);
@@ -168,7 +167,11 @@ export function FilterManager() {
   const getOperators = (propertyType: string) =>
     FILTER_OPERATORS[propertyType] || FILTER_OPERATORS.text;
 
-  const renderValueInput = (filter: TFilterCondition, index: number) => {
+  const renderValueInput = (
+    filter: TFilterCondition,
+    index: number,
+    disabled = false
+  ) => {
     const property = getProperty(filter.property);
     if (!property) return null;
 
@@ -186,6 +189,7 @@ export function FilterManager() {
           <Select
             value={filter.value as string}
             onValueChange={(value) => updateFilter(index, "value", value)}
+            disabled={disabled}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Select option..." />
@@ -220,6 +224,7 @@ export function FilterManager() {
                       : currentValues.filter((id: string) => id !== option.id);
                     updateFilter(index, "value", newValues);
                   }}
+                  disabled={disabled}
                 />
                 <label htmlFor={`${index}-${option.id}`}>{option.label}</label>
               </div>
@@ -234,6 +239,7 @@ export function FilterManager() {
             value={filter.value as string}
             onChange={(e) => updateFilter(index, "value", e.target.value)}
             placeholder="Enter value..."
+            disabled={disabled}
           />
         );
     }
@@ -242,7 +248,14 @@ export function FilterManager() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={isFrozen}
+          title={
+            isFrozen ? "Cannot modify filters for frozen database" : undefined
+          }
+        >
           <FilterIcon />
         </Button>
       </PopoverTrigger>
@@ -251,7 +264,9 @@ export function FilterManager() {
         align="start"
         side="bottom"
       >
-        <p className="text-xs font-medium text-muted-foreground">Where</p>
+        <p className="text-xs font-medium text-muted-foreground">
+          {isFrozen ? "Filters disabled (database frozen)" : "Where"}
+        </p>
 
         {localFilters.length > 0 ? (
           <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -269,6 +284,7 @@ export function FilterManager() {
                     onValueChange={(value) =>
                       updateFilter(index, "property", value)
                     }
+                    disabled={isFrozen}
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="Property" />
@@ -287,6 +303,7 @@ export function FilterManager() {
                     onValueChange={(value) =>
                       updateFilter(index, "condition", value)
                     }
+                    disabled={isFrozen}
                   >
                     <SelectTrigger className="w-[140px]">
                       <SelectValue placeholder="Operator" />
@@ -301,13 +318,14 @@ export function FilterManager() {
                     </SelectContent>
                   </Select>
 
-                  {renderValueInput(filter, index)}
+                  {renderValueInput(filter, index, isFrozen)}
 
                   <Button
                     variant="ghost"
                     className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                     size="icon"
                     onClick={() => removeFilter(index)}
+                    disabled={isFrozen}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -322,16 +340,21 @@ export function FilterManager() {
         )}
 
         <div className="flex items-center gap-2 pt-1">
-          <Button size="sm" onClick={addFilter}>
+          <Button size="sm" onClick={addFilter} disabled={isFrozen}>
             <Plus className="mr-1 h-4 w-4" />
             Add filter
           </Button>
           {localFilters.length > 0 && (
             <>
-              <Button size="sm" variant="outline" onClick={handleReset}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleReset}
+                disabled={isFrozen}
+              >
                 Reset
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={handleSave} disabled={isFrozen}>
                 Apply
               </Button>
             </>

@@ -633,6 +633,73 @@ export const useUpdateView = () => {
   });
 };
 
+export const useUpdateViewFilters = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<TView>,
+    AxiosError<ApiError>,
+    {
+      databaseId: string;
+      viewId: string;
+      filters: Array<{
+        property: string;
+        condition: string;
+        value?: unknown;
+        operator?: string;
+      }>;
+    }
+  >({
+    mutationFn: ({ databaseId, viewId, filters }) =>
+      databaseApi.updateViewFilters(databaseId, viewId, filters),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.views(variables.databaseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
+      });
+      toast.success("View filters updated successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update view filters"
+      );
+    },
+  });
+};
+
+export const useUpdateViewSorts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<TView>,
+    AxiosError<ApiError>,
+    {
+      databaseId: string;
+      viewId: string;
+      sorts: Array<{ propertyId: string; direction: "asc" | "desc" }>;
+    }
+  >({
+    mutationFn: ({ databaseId, viewId, sorts }) =>
+      databaseApi.updateViewSorts(databaseId, viewId, sorts),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.views(variables.databaseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
+      });
+      toast.success("View sorts updated successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to update view sorts"
+      );
+    },
+  });
+};
+
 export const useDeleteView = () => {
   const queryClient = useQueryClient();
 

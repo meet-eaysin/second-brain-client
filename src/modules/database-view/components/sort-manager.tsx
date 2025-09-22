@@ -46,11 +46,7 @@ import {
 } from "lucide-react";
 import type { TSortConfig } from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
-import {
-  useCreateDatabaseSort,
-  useDatabaseSorts,
-  useDeleteDatabaseSort,
-} from "@/modules/database-view/services/database-queries.ts";
+import { useUpdateViewSorts } from "@/modules/database-view/services/database-queries.ts";
 
 const PROPERTY_TYPE_ICONS = {
   text: Type,
@@ -84,28 +80,28 @@ const PROPERTY_TYPE_ICONS = {
   LOOKUP: Search,
 } as const;
 
-const SORT_QUERY_PARAMS = { isActive: true };
-
 export function SortManager() {
-  const { database, properties } = useDatabaseView();
+  const { database, properties, currentView } = useDatabaseView();
   const [open, setOpen] = useState(false);
   const databaseId = database?.id || "";
-  const { data: databaseSorts = [] } = useDatabaseSorts(
-    databaseId,
-    SORT_QUERY_PARAMS
-  );
+  const viewId = currentView?.id || "";
+
+  // Get current sorts from the view settings
+  const currentSorts = currentView?.settings?.sorts || [];
 
   const [localSorts, setLocalSorts] = useState<TSortConfig[]>(
-    databaseSorts.length > 0
-      ? databaseSorts.map((sort) => ({
-          propertyId: sort.sorts[0]?.propertyId || "",
-          direction: sort.sorts[0]?.direction || "asc",
-        }))
-      : []
+    currentSorts.map((sort) => ({
+      propertyId: sort.property,
+      direction:
+        sort.direction === "ascending"
+          ? "asc"
+          : sort.direction === "descending"
+          ? "desc"
+          : "asc",
+    }))
   );
 
-  const createSortMutation = useCreateDatabaseSort();
-  const deleteSortMutation = useDeleteDatabaseSort();
+  const updateViewSortsMutation = useUpdateViewSorts();
 
   const addSort = () => {
     const available = properties.filter(
@@ -139,32 +135,22 @@ export function SortManager() {
   };
 
   const handleSave = async () => {
-    if (!database?.id) return;
+    if (!database?.id || !currentView?.id) return;
 
     try {
-      for (const dbSort of databaseSorts) {
-        await deleteSortMutation.mutateAsync({
-          databaseId: database.id,
-          sortId: dbSort.id,
-        });
-      }
+      // Convert local sorts to backend format
+      const sorts = localSorts
+        .filter((sort) => sort.propertyId)
+        .map((sort) => ({
+          propertyId: sort.propertyId,
+          direction: sort.direction,
+        }));
 
-      for (const localSort of localSorts) {
-        if (localSort.propertyId) {
-          await createSortMutation.mutateAsync({
-            databaseId: database.id,
-            data: {
-              name: `Sort by ${
-                properties.find((p) => p.id === localSort.propertyId)?.name ||
-                "Property"
-              }`,
-              sorts: [localSort],
-              isActive: true,
-              isDefault: false,
-            },
-          });
-        }
-      }
+      await updateViewSortsMutation.mutateAsync({
+        databaseId: database.id,
+        viewId: currentView.id,
+        sorts,
+      });
 
       setOpen(false);
     } catch (err) {
@@ -174,10 +160,20 @@ export function SortManager() {
 
   const handleReset = () => setLocalSorts([]);
 
+  const isFrozen = database?.isFrozen;
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="h-8 px-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 px-2"
+          disabled={isFrozen}
+          title={
+            isFrozen ? "Cannot modify sorting for frozen database" : undefined
+          }
+        >
           <ArrowDownUp className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
@@ -187,7 +183,11 @@ export function SortManager() {
         className="w-[420px] flex flex-col gap-2 p-3 text-sm"
       >
         <h4 className="font-medium text-sm">
-          {localSorts.length > 0 ? "Sort by" : "No sorting applied"}
+          {isFrozen
+            ? "Sorting disabled (database frozen)"
+            : localSorts.length > 0
+            ? "Sort by"
+            : "No sorting applied"}
         </h4>
 
         {localSorts.length > 0 ? (
@@ -201,6 +201,7 @@ export function SortManager() {
                     <Select
                       value={sort.propertyId}
                       onValueChange={(v) => updateSort(i, "propertyId", v)}
+                      disabled={isFrozen}
                     >
                       <SelectTrigger className="flex-1 h-7 min-h-7 px-2 text-sm">
                         <SelectValue />
@@ -235,6 +236,7 @@ export function SortManager() {
                       onValueChange={(v) =>
                         updateSort(i, "direction", v as "asc" | "desc")
                       }
+                      disabled={isFrozen}
                     >
                       <SelectTrigger className="w-[80px] h-7 min-h-7 text-sm px-2">
                         <SelectValue />
@@ -258,7 +260,7 @@ export function SortManager() {
                         variant="ghost"
                         size="sm"
                         onClick={() => moveSort(i, "up")}
-                        disabled={i === 0}
+                        disabled={isFrozen || i === 0}
                         className="h-7 w-7 p-0"
                       >
                         <ArrowUp className="h-3.5 w-3.5" />
@@ -267,7 +269,7 @@ export function SortManager() {
                         variant="ghost"
                         size="sm"
                         onClick={() => moveSort(i, "down")}
-                        disabled={i === localSorts.length - 1}
+                        disabled={isFrozen || i === localSorts.length - 1}
                         className="h-7 w-7 p-0"
                       >
                         <ArrowDown className="h-3.5 w-3.5" />
@@ -276,6 +278,7 @@ export function SortManager() {
                         variant="ghost"
                         size="sm"
                         onClick={() => removeSort(i)}
+                        disabled={isFrozen}
                         className="h-7 w-7 p-0 text-destructive hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -298,7 +301,7 @@ export function SortManager() {
             onClick={addSort}
             variant="outline"
             className="h-8 text-sm"
-            disabled={localSorts.length >= properties.length}
+            disabled={isFrozen || localSorts.length >= properties.length}
           >
             <Plus className="h-3.5 w-3.5 mr-1" />
             Add Sort
@@ -309,11 +312,16 @@ export function SortManager() {
               variant="outline"
               onClick={handleReset}
               className="h-8 text-sm"
-              disabled={localSorts.length === 0}
+              disabled={isFrozen || localSorts.length === 0}
             >
               Reset
             </Button>
-            <Button size="sm" className="h-8 text-sm" onClick={handleSave}>
+            <Button
+              size="sm"
+              className="h-8 text-sm"
+              onClick={handleSave}
+              disabled={isFrozen}
+            >
               Apply
             </Button>
           </div>
