@@ -77,13 +77,8 @@ const FILTER_OPERATORS: Record<
 };
 
 export function FilterManager() {
-  const {
-    database,
-    currentView,
-    properties,
-    filters: contextFilters,
-    onFiltersChange,
-  } = useDatabaseView();
+  const { database, currentView, properties, tempFilters, setTempFilters } =
+    useDatabaseView();
   const [localFilters, setLocalFilters] = useState<TFilterCondition[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -91,10 +86,10 @@ export function FilterManager() {
   const isFrozen = database?.isFrozen;
 
   useEffect(() => {
-    if (open && contextFilters) {
-      setLocalFilters(contextFilters);
+    if (open && tempFilters) {
+      setLocalFilters(tempFilters);
     }
-  }, [open, contextFilters]);
+  }, [open, tempFilters]);
 
   const addFilter = () => {
     if (properties.length > 0) {
@@ -102,7 +97,7 @@ export function FilterManager() {
       const operators =
         FILTER_OPERATORS[firstProperty.type] || FILTER_OPERATORS.text;
 
-      setLocalFilters([
+      const newFilters = [
         ...localFilters,
         {
           property: firstProperty.id,
@@ -110,12 +105,16 @@ export function FilterManager() {
           value: "",
           operator: "and",
         },
-      ]);
+      ];
+      setLocalFilters(newFilters);
+      setTempFilters(newFilters);
     }
   };
 
   const removeFilter = (index: number) => {
-    setLocalFilters(localFilters.filter((_, i) => i !== index));
+    const newFilters = localFilters.filter((_, i) => i !== index);
+    setLocalFilters(newFilters);
+    setTempFilters(newFilters);
   };
 
   const updateFilter = (
@@ -137,6 +136,8 @@ export function FilterManager() {
     }
 
     setLocalFilters(newFilters);
+    // Update tempFilters immediately for instant feedback
+    setTempFilters(newFilters);
   };
 
   const handleSave = async () => {
@@ -149,16 +150,15 @@ export function FilterManager() {
         filters: localFilters,
       });
 
-      onFiltersChange(localFilters);
       setOpen(false);
     } catch (error) {
       console.error("Failed to save filters:", error);
     }
   };
 
-  const handleReset = () => {
+  const handleClearAll = () => {
     setLocalFilters([]);
-    onFiltersChange([]);
+    setTempFilters([]);
   };
 
   const getProperty = (propertyId: string) =>
@@ -344,21 +344,17 @@ export function FilterManager() {
             <Plus className="mr-1 h-4 w-4" />
             Add filter
           </Button>
-          {localFilters.length > 0 && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleReset}
-                disabled={isFrozen}
-              >
-                Reset
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={isFrozen}>
-                Apply
-              </Button>
-            </>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleClearAll}
+            disabled={isFrozen}
+          >
+            Clear All
+          </Button>
+          <Button size="sm" onClick={handleSave} disabled={isFrozen}>
+            Apply
+          </Button>
         </div>
       </PopoverContent>
     </Popover>

@@ -85,7 +85,7 @@ export type GanttMarkerProps = {
 
 export type Range = "daily" | "monthly" | "quarterly";
 
-export type TimelineData = {
+export type GanttData = {
   year: number;
   quarters: {
     months: {
@@ -103,7 +103,7 @@ export type GanttContextProps = {
   rowHeight: number;
   onAddItem: ((date: Date) => void) | undefined;
   placeholderLength: number;
-  timelineData: TimelineData;
+  ganttData: GanttData;
   ref: RefObject<HTMLDivElement | null> | null;
   scrollToFeature?: (feature: GanttFeature) => void;
 };
@@ -170,12 +170,12 @@ const getAddRange = (range: Range) => {
 };
 
 const getDateByMousePosition = (context: GanttContextProps, mouseX: number) => {
-  const timelineStartDate = new Date(context.timelineData[0].year, 0, 1);
+  const ganttStartDate = new Date(context.ganttData[0].year, 0, 1);
   const columnWidth = (context.columnWidth * context.zoom) / 100;
   const offset = Math.floor(mouseX / columnWidth);
   const daysIn = getsDaysIn(context.range);
   const addRange = getAddRange(context.range);
-  const month = addRange(timelineStartDate, offset);
+  const month = addRange(ganttStartDate, offset);
   const daysInMonth = daysIn(month);
   const pixelsPerDay = Math.round(columnWidth / daysInMonth);
   const dayOffset = Math.floor((mouseX % columnWidth) / pixelsPerDay);
@@ -184,8 +184,8 @@ const getDateByMousePosition = (context: GanttContextProps, mouseX: number) => {
   return actualDate;
 };
 
-const createInitialTimelineData = (today: Date) => {
-  const data: TimelineData = [];
+const createInitialGanttData = (today: Date) => {
+  const data: GanttData = [];
 
   data.push(
     { year: today.getFullYear() - 1, quarters: new Array(4).fill(null) },
@@ -209,13 +209,13 @@ const createInitialTimelineData = (today: Date) => {
 
 const getOffset = (
   date: Date,
-  timelineStartDate: Date,
+  ganttStartDate: Date,
   context: GanttContextProps
 ) => {
   const parsedColumnWidth = (context.columnWidth * context.zoom) / 100;
   const differenceIn = getDifferenceIn(context.range);
   const startOf = getStartOf(context.range);
-  const fullColumns = differenceIn(startOf(date), timelineStartDate);
+  const fullColumns = differenceIn(startOf(date), ganttStartDate);
 
   if (context.range === "daily") {
     return parsedColumnWidth * fullColumns;
@@ -1202,7 +1202,7 @@ export const GanttProvider: FC<GanttProviderProps> = ({
         "--gantt-header-height": `${headerHeight}px`,
         "--gantt-row-height": `${rowHeight}px`,
         "--gantt-sidebar-width": `${sidebarWidth}px`,
-      }) as CSSProperties,
+      } as CSSProperties),
     [zoom, columnWidth, sidebarWidth]
   );
 

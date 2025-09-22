@@ -283,7 +283,7 @@ export const generateDocumentColumns = (
 
   properties.forEach((property) => {
     columns.push({
-      accessorKey: `properties.${property.id}`,
+      accessorKey: `properties.${property.name}`,
       id: property.id,
       header: ({ column }) => {
         return (
@@ -300,7 +300,7 @@ export const generateDocumentColumns = (
         );
       },
       cell: ({ row }) => {
-        const value = row.original.properties[property.id];
+        const value = row.original.properties[property.name];
 
         if (onUpdateRecord) {
           return (
@@ -318,7 +318,7 @@ export const generateDocumentColumns = (
       enableSorting: true,
       enableHiding: true,
       filterFn: (row, _id, value) => {
-        const cellValue = row.original.properties[property.id];
+        const cellValue = row.original.properties[property.name];
 
         if (property.type === "multi_select" && Array.isArray(cellValue)) {
           const cellArray = cellValue as (

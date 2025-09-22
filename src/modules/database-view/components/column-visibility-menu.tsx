@@ -56,7 +56,7 @@ export function ColumnVisibilityMenu() {
     try {
       await toggleProperty(propertyId);
       toast.success(`Property visibility updated`);
-    } catch (error) {
+    } catch {
       toast.error(`Failed to update property visibility`);
     } finally {
       setIsLoading(false);
@@ -71,7 +71,7 @@ export function ColumnVisibilityMenu() {
     try {
       await showAll();
       toast.success("All properties are now visible");
-    } catch (error) {
+    } catch {
       toast.error("Failed to show all properties");
     } finally {
       setIsLoading(false);
@@ -85,7 +85,7 @@ export function ColumnVisibilityMenu() {
     try {
       await hideAll();
       toast.success("Non-required properties hidden");
-    } catch (error) {
+    } catch {
       toast.error("Failed to hide properties");
     } finally {
       setIsLoading(false);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Popover,
   PopoverContent,
@@ -81,37 +81,34 @@ const PROPERTY_TYPE_ICONS = {
 } as const;
 
 export function SortManager() {
-  const { database, properties, currentView } = useDatabaseView();
+  const { database, properties, currentView, tempSorts, setTempSorts } =
+    useDatabaseView();
   const [open, setOpen] = useState(false);
   const databaseId = database?.id || "";
   const viewId = currentView?.id || "";
 
-  // Get current sorts from the view settings
-  const currentSorts = currentView?.settings?.sorts || [];
-
-  const [localSorts, setLocalSorts] = useState<TSortConfig[]>(
-    currentSorts.map((sort) => ({
-      propertyId: sort.property,
-      direction:
-        sort.direction === "ascending"
-          ? "asc"
-          : sort.direction === "descending"
-          ? "desc"
-          : "asc",
-    }))
-  );
+  const [localSorts, setLocalSorts] = useState<TSortConfig[]>([]);
 
   const updateViewSortsMutation = useUpdateViewSorts();
+
+  // Sync localSorts with tempSorts when opening
+  useEffect(() => {
+    if (open) {
+      setLocalSorts(tempSorts);
+    }
+  }, [open, tempSorts]);
 
   const addSort = () => {
     const available = properties.filter(
       (prop) => !localSorts.some((s) => s.propertyId === prop.id)
     );
     if (available.length > 0) {
-      setLocalSorts([
+      const newSorts = [
         ...localSorts,
         { propertyId: available[0].id, direction: "asc" },
-      ]);
+      ];
+      setLocalSorts(newSorts);
+      setTempSorts(newSorts);
     }
   };
 
@@ -119,10 +116,13 @@ export function SortManager() {
     const next = [...localSorts];
     next[i] = { ...next[i], [field]: value };
     setLocalSorts(next);
+    setTempSorts(next);
   };
 
   const removeSort = (i: number) => {
-    setLocalSorts(localSorts.filter((_, idx) => idx !== i));
+    const newSorts = localSorts.filter((_, idx) => idx !== i);
+    setLocalSorts(newSorts);
+    setTempSorts(newSorts);
   };
 
   const moveSort = (i: number, dir: "up" | "down") => {
@@ -131,6 +131,7 @@ export function SortManager() {
     if (t >= 0 && t < next.length) {
       [next[i], next[t]] = [next[t], next[i]];
       setLocalSorts(next);
+      setTempSorts(next);
     }
   };
 
@@ -142,7 +143,7 @@ export function SortManager() {
       const sorts = localSorts
         .filter((sort) => sort.propertyId)
         .map((sort) => ({
-          propertyId: sort.propertyId,
+          property: sort.propertyId,
           direction: sort.direction,
         }));
 
@@ -158,7 +159,11 @@ export function SortManager() {
     }
   };
 
-  const handleReset = () => setLocalSorts([]);
+  const handleReset = () => {
+    const newSorts: TSortConfig[] = [];
+    setLocalSorts(newSorts);
+    setTempSorts(newSorts);
+  };
 
   const isFrozen = database?.isFrozen;
 

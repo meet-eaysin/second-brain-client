@@ -41,11 +41,7 @@ import type { TRecord } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 
-interface TimelineProps {
-  className?: string;
-}
-
-export function Timeline({ className = "" }: TimelineProps) {
+export function Gantt({ className = "" }: { className?: string }) {
   const {
     database,
     properties,
@@ -57,7 +53,7 @@ export function Timeline({ className = "" }: TimelineProps) {
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
-  // Find date properties for timeline
+  // Find date properties for Gantt
   const dateProperties = useMemo(() => {
     return properties.filter((p) => p.type === EPropertyType.DATE);
   }, [properties]);
@@ -80,8 +76,8 @@ export function Timeline({ className = "" }: TimelineProps) {
     );
   }, [properties]);
 
-  // Transform records for timeline format
-  const timelineFeatures = useMemo(() => {
+  // Transform records for Gantt format
+  const ganttFeatures = useMemo(() => {
     if (!records || !Array.isArray(records) || dateProperties.length === 0) {
       return [];
     }
@@ -145,8 +141,8 @@ export function Timeline({ className = "" }: TimelineProps) {
 
   // Group features by group name
   const groupedFeatures = useMemo(() => {
-    return groupBy(timelineFeatures, (feature) => feature.group.name);
-  }, [timelineFeatures]);
+    return groupBy(ganttFeatures, (feature) => feature.group.name);
+  }, [ganttFeatures]);
 
   // Sort grouped features
   const sortedGroupedFeatures = useMemo(() => {
@@ -159,7 +155,7 @@ export function Timeline({ className = "" }: TimelineProps) {
 
   // Handle feature interactions
   const handleViewFeature = (id: string) => {
-    const feature = timelineFeatures.find((f) => f.id === id);
+    const feature = ganttFeatures.find((f) => f.id === id);
     if (feature && onRecordEdit) {
       onRecordEdit(feature.record);
     }
@@ -184,7 +180,7 @@ export function Timeline({ className = "" }: TimelineProps) {
   ) => {
     if (!endAt || !database?.id) return;
 
-    const feature = timelineFeatures.find((f) => f.id === id);
+    const feature = ganttFeatures.find((f) => f.id === id);
     if (!feature) return;
 
     // Find the date property used for this feature
@@ -240,7 +236,7 @@ export function Timeline({ className = "" }: TimelineProps) {
   if (dateProperties.length === 0) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="Timeline view requires at least one DATE property" />
+        <NoDataMessage message="Gantt view requires at least one DATE property" />
       </div>
     );
   }
@@ -315,7 +311,7 @@ export function Timeline({ className = "" }: TimelineProps) {
                           onClick={() => handleRemoveFeature(feature.id)}
                         >
                           <TrashIcon size={16} />
-                          Remove from timeline
+                          Remove from gantt
                         </ContextMenuItem>
                       </ContextMenuContent>
                     </ContextMenu>

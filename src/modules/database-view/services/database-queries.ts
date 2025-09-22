@@ -403,10 +403,70 @@ export const useReorderProperties = () => {
   });
 };
 
-export const useRecords = (databaseId: string, params?: TRecordQueryParams) => {
+export const useRecords = (
+  databaseId: string,
+  params?: TRecordQueryParams,
+  tempFilters?: TFilterCondition[],
+  tempSorts?: TSortConfig[]
+) => {
   return useQuery({
-    queryKey: [...DATABASE_KEYS.records(databaseId), params],
-    queryFn: async () => databaseApi.getRecords(databaseId, params),
+    queryKey: [
+      ...DATABASE_KEYS.records(databaseId),
+      params,
+      tempFilters,
+      tempSorts,
+    ],
+    queryFn: async () => {
+      const response = await databaseApi.getRecords(databaseId, params);
+      let records = response.data.records;
+
+      // Apply client-side filtering for tempFilters
+      if (tempFilters && tempFilters.length > 0) {
+        records = records.filter((record) => {
+          return tempFilters.every((filter) => {
+            const propertyValue = record.properties[filter.property];
+            // Simple filtering logic - can be enhanced
+            switch (filter.condition) {
+              case "equals":
+                return propertyValue === filter.value;
+              case "contains":
+                return String(propertyValue)
+                  .toLowerCase()
+                  .includes(String(filter.value).toLowerCase());
+              case "is_empty":
+                return !propertyValue || propertyValue === "";
+              case "is_not_empty":
+                return propertyValue && propertyValue !== "";
+              default:
+                return true;
+            }
+          });
+        });
+      }
+
+      // Apply client-side sorting for tempSorts
+      if (tempSorts && tempSorts.length > 0) {
+        records = [...records].sort((a, b) => {
+          for (const sort of tempSorts) {
+            const aValue = a.properties[sort.propertyId];
+            const bValue = b.properties[sort.propertyId];
+
+            let comparison = 0;
+            if (aValue < bValue) comparison = -1;
+            else if (aValue > bValue) comparison = 1;
+
+            if (comparison !== 0) {
+              return sort.direction === "desc" ? -comparison : comparison;
+            }
+          }
+          return 0;
+        });
+      }
+
+      response.data.records = records;
+      response.data.total = records.length;
+      return response;
+    },
     enabled: !!databaseId && !!params?.viewId,
   });
 };

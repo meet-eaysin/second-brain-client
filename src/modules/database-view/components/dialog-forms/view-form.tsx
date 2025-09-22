@@ -107,13 +107,6 @@ const viewTypes: {
     isAvailable: true,
   },
   {
-    value: EViewType.TIMELINE,
-    label: "Timeline",
-    icon: <Clock className="h-4 w-4" />,
-    description: "Time view",
-    isAvailable: true,
-  },
-  {
     value: EViewType.GANTT,
     label: "Gantt",
     icon: <Clock className="h-4 w-4" />,

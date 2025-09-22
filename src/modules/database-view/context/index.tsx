@@ -1,4 +1,11 @@
-import { createContext, type ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useState,
+  useMemo,
+  useEffect,
+} from "react";
 import { toast } from "sonner";
 import {
   EDatabaseType,
@@ -14,6 +21,7 @@ import {
   useCreateRecord,
   useDeleteRecord,
   useDuplicateRecord,
+  useUpdateViewFilters,
 } from "../services/database-queries";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import {
@@ -74,6 +82,10 @@ interface DatabaseViewContextValue {
 
   searchQuery: string;
   filters: TFilterCondition[];
+  tempFilters: TFilterCondition[];
+  setTempFilters: (filters: TFilterCondition[]) => void;
+  tempSorts: TSortConfig[];
+  setTempSorts: (sorts: TSortConfig[]) => void;
   sorts: TSortConfig[];
 
   onDialogOpen: (dialog: DatabaseDialogType | null) => void;
@@ -120,7 +132,8 @@ export function DatabaseViewProvider({
   );
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filters, setFilters] = useState<TFilterCondition[]>([]);
+  const [tempFilters, setTempFilters] = useState<TFilterCondition[]>([]);
+  const [tempSorts, setTempSorts] = useState<TSortConfig[]>([]);
   const [sorts, setSorts] = useState<TSortConfig[]>([]);
 
   const { currentWorkspace } = useAuthStore();
@@ -128,6 +141,7 @@ export function DatabaseViewProvider({
   const createRecordMutation = useCreateRecord();
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
+  const updateViewFiltersMutation = useUpdateViewFilters();
 
   const { data: databasesByType, isLoading: isDatabasesByTypeLoading } =
     useDatabaseByModuleType(moduleType);
@@ -144,6 +158,32 @@ export function DatabaseViewProvider({
 
   const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
     useView(currentDatabaseId, effectiveViewId);
+
+  // Derive filters from current view settings
+  const filters = useMemo(() => {
+    return currentViewResponse?.data?.settings?.filters || [];
+  }, [currentViewResponse?.data?.settings?.filters]);
+
+  // Sync temp state with view data when view changes
+  useEffect(() => {
+    const viewFilters = currentViewResponse?.data?.settings?.filters || [];
+    setTempFilters(viewFilters);
+
+    const viewSorts =
+      currentViewResponse?.data?.settings?.sorts?.map((sort) => ({
+        propertyId: sort.property,
+        direction:
+          sort.direction === "ascending"
+            ? "asc"
+            : sort.direction === "descending"
+            ? "desc"
+            : "asc",
+      })) || [];
+    setTempSorts(viewSorts);
+  }, [
+    currentViewResponse?.data?.settings?.filters,
+    currentViewResponse?.data?.settings?.sorts,
+  ]);
 
   const propertiesQueryParams: TPropertyQueryParams = {
     viewId: effectiveViewId,
@@ -170,7 +210,9 @@ export function DatabaseViewProvider({
 
   const { data: recordsResponse, isLoading: isRecordsLoading } = useRecords(
     currentDatabaseId,
-    recordQueryParams
+    recordQueryParams,
+    tempFilters,
+    tempSorts
   );
 
   const visibleProperties =
@@ -195,8 +237,20 @@ export function DatabaseViewProvider({
   const onSelectedRecordsChange = (records: Set<string>) =>
     setSelectedRecords(records);
   const onSearchQueryChange = (query: string) => setSearchQuery(query);
-  const onFiltersChange = (newFilters: TFilterCondition[]) =>
-    setFilters(newFilters);
+  const onFiltersChange = async (newFilters: TFilterCondition[]) => {
+    if (currentDatabaseId && currentViewId) {
+      try {
+        await updateViewFiltersMutation.mutateAsync({
+          databaseId: currentDatabaseId,
+          viewId: currentViewId,
+          filters: newFilters,
+        });
+        // Filters will be updated when view is refetched
+      } catch (error) {
+        console.error("Failed to update filters:", error);
+      }
+    }
+  };
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
   const onBulkEdit = () => onDialogOpen("bulk-edit");
@@ -289,6 +343,10 @@ export function DatabaseViewProvider({
 
     searchQuery,
     filters,
+    tempFilters,
+    setTempFilters,
+    tempSorts,
+    setTempSorts,
     sorts,
 
     onDialogOpen,

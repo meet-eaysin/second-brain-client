@@ -4,7 +4,14 @@ import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { EViewType } from "@/modules/database-view/types";
-import {Board, Calendar, Gallery, List, Table, Timeline} from "@/modules/database-view/components/views";
+import {
+  Board,
+  Calendar,
+  Gallery,
+  List,
+  Table,
+  Gantt,
+} from "@/modules/database-view/components/views";
 
 interface RendererProps {
   className?: string;
@@ -65,20 +72,20 @@ export function Renderer({ className = "" }: RendererProps) {
       case EViewType.CALENDAR:
         return <Calendar />;
 
-      case EViewType.TIMELINE:
-        return <Timeline />;
-
       case EViewType.GANTT:
+        return <Gantt />;
+
+      case EViewType.CHART:
         return (
           <Card className="border-yellow-500">
             <CardContent className="flex items-center justify-center p-8">
               <div className="text-center">
                 <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-yellow-600 mb-2">
-                  Gantt View Coming Soon
+                  Chart View Coming Soon
                 </h3>
                 <p className="text-muted-foreground mb-4">
-                  The Gantt view is currently under development.
+                  The Chart view is currently under development.
                 </p>
                 <Button
                   variant="outline"

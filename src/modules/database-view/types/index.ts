@@ -388,7 +388,7 @@ export type TViewConfig = {
   group?: TGroupConfig;
   calendar?: TCalendarConfig;
   gallery?: TGalleryConfig;
-  timeline?: TTimelineConfig;
+  gantt?: TGanttConfig;
 };
 
 export type TColumnConfig = {
@@ -418,7 +418,7 @@ export type TGalleryConfig = {
   showProperties?: string[];
 };
 
-export type TTimelineConfig = {
+export type TGanttConfig = {
   startDatePropertyId: string;
   endDatePropertyId?: string;
   groupByPropertyId?: string;

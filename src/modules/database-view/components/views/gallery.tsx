@@ -1,23 +1,27 @@
 import { useMemo } from "react";
-import {
-  KanbanBoard,
-  KanbanCard,
-  KanbanCards,
-  KanbanHeader,
-  KanbanProvider,
-} from "@/components/ui/kibo-ui/kanban";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  DragDropContext,
+  Droppable,
+  Draggable,
+  type DropResult,
+} from "@hello-pangea/dnd";
+import { MoreHorizontal, Plus, Edit, Trash2, GripVertical } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
 import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 
-interface GalleryProps {
-  className?: string;
-}
-
-export function Gallery({ className = "" }: GalleryProps) {
+export function Gallery({ className = "" }: { className?: string }) {
   const {
     database,
     properties,
@@ -26,10 +30,13 @@ export function Gallery({ className = "" }: GalleryProps) {
     isRecordsLoading,
     isPropertiesLoading,
     onRecordEdit,
+    onRecordDelete,
+    onRecordCreate,
+    onDialogOpen,
   } = useDatabaseView();
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
-
+  // Find the grouping property (usually a SELECT property)
   const groupingProperty = useMemo(() => {
     return (
       properties.find((p) => p.type === EPropertyType.SELECT) ||
@@ -37,178 +44,244 @@ export function Gallery({ className = "" }: GalleryProps) {
     );
   }, [properties]);
 
-  const columns = useMemo(() => {
+  // Handle drag and drop
+  const handleDragEnd = async (result: DropResult) => {
+    if (!result.destination || !database?.id || !groupingProperty) {
+      return;
+    }
+
+    const { source, destination, draggableId } = result;
+
+    // If dropped in the same position, do nothing
+    if (
+      source.droppableId === destination.droppableId &&
+      source.index === destination.index
+    ) {
+      return;
+    }
+
+    // Find the record being moved
+    const recordId = draggableId;
+    const newGroupId = destination.droppableId;
+
+    try {
+      // Update the record's grouping property
+      const payload: Record<string, TPropertyValue> = {
+        [groupingProperty.id]: newGroupId === "ungrouped" ? null : newGroupId,
+      };
+
+      await updateRecordMutation({
+        databaseId: database.id,
+        recordId,
+        payload,
+      });
+    } catch (error) {
+      console.error("Failed to update record position:", error);
+    }
+  };
+
+  // Get all possible groups from the grouping property
+  const groups = useMemo(() => {
     if (!groupingProperty?.config?.options) {
       return [{ id: "ungrouped", name: "Ungrouped", color: "#6b7280" }];
     }
 
-    const cols = groupingProperty.config.options.map((option) => ({
+    const groups = groupingProperty.config.options.map((option) => ({
       id: option.id,
       name: option.label,
       color: option.color || "#6b7280",
     }));
 
+    // Add ungrouped if Gallery settings allow it
     if (currentView?.settings?.showUngrouped !== false) {
-      cols.push({ id: "ungrouped", name: "Ungrouped", color: "#6b7280" });
+      groups.push({ id: "ungrouped", name: "Ungrouped", color: "#6b7280" });
     }
 
-    return cols;
+    return groups;
   }, [groupingProperty, currentView?.settings?.showUngrouped]);
 
-  const titleProperty = useMemo(() => {
-    return (
-      properties.find((p) => p.type === EPropertyType.TEXT) ||
-      properties.find((p) => p.name.toLowerCase().includes("title")) ||
-      properties.find((p) => p.name.toLowerCase().includes("name")) ||
-      properties[0]
-    );
-  }, [properties]);
+  // Group records by the grouping property
+  const groupedRecords = useMemo(() => {
+    const grouped: Record<string, TRecord[]> = {};
 
-  // Find display properties (excluding title and grouping properties)
-  const displayProperties = useMemo(() => {
-    const excludedIds = new Set(
-      [titleProperty?.id, groupingProperty?.id].filter(Boolean)
-    );
+    // Initialize all groups
+    groups.forEach((group) => {
+      grouped[group.id] = [];
+    });
 
-    return properties
-      .filter((p) => !excludedIds.has(p.id) && p.isVisible)
+    // Group records
+    if (records && Array.isArray(records)) {
+      records.forEach((record: TRecord) => {
+        const groupValue = groupingProperty
+          ? record.properties[groupingProperty.id]
+          : "ungrouped";
+
+        const groupId = String(groupValue || "ungrouped");
+
+        if (grouped[groupId]) {
+          grouped[groupId].push(record);
+        } else {
+          grouped["ungrouped"].push(record);
+        }
+      });
+    }
+
+    return grouped;
+  }, [records, groupingProperty, groups]);
+
+  const renderRecordCard = (record: TRecord, index: number) => {
+    // Get the title property (first text property or first property)
+    const titleProperty =
+      properties.find((p) => p.type === EPropertyType.TEXT) || properties[0];
+    const titleValue = titleProperty
+      ? record.properties[titleProperty.id] ?? "Untitled"
+      : "Untitled";
+    const title = String(titleValue);
+
+    // Get other visible properties
+    const visibleProperties = properties
+      .filter(
+        (p) =>
+          p.id !== groupingProperty?.id &&
+          p.id !== titleProperty?.id &&
+          currentView?.settings?.visibleProperties?.includes(p.id)
+      )
       .slice(0, 3); // Show max 3 additional properties
-  }, [properties, titleProperty?.id, groupingProperty?.id]);
 
-  // Helper function to render property values
-  const renderPropertyValue = (
-    property: (typeof properties)[0],
-    value: TPropertyValue
-  ) => {
-    if (value === null || value === undefined || value === "") return null;
-
-    switch (property.type) {
-      case EPropertyType.SELECT:
-        if (property.config?.options) {
-          const option = property.config.options.find(
-            (opt) => opt.id === value
-          );
-          if (option) {
-            return (
-              <Badge
-                variant="outline"
-                className="text-xs text-white border-0"
-                style={{ backgroundColor: option.color || "#6b7280" }}
-              >
-                {option.label}
-              </Badge>
-            );
-          }
-        }
-        return (
-          <Badge variant="secondary" className="text-xs">
-            {String(value)}
-          </Badge>
-        );
-
-      case EPropertyType.MULTI_SELECT:
-        if (Array.isArray(value) && property.config?.options) {
-          return (
-            <div className="flex flex-wrap gap-1">
-              {value.slice(0, 2).map((val, index) => {
-                const option = property?.config?.options?.find(
-                  (opt) => opt.id === val
-                );
-                return (
-                  <Badge
-                    key={String(val) || index}
-                    variant="outline"
-                    className="text-xs text-white border-0"
-                    style={{ backgroundColor: option?.color || "#6b7280" }}
+    return (
+      <Draggable key={record.id} draggableId={record.id} index={index}>
+        {(provided, snapshot) => (
+          <Card
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            className={`mb-3 cursor-pointer hover:shadow-md transition-all duration-200 group ${
+              snapshot.isDragging
+                ? "shadow-xl rotate-2 scale-105 bg-background border-primary"
+                : "hover:shadow-md"
+            }`}
+            onClick={() => onRecordEdit?.(record)}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2 flex-1">
+                  <div
+                    {...provided.dragHandleProps}
+                    className={`cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-all duration-200 ${
+                      snapshot.isDragging
+                        ? "text-primary"
+                        : "opacity-0 group-hover:opacity-100"
+                    }`}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {option?.label || String(val)}
-                  </Badge>
-                );
-              })}
-              {value.length > 2 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{value.length - 2}
-                </Badge>
-              )}
-            </div>
-          );
-        }
-        return null;
+                    <GripVertical className="h-4 w-4" />
+                  </div>
+                  <CardTitle className="text-sm font-medium line-clamp-2 flex-1">
+                    {title || "Untitled"}
+                  </CardTitle>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-3 w-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRecordEdit?.(record);
+                      }}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRecordDelete?.(record.id);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </CardHeader>
+            {visibleProperties.length > 0 && (
+              <CardContent className="pt-0">
+                <div className="space-y-1">
+                  {visibleProperties.map((property) => {
+                    const value = record.properties[property.id];
+                    if (value === null || value === undefined || value === "")
+                      return null;
 
-      case EPropertyType.CHECKBOX:
-        return (
-          <Badge variant={value ? "default" : "secondary"} className="text-xs">
-            {value ? "Yes" : "No"}
-          </Badge>
-        );
-
-      case EPropertyType.DATE:
-        return (
-          <span className="text-xs text-muted-foreground">
-            {value ? new Date(String(value)).toLocaleDateString() : "-"}
-          </span>
-        );
-
-      case EPropertyType.NUMBER:
-        return <span className="text-xs font-medium">{String(value)}</span>;
-
-      default:
-        return (
-          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
-            {String(value)}
-          </span>
-        );
-    }
+                    return (
+                      <div
+                        key={property.id}
+                        className="text-xs text-muted-foreground"
+                      >
+                        <span className="font-medium">{property.name}:</span>{" "}
+                        {property.type === EPropertyType.SELECT ? (
+                          <Badge
+                            variant="outline"
+                            className="text-xs text-white border-0"
+                            style={{
+                              backgroundColor:
+                                property.config?.options?.find(
+                                  (opt) => opt.id === value
+                                )?.color || "#6b7280",
+                            }}
+                          >
+                            {property.config?.options?.find(
+                              (opt) => opt.id === value
+                            )?.label || String(value)}
+                          </Badge>
+                        ) : property.type === EPropertyType.MULTI_SELECT ? (
+                          <div className="flex flex-wrap gap-1">
+                            {Array.isArray(value) &&
+                              value.map((val: unknown, index: number) => {
+                                const stringVal = String(val);
+                                const option = property.config?.options?.find(
+                                  (opt) => opt.id === stringVal
+                                );
+                                return (
+                                  <Badge
+                                    key={stringVal || index}
+                                    variant="outline"
+                                    className="text-xs text-white border-0"
+                                    style={{
+                                      backgroundColor:
+                                        option?.color || "#6b7280",
+                                    }}
+                                  >
+                                    {option?.label || stringVal}
+                                  </Badge>
+                                );
+                              })}
+                          </div>
+                        ) : (
+                          <span>{String(value)}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+      </Draggable>
+    );
   };
 
-  const kanbanData = useMemo(() => {
-    if (!records || !Array.isArray(records)) return [];
-
-    return records.map((record: TRecord) => {
-      const titleValue = titleProperty
-        ? record.properties[titleProperty.id] ?? "Untitled"
-        : "Untitled";
-      const title = String(titleValue);
-
-      const groupValue = groupingProperty
-        ? record.properties[groupingProperty.id]
-        : "ungrouped";
-      const column = String(groupValue || "ungrouped");
-
-      return {
-        id: record.id,
-        name: title,
-        column,
-        record,
-      };
-    });
-  }, [records, titleProperty, groupingProperty]);
-
-  const handleDataChange = async (newData: typeof kanbanData) => {
-    const changedRecords = newData.filter((item, index) => {
-      const original = kanbanData[index];
-      return original && item.column !== original.column;
-    });
-
-    for (const item of changedRecords) {
-      if (!groupingProperty || !database?.id) continue;
-
-      const payload: Record<string, TPropertyValue> = {
-        [groupingProperty.id]: item.column === "ungrouped" ? null : item.column,
-      };
-
-      try {
-        await updateRecordMutation({
-          databaseId: database.id,
-          recordId: String(item.id),
-          payload,
-        });
-      } catch (error) {
-        console.error("Failed to update record position:", error);
-      }
-    }
-  };
-
+  // Show loading state
   if (isPropertiesLoading || isRecordsLoading) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
@@ -228,96 +301,86 @@ export function Gallery({ className = "" }: GalleryProps) {
   if (!records || records.length === 0) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="No records to display" />
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">No records found</p>
+          <Button onClick={onRecordCreate}>Create First Record</Button>
+        </div>
       </div>
     );
   }
 
-  // Show message if no grouping property
   if (!groupingProperty) {
     return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="Gallery view requires a SELECT property for grouping" />
-      </div>
+      <NoDataMessage
+        message="Gallery view requires a SELECT property for grouping"
+        action={{
+          label: "Add SELECT Property",
+          onClick: () => onDialogOpen?.("create-property"),
+        }}
+      />
     );
   }
 
   return (
-    <div className={`w-full h-full ${className}`}>
-      <KanbanProvider
-        columns={columns}
-        data={kanbanData}
-        onDataChange={handleDataChange}
-      >
-        {(column) => (
-          <KanbanBoard id={column.id} key={column.id}>
-            <KanbanHeader>
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: column.color }}
-                />
-                <span className="font-medium">{column.name}</span>
-                <span className="text-sm text-muted-foreground">
-                  (
-                  {
-                    kanbanData.filter((item) => item.column === column.id)
-                      .length
-                  }
-                  )
-                </span>
-              </div>
-            </KanbanHeader>
-            <KanbanCards id={column.id}>
-              {(item: (typeof kanbanData)[number]) => (
-                <KanbanCard
-                  column={column.id}
-                  id={item.id}
-                  key={item.id}
-                  name={item.name}
-                >
-                  <div
-                    className="p-2 cursor-pointer"
-                    onClick={() => onRecordEdit?.(item.record)}
-                  >
-                    <p className="m-0 font-medium text-sm line-clamp-2">
-                      {item.name}
-                    </p>
-                    {/* Display additional properties */}
-                    {displayProperties.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {displayProperties.map((property) => {
-                          const value = item.record.properties[property.id];
-                          if (
-                            value === null ||
-                            value === undefined ||
-                            value === ""
-                          )
-                            return null;
-
-                          return (
-                            <div
-                              key={property.id}
-                              className="flex items-center justify-between"
-                            >
-                              <span className="text-xs text-muted-foreground font-medium">
-                                {property.name}:
-                              </span>
-                              <div className="ml-2">
-                                {renderPropertyValue(property, value)}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+    <div className={`space-y-4 ${className}`}>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {groups.map((group) => (
+            <div key={group.id} className="flex-shrink-0 w-80">
+              <div className="bg-muted/50 rounded-lg p-4">
+                {/* Group Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: group.color }}
+                    />
+                    <h3 className="font-medium">{group.name}</h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {groupedRecords[group.id]?.length || 0}
+                    </Badge>
                   </div>
-                </KanbanCard>
-              )}
-            </KanbanCards>
-          </KanbanBoard>
-        )}
-      </KanbanProvider>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={onRecordCreate}
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+
+                {/* Records */}
+                <Droppable droppableId={group.id}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.droppableProps}
+                      className={`space-y-2 min-h-[200px] transition-all duration-200 rounded-md ${
+                        snapshot.isDraggingOver
+                          ? "bg-primary/10 border-2 border-dashed border-primary/30 scale-[1.02]"
+                          : "border-2 border-transparent"
+                      }`}
+                    >
+                      {groupedRecords[group.id]?.map((record, index) =>
+                        renderRecordCard(record, index)
+                      )}
+
+                      {groupedRecords[group.id]?.length === 0 && (
+                        <NoDataMessage
+                          message="No records in this group"
+                          compact
+                        />
+                      )}
+                      {provided.placeholder}
+                    </div>
+                  )}
+                </Droppable>
+              </div>
+            </div>
+          ))}
+        </div>
+      </DragDropContext>
     </div>
   );
 }
