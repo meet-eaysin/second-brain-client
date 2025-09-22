@@ -30,6 +30,7 @@ function DocumentViewInternal({ className }: DocumentViewProps) {
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,
+    isCurrentViewLoading,
   } = useDatabaseView();
 
   return (
@@ -82,13 +83,16 @@ function DocumentViewInternal({ className }: DocumentViewProps) {
 
       <div className="flex-1 overflow-auto">
         {isDatabaseLoading && <TableSkeleton />}
-        {!isDatabaseLoading && !currentView && (
+        {!isDatabaseLoading && isCurrentViewLoading && <TableSkeleton />}
+        {!isDatabaseLoading && !isCurrentViewLoading && !currentView && (
           <NoDataMessage
             title="No View Available"
             message={"No view has been selected"}
           />
         )}
-        {!isDatabaseLoading && currentView && <Renderer />}
+        {!isDatabaseLoading && !isCurrentViewLoading && currentView && (
+          <Renderer />
+        )}
       </div>
 
       <DatabaseDialogs />

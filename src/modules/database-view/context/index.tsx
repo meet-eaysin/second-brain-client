@@ -163,6 +163,18 @@ export function DatabaseViewProvider({
     viewsResponse?.data?.find((view) => view?.isDefault)?.id || "";
   const effectiveViewId = currentViewId || defaultViewId || "";
 
+  // Reset currentViewId if the selected view no longer exists
+  useEffect(() => {
+    if (viewsResponse?.data && currentViewId) {
+      const viewExists = viewsResponse.data.some(
+        (view) => view.id === currentViewId
+      );
+      if (!viewExists) {
+        setCurrentViewId("");
+      }
+    }
+  }, [viewsResponse?.data, currentViewId]);
+
   const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
     useView(currentDatabaseId, effectiveViewId);
 

@@ -730,12 +730,16 @@ export const useDeleteView = () => {
     mutationFn: ({ databaseId, viewId }) =>
       databaseApi.deleteView(databaseId, viewId),
     onSuccess: (_, variables) => {
+      // Invalidate views list to trigger automatic view switching in context
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.views(variables.databaseId),
       });
+
+      // Remove the deleted view from cache
       queryClient.removeQueries({
         queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
       });
+
       toast.success("View deleted successfully");
     },
     onError: (error) => {

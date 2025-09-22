@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { EViewType } from "@/modules/database-view/types";
 import {
@@ -12,6 +12,11 @@ import {
   Table,
   Gantt,
 } from "@/modules/database-view/components/views";
+import {
+  TableSkeleton,
+  GallerySkeleton,
+  ListSkeleton,
+} from "@/modules/database-view/components/skeleton";
 
 interface RendererProps {
   className?: string;
@@ -20,15 +25,26 @@ interface RendererProps {
 export function Renderer({ className = "" }: RendererProps) {
   const { currentView, isCurrentViewLoading, database } = useDatabaseView();
 
+  const renderSkeleton = () => {
+    const viewType = currentView?.type || EViewType.TABLE;
+
+    switch (viewType) {
+      case EViewType.TABLE:
+        return <TableSkeleton />;
+      case EViewType.GALLERY:
+        return <GallerySkeleton />;
+      case EViewType.LIST:
+        return <ListSkeleton />;
+      case EViewType.BOARD:
+      case EViewType.CALENDAR:
+      case EViewType.GANTT:
+      default:
+        return <TableSkeleton />;
+    }
+  };
+
   if (isCurrentViewLoading) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Loading view...</p>
-        </div>
-      </div>
-    );
+    return <div className={className}>{renderSkeleton()}</div>;
   }
 
   if (!database?.id) {
@@ -129,20 +145,7 @@ export function Renderer({ className = "" }: RendererProps) {
 
   return (
     <div className={`w-full ${className}`}>
-      <Suspense
-        fallback={
-          <div className="flex items-center justify-center p-8">
-            <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                Loading view component...
-              </p>
-            </div>
-          </div>
-        }
-      >
-        {renderView()}
-      </Suspense>
+      <Suspense fallback={renderSkeleton()}>{renderView()}</Suspense>
     </div>
   );
 }
