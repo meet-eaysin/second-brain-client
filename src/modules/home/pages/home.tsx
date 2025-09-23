@@ -1,138 +1,43 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Activity,
-  BarChart3,
-  TrendingUp,
-  Users,
-  FileText,
-  Clock,
-} from "lucide-react";
+import { Activity, FileText } from "lucide-react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { formatDistanceToNow } from "date-fns";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { useNavigate } from "react-router-dom";
-
-// Mock demo data
-const mockDashboardData = {
-  recentActivity: [
-    {
-      id: "1",
-      title: "New note created",
-      description: "Added a new note about project planning",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    },
-    {
-      id: "2",
-      title: "Task completed",
-      description: "Finished reviewing quarterly goals",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    },
-    {
-      id: "3",
-      title: "File uploaded",
-      description: "Uploaded presentation slides for team meeting",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
-    },
-    {
-      id: "4",
-      title: "Goal updated",
-      description: "Updated progress on Q4 objectives",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
-    },
-    {
-      id: "5",
-      title: "Collaboration started",
-      description: "Began collaborating on research document",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
-    },
-  ],
-  workspaceStats: {
-    totalNotes: 1247,
-    totalTasks: 89,
-    activeProjects: 12,
-    completedGoals: 34,
-    systemUptime: "99.9%",
-    lastBackup: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-  },
-  recentlyVisited: [
-    {
-      id: "1",
-      name: "Notes",
-      type: "page",
-      preview: "View and manage your knowledge base",
-      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-      icon: "📝",
-      color: "#3b82f6",
-      route: "/notes",
-      moduleType: "notes",
-    },
-    {
-      id: "2",
-      name: "Tasks",
-      type: "page",
-      preview: "Track and manage your tasks",
-      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-      icon: "✅",
-      color: "#10b981",
-      route: "/tasks",
-      moduleType: "tasks",
-    },
-    {
-      id: "3",
-      name: "Goals",
-      type: "page",
-      preview: "Set and track your objectives",
-      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
-      icon: "🎯",
-      color: "#8b5cf6",
-      route: "/goals",
-      moduleType: "goals",
-    },
-    {
-      id: "4",
-      name: "Projects",
-      type: "page",
-      preview: "Manage your projects and initiatives",
-      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
-      icon: "📁",
-      color: "#f59e0b",
-      route: "/projects",
-      moduleType: "projects",
-    },
-    {
-      id: "5",
-      name: "Habits",
-      type: "page",
-      preview: "Build and maintain good habits",
-      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
-      icon: "🔥",
-      color: "#ef4444",
-      route: "/habits",
-      moduleType: "habits",
-    },
-    {
-      id: "6",
-      name: "Finance",
-      type: "page",
-      preview: "Track income and expenses",
-      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
-      icon: "💰",
-      color: "#059669",
-      route: "/finance",
-      moduleType: "finance",
-    },
-  ],
-};
+import {
+  useDashboardOverview,
+  useRecentlyVisited,
+} from "../services/dashboard-queries";
+import { useSystemActivityFeed } from "../services/system-queries";
+import { systemApi } from "../services/system-api";
 
 export function HomePage() {
   const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
-  // Using mock data instead of API call
-  const dashboardData = mockDashboardData;
-  const isLoading = false;
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+    refetch,
+  } = useDashboardOverview();
+
+  const { data: systemActivityData, isLoading: systemActivityLoading } =
+    useSystemActivityFeed(currentWorkspace?.id || "", 5);
+
+  const { data: recentlyVisitedData, isLoading: recentlyVisitedLoading } =
+    useRecentlyVisited(6);
+
+  // Record page visit
+  useEffect(() => {
+    if (currentWorkspace?.id) {
+      systemApi
+        .recordPageVisit("/home", currentWorkspace.id)
+        .catch(console.error);
+    }
+  }, [currentWorkspace?.id]);
 
   // Dynamic greeting based on time of day
   const getGreeting = () => {
@@ -141,6 +46,29 @@ export function HomePage() {
     if (hour < 17) return "Good afternoon";
     return "Good evening";
   };
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">
+            Failed to load dashboard data
+          </p>
+          <p className="text-xs text-muted-foreground mb-4">
+            Please check your connection and try again
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={() => refetch()}>
+              Try Again
+            </Button>
+            <Button variant="ghost" onClick={() => window.location.reload()}>
+              Reload Page
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -288,7 +216,7 @@ export function HomePage() {
     );
   }
 
-  const { recentActivity, recentlyVisited } = dashboardData;
+  const { recentActivity } = dashboardData || {};
 
   return (
     <>
@@ -360,8 +288,8 @@ export function HomePage() {
             <h2 className="text-xl font-semibold">Recently Visited</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentlyVisited && recentlyVisited.length > 0 ? (
-              recentlyVisited.slice(0, 6).map((item) => (
+            {recentlyVisitedData && recentlyVisitedData.length > 0 ? (
+              recentlyVisitedData.slice(0, 6).map((item) => (
                 <Card
                   key={item.id}
                   className="hover:shadow-md transition-shadow cursor-pointer"
@@ -418,42 +346,41 @@ export function HomePage() {
           </div>
           <Card>
             <CardContent className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
-                  <Activity className="h-4 w-4 text-green-500" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      System backup completed
-                    </p>
-                    <p className="text-xs text-muted-foreground">2 hours ago</p>
-                  </div>
+              {systemActivityData && systemActivityData.length > 0 ? (
+                <div className="space-y-3">
+                  {systemActivityData.slice(0, 5).map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
+                    >
+                      <Activity className="h-4 w-4 text-muted-foreground mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{activity.title}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {activity.description}
+                        </p>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {activity.userName || "System"}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(activity.timestamp, {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
-                  <Users className="h-4 w-4 text-blue-500" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">New user registered</p>
-                    <p className="text-xs text-muted-foreground">4 hours ago</p>
-                  </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-sm text-muted-foreground">
+                    No recent system activity
+                  </p>
                 </div>
-                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
-                  <FileText className="h-4 w-4 text-purple-500" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      Content sync completed
-                    </p>
-                    <p className="text-xs text-muted-foreground">6 hours ago</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
-                  <Clock className="h-4 w-4 text-orange-500" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      Scheduled maintenance finished
-                    </p>
-                    <p className="text-xs text-muted-foreground">1 day ago</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -467,9 +394,12 @@ export function HomePage() {
             <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
               <div className="h-32 bg-gradient-to-br from-blue-400 to-blue-600 relative">
                 <div className="absolute inset-0 bg-black/20"></div>
-                <div className="absolute bottom-3 left-4">
+                <div className="absolute bottom-3 left-4 flex items-center gap-2">
                   <span className="text-xs font-medium text-white/90 uppercase tracking-wide bg-white/20 px-2 py-1 rounded">
                     Guide
+                  </span>
+                  <span className="text-xs font-medium text-white bg-orange-500 px-2 py-1 rounded uppercase tracking-wide">
+                    Upcoming
                   </span>
                 </div>
               </div>
@@ -531,9 +461,12 @@ export function HomePage() {
             <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
               <div className="h-32 bg-gradient-to-br from-purple-400 to-purple-600 relative">
                 <div className="absolute inset-0 bg-black/20"></div>
-                <div className="absolute bottom-3 left-4">
+                <div className="absolute bottom-3 left-4 flex items-center gap-2">
                   <span className="text-xs font-medium text-white/90 uppercase tracking-wide bg-white/20 px-2 py-1 rounded">
                     Productivity
+                  </span>
+                  <span className="text-xs font-medium text-white bg-blue-500 px-2 py-1 rounded uppercase tracking-wide">
+                    New
                   </span>
                 </div>
               </div>

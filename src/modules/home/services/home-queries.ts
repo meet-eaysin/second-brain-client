@@ -1,10 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi, systemApi } from "./home-api";
-import type { IDashboardQueryParams } from "../types/dashboard.types";
-import type {
-  IActivityQueryOptions,
-  IAnalyticsQueryParams,
-} from "../types/system.types";
+import type { IDashboardQueryParams } from "../types";
+import type { IActivityQueryOptions, IAnalyticsQueryParams } from "../types";
 
 export const DASHBOARD_KEYS = {
   all: ["dashboard"] as const,

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "./dashboard-api";
-import type { IDashboardQueryParams } from "../types/dashboard.types";
+import type { IDashboardQueryParams } from "../types";
 
 // Query Keys
 export const DASHBOARD_KEYS = {
@@ -15,6 +15,8 @@ export const DASHBOARD_KEYS = {
   habitStreaks: () => [...DASHBOARD_KEYS.all, "habit-streaks"] as const,
   financeSummary: (period: string) =>
     [...DASHBOARD_KEYS.all, "finance-summary", period] as const,
+  recentlyVisited: (limit: number) =>
+    [...DASHBOARD_KEYS.all, "recently-visited", limit] as const,
 };
 
 // Dashboard Queries
@@ -87,5 +89,13 @@ export const useFinanceSummary = (period = "month") => {
     queryKey: DASHBOARD_KEYS.financeSummary(period),
     queryFn: () => dashboardApi.getFinanceSummary(period),
     staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+export const useRecentlyVisited = (limit = 8) => {
+  return useQuery({
+    queryKey: DASHBOARD_KEYS.recentlyVisited(limit),
+    queryFn: () => dashboardApi.getRecentlyVisited(limit),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

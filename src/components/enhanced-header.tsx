@@ -21,6 +21,7 @@ import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { ProfileDropdown } from "@/components/profile-dropdown";
+import { NotificationBell } from "@/modules/notifications";
 
 interface EnhancedHeaderProps {
   className?: string;
@@ -103,6 +104,9 @@ export function EnhancedHeader({
       <div className="flex items-center gap-1">
         {/* Context-specific actions */}
         {contextActions}
+
+        {/* Notifications */}
+        <NotificationBell />
 
         {/* Utility dropdown for all essential functions */}
         <DropdownMenu>

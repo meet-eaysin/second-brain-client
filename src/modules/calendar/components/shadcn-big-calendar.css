@@ -482,6 +482,7 @@ button.rbc-input::-moz-focus-inner {
 }
 .rbc-day-slot .rbc-time-slot {
   border-top: 1px solid hsla(var(--border), 0.5);
+  border-right: 1px solid hsla(var(--border), 0.5);
 }
 .rbc-time-slot {
   -webkit-flex: 1 0 0;
@@ -599,9 +600,10 @@ button.rbc-input::-moz-focus-inner {
   -webkit-user-select: none;
 }
 .rbc-current-time-indicator {
-  border-top: 2px solid hsl(var(--destructive)) !important;
+  background-color: hsl(var(--destructive)) !important;
+  height: 2px !important;
   width: 100%;
-  z-index: 10;
+  z-index: 20;
   position: absolute;
   pointer-events: none;
 }
@@ -645,6 +647,7 @@ button.rbc-input::-moz-focus-inner {
 .rbc-day-bg {
   background-color: hsl(var(--background));
   border-right: 1px solid hsl(var(--border));
+  border-bottom: 1px solid hsl(var(--border));
 }
 .rbc-month-view {
   border: none;
@@ -661,13 +664,6 @@ button.rbc-input::-moz-focus-inner {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-.rbc-current-time-indicator {
-  background-color: 2px solid hsl(var(--destructive)) !important;
-  z-index: 3;
-  position: absolute;
-  pointer-events: none;
-  height: 1px;
 }
 .rbc-agenda-empty {
   color: hsl(var(--muted-foreground));

@@ -57,7 +57,7 @@ export default function ShadcnBigCalendarComponent({
 }: ShadcnBigCalendarComponentProps) {
   const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
   const [view, setView] = useState<(typeof Views)[keyof typeof Views]>(
-    Views.MONTH
+    Views.WEEK
   );
   const [date, setDate] = useState(new Date());
 
@@ -168,25 +168,23 @@ export default function ShadcnBigCalendarComponent({
         </DialogContent>
       </Dialog>
 
-      <div className="bg-card border rounded-lg overflow-hidden">
-        <DnDCalendar
-          localizer={localizer}
-          style={{ height: 700, width: "100%" }}
-          className="bg-card"
-          selectable
-          date={date}
-          onNavigate={handleNavigate}
-          view={view}
-          onView={handleViewChange}
-          resizable
-          draggableAccessor={() => true}
-          resizableAccessor={() => true}
-          events={calendarEvents}
-          onSelectSlot={handleSelectSlot}
-          onEventDrop={handleEventDrop}
-          onEventResize={handleEventResize}
-        />
-      </div>
+      <DnDCalendar
+        localizer={localizer}
+        style={{ height: 600, width: "100%" }}
+        className="border-border border-rounded-md border-solid border-2 rounded-lg"
+        selectable
+        date={date}
+        onNavigate={handleNavigate}
+        view={view}
+        onView={handleViewChange}
+        resizable
+        draggableAccessor={() => true}
+        resizableAccessor={() => true}
+        events={calendarEvents}
+        onSelectSlot={handleSelectSlot}
+        onEventDrop={handleEventDrop}
+        onEventResize={handleEventResize}
+      />
     </div>
   );
 }

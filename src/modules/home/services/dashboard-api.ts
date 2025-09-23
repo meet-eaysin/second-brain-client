@@ -4,7 +4,8 @@ import type {
   IDashboardOverview,
   IDashboardStats,
   IDashboardQueryParams,
-} from "../types/dashboard.types";
+  IRecentlyVisitedItem,
+} from "../types";
 
 export const dashboardApi = {
   // Get dashboard overview
@@ -99,5 +100,16 @@ export const dashboardApi = {
       }
     );
     return response.data.data!;
+  },
+
+  // Get recently visited items
+  getRecentlyVisited: async (limit = 8): Promise<IRecentlyVisitedItem[]> => {
+    const response = await apiClient.get<ApiResponse<IRecentlyVisitedItem[]>>(
+      "/dashboard/recently-visited",
+      {
+        params: { limit },
+      }
+    );
+    return response.data.data || [];
   },
 };

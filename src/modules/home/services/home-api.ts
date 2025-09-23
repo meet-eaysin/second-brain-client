@@ -11,8 +11,7 @@ import type {
   IHabitStreak,
   IFinanceSummary,
   IQuickStats,
-  IWorkspaceStats,
-} from "../types/dashboard.types";
+} from "../types";
 import type { ICalendarEvent } from "@/modules/calendar/types/calendar.types";
 import type {
   IActivity,
@@ -134,6 +133,14 @@ export const dashboardApi = {
     const response = await apiClient.get<ApiResponse<ICalendarEvent[]>>(
       "/calendar/events/upcoming",
       { params }
+    );
+    return response.data.data;
+  },
+
+  // Get learn content with upcoming badges
+  getLearnContent: async (): Promise<ILearnContent[]> => {
+    const response = await apiClient.get<ApiResponse<ILearnContent[]>>(
+      "/dashboard/learn-content"
     );
     return response.data.data;
   },
