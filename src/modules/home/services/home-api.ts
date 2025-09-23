@@ -1,4 +1,4 @@
-rimport { apiClient } from "@/services/api-client.ts";
+import { apiClient } from "@/services/api-client.ts";
 import type { ApiResponse } from "@/types/api.types";
 import type {
   IDashboardOverview,

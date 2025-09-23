@@ -3,30 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  Plus,
-  CheckSquare,
-  Target,
-  Clock,
-  Activity,
-  FileText,
-  Flame,
-  Database,
-  RefreshCw,
-  Settings,
-  PenTool,
-  Calendar,
-  TrendingUp,
-} from "lucide-react";
+import { CheckSquare, Activity, Calendar } from "lucide-react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { useDashboardOverview } from "../services/dashboard-queries";
-import {
-  useRecentActivityFeed,
-  useAnalyticsSummary,
-} from "../services/home-queries";
 import { useUpcomingEvents } from "@/modules/calendar/services/calendar-queries";
+import { DatabaseView, EDatabaseType } from "@/modules/database-view";
 import { formatDistanceToNow, format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -44,12 +26,6 @@ export function HomePage() {
 
   const { data: upcomingEvents, isLoading: isLoadingEvents } =
     useUpcomingEvents({ limit: 5 });
-
-  const { data: systemActivityFeed, isLoading: isLoadingSystemActivity } =
-    useRecentActivityFeed({ limit: 5 });
-
-  const { data: analyticsSummary, isLoading: isLoadingAnalytics } =
-    useAnalyticsSummary();
 
   // Dynamic greeting based on time of day
   const getGreeting = () => {
@@ -504,163 +480,29 @@ export function HomePage() {
         </div>
 
         {/* System Activity */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">System Activity</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toast.info("System activity page coming soon!")}
-            >
-              View All
-            </Button>
+            <div>
+              <h2 className="text-2xl font-bold">System Activity</h2>
+              <p className="text-muted-foreground">
+                Monitor system-wide activities and events
+              </p>
+            </div>
           </div>
-          <Card>
-            <CardContent className="p-6">
-              {isLoadingSystemActivity ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3">
-                      <div className="w-4 h-4 bg-muted animate-pulse rounded mt-1"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-3/4 bg-muted animate-pulse rounded"></div>
-                        <div className="h-3 w-1/2 bg-muted animate-pulse rounded"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : systemActivityFeed && systemActivityFeed.length > 0 ? (
-                <div className="space-y-3">
-                  {systemActivityFeed.slice(0, 5).map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
-                    >
-                      <Activity className="h-4 w-4 text-muted-foreground mt-1" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{activity.action}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {activity.entityType} activity
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(activity.timestamp), {
-                            addSuffix: true,
-                          })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">
-                    No system activity
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <DatabaseView moduleType={EDatabaseType.ACTIVITY} />
         </div>
 
         {/* System Analytics */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">System Analytics</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toast.info("Analytics dashboard coming soon!")}
-            >
-              View Details
-            </Button>
+            <div>
+              <h2 className="text-2xl font-bold">System Analytics</h2>
+              <p className="text-muted-foreground">
+                Comprehensive analytics and insights
+              </p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {isLoadingAnalytics ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <div className="h-4 w-20 bg-muted animate-pulse rounded"></div>
-                      <div className="h-6 w-12 bg-muted animate-pulse rounded"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : analyticsSummary ? (
-              <>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-5 w-5 text-blue-500" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Total Activities
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {analyticsSummary.metrics.totalActivities}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-green-500" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Active Users
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {analyticsSummary.metrics.uniqueUsers}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-purple-500" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Activities/User
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {analyticsSummary.metrics.averageActivitiesPerUser.toFixed(
-                            1
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-orange-500" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">
-                          Peak Hour
-                        </p>
-                        <p className="text-2xl font-bold">
-                          {analyticsSummary.metrics.peakActivityHour}:00
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-sm text-muted-foreground">
-                  Analytics data not available
-                </p>
-              </div>
-            )}
-          </div>
+          <DatabaseView moduleType={EDatabaseType.ANALYSIS} />
         </div>
 
         {/* Learn */}

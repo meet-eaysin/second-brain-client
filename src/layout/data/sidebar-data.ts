@@ -17,6 +17,8 @@ import {
   BarChart3,
   Repeat,
   Calendar,
+  Archive,
+  FolderOpen,
 } from "lucide-react";
 
 export const sidebarData = {
@@ -69,11 +71,6 @@ export const sidebarData = {
           icon: FileText,
         },
         {
-          title: "Projects",
-          url: "/app/second-brain/projects",
-          icon: Target,
-        },
-        {
           title: "Goals",
           url: "/app/second-brain/goals",
           icon: Target,
@@ -103,10 +100,41 @@ export const sidebarData = {
           url: "/app/second-brain/mood-tracker",
           icon: Heart,
         },
+      ],
+    },
+    {
+      title: "PARA Method",
+      items: [
+        {
+          title: "PARA Overview",
+          url: "/app/second-brain/para",
+          icon: FolderOpen,
+          tooltip:
+            "Overview of your PARA system (Projects, Areas, Resources, Archive)",
+        },
+        {
+          title: "Projects",
+          url: "/app/second-brain/para/projects",
+          icon: Target,
+          tooltip: "Active projects that require action",
+        },
+        {
+          title: "Areas",
+          url: "/app/second-brain/para/areas",
+          icon: Users,
+          tooltip: "Areas of responsibility and interest",
+        },
         {
           title: "Resources",
-          url: "/app/second-brain/resources",
+          url: "/app/second-brain/para/resources",
           icon: Bookmark,
+          tooltip: "Reference materials and resources",
+        },
+        {
+          title: "Archive",
+          url: "/app/second-brain/para/archive",
+          icon: Archive,
+          tooltip: "Completed or inactive items",
         },
       ],
     },
