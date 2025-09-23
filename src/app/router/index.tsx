@@ -1,8 +1,4 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ErrorBoundary } from "../providers/error-boundary.tsx";
 import { authRoutes } from "@/modules/auth";
 import { lazy } from "react";
@@ -10,7 +6,6 @@ import {
   getAuthParentLink,
   getHomeLink,
   getAppLink,
-  getDashboardLink,
   getDataTablesLink,
   getUsersLink,
   getNotificationsLink,

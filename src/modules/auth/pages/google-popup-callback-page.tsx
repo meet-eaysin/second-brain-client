@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { FullScreenLoader } from "@/components/loader/full-screen-loader.tsx";
+import { LoadingSpinner } from "@/components/loading-spinner.tsx";
 import { toast } from "sonner";
 import { getSignInLink, getDashboardLink } from "@/app/router/router-link";
 import { setToken, setRefreshToken } from "../utils/tokenUtils";
@@ -99,20 +99,7 @@ const GooglePopupCallbackPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchParams, navigate]);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <FullScreenLoader
-          message="Processing authentication..."
-          size="lg"
-          variant="primary"
-        />
-        <p className="mt-4 text-sm text-muted-foreground">
-          Please wait while we complete your authentication...
-        </p>
-      </div>
-    </div>
-  );
+  return <LoadingSpinner />;
 };
 
 export default GooglePopupCallbackPage;

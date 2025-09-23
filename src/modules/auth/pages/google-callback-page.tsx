@@ -5,7 +5,7 @@ import { useAuthService } from "../hooks/useAuthService";
 import { authApi } from "../services/auth-api";
 import { getSignInLink } from "@/app/router/router-link";
 import { toast } from "sonner";
-import { FullScreenLoader } from "@/components/loader/full-screen-loader.tsx";
+import { LoadingSpinner } from "@/components/loading-spinner.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from "lucide-react";
 
@@ -252,15 +252,7 @@ const GoogleCallbackPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <FullScreenLoader
-        message="Processing Google authentication..."
-        size="lg"
-        variant="primary"
-      />
-    </div>
-  );
+  return <LoadingSpinner />;
 };
 
 export default GoogleCallbackPage;

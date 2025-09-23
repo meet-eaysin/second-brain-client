@@ -319,18 +319,3 @@
   --muted: oklch(0.4 0 0);
   --muted-foreground: oklch(0.9 0 0);
 }
-
-/* Animations disabled */
-.animations-disabled * {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* Sidebar styles - these would need to be applied to sidebar components */
-.sidebar-compact {
-  /* Reduce sidebar padding and font sizes */
-}
-
-.sidebar-minimal {
-  /* Minimal sidebar with icons only */
-}

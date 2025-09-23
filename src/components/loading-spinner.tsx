@@ -1,20 +1,7 @@
-import React from 'react';
-import { ParticleLoader } from './loader/particle-loader.tsx';
+import { Spinner } from "@/components/ui/kibo-ui/spinner";
 
-interface LoadingSpinnerProps {
-    size?: 'sm' | 'md' | 'lg' | 'xl';
-    variant?: 'default' | 'primary' | 'muted';
-    className?: string;
-}
-
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-    size = 'md',
-    variant = 'default',
-    className
-}) => {
-    return (
-        <div className="flex justify-center items-center">
-            <ParticleLoader size={size} variant={variant} className={className} />
-        </div>
-    );
-};
+export const LoadingSpinner = () => (
+  <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+    <Spinner />
+  </div>
+);

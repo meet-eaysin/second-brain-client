@@ -1,23 +1,17 @@
-import { type ReactNode } from 'react';
-import { FullScreenLoader } from "@/components/loader/full-screen-loader.tsx";
+import { type ReactNode } from "react";
+import { LoadingSpinner } from "@/components/loading-spinner.tsx";
 import { useAuth } from "@/modules/auth/hooks/useAuth.ts";
 
 interface AuthProviderProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const { isLoading, hasToken, isInitialized } = useAuth();
+  const { isLoading, hasToken, isInitialized } = useAuth();
 
-    if (hasToken && !isInitialized && isLoading) {
-        return (
-          <FullScreenLoader
-            message="Authenticating..."
-            size="lg"
-            variant="primary"
-          />
-        );
-    }
+  if (hasToken && !isInitialized && isLoading) {
+    return <LoadingSpinner />;
+  }
 
-    return <>{children}</>;
+  return <>{children}</>;
 };
