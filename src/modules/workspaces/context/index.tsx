@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import {
   useCurrentWorkspace,
   useUserWorkspaces,
@@ -32,6 +32,8 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   // Fetch current workspace
   const { data: currentWorkspaceData, isLoading: isCurrentWorkspaceLoading } =
     useCurrentWorkspace();
+
+  console.log("## currentWorkspaceData", currentWorkspaceData)
 
   // Fetch user's workspaces
   const { data: userWorkspacesData, isLoading: isUserWorkspacesLoading } =
@@ -92,6 +94,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useWorkspace = (): WorkspaceContextValue => {
   const context = useContext(WorkspaceContext);
   if (!context) {

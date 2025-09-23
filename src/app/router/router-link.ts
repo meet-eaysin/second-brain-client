@@ -40,7 +40,6 @@ export const getDatabaseLink = (id: string) => `/app/databases/${id}`;
 export const getCreateDatabaseLink = () => "/app/databases/new";
 export const getDatabaseTemplatesLink = () => "/app/databases/templates";
 export const getDatabaseImportLink = () => "/app/databases/import";
-export const getDatabaseCategoriesLink = () => "/app/databases/categories";
 
 // Admin routes
 export const getAdminLink = () => "/app/admin";

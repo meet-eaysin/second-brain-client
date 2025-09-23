@@ -66,9 +66,12 @@ export const API_ENDPOINTS = {
   WORKSPACES: {
     LIST: "/workspaces",
     CREATE: "/workspaces",
+    CURRENT: "/workspaces/current",
     BY_ID: "/workspaces/current",
     UPDATE: "/workspaces/current",
     DELETE: "/workspaces/current",
+    CURRENT_STATS: "/workspaces/current/stats",
+    CURRENT_ACCESS: "/workspaces/current/access",
     DUPLICATE: "/workspaces/current/duplicate",
     LEAVE: "/workspaces/current/leave",
     PERMISSIONS: "/workspaces/current/permissions",

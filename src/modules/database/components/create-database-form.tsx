@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button.tsx";
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Switch } from "@/components/ui/switch.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
 import {
   Card,
   CardContent,
@@ -34,40 +33,45 @@ import {
   Palette,
   Settings,
   Shield,
-  Users,
   FileText,
-  Archive,
   Save,
 } from "lucide-react";
-import { useDatabaseView } from "../../context";
-import {
-  useCreateDatabase,
-  useUpdateDatabase,
-} from "../../services/database-queries";
-import type { TCreateDatabase, TUpdateDatabase } from "../../types";
+import { useCreateDatabase } from "@/modules/database-view/services/database-queries";
+import type { TCreateDatabase } from "@/modules/database-view/types";
 import {
   createDatabaseSchema,
-  updateDatabaseSchema,
   type CreateDatabaseFormData,
-  type UpdateDatabaseFormData,
-} from "../../schemas/database.schema";
+} from "@/modules/database-view/schemas/database.schema";
 import { Label } from "@/components/ui/label.tsx";
+import { toast } from "sonner";
+import { useWorkspace } from "@/modules/workspaces/context";
 
-export function DatabaseForm() {
-  const { database, dialogOpen, onDialogOpen, workspace } = useDatabaseView();
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+}
 
+interface CreateDatabaseFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}
+
+export function CreateDatabaseForm({
+  open,
+  onOpenChange,
+  onSuccess,
+}: CreateDatabaseFormProps) {
+  const { currentWorkspace, isCurrentWorkspaceLoading } = useWorkspace();
+  console.log("$$ TEST", currentWorkspace);
   const createDatabaseMutation = useCreateDatabase();
-  const updateDatabaseMutation = useUpdateDatabase();
 
-  const isOpen =
-    dialogOpen === "create-database" || dialogOpen === "edit-database";
-  const mode = dialogOpen === "create-database" ? "create" : "edit";
-
-  const schema =
-    mode === "create" ? createDatabaseSchema : updateDatabaseSchema;
-
-  const form = useForm<CreateDatabaseFormData | UpdateDatabaseFormData>({
-    resolver: zodResolver(schema),
+  const form = useForm<CreateDatabaseFormData>({
+    resolver: zodResolver(createDatabaseSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
@@ -88,90 +92,117 @@ export function DatabaseForm() {
   });
 
   useEffect(() => {
-    if (isOpen) {
-      if (database && mode === "edit") {
-        form.reset({
-          name: database.name,
-          description: database.description || "",
-          isPublic: database.isPublic,
-          icon: database.icon?.value || "",
-          cover: database.cover?.value || "",
-        });
+    if (open) {
+      form.reset({
+        name: "",
+        description: "",
+        isPublic: false,
+        icon: "",
+        cover: "",
+      });
 
-        setAdvancedSettings({
-          allowComments: database.allowComments,
-          allowDuplicates: database.allowDuplicates,
-          enableVersioning: database.enableVersioning,
-          enableAuditLog: database.enableAuditLog,
-          enableAutoTagging: database.enableAutoTagging,
-          enableSmartSuggestions: database.enableSmartSuggestions,
-        });
-      } else if (mode === "create") {
-        form.reset({
-          name: "",
-          description: "",
-          isPublic: false,
-          icon: "",
-          cover: "",
-        });
-
-        setAdvancedSettings({
-          allowComments: true,
-          allowDuplicates: false,
-          enableVersioning: true,
-          enableAuditLog: false,
-          enableAutoTagging: true,
-          enableSmartSuggestions: true,
-        });
-      }
-    }
-  }, [isOpen, database, mode, form]);
-
-  const onSubmit = async (
-    data: CreateDatabaseFormData | UpdateDatabaseFormData
-  ) => {
-    if (!workspace?._id) return;
-
-    if (mode === "create") {
-      const createData: TCreateDatabase = {
-        ...(data as TCreateDatabase),
-        workspaceId: workspace._id,
-      };
-
-      await createDatabaseMutation.mutateAsync({ data: createData });
-    } else if (database) {
-      const updateData: TUpdateDatabase = data as TUpdateDatabase;
-      await updateDatabaseMutation.mutateAsync({
-        id: database.id,
-        data: updateData,
+      setAdvancedSettings({
+        allowComments: true,
+        allowDuplicates: false,
+        enableVersioning: true,
+        enableAuditLog: false,
+        enableAutoTagging: true,
+        enableSmartSuggestions: true,
       });
     }
+  }, [open, form]);
 
-    onDialogOpen(null);
+  const onSubmit = async (data: CreateDatabaseFormData) => {
+    // Wait for workspace to load
+    if (isCurrentWorkspaceLoading) {
+      toast.error("Loading workspace information. Please wait...");
+      return;
+    }
+
+    if (!currentWorkspace?.id) {
+      // Workspace should always be available through useWorkspace hook
+      console.error("No workspace available - this should not happen");
+      toast.error(
+        "Unable to create database. Please refresh the page and try again."
+      );
+      return;
+    }
+
+    try {
+      // Prepare the create data, omitting empty icon and cover fields
+      const createData: TCreateDatabase = {
+        workspaceId: currentWorkspace.id,
+        name: data.name,
+        description: data.description || undefined,
+        type: "custom",
+        isPublic: data.isPublic,
+        allowComments: advancedSettings.allowComments,
+        allowDuplicates: advancedSettings.allowDuplicates,
+        enableVersioning: advancedSettings.enableVersioning,
+        enableAuditLog: advancedSettings.enableAuditLog,
+        enableAutoTagging: advancedSettings.enableAutoTagging,
+        enableSmartSuggestions: advancedSettings.enableSmartSuggestions,
+      };
+
+      // Only include icon if it has a value
+      if (data.icon && data.icon.trim()) {
+        // For now, assume emoji type for simple icons
+        createData.icon = {
+          type: "emoji" as const,
+          value: data.icon.trim(),
+        };
+      }
+
+      // Only include cover if it has a value
+      if (data.cover && data.cover.trim()) {
+        // For now, assume color type for simple covers
+        createData.cover = {
+          type: "color" as const,
+          value: data.cover.trim(),
+        };
+      }
+
+      await createDatabaseMutation.mutateAsync({ data: createData });
+
+      toast.success("Custom database created successfully!");
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error: unknown) {
+      console.error("Failed to create database:", error);
+
+      // Show specific error message
+      const apiError = error as ApiError;
+      const errorMessage =
+        apiError?.response?.data?.message ||
+        apiError?.message ||
+        "Failed to create database. Please try again.";
+
+      toast.error(errorMessage);
+    }
   };
 
   const handleCancel = () => {
-    onDialogOpen(null);
+    onOpenChange(false);
   };
 
-  const isLoading =
-    createDatabaseMutation.isPending || updateDatabaseMutation.isPending;
+  const isLoading = createDatabaseMutation.isPending;
+  const isWorkspaceReady = !isCurrentWorkspaceLoading && !!currentWorkspace?.id;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
-      <DialogContent className="overflow-y-auto max-w-4xl max-h-[90vh] px-6">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="overflow-y-auto max-w-6xl max-h-[90vh] px-6">
         <DialogHeader className="space-y-4 pb-3 px-2">
           <div>
             <DialogTitle className="text-xl flex items-center gap-2">
               <Database className="h-5 w-5" />
-              {mode === "create"
-                ? "Create Custom Database"
-                : "Edit Custom Database"}
+              Create Custom Database
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              {mode === "create"
-                ? "Create a custom database to organize your data with advanced features and customization options."
-                : "Update your custom database settings and configuration."}
+              {isCurrentWorkspaceLoading
+                ? "Loading workspace information..."
+                : !currentWorkspace?.id
+                ? "No workspace available. Please ensure you're logged in and have access to a workspace."
+                : "Create a custom database to organize your data with advanced features and customization options."}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -198,6 +229,7 @@ export function DatabaseForm() {
                       <FormControl>
                         <Input
                           placeholder="Enter database name"
+                          disabled={isLoading || !isWorkspaceReady}
                           {...field}
                         />
                       </FormControl>
@@ -216,6 +248,7 @@ export function DatabaseForm() {
                         <Textarea
                           placeholder="Describe what this database is for..."
                           rows={3}
+                          disabled={isLoading || !isWorkspaceReady}
                           {...field}
                         />
                       </FormControl>
@@ -260,7 +293,7 @@ export function DatabaseForm() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Use an emoji (📝) or image URL
+                          Enter an emoji (e.g., 📝) for the database icon
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -281,7 +314,8 @@ export function DatabaseForm() {
                           />
                         </FormControl>
                         <FormDescription>
-                          Optional background image URL
+                          Enter a color value (e.g., #ff0000) for the database
+                          cover
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
@@ -461,24 +495,7 @@ export function DatabaseForm() {
 
             <DialogFooter className="flex gap-3 pt-6 border-t px-1">
               <div className="flex items-center gap-2">
-                {mode === "edit" && database && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Badge
-                      variant="outline"
-                      className="flex items-center gap-1"
-                    >
-                      <Archive className="h-3 w-3" />
-                      {database.recordCount} records
-                    </Badge>
-                    <Badge
-                      variant="outline"
-                      className="flex items-center gap-1"
-                    >
-                      <Users className="h-3 w-3" />
-                      {database.properties.length} properties
-                    </Badge>
-                  </div>
-                )}
+                {/* Empty space for alignment */}
               </div>
 
               <div className="flex items-center gap-2">
@@ -491,18 +508,27 @@ export function DatabaseForm() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading} className="flex-1">
+                <Button
+                  type="submit"
+                  disabled={isLoading || !isWorkspaceReady}
+                  className="flex-1"
+                >
                   {isLoading ? (
                     <>
                       <Settings className="mr-2 h-4 w-4 animate-spin" />
-                      {mode === "create" ? "Creating..." : "Updating..."}
+                      Creating...
+                    </>
+                  ) : !isWorkspaceReady ? (
+                    <>
+                      <Database className="mr-2 h-4 w-4" />
+                      {isCurrentWorkspaceLoading
+                        ? "Loading..."
+                        : "No Workspace"}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      {mode === "create"
-                        ? "Create Custom Database"
-                        : "Update Custom Database"}
+                      Create Custom Database
                     </>
                   )}
                 </Button>

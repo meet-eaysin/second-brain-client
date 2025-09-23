@@ -94,14 +94,7 @@ export const DATABASE_KEYS = {
 
 export const useDatabases = (params?: TDatabaseQueryParams) => {
   return useQuery<
-    {
-      databases: TDatabase[];
-      total: number;
-      page: number;
-      limit: number;
-      hasNext: boolean;
-      hasPrev: boolean;
-    },
+    ApiResponse<TDatabase[]>,
     AxiosError
   >({
     queryKey: DATABASE_KEYS.list(params || {}),

@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -8,23 +9,64 @@ import {
 import { sidebarData } from "./data/sidebar-data";
 import { TeamSwitcher } from "@/layout/workspace-switcher.tsx";
 import { NavGroup } from "@/layout/nav-group.tsx";
+import { DynamicNavGroup } from "@/layout/dynamic-nav-group.tsx";
 import { NavUser } from "@/layout/nav-user.tsx";
+import { CreateCategoryDialog } from "@/modules/database/components/create-category-dialog";
+import { CreateDatabaseDialog } from "@/modules/database/components/create-database-dialog";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const [createCategoryDialogOpen, setCreateCategoryDialogOpen] =
+    useState(false);
+  const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
+    useState(false);
+
+  const handleCreateCategory = () => {
+    setCreateCategoryDialogOpen(true);
+  };
+
+  const handleCreateDatabase = () => {
+    setCreateDatabaseDialogOpen(true);
+  };
+
   return (
-    <Sidebar collapsible="icon" variant="floating" {...props}>
-      <SidebarHeader>
-        <TeamSwitcher />
-      </SidebarHeader>
-      <SidebarContent>
-        {sidebarData.navGroups.map((props) => {
-          return <NavGroup key={props.title} {...props} />;
-        })}
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser />
-      </SidebarFooter>
-      <SidebarRail />
-    </Sidebar>
+    <>
+      <Sidebar collapsible="icon" variant="floating" {...props}>
+        <SidebarHeader>
+          <TeamSwitcher />
+        </SidebarHeader>
+        <SidebarContent>
+          {sidebarData.navGroups.map((props) => {
+            // Use DynamicNavGroup for groups that have dynamic items
+            if (
+              props.items.some((item) => "isDynamic" in item && item.isDynamic)
+            ) {
+              return (
+                <DynamicNavGroup
+                  key={props.title}
+                  {...props}
+                  onCreateCategory={handleCreateCategory}
+                  onCreateDatabase={handleCreateDatabase}
+                />
+              );
+            }
+            return <NavGroup key={props.title} {...props} />;
+          })}
+        </SidebarContent>
+        <SidebarFooter>
+          <NavUser />
+        </SidebarFooter>
+        <SidebarRail />
+      </Sidebar>
+
+      <CreateCategoryDialog
+        open={createCategoryDialogOpen}
+        onOpenChange={setCreateCategoryDialogOpen}
+      />
+
+      <CreateDatabaseDialog
+        open={createDatabaseDialogOpen}
+        onOpenChange={setCreateDatabaseDialogOpen}
+      />
+    </>
   );
 }

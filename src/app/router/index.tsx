@@ -42,6 +42,7 @@ import { KnowledgeGraphPage } from "@/modules/knowledge-graph/pages/knowledge-gr
 import NotesPage from "@/modules/notes/pages/notes-page";
 import SearchPage from "@/modules/search/pages/search-page";
 import { SecondBrainRoutes } from "@/modules/second-brain/routes/second-brain-routes";
+import { DatabaseRoutes } from "@/modules/database/routes/database-routes";
 
 const UnauthorizedPage = lazy(
   () => import("@/modules/auth/pages/unauthorized-page")
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
       {
         path: "second-brain/*",
         element: <SecondBrainRoutes />,
+      },
+      {
+        path: "databases/*",
+        element: <DatabaseRoutes />,
       },
       {
         path: "ai-assistant",

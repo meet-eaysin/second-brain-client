@@ -32,11 +32,11 @@ export const workspaceApi = {
   },
 
   // Get workspace by ID (current workspace)
-  getCurrentWorkspace: async (): Promise<Workspace> => {
+  getCurrentWorkspace: async (): Promise<ApiResponse<Workspace>> => {
     const response = await apiClient.get<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.CURRENT
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Update current workspace
