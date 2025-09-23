@@ -489,6 +489,7 @@ export type TCreateDatabase = {
   isPublic?: boolean;
   isFrozen?: boolean;
   frozenReason?: string;
+  defaultViewType?: string;
 };
 
 export type TUpdateDatabase = {

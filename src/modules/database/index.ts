@@ -1,12 +1,4 @@
-// Pages
-export { DatabasesPage } from "./pages/databases-page";
-export { DatabaseViewPage } from "./pages/database-view-page";
-export { DatabaseFormPage } from "./pages/database-form-page";
-
-// Routes
-export { DatabaseRoutes } from "./routes/database-routes";
-
-// Re-export database-view components and types for convenience
+// Re-export database-view components and types for database management
 export {
   DatabaseView,
   DataTable,
@@ -19,163 +11,32 @@ export {
   EditableCell,
 } from "../database-view";
 
-// Re-export templates for database creation
-export {
-  templatesApi,
-  useFeaturedTemplates,
-  useOfficialTemplates,
-  useApplyDatabaseTemplate,
-} from "../templates";
-
-// Re-export database API functions
-export {
-  databaseApi,
-  getDatabases,
-  createDatabase,
-  updateDatabase,
-  deleteDatabase,
-  duplicateDatabase,
-  getDatabaseStats,
-  getProperties,
-  createProperty,
-  updateProperty,
-  deleteProperty,
-  reorderProperties,
-  duplicateProperty,
-  changePropertyType,
-  insertPropertyAfter,
-  togglePropertyVisibility,
-  getRecords,
-  createRecord,
-  updateRecord,
-  deleteRecord,
-  bulkUpdateRecords,
-  bulkDeleteRecords,
-  reorderRecords,
-  duplicateRecord,
-  getViews,
-  createView,
-  updateView,
-  deleteView,
-  duplicateView,
-  updateViewGrouping,
-  changeViewType,
-  updateViewPropertyVisibility,
-  updateViewHiddenProperties,
-  updateViewColumnFreeze,
-  updateViewFilters,
-  updateViewSorts,
-  getDatabaseFilters,
-  getDatabaseFilterById,
-  createDatabaseFilter,
-  updateDatabaseFilter,
-  deleteDatabaseFilter,
-  duplicateDatabaseFilter,
-  getDatabaseSorts,
-  getDatabaseSortById,
-  createDatabaseSort,
-  updateDatabaseSort,
-  deleteDatabaseSort,
-  duplicateDatabaseSort,
-  getDatabaseFilterPresets,
-  getDatabaseFilterPresetById,
-  createDatabaseFilterPreset,
-  updateDatabaseFilterPreset,
-  deleteDatabaseFilterPreset,
-  duplicateDatabaseFilterPreset,
-  applyDatabaseFilterPreset,
-  getRelations,
-  getRelation,
-  createRelation,
-  updateRelation,
-  deleteRelation,
-  getRelationConnections,
-  createRelationConnection,
-  deleteRelationConnection,
-  getBlocks,
-  getBlock,
-  createBlock,
-  updateBlock,
-  deleteBlock,
-  bulkBlockOperations,
-  moveBlock,
-  duplicateBlock,
-} from "../database-view/services/database-api";
-
-// Re-export queries
+// Re-export database API services
+export { databaseApi } from "../database-view/services/database-api";
 export {
   useDatabases,
-  useDatabase,
   useCreateDatabase,
   useUpdateDatabase,
   useDeleteDatabase,
-  useDuplicateDatabase,
-  useDatabaseStats,
-  useProperties,
-  useProperty,
-  useCreateProperty,
-  useUpdateProperty,
-  useDeleteProperty,
-  useReorderProperties,
-  useDuplicateProperty,
-  useChangePropertyType,
-  useInsertPropertyAfter,
-  useTogglePropertyVisibility,
-  useRecords,
-  useRecord,
-  useCreateRecord,
-  useUpdateRecord,
-  useDeleteRecord,
-  useBulkUpdateRecords,
-  useBulkDeleteRecords,
-  useReorderRecords,
-  useDuplicateRecord,
-  useViews,
-  useView,
-  useCreateView,
-  useUpdateView,
-  useDeleteView,
-  useDuplicateView,
-  useUpdateViewGrouping,
-  useChangeViewType,
-  useUpdateViewPropertyVisibility,
-  useUpdateViewHiddenProperties,
-  useUpdateViewColumnFreeze,
-  useUpdateViewFilters,
-  useUpdateViewSorts,
-  useDatabaseFilters,
-  useDatabaseFilter,
-  useCreateDatabaseFilter,
-  useUpdateDatabaseFilter,
-  useDeleteDatabaseFilter,
-  useDuplicateDatabaseFilter,
-  useDatabaseSorts,
-  useDatabaseSort,
-  useCreateDatabaseSort,
-  useUpdateDatabaseSort,
-  useDeleteDatabaseSort,
-  useDuplicateDatabaseSort,
-  useDatabaseFilterPresets,
-  useDatabaseFilterPreset,
-  useCreateDatabaseFilterPreset,
-  useUpdateDatabaseFilterPreset,
-  useDeleteDatabaseFilterPreset,
-  useDuplicateDatabaseFilterPreset,
-  useApplyDatabaseFilterPreset,
-  useRelations,
-  useRelation,
-  useCreateRelation,
-  useUpdateRelation,
-  useDeleteRelation,
-  useRelationConnections,
-  useCreateRelationConnection,
-  useDeleteRelationConnection,
-  useBlocks,
-  useBlock,
-  useCreateBlock,
-  useUpdateBlock,
-  useDeleteBlock,
-  useBulkBlockOperations,
-  useMoveBlock,
-  useDuplicateBlock,
 } from "../database-view/services/database-queries";
+
+// Database management components
+export { CreateDatabaseForm } from "./components/create-database-form";
+export { CreateDatabaseDialog } from "./components/create-database-dialog";
+
+// Database pages
+export { DatabasesPage } from "./pages/databases-page";
+export { DatabaseViewPage } from "./pages/database-view-page";
+export { DatabaseFormPage } from "./pages/database-form-page";
+
+// Hooks and utilities
+export { useDatabaseSidebar } from "./hooks/useDatabaseSidebar";
+
+// Types
+export type {
+  TDatabase,
+  TDatabaseQueryParams,
+  TCreateDatabase,
+  TUpdateDatabase,
+  TDatabaseStats,
+} from "../database-view/types";

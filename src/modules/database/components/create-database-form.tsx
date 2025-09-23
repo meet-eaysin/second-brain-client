@@ -35,9 +35,17 @@ import {
   Shield,
   FileText,
   Save,
+  TableIcon,
+  Columns,
+  List,
+  Grid,
+  Calendar,
+  Clock,
+  ChartArea,
 } from "lucide-react";
 import { useCreateDatabase } from "@/modules/database-view/services/database-queries";
 import type { TCreateDatabase } from "@/modules/database-view/types";
+import { EViewType } from "@/modules/database-view/types";
 import {
   createDatabaseSchema,
   type CreateDatabaseFormData,
@@ -79,6 +87,7 @@ export function CreateDatabaseForm({
       isPublic: false,
       icon: "",
       cover: "",
+      defaultViewType: "TABLE",
     },
   });
 
@@ -99,6 +108,7 @@ export function CreateDatabaseForm({
         isPublic: false,
         icon: "",
         cover: "",
+        defaultViewType: "TABLE",
       });
 
       setAdvancedSettings({
@@ -142,6 +152,7 @@ export function CreateDatabaseForm({
         enableAuditLog: advancedSettings.enableAuditLog,
         enableAutoTagging: advancedSettings.enableAutoTagging,
         enableSmartSuggestions: advancedSettings.enableSmartSuggestions,
+        defaultViewType: data.defaultViewType,
       };
 
       // Only include icon if it has a value
@@ -252,6 +263,81 @@ export function CreateDatabaseForm({
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="defaultViewType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Default View Type</FormLabel>
+                      <FormControl>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            {
+                              value: "TABLE",
+                              label: "Table",
+                              icon: <TableIcon className="h-3 w-3" />,
+                            },
+                            {
+                              value: "BOARD",
+                              label: "Board",
+                              icon: <Columns className="h-3 w-3" />,
+                            },
+                            {
+                              value: "LIST",
+                              label: "List",
+                              icon: <List className="h-3 w-3" />,
+                            },
+                            {
+                              value: "GALLERY",
+                              label: "Gallery",
+                              icon: <Grid className="h-3 w-3" />,
+                            },
+                            {
+                              value: "CALENDAR",
+                              label: "Calendar",
+                              icon: <Calendar className="h-3 w-3" />,
+                            },
+                            {
+                              value: "GANTT",
+                              label: "Gantt",
+                              icon: <Clock className="h-3 w-3" />,
+                            },
+                          ].map((viewType) => (
+                            <Card
+                              key={viewType.value}
+                              className={`cursor-pointer transition-all duration-200 p-0 hover:scale-105 ${
+                                field.value === viewType.value
+                                  ? "border-primary bg-primary/10"
+                                  : "hover:border-muted-foreground/50"
+                              }`}
+                              onClick={() => field.onChange(viewType.value)}
+                            >
+                              <CardContent className="p-2 text-center">
+                                <div
+                                  className={`inline-flex p-1 rounded-md mb-1 ${
+                                    field.value === viewType.value
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted"
+                                  }`}
+                                >
+                                  {viewType.icon}
+                                </div>
+                                <div className="text-xs font-medium">
+                                  {viewType.label}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Choose the default view type for your database
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

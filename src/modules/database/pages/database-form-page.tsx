@@ -45,7 +45,7 @@ export function DatabaseFormPage() {
       <div className="container mx-auto py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Invalid action</h1>
-          <Button onClick={() => navigate("/databases")}>
+          <Button onClick={() => navigate("/app/databases")}>
             Back to Databases
           </Button>
         </div>
@@ -78,7 +78,7 @@ export function DatabaseFormPage() {
         `Database "${template.name}" has been created successfully from template.`
       );
 
-      navigate("/databases");
+      navigate("/app/databases");
     } catch (error: unknown) {
       console.error("Failed to create database from template:", error);
 
@@ -110,7 +110,7 @@ export function DatabaseFormPage() {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate("/databases")}
+              onClick={() => navigate("/app/databases")}
               className="flex items-center gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -245,7 +245,7 @@ export function DatabaseFormPage() {
                 if (isCreateMode && !selectedTemplate) {
                   setShowTemplates(true);
                 } else {
-                  navigate("/databases");
+                  navigate("/app/databases");
                 }
               }}
               className="flex items-center gap-2"

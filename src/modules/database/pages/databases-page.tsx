@@ -68,15 +68,15 @@ export function DatabasesPage() {
   const databases = databasesResponse?.data || [];
 
   const handleCreateDatabase = () => {
-    navigate("/databases/new");
+    navigate("/app/databases/new");
   };
 
   const handleViewDatabase = (databaseId: string) => {
-    navigate(`/databases/${databaseId}`);
+    navigate(`/app/databases/${databaseId}`);
   };
 
   const handleEditDatabase = (databaseId: string) => {
-    navigate(`/databases/${databaseId}/edit`);
+    navigate(`/app/databases/${databaseId}/edit`);
   };
 
   const handleDeleteDatabase = (database: TDatabase) => {

@@ -23,6 +23,19 @@ export const createDatabaseSchema = z.object({
     .string()
     .max(500, "Cover URL must be less than 500 characters")
     .optional(),
+
+  defaultViewType: z
+    .enum([
+      "TABLE",
+      "BOARD",
+      "LIST",
+      "CALENDAR",
+      "GALLERY",
+      "TIMELINE",
+      "GANTT",
+      "CHART",
+    ])
+    .default("TABLE"),
 });
 
 export const updateDatabaseSchema = createDatabaseSchema.partial();
