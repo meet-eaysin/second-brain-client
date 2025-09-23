@@ -16,25 +16,26 @@ import {
   getNotificationsLink,
 } from "@/app/router/router-link.ts";
 import {
-    AuthenticatedLayout,
-    CalendarPage,
-    DashboardPage,
-    DataTablePage,
-    UsersPage,
-    TagsPage,
-    NotificationsPage,
-    SettingsPage,
-    ProfileSettingsPage,
-    AccountSettingsPage,
-    SecuritySettingsPage,
-    BillingSettingsPage,
-    AppearanceSettingsPage,
-    DisplaySettingsPage,
-    NotificationSettingsPage,
-    WorkspaceSettingsPage,
-    HomePage,
-    NotFoundPage,
-    PublicRoute, ProtectedRoute,
+  AuthenticatedLayout,
+  CalendarPage,
+  LandingPage,
+  DataTablePage,
+  UsersPage,
+  TagsPage,
+  NotificationsPage,
+  SettingsPage,
+  ProfileSettingsPage,
+  AccountSettingsPage,
+  SecuritySettingsPage,
+  BillingSettingsPage,
+  AppearanceSettingsPage,
+  DisplaySettingsPage,
+  NotificationSettingsPage,
+  WorkspaceSettingsPage,
+  HomePage,
+  NotFoundPage,
+  PublicRoute,
+  ProtectedRoute,
 } from "@/app/router/lazy-components";
 import AIAssistantPage from "@/modules/ai-assistant/pages/ai-assistant-page";
 import { KnowledgeGraphPage } from "@/modules/knowledge-graph/pages/knowledge-graph-page";
@@ -51,7 +52,7 @@ const router = createBrowserRouter([
     path: getHomeLink(),
     element: (
       <ErrorBoundary>
-        <HomePage />
+        <LandingPage />
       </ErrorBoundary>
     ),
   },
@@ -78,11 +79,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to={getDashboardLink()} replace />,
-      },
-      {
-        path: getDashboardLink().replace("/app/", ""),
-        element: <DashboardPage />,
+        element: <HomePage />,
       },
       {
         path: "second-brain/*",

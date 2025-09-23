@@ -13,14 +13,15 @@ export const getChangePasswordLink = () => "/auth/change-password";
 // LinkedIn routes (nested under /app)
 export const getSocialConnectParentLink = () => "/app/social-connect";
 export const getLinkedinLink = () => "/app/social-connect/linkedin";
-export const getLinkedinCallbackLink = () => "/app/social-connect/linkedin/callback";
+export const getLinkedinCallbackLink = () =>
+  "/app/social-connect/linkedin/callback";
 
 // Public routes
 export const getHomeLink = () => "/";
 
 // Protected routes (authenticated)
 export const getAppLink = () => "/app";
-export const getDashboardLink = () => "/app/dashboard";
+export const getDashboardLink = () => "/app";
 export const getDataTablesLink = () => "/app/data-tables";
 
 // User Management routes

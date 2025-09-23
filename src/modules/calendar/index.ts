@@ -1,8 +1,5 @@
 // Calendar module exports
-export { default as CalendarPage } from './pages/calendar-page';
-
-// Components
-export { CalendarView } from './components/calendar-view';
+export { default as CalendarPage } from "./pages/calendar-page";
 
 // Types
-export type * from '@/types/calendar';
+export type * from "@/types/calendar";

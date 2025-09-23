@@ -1,416 +1,372 @@
+// No external imports needed for calendar types
+
+// Calendar Provider Types
+export enum ECalendarProvider {
+  INTERNAL = "internal",
+  GOOGLE = "google",
+  OUTLOOK = "outlook",
+  APPLE = "apple",
+  CALDAV = "caldav",
+  EXCHANGE = "exchange",
+  ICAL = "ical",
+}
+
 // Calendar Types
-export enum CalendarType {
-    PERSONAL = 'PERSONAL',
-    TEAM = 'TEAM',
-    PROJECT = 'PROJECT',
-    EXTERNAL = 'EXTERNAL',
-    SYSTEM = 'SYSTEM',
-}
-
-export enum CalendarVisibility {
-    PRIVATE = 'PRIVATE',
-    SHARED = 'SHARED',
-    PUBLIC = 'PUBLIC',
-}
-
-export interface Calendar {
-    id: string;
-    name: string;
-    description?: string;
-    type: CalendarType;
-    visibility: CalendarVisibility;
-    color: string;
-    icon?: string;
-    isActive: boolean;
-    isDefault: boolean;
-    sortOrder: number;
-    ownerId: string;
-    settings: {
-        defaultView?: 'month' | 'week' | 'day' | 'agenda' | 'timeline';
-        weekStartsOn?: 0 | 1 | 2 | 3 | 4 | 5 | 6;
-        workingHours?: {
-            start: string;
-            end: string;
-            days: number[];
-        };
-        timeZone?: string;
-        defaultEventDuration?: number;
-        allowOverlapping?: boolean;
-        showWeekends?: boolean;
-        showDeclinedEvents?: boolean;
-        defaultReminders?: Array<{
-            type: 'popup' | 'email' | 'sms';
-            minutes: number;
-        }>;
-        syncEnabled?: boolean;
-        syncInterval?: number;
-        lastSyncAt?: string;
-        eventDisplayMode?: 'full' | 'compact' | 'minimal';
-        showEventTime?: boolean;
-        showEventLocation?: boolean;
-        customCss?: string;
-    };
-    externalConfig?: {
-        provider?: 'google' | 'outlook' | 'icloud' | 'caldav' | 'ical';
-        externalId?: string;
-        syncToken?: string;
-        webhookUrl?: string;
-        credentials?: any;
-        lastSyncAt?: string;
-        syncErrors?: Array<{
-            timestamp: string;
-            error: string;
-            resolved: boolean;
-        }>;
-    };
-    teamSettings?: {
-        allowEventCreation?: boolean;
-        allowEventEditing?: boolean;
-        allowEventDeletion?: boolean;
-        requireApproval?: boolean;
-        moderators?: string[];
-        autoAcceptInvites?: boolean;
-        defaultEventVisibility?: 'public' | 'private';
-    };
-    integrations?: CalendarIntegration[];
-    permissions?: CalendarPermission[];
-    createdAt: string;
-    updatedAt: string;
+export enum ECalendarType {
+  PERSONAL = "personal",
+  WORK = "work",
+  SHARED = "shared",
+  PROJECT = "project",
+  TEAM = "team",
+  HOLIDAY = "holiday",
+  BIRTHDAY = "birthday",
 }
 
 // Event Types
-export enum EventStatus {
-    CONFIRMED = 'CONFIRMED',
-    TENTATIVE = 'TENTATIVE',
-    CANCELLED = 'CANCELLED',
+export enum EEventType {
+  EVENT = "event",
+  TASK = "task",
+  MEETING = "meeting",
+  REMINDER = "reminder",
+  DEADLINE = "deadline",
+  MILESTONE = "milestone",
+  HABIT = "habit",
+  GOAL_REVIEW = "goal_review",
+  BREAK = "break",
+  FOCUS_TIME = "focus_time",
+  TRAVEL = "travel",
+  APPOINTMENT = "appointment",
 }
 
-export enum EventVisibility {
-    PUBLIC = 'PUBLIC',
-    PRIVATE = 'PRIVATE',
-    CONFIDENTIAL = 'CONFIDENTIAL',
+// Event Status
+export enum EEventStatus {
+  CONFIRMED = "confirmed",
+  TENTATIVE = "tentative",
+  CANCELLED = "cancelled",
+  NEEDS_ACTION = "needs_action",
+  COMPLETED = "completed",
+  IN_PROGRESS = "in_progress",
 }
 
-export enum EventBusyStatus {
-    BUSY = 'BUSY',
-    FREE = 'FREE',
-    TENTATIVE = 'TENTATIVE',
-    OUT_OF_OFFICE = 'OUT_OF_OFFICE',
+// Event Visibility
+export enum EEventVisibility {
+  PUBLIC = "public",
+  PRIVATE = "private",
+  CONFIDENTIAL = "confidential",
 }
 
+// Recurrence Frequency
+export enum ERecurrenceFrequency {
+  DAILY = "daily",
+  WEEKLY = "weekly",
+  MONTHLY = "monthly",
+  YEARLY = "yearly",
+  HOURLY = "hourly",
+}
+
+// Calendar Access Level
+export enum ECalendarAccessLevel {
+  OWNER = "owner",
+  EDITOR = "editor",
+  VIEWER = "viewer",
+  FREE_BUSY = "free_busy",
+}
+
+// Calendar Interface
+export interface Calendar {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  provider: ECalendarProvider;
+  type: ECalendarType;
+  externalId?: string;
+  externalData?: Record<string, unknown>;
+  ownerId: string;
+  isDefault: boolean;
+  isVisible: boolean;
+  accessLevel: ECalendarAccessLevel;
+  syncEnabled: boolean;
+  lastSyncAt?: Date;
+  syncToken?: string;
+  timeZone: string;
+  metadata?: {
+    source?: string;
+    tags?: string[];
+    category?: string;
+  };
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Calendar Event Interface
 export interface CalendarEvent {
-    id: string;
-    title: string;
-    description?: string;
-    location?: string;
-    startTime: string;
-    endTime: string;
-    isAllDay: boolean;
-    status: EventStatus;
-    visibility: EventVisibility;
-    busyStatus: EventBusyStatus;
-    color?: string;
-    priority?: number;
-    calendarId: string;
-    createdById: string;
-    externalId?: string;
-    externalProvider?: string;
-    lastSyncAt?: string;
-    isRecurring: boolean;
-    recurringEventId?: string;
-    recurrenceRule?: {
-        frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
-        interval?: number;
-        count?: number;
-        until?: string;
-        byDay?: string[];
-        byMonthDay?: number[];
-        byMonth?: number[];
-        exceptions?: string[];
-    };
-    metadata?: {
-        meetingUrl?: string;
-        meetingId?: string;
-        meetingPassword?: string;
-        meetingProvider?: 'zoom' | 'teams' | 'meet' | 'webex' | 'custom';
-        attachments?: Array<{
-            id: string;
-            name: string;
-            url: string;
-            type: string;
-            size: number;
-        }>;
-        customFields?: Record<string, any>;
-        integrationData?: Record<string, any>;
-        displaySettings?: {
-            showInMiniCalendar?: boolean;
-            highlightColor?: string;
-            icon?: string;
-        };
-    };
-    calendar?: Calendar;
-    reminders?: CalendarEventReminder[];
-    attendees?: CalendarEventAttendee[];
-    createdAt: string;
-    updatedAt: string;
+  id: string;
+  calendarId: string;
+  title: string;
+  description?: string;
+  location?: string;
+  startTime: Date;
+  endTime: Date;
+  isAllDay: boolean;
+  timeZone: string;
+  type: EEventType;
+  status: EEventStatus;
+  visibility: EEventVisibility;
+  externalId?: string;
+  externalData?: Record<string, unknown>;
+  recurrence?: RecurrenceRule;
+  recurrenceId?: string;
+  organizer?: EventOrganizer;
+  attendees?: EventAttendee[];
+  reminders?: EventReminder[];
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  metadata?: {
+    source?: string;
+    tags?: string[];
+    priority?: "low" | "medium" | "high" | "urgent";
+    category?: string;
+    url?: string;
+    attachments?: EventAttachment[];
+  };
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// Reminder Types
-export enum ReminderType {
-    POPUP = 'POPUP',
-    EMAIL = 'EMAIL',
-    SMS = 'SMS',
-    PUSH = 'PUSH',
-    WEBHOOK = 'WEBHOOK',
+// Recurrence Rule
+export interface RecurrenceRule {
+  frequency: ERecurrenceFrequency;
+  interval: number;
+  count?: number;
+  until?: Date;
+  byDay?: string[];
+  byMonthDay?: number[];
+  byMonth?: number[];
+  bySetPos?: number[];
+  weekStart?: string;
+  exceptions?: Date[];
 }
 
-export enum ReminderStatus {
-    PENDING = 'PENDING',
-    SENT = 'SENT',
-    FAILED = 'FAILED',
-    CANCELLED = 'CANCELLED',
+// Event Organizer
+export interface EventOrganizer {
+  email: string;
+  name?: string;
+  userId?: string;
 }
 
-export interface CalendarEventReminder {
-    id: string;
-    eventId: string;
-    userId?: string;
-    type: ReminderType;
-    minutesBefore: number;
-    triggerAt: string;
-    status: ReminderStatus;
-    message?: string;
-    config?: {
-        emailTemplate?: string;
-        emailSubject?: string;
-        smsTemplate?: string;
-        phoneNumber?: string;
-        pushTitle?: string;
-        pushBody?: string;
-        pushIcon?: string;
-        pushActions?: Array<{
-            action: string;
-            title: string;
-            icon?: string;
-        }>;
-        webhookUrl?: string;
-        webhookMethod?: 'GET' | 'POST';
-        webhookHeaders?: Record<string, string>;
-        webhookPayload?: Record<string, any>;
-        popupDuration?: number;
-        popupSound?: boolean;
-        popupPersistent?: boolean;
-    };
-    sentAt?: string;
-    errorMessage?: string;
-    retryCount: number;
-    nextRetryAt?: string;
-    createdAt: string;
-    updatedAt: string;
+// Event Attendee
+export interface EventAttendee {
+  email: string;
+  name?: string;
+  userId?: string;
+  status: "accepted" | "declined" | "tentative" | "needs_action";
+  role: "required" | "optional" | "resource";
+  responseTime?: Date;
 }
 
-// Attendee Types
-export enum AttendeeStatus {
-    PENDING = 'PENDING',
-    ACCEPTED = 'ACCEPTED',
-    DECLINED = 'DECLINED',
-    TENTATIVE = 'TENTATIVE',
-    NEEDS_ACTION = 'NEEDS_ACTION',
+// Event Reminder
+export interface EventReminder {
+  method: "email" | "popup" | "sms" | "push";
+  minutes: number;
 }
 
-export enum AttendeeRole {
-    ORGANIZER = 'ORGANIZER',
-    REQUIRED = 'REQUIRED',
-    OPTIONAL = 'OPTIONAL',
-    RESOURCE = 'RESOURCE',
+// Event Attachment
+export interface EventAttachment {
+  title: string;
+  url: string;
+  mimeType?: string;
+  size?: number;
 }
 
-export interface CalendarEventAttendee {
-    id: string;
-    eventId: string;
-    userId?: string;
-    name?: string;
-    email: string;
-    status: AttendeeStatus;
-    role: AttendeeRole;
-    comment?: string;
-    sendInvitation: boolean;
-    sendUpdates: boolean;
-    externalId?: string;
-    externalData?: {
-        provider?: string;
-        originalEmail?: string;
-        displayName?: string;
-        photoUrl?: string;
-        organizationName?: string;
-        title?: string;
-    };
-    respondedAt?: string;
-    invitationSentAt?: string;
-    lastReminderSentAt?: string;
-    availability?: {
-        busyTimes?: Array<{
-            start: string;
-            end: string;
-        }>;
-        timeZone?: string;
-        lastChecked?: string;
-    };
-    createdAt: string;
-    updatedAt: string;
+// Calendar Connection (External)
+export interface CalendarConnection {
+  id: string;
+  userId: string;
+  provider: ECalendarProvider;
+  accountEmail: string;
+  accountName?: string;
+  accessToken: string;
+  refreshToken?: string;
+  tokenExpiresAt?: Date;
+  isActive: boolean;
+  syncEnabled: boolean;
+  syncFrequency: number;
+  lastSyncAt?: Date;
+  syncSettings: {
+    importEvents: boolean;
+    exportEvents: boolean;
+    bidirectionalSync: boolean;
+    syncPastDays: number;
+    syncFutureDays: number;
+    conflictResolution: "local" | "remote" | "manual";
+  };
+  lastError?: string;
+  errorCount: number;
+  metadata?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// Integration Types
-export enum IntegrationProvider {
-    GOOGLE = 'GOOGLE',
-    OUTLOOK = 'OUTLOOK',
-    ICLOUD = 'ICLOUD',
-    CALDAV = 'CALDAV',
-    ICAL = 'ICAL',
-    EXCHANGE = 'EXCHANGE',
-    ZIMBRA = 'ZIMBRA',
+// Calendar View Configuration
+export interface CalendarView {
+  type: "month" | "week" | "day" | "agenda" | "year";
+  startDate: Date;
+  endDate: Date;
+  timeZone: string;
+  calendarIds?: string[];
+  eventTypes?: EEventType[];
+  statuses?: EEventStatus[];
+  showWeekends: boolean;
+  showAllDay: boolean;
+  showDeclined: boolean;
+  groupBy?: "calendar" | "type" | "status";
 }
 
-export enum IntegrationStatus {
-    ACTIVE = 'ACTIVE',
-    INACTIVE = 'INACTIVE',
-    ERROR = 'ERROR',
-    EXPIRED = 'EXPIRED',
-    REVOKED = 'REVOKED',
+// Calendar Event Query Options
+export interface CalendarEventsQuery {
+  calendarIds?: string[];
+  startDate?: Date;
+  endDate?: Date;
+  eventTypes?: EEventType[];
+  statuses?: EEventStatus[];
+  searchQuery?: string;
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  includeRecurring?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
-export enum SyncDirection {
-    IMPORT_ONLY = 'IMPORT_ONLY',
-    EXPORT_ONLY = 'EXPORT_ONLY',
-    BIDIRECTIONAL = 'BIDIRECTIONAL',
-}
-
-export interface CalendarIntegration {
-    id: string;
-    calendarId: string;
-    userId: string;
-    name: string;
-    provider: IntegrationProvider;
-    status: IntegrationStatus;
-    syncDirection: SyncDirection;
-    externalCalendarId: string;
-    externalCalendarName?: string;
-    credentials?: any;
-    syncConfig?: any;
-    lastSyncAt?: string;
-    nextSyncAt?: string;
-    syncToken?: string;
-    syncStats?: {
-        totalEvents?: number;
-        eventsCreated?: number;
-        eventsUpdated?: number;
-        eventsDeleted?: number;
-        lastSyncDuration?: number;
-        errorCount?: number;
-        lastError?: string;
-        lastErrorAt?: string;
-    };
-    webhookConfig?: any;
-    errors?: Array<{
-        timestamp: string;
-        type: 'auth' | 'sync' | 'webhook' | 'network' | 'other';
-        message: string;
-        details?: any;
-        resolved?: boolean;
-        resolvedAt?: string;
-    }>;
-    createdAt: string;
-    updatedAt: string;
-}
-
-// Permission Types
-export enum PermissionLevel {
-    OWNER = 'OWNER',
-    ADMIN = 'ADMIN',
-    EDITOR = 'EDITOR',
-    CONTRIBUTOR = 'CONTRIBUTOR',
-    VIEWER = 'VIEWER',
-}
-
-export enum PermissionStatus {
-    ACTIVE = 'ACTIVE',
-    PENDING = 'PENDING',
-    DECLINED = 'DECLINED',
-    REVOKED = 'REVOKED',
-    EXPIRED = 'EXPIRED',
-}
-
-export interface CalendarPermission {
-    id: string;
-    calendarId: string;
-    userId: string;
-    level: PermissionLevel;
-    status: PermissionStatus;
-    permissions?: Record<string, boolean>;
-    expiresAt?: string;
-    timeRestrictions?: any;
-    invitedBy?: string;
-    invitedAt?: string;
-    acceptedAt?: string;
-    invitationMessage?: string;
-    responseMessage?: string;
-    notificationSettings?: any;
-    lastAccessedAt?: string;
-    accessCount: number;
-    usageStats?: any;
-    createdAt: string;
-    updatedAt: string;
+// Calendar Statistics
+export interface CalendarStats {
+  totalEvents: number;
+  upcomingEvents: number;
+  todayEvents: number;
+  weekEvents: number;
+  monthEvents: number;
+  byType: Record<EEventType, number>;
+  byStatus: Record<EEventStatus, number>;
+  byCalendar: Record<string, number>;
+  busyHours: {
+    date: string;
+    hours: number;
+  }[];
+  productivity: {
+    focusTime: number;
+    meetingTime: number;
+    breakTime: number;
+    freeTime: number;
+  };
 }
 
 // Request/Response Types
 export interface CreateCalendarRequest {
-    name: string;
-    description?: string;
-    type?: CalendarType;
-    visibility?: CalendarVisibility;
-    color?: string;
-    icon?: string;
-    isDefault?: boolean;
-    settings?: Calendar['settings'];
-    teamSettings?: Calendar['teamSettings'];
+  name: string;
+  description?: string;
+  color: string;
+  type: ECalendarType;
+  timeZone: string;
+  isDefault?: boolean;
+  metadata?: Record<string, unknown>;
 }
 
-export interface UpdateCalendarRequest extends Partial<CreateCalendarRequest> {}
+export interface UpdateCalendarRequest {
+  name?: string;
+  description?: string;
+  color?: string;
+  isVisible?: boolean;
+  timeZone?: string;
+  metadata?: Record<string, unknown>;
+}
 
 export interface CreateEventRequest {
-    calendarId: string;
-    title: string;
-    description?: string;
-    location?: string;
-    startTime: string;
-    endTime: string;
-    isAllDay?: boolean;
-    status?: EventStatus;
-    visibility?: EventVisibility;
-    color?: string;
-    priority?: number;
-    recurrenceRule?: CalendarEvent['recurrenceRule'];
-    reminders?: Array<{
-        type: ReminderType;
-        minutesBefore: number;
-        message?: string;
-        config?: any;
-    }>;
-    attendees?: Array<{
-        email: string;
-        name?: string;
-        role?: AttendeeRole;
-    }>;
-    metadata?: CalendarEvent['metadata'];
+  calendarId: string;
+  title: string;
+  description?: string;
+  location?: string;
+  startTime: Date;
+  endTime: Date;
+  isAllDay?: boolean;
+  timeZone?: string;
+  type?: EEventType;
+  status?: EEventStatus;
+  visibility?: EEventVisibility;
+  recurrence?: RecurrenceRule;
+  attendees?: Omit<EventAttendee, "responseTime">[];
+  reminders?: EventReminder[];
+  relatedEntityType?: string;
+  relatedEntityId?: string;
+  metadata?: Record<string, unknown>;
 }
 
-export interface UpdateEventRequest extends Partial<CreateEventRequest> {}
+export interface UpdateEventRequest {
+  title?: string;
+  description?: string;
+  location?: string;
+  startTime?: Date;
+  endTime?: Date;
+  isAllDay?: boolean;
+  status?: EEventStatus;
+  visibility?: EEventVisibility;
+  attendees?: Omit<EventAttendee, "responseTime">[];
+  reminders?: EventReminder[];
+  metadata?: Record<string, unknown>;
+}
 
-export interface CalendarEventsQuery {
-    startDate: string;
-    endDate: string;
-    calendarIds?: string[];
-    status?: EventStatus[];
-    includeRecurring?: boolean;
-    includeDeclined?: boolean;
+export interface ConnectCalendarRequest {
+  provider: ECalendarProvider;
+  authCode?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  accountEmail: string;
+  syncSettings?: Partial<CalendarConnection["syncSettings"]>;
+}
+
+// Response Types
+export interface CalendarResponse {
+  calendars: Calendar[];
+  total: number;
+}
+
+export interface EventsResponse {
+  events: CalendarEvent[];
+  total: number;
+  query: CalendarEventsQuery;
+}
+
+export interface CalendarViewResponse {
+  events: CalendarEvent[];
+  calendars: Calendar[];
+  view: CalendarView;
+}
+
+export interface UpcomingEventsResponse {
+  events: CalendarEvent[];
+  period: {
+    startDate: Date;
+    endDate: Date;
+    days: number;
+  };
+}
+
+export interface TodayEventsResponse {
+  events: CalendarEvent[];
+  date: string;
+  count: number;
+}
+
+export interface BusyTimesResponse {
+  busyTimes: {
+    start: Date;
+    end: Date;
+    title: string;
+    eventId: string;
+    calendarId: string;
+  }[];
+  period: {
+    startDate: Date;
+    endDate: Date;
+  };
+  count: number;
 }

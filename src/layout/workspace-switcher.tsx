@@ -22,43 +22,33 @@ import type { CreateWorkspaceRequest } from "@/types/workspace.types";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const {
-    currentWorkspace,
-    setCurrentWorkspace,
-    workspaces,
-    isAuthenticated,
-    addWorkspace,
-  } = useAuthStore();
+  const { currentWorkspace, workspaces, isAuthenticated, addWorkspace } =
+    useAuthStore();
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] =
     React.useState(false);
 
-  console.log("current", currentWorkspace);
-
-  // Use React Query hooks for data fetching and mutations
   const createWorkspaceMutation = useCreateWorkspace();
 
   const hasWorkspaces = workspaces.length > 0;
   const isLoadingWorkspaces = !isAuthenticated;
-  console.log("workspaces", workspaces);
 
   const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
     try {
       const createdWorkspace = await createWorkspaceMutation.mutateAsync(data);
-      // Convert Workspace to UserWorkspace
       const userWorkspace = {
         id: createdWorkspace.id,
         name: createdWorkspace.name,
         description: createdWorkspace.description,
         type: createdWorkspace.type,
         role: "owner" as const,
-        isDefault: workspaces.length === 0, // First workspace is default
+        isDefault: workspaces.length === 0,
         memberCount: createdWorkspace.memberCount,
         databaseCount: createdWorkspace.databaseCount,
         createdAt: createdWorkspace.createdAt,
         updatedAt: createdWorkspace.updatedAt,
       };
       addWorkspace(userWorkspace);
-      setCurrentWorkspace(createdWorkspace);
+      // Note: currentWorkspace will be set by the API response or persisted state
       setIsCreateWorkspaceOpen(false);
     } catch (error) {
       console.error("Failed to create workspace:", error);
@@ -81,7 +71,7 @@ export function TeamSwitcher() {
                     <div
                       className="flex aspect-square size-8 items-center justify-center rounded-lg text-white"
                       style={{
-                        backgroundColor: "#3b82f6", // Default color since Workspace type doesn't have color
+                        backgroundColor: "#3b82f6",
                       }}
                     >
                       <span className="text-lg">
@@ -130,14 +120,16 @@ export function TeamSwitcher() {
                     <DropdownMenuItem
                       key={workspace.id}
                       onClick={() => {
-                        setCurrentWorkspace(workspace);
+                        // TODO: Fetch full workspace data and set as current
+                        // For now, just navigate or show a message
+                        console.log("Switch to workspace:", workspace.name);
                       }}
                       className="gap-2 p-2"
                     >
                       <div
                         className="flex size-6 items-center justify-center rounded-sm text-white text-xs"
                         style={{
-                          backgroundColor: "#3b82f6", // Default color
+                          backgroundColor: "#3b82f6",
                         }}
                       >
                         🏢

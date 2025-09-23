@@ -21,7 +21,7 @@ class RoutePreloader {
 
   preloadCriticalRoutes() {
     // Preload most commonly used routes
-    this.preload(() => import("@/modules/dashboard"), "dashboard");
+    this.preload(() => import("@/modules/home"), "dashboard");
     this.preload(() => import("@/modules/auth/pages/sign-up-page"), "sign-up");
   }
 }

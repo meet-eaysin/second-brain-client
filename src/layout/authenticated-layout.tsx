@@ -5,14 +5,13 @@ import SkipToMain from "@/components/skip-to-main";
 import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/layout/app-sidebar.tsx";
 import React from "react";
-import Cookies from "js-cookie";
 
 interface Props {
   children?: React.ReactNode;
 }
 
 function AuthenticatedLayout({ children }: Props) {
-  const defaultOpen = Cookies.get("sidebar_state") !== "false";
+  const defaultOpen = true; // Always default to open
 
   return (
     <SearchProvider>

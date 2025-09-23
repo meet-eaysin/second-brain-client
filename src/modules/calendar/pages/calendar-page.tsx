@@ -1,207 +1,165 @@
-import { useState, useEffect } from 'react';
-import { CalendarView } from '../components/calendar-view';
-import { Calendar, CalendarEvent } from '@/types/calendar';
-import { usePageHeader } from '@/hooks/usePageHeader';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import React, { useState } from "react";
+import { Main } from "@/layout/main";
+import { EnhancedHeader } from "@/components/enhanced-header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Calendar as CalendarIcon,
+  Plus,
+  Settings,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
+} from "lucide-react";
+import { useCalendars, useCalendarStats } from "../services/calendar-queries";
+import ShadcnBigCalendarComponent from "../components/schedule-x-calendar";
 
 export default function CalendarPage() {
-    usePageHeader({
-        title: 'Calendar',
-        description: 'Manage your events, meetings, and schedule',
-        icon: CalendarIcon,
-    });
+  const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
 
-    const [calendars, setCalendars] = useState<Calendar[]>([]);
-    const [events, setEvents] = useState<CalendarEvent[]>([]);
-    const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
-    const [currentView, setCurrentView] = useState<'month' | 'week' | 'day' | 'agenda'>('month');
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [loading, setLoading] = useState(true);
+  // Fetch calendars
+  const { data: calendars = [], isLoading: calendarsLoading } = useCalendars();
 
-    // Mock data for demonstration
-    useEffect(() => {
-        // Simulate loading calendars and events
-        const mockCalendars: Calendar[] = [
-            {
-                id: '1',
-                name: 'Personal',
-                description: 'Personal events and appointments',
-                type: 'PERSONAL' as any,
-                visibility: 'PRIVATE' as any,
-                color: '#3b82f6',
-                isActive: true,
-                isDefault: true,
-                sortOrder: 1,
-                ownerId: 'user1',
-                settings: {},
-                permissions: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            },
-            {
-                id: '2',
-                name: 'Work',
-                description: 'Work meetings and deadlines',
-                type: 'TEAM' as any,
-                visibility: 'SHARED' as any,
-                color: '#ef4444',
-                isActive: true,
-                isDefault: false,
-                sortOrder: 2,
-                ownerId: 'user1',
-                settings: {},
-                permissions: [],
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            },
-        ];
+  // Fetch calendar stats
+  const { data: stats } = useCalendarStats();
 
-        const mockEvents: CalendarEvent[] = [
-            {
-                id: '1',
-                title: 'Team Meeting',
-                description: 'Weekly team sync',
-                location: 'Conference Room A',
-                startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-                endTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString(), // Tomorrow + 1 hour
-                isAllDay: false,
-                status: 'CONFIRMED' as any,
-                visibility: 'PUBLIC' as any,
-                busyStatus: 'BUSY' as any,
-                color: '#ef4444',
-                calendarId: '2',
-                createdById: 'user1',
-                isRecurring: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            },
-            {
-                id: '2',
-                title: 'Doctor Appointment',
-                description: 'Annual checkup',
-                startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // Day after tomorrow
-                endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 30 * 60 * 1000).toISOString(), // Day after tomorrow + 30 min
-                isAllDay: false,
-                status: 'CONFIRMED' as any,
-                visibility: 'PRIVATE' as any,
-                busyStatus: 'BUSY' as any,
-                color: '#3b82f6',
-                calendarId: '1',
-                createdById: 'user1',
-                isRecurring: false,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            },
-        ];
-
-        setTimeout(() => {
-            setCalendars(mockCalendars);
-            setEvents(mockEvents);
-            setSelectedCalendars(mockCalendars.map(c => c.id));
-            setLoading(false);
-        }, 1000);
-    }, []);
-
-    const handleCalendarToggle = (calendarId: string) => {
-        setSelectedCalendars(prev => 
-            prev.includes(calendarId)
-                ? prev.filter(id => id !== calendarId)
-                : [...prev, calendarId]
-        );
-    };
-
-    const handleEventCreate = (eventData: any) => {
-        const newEvent: CalendarEvent = {
-            id: Date.now().toString(),
-            title: eventData.title,
-            description: eventData.description,
-            location: eventData.location,
-            startTime: eventData.start.toISOString(),
-            endTime: eventData.end.toISOString(),
-            isAllDay: eventData.allDay || false,
-            status: 'CONFIRMED' as any,
-            visibility: 'PUBLIC' as any,
-            busyStatus: 'BUSY' as any,
-            color: eventData.color || '#3b82f6',
-            calendarId: eventData.calendarId || calendars[0]?.id,
-            createdById: 'user1',
-            isRecurring: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        setEvents(prev => [...prev, newEvent]);
-    };
-
-    const handleEventUpdate = (eventId: string, updates: Partial<CalendarEvent>) => {
-        setEvents(prev => prev.map(event => 
-            event.id === eventId ? { ...event, ...updates } : event
-        ));
-    };
-
-    const handleEventDelete = (eventId: string) => {
-        setEvents(prev => prev.filter(event => event.id !== eventId));
-    };
-
-    const handleCalendarCreate = (calendarData: any) => {
-        const newCalendar: Calendar = {
-            id: Date.now().toString(),
-            name: calendarData.name,
-            description: calendarData.description,
-            type: calendarData.type,
-            visibility: 'PRIVATE' as any,
-            color: calendarData.color,
-            isActive: true,
-            isDefault: false,
-            sortOrder: calendars.length + 1,
-            ownerId: 'user1',
-            settings: {},
-            permissions: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-        setCalendars(prev => [...prev, newCalendar]);
-        setSelectedCalendars(prev => [...prev, newCalendar.id]);
-    };
-
-    const handleCalendarUpdate = (calendarId: string, updates: Partial<Calendar>) => {
-        setCalendars(prev => prev.map(calendar => 
-            calendar.id === calendarId ? { ...calendar, ...updates } : calendar
-        ));
-    };
-
-    const handleCalendarDelete = (calendarId: string) => {
-        setCalendars(prev => prev.filter(calendar => calendar.id !== calendarId));
-        setSelectedCalendars(prev => prev.filter(id => id !== calendarId));
-        setEvents(prev => prev.filter(event => event.calendarId !== calendarId));
-    };
-
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
+  // Set default selected calendars when calendars load
+  React.useEffect(() => {
+    if (calendars.length > 0 && selectedCalendars.length === 0) {
+      setSelectedCalendars(
+        calendars.filter((c) => c.isVisible).map((c) => c.id)
+      );
     }
+  }, [calendars, selectedCalendars.length]);
 
+  const handleCreateEvent = () => {
+    setShowCreateEvent(true);
+  };
+
+  const contextActions = (
+    <div className="flex items-center gap-2">
+      <Button variant="outline" size="sm">
+        <Filter className="h-4 w-4 mr-2" />
+        Filter
+      </Button>
+      <Button variant="outline" size="sm">
+        <Settings className="h-4 w-4 mr-2" />
+        Settings
+      </Button>
+      <Button onClick={handleCreateEvent} size="sm">
+        <Plus className="h-4 w-4 mr-2" />
+        New Event
+      </Button>
+    </div>
+  );
+
+  if (calendarsLoading) {
     return (
-        <div className="h-full">
-            <CalendarView
-                calendars={calendars}
-                events={events}
-                selectedCalendars={selectedCalendars}
-                currentView={currentView}
-                currentDate={currentDate}
-                onViewChange={setCurrentView}
-                onDateChange={setCurrentDate}
-                onCalendarToggle={handleCalendarToggle}
-                onEventCreate={handleEventCreate}
-                onEventUpdate={handleEventUpdate}
-                onEventDelete={handleEventDelete}
-                onCalendarCreate={handleCalendarCreate}
-                onCalendarUpdate={handleCalendarUpdate}
-                onCalendarDelete={handleCalendarDelete}
-                loading={loading}
-            />
-        </div>
+      <>
+        <EnhancedHeader />
+        <Main className="space-y-8">
+          <div className="flex items-center justify-center h-96">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </Main>
+      </>
     );
+  }
+
+  return (
+    <>
+      <EnhancedHeader contextActions={contextActions} />
+
+      <Main className="space-y-6">
+        {/* Calendar Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
+            <p className="text-muted-foreground">
+              Manage your events, meetings, and schedule
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm">
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Today
+            </Button>
+            <Button variant="outline" size="sm">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Calendar Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Total Events
+              </CardTitle>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.totalEvents || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">All time events</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">This Week</CardTitle>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats?.weekEvents || 0}</div>
+              <p className="text-xs text-muted-foreground">Events this week</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Calendars</CardTitle>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{calendars.length}</div>
+              <p className="text-xs text-muted-foreground">Active calendars</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">This Month</CardTitle>
+              <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats?.monthEvents || 0}
+              </div>
+              <p className="text-xs text-muted-foreground">Events this month</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Calendar Component */}
+        <Card>
+          <CardContent className="p-6">
+            <ShadcnBigCalendarComponent
+              selectedCalendars={selectedCalendars}
+              showCreateEvent={showCreateEvent}
+              onCreateEventClose={() => setShowCreateEvent(false)}
+            />
+          </CardContent>
+        </Card>
+      </Main>
+    </>
+  );
 }

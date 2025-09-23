@@ -33,7 +33,7 @@ interface AuthState {
   setWorkspaceLoading: (loading: boolean) => void;
   setNeedsWorkspaceSetup: (needsSetup: boolean) => void;
   setShowWorkspaceSetupWizard: (show: boolean) => void;
-  addWorkspace: (workspace: Workspace) => void;
+  addWorkspace: (workspace: UserWorkspace) => void;
   updateWorkspace: (id: string, workspace: Workspace) => void;
   removeWorkspace: (id: string) => void;
   completeWorkspaceSetup: (workspace: Workspace) => void;

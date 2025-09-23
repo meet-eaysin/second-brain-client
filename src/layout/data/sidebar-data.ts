@@ -16,6 +16,7 @@ import {
   DollarSign,
   BarChart3,
   Repeat,
+  Calendar,
 } from "lucide-react";
 
 export const sidebarData = {
@@ -24,8 +25,8 @@ export const sidebarData = {
       title: "General",
       items: [
         {
-          title: "Dashboard",
-          url: "/app/dashboard",
+          title: "Home",
+          url: "/app",
           icon: LucideLayoutDashboard,
           tooltip: "View your workspace overview and analytics",
         },
@@ -34,6 +35,12 @@ export const sidebarData = {
           url: "/app/databases",
           icon: DatabaseIcon,
           isDynamic: true,
+        },
+        {
+          title: "Calendar",
+          url: "/app/calendar",
+          icon: Calendar,
+          tooltip: "Manage your events, meetings, and schedule",
         },
         {
           title: "Notifications",
@@ -50,11 +57,6 @@ export const sidebarData = {
           title: "Dashboard",
           url: "/app/second-brain/dashboard",
           icon: BarChart3,
-        },
-        {
-          title: "Tasks",
-          url: "/app/second-brain/tasks",
-          icon: CheckSquare,
         },
         {
           title: "Tasks",
