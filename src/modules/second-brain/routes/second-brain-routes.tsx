@@ -56,6 +56,7 @@ export function SecondBrainRoutes() {
     <Routes>
       {/* Main Dashboard */}
       <Route index element={<SecondBrainDashboard />} />
+      <Route path="dashboard" element={<SecondBrainDashboard />} />
 
       {/* Core Features */}
       <Route path="capture" element={<QuickCapturePage />} />

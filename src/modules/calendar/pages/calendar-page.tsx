@@ -3,16 +3,7 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Calendar as CalendarIcon,
-  Plus,
-  Settings,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  CalendarDays,
-} from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Settings, Filter } from "lucide-react";
 import { useCalendars, useCalendarStats } from "../services/calendar-queries";
 import ShadcnBigCalendarComponent from "../components/schedule-x-calendar";
 
@@ -20,13 +11,10 @@ export default function CalendarPage() {
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
 
-  // Fetch calendars
   const { data: calendars = [], isLoading: calendarsLoading } = useCalendars();
 
-  // Fetch calendar stats
   const { data: stats } = useCalendarStats();
 
-  // Set default selected calendars when calendars load
   React.useEffect(() => {
     if (calendars.length > 0 && selectedCalendars.length === 0) {
       setSelectedCalendars(
@@ -81,18 +69,6 @@ export default function CalendarPage() {
             <p className="text-muted-foreground">
               Manage your events, meetings, and schedule
             </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm">
-              <CalendarDays className="h-4 w-4 mr-2" />
-              Today
-            </Button>
-            <Button variant="outline" size="sm">
-              <ChevronRight className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
@@ -150,15 +126,11 @@ export default function CalendarPage() {
         </div>
 
         {/* Calendar Component */}
-        <Card>
-          <CardContent className="p-6">
-            <ShadcnBigCalendarComponent
-              selectedCalendars={selectedCalendars}
-              showCreateEvent={showCreateEvent}
-              onCreateEventClose={() => setShowCreateEvent(false)}
-            />
-          </CardContent>
-        </Card>
+        <ShadcnBigCalendarComponent
+          selectedCalendars={selectedCalendars}
+          showCreateEvent={showCreateEvent}
+          onCreateEventClose={() => setShowCreateEvent(false)}
+        />
       </Main>
     </>
   );
