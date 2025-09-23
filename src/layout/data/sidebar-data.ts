@@ -9,7 +9,6 @@ import {
   FileText,
   Bookmark,
   Bell,
-  Settings,
   CheckSquare,
   Target,
   Heart,
@@ -154,13 +153,49 @@ export const sidebarData = {
       ],
     },
     {
-      title: "Other",
+      title: "Settings",
       items: [
         {
-          title: "Settings",
-          url: "/app/settings",
-          icon: Settings,
+          title: "Profile",
+          url: "/app/settings/profile",
+          icon: LucideUserCog,
+          tooltip: "Manage your personal information and preferences",
         },
+        {
+          title: "Security",
+          url: "/app/settings/security",
+          icon: Shield,
+          tooltip: "Password, 2FA, and security settings",
+        },
+        {
+          title: "Appearance",
+          url: "/app/settings/appearance",
+          icon: LucideLayoutDashboard,
+          tooltip: "Theme, layout, and visual preferences",
+        },
+        {
+          title: "Notifications",
+          url: "/app/settings/notifications",
+          icon: Bell,
+          tooltip: "Email, push, and in-app notifications",
+        },
+        {
+          title: "Workspace",
+          url: "/app/settings/workspace",
+          icon: Users,
+          tooltip: "Team settings and permissions",
+        },
+        {
+          title: "Billing",
+          url: "/app/settings/billing",
+          icon: DollarSign,
+          tooltip: "Subscription and billing information",
+        },
+      ],
+    },
+    {
+      title: "Other",
+      items: [
         {
           title: "Help Center",
           url: "/help-center",

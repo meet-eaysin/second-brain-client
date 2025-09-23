@@ -391,4 +391,13 @@ export const API_ENDPOINTS = {
       `/template-builder/wizard-steps/${templateType}`,
     ANALYTICS: "/template-builder/analytics",
   },
+  SETTINGS: {
+    BASE: "/settings",
+    APPEARANCE: "/settings/appearance",
+    NOTIFICATIONS: "/settings/notifications",
+    DISPLAY: "/settings/display",
+    SECURITY: "/settings/security",
+    WORKSPACE: "/settings/workspace",
+    RESET: "/settings/reset",
+  },
 } as const;

@@ -211,3 +211,126 @@
   height: 700px;
   width: 100%;
 }
+
+/* Appearance settings styles */
+
+/* Font sizes - Force consistent application across all elements */
+.font-small {
+  font-size: 14px !important;
+}
+
+.font-small html,
+.font-small body,
+.font-small p,
+.font-small span,
+.font-small div,
+.font-small h1,
+.font-small h2,
+.font-small h3,
+.font-small h4,
+.font-small h5,
+.font-small h6,
+.font-small button,
+.font-small input,
+.font-small textarea,
+.font-small select,
+.font-small label,
+.font-small a {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.font-medium {
+  font-size: 16px !important;
+}
+
+.font-medium html,
+.font-medium body,
+.font-medium p,
+.font-medium span,
+.font-medium div,
+.font-medium h1,
+.font-medium h2,
+.font-medium h3,
+.font-medium h4,
+.font-medium h5,
+.font-medium h6,
+.font-medium button,
+.font-medium input,
+.font-medium textarea,
+.font-medium select,
+.font-medium label,
+.font-medium a {
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+}
+
+.font-large {
+  font-size: 18px !important;
+}
+
+.font-large html,
+.font-large body,
+.font-large p,
+.font-large span,
+.font-large div,
+.font-large h1,
+.font-large h2,
+.font-large h3,
+.font-large h4,
+.font-large h5,
+.font-large h6,
+.font-large button,
+.font-large input,
+.font-large textarea,
+.font-large select,
+.font-large label,
+.font-large a {
+  font-size: 18px !important;
+  line-height: 1.6 !important;
+}
+
+/* Compact mode - reduce spacing */
+.compact-mode .space-y-6 > * + * {
+  margin-top: 0.75rem !important;
+}
+
+.compact-mode .space-y-4 > * + * {
+  margin-top: 0.5rem !important;
+}
+
+.compact-mode .p-4 {
+  padding: 0.75rem !important;
+}
+
+.compact-mode .p-6 {
+  padding: 1rem !important;
+}
+
+/* High contrast mode */
+.high-contrast {
+  --border: oklch(0.5 0 0);
+  --muted: oklch(0.3 0 0);
+  --muted-foreground: oklch(0.8 0 0);
+}
+
+.dark.high-contrast {
+  --border: oklch(0.7 0 0);
+  --muted: oklch(0.4 0 0);
+  --muted-foreground: oklch(0.9 0 0);
+}
+
+/* Animations disabled */
+.animations-disabled * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Sidebar styles - these would need to be applied to sidebar components */
+.sidebar-compact {
+  /* Reduce sidebar padding and font sizes */
+}
+
+.sidebar-minimal {
+  /* Minimal sidebar with icons only */
+}

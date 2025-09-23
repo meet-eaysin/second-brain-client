@@ -1,348 +1,295 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Main } from '@/layout/main';
-import { EnhancedHeader } from '@/components/enhanced-header';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Link } from "react-router-dom";
+import { Main } from "@/layout/main";
+import { EnhancedHeader } from "@/components/enhanced-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
-    ArrowLeft, User, Camera, MapPin,
-    Calendar, Globe, Save, Upload, Github, Linkedin,
-    Twitter, Instagram, Plus, X, Tag
-} from 'lucide-react';
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useAuthStore } from "@/modules/auth/store/authStore";
+import { toast } from "sonner";
+import { userApi } from "@/modules/users/services/userApi";
+import { usersApi } from "@/modules/users/services/usersApi";
+import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+
+// Validation schema matching backend
+const profileSchema = z.object({
+  firstName: z
+    .string()
+    .max(50, "First name cannot exceed 50 characters")
+    .optional(),
+  lastName: z
+    .string()
+    .max(50, "Last name cannot exceed 50 characters")
+    .optional(),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters long")
+    .max(30, "Username cannot exceed 30 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores"
+    )
+    .optional(),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export const ProfileSettingsPage: React.FC = () => {
-    return (
-        <>
-            <EnhancedHeader 
-                contextActions={
-                    <>
-                        <Button size="sm" variant="outline" className="h-8 gap-2" asChild>
-                            <Link to="/app/settings">
-                                <ArrowLeft className="h-4 w-4" />
-                                Back to Settings
-                            </Link>
-                        </Button>
-                        <Button size="sm" className="h-8 gap-2">
-                            <Save className="h-4 w-4" />
-                            Save Changes
-                        </Button>
-                    </>
-                }
-            />
-            
-            <Main className="space-y-8">
-                {/* Page Description */}
-                <div className="space-y-2">
-                    <p className="text-muted-foreground">
-                        Manage your personal information and profile preferences
+  const { user, updateUser } = useAuthStore();
+
+  const form = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      firstName: user?.firstName || "",
+      lastName: user?.lastName || "",
+      username: user?.username || "",
+    },
+  });
+
+  // Update form when user data changes
+  useEffect(() => {
+    if (user) {
+      form.reset({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        username: user.username || "",
+      });
+    }
+  }, [user, form]);
+
+  const onSubmit = async (data: ProfileFormData) => {
+    try {
+      const updatedUser = await userApi.updateUserProfile(data);
+      updateUser(updatedUser);
+
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Profile update error:", error);
+      toast.error("Failed to update profile. Please try again.");
+    }
+  };
+
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type and size
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(
+        "Please upload a valid image file (JPEG, PNG, GIF, or WebP)."
+      );
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB
+      toast.error("Please upload an image smaller than 5MB.");
+      return;
+    }
+
+    try {
+      const updatedUser = await usersApi.uploadAvatar(file);
+      updateUser(updatedUser);
+
+      toast.success("Profile picture updated successfully");
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      toast.error("Failed to upload avatar. Please try again.");
+    }
+  };
+  const isLoading = form.formState.isSubmitting;
+
+  return (
+    <>
+      <EnhancedHeader
+        title="Profile Settings"
+        contextActions={
+          <>
+            <Button size="sm" variant="outline" className="h-8 gap-2" asChild>
+              <Link to="/app/settings">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Settings
+              </Link>
+            </Button>
+            <Button
+              size="sm"
+              className="h-8 gap-2"
+              onClick={form.handleSubmit(onSubmit)}
+              disabled={isLoading || !form.formState.isDirty}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {isLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </>
+        }
+      />
+
+      <Main className="space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">Profile</h1>
+          <p className="text-muted-foreground">
+            Manage your personal information and profile picture
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {/* Profile Picture */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center sm:text-left">
+                Profile Picture
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
+                  <AvatarImage src={user?.profilePicture} />
+                  <AvatarFallback className="text-base sm:text-lg">
+                    {user?.firstName?.[0]}
+                    {user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                    id="avatar-upload"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    asChild
+                  >
+                    <label htmlFor="avatar-upload" className="cursor-pointer">
+                      <Upload className="h-4 w-4 mr-2" />
+                      Change Photo
+                    </label>
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    JPG, PNG, GIF, WebP up to 5MB
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>First Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your first name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Last Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your last name"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter your username" {...field} />
+                        </FormControl>
+                        <FormDescription>
+                          Your unique username for identification
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-2">
+                    <Label>Email Address</Label>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                      <Input
+                        value={user?.email || ""}
+                        disabled
+                        className="flex-1"
+                      />
+                      <Badge
+                        variant={
+                          user?.isEmailVerified ? "secondary" : "outline"
+                        }
+                        className="w-fit"
+                      >
+                        {user?.isEmailVerified ? "Verified" : "Unverified"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Email cannot be changed. Contact support if needed.
                     </p>
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-3">
-                    {/* Profile Picture */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Camera className="h-4 w-4" />
-                                Profile Picture
-                            </CardTitle>
-                            <CardDescription>
-                                Update your profile photo
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex flex-col items-center space-y-4">
-                                <Avatar className="h-24 w-24">
-                                    <AvatarImage src="/placeholder-avatar.jpg" />
-                                    <AvatarFallback className="text-lg">JD</AvatarFallback>
-                                </Avatar>
-                                <div className="space-y-2 text-center">
-                                    <Button size="sm" variant="outline" className="gap-2">
-                                        <Upload className="h-4 w-4" />
-                                        Upload Photo
-                                    </Button>
-                                    <p className="text-xs text-muted-foreground">
-                                        JPG, PNG up to 5MB
-                                    </p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Basic Information */}
-                    <Card className="lg:col-span-2">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <User className="h-4 w-4" />
-                                Basic Information
-                            </CardTitle>
-                            <CardDescription>
-                                Your personal details and contact information
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="firstName">First Name</Label>
-                                    <Input id="firstName" placeholder="John" />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="lastName">Last Name</Label>
-                                    <Input id="lastName" placeholder="Doe" />
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email Address</Label>
-                                <div className="flex gap-2">
-                                    <Input id="email" type="email" placeholder="john@example.com" />
-                                    <Badge variant="secondary">Verified</Badge>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="phone">Phone Number</Label>
-                                <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="bio">Bio</Label>
-                                <Textarea 
-                                    id="bio" 
-                                    placeholder="Tell us about yourself..."
-                                    className="min-h-[100px]"
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Location & Timezone */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            Location & Timezone
-                        </CardTitle>
-                        <CardDescription>
-                            Set your location and timezone preferences
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="country">Country</Label>
-                                <Input id="country" placeholder="United States" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="timezone">Timezone</Label>
-                                <Input id="timezone" placeholder="America/New_York" />
-                            </div>
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="city">City</Label>
-                                <Input id="city" placeholder="New York" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="language">Language</Label>
-                                <Input id="language" placeholder="English" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Professional Information */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Globe className="h-4 w-4" />
-                            Professional Information
-                        </CardTitle>
-                        <CardDescription>
-                            Your work and professional details
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="company">Company</Label>
-                                <Input id="company" placeholder="Acme Inc." />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="jobTitle">Job Title</Label>
-                                <Input id="jobTitle" placeholder="Software Engineer" />
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="website">Website</Label>
-                            <Input id="website" type="url" placeholder="https://example.com" />
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Social Links */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Globe className="h-4 w-4" />
-                            Social Links
-                        </CardTitle>
-                        <CardDescription>
-                            Connect your social media profiles and professional networks
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="github" className="flex items-center gap-2">
-                                    <Github className="h-4 w-4" />
-                                    GitHub
-                                </Label>
-                                <Input id="github" placeholder="https://github.com/username" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="linkedin" className="flex items-center gap-2">
-                                    <Linkedin className="h-4 w-4" />
-                                    LinkedIn
-                                </Label>
-                                <Input id="linkedin" placeholder="https://linkedin.com/in/username" />
-                            </div>
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-2">
-                                <Label htmlFor="twitter" className="flex items-center gap-2">
-                                    <Twitter className="h-4 w-4" />
-                                    Twitter
-                                </Label>
-                                <Input id="twitter" placeholder="https://twitter.com/username" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="instagram" className="flex items-center gap-2">
-                                    <Instagram className="h-4 w-4" />
-                                    Instagram
-                                </Label>
-                                <Input id="instagram" placeholder="https://instagram.com/username" />
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Skills & Interests */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Tag className="h-4 w-4" />
-                            Skills & Interests
-                        </CardTitle>
-                        <CardDescription>
-                            Add your skills, expertise, and interests to help others discover you
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Skills</Label>
-                            <div className="flex flex-wrap gap-2 mb-2">
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                    JavaScript
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                    React
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                    TypeScript
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                    Node.js
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                            </div>
-                            <Button variant="outline" size="sm" className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Add Skill
-                            </Button>
-                        </div>
-
-                        <Separator />
-
-                        <div className="space-y-2">
-                            <Label>Interests</Label>
-                            <div className="flex flex-wrap gap-2 mb-2">
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                    Machine Learning
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                    Design Systems
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                    Open Source
-                                    <X className="h-3 w-3 cursor-pointer" />
-                                </Badge>
-                            </div>
-                            <Button variant="outline" size="sm" className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Add Interest
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Account Status */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            Account Information
-                        </CardTitle>
-                        <CardDescription>
-                            Your account status and membership details
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <Label className="text-sm font-medium">Member Since</Label>
-                                <p className="text-sm text-muted-foreground">January 15, 2024</p>
-                            </div>
-                            <div>
-                                <Label className="text-sm font-medium">Account Type</Label>
-                                <div className="flex items-center gap-2">
-                                    <Badge>Free Plan</Badge>
-                                    <Button size="sm" variant="link" className="h-auto p-0">
-                                        Upgrade
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                        <Separator />
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <Label className="text-sm font-medium">Last Login</Label>
-                                <p className="text-sm text-muted-foreground">2 hours ago</p>
-                            </div>
-                            <div>
-                                <Label className="text-sm font-medium">Account Status</Label>
-                                <Badge variant="secondary" className="bg-green-100 text-green-800">
-                                    Active
-                                </Badge>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </Main>
-        </>
-    );
+                  </div>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        </div>
+      </Main>
+    </>
+  );
 };
 
 export default ProfileSettingsPage;
