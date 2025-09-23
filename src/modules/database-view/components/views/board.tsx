@@ -229,14 +229,7 @@ export function Board({ className = "" }: { className?: string }) {
     );
   }
 
-  // Show message if no grouping property
-  if (!groupingProperty) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="Board view requires a SELECT property for grouping" />
-      </div>
-    );
-  }
+  // Allow board view to work without grouping property - records will be in "ungrouped" column
 
   return (
     <div className={`w-full h-full ${className}`}>

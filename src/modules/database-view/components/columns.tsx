@@ -278,6 +278,7 @@ export const generateDocumentColumns = (
       ),
       enableSorting: false,
       enableHiding: false,
+      size: 50, // Fixed width for checkbox column
     },
   ];
 
@@ -317,6 +318,7 @@ export const generateDocumentColumns = (
       },
       enableSorting: true,
       enableHiding: true,
+      size: 200, // Default width for columns to prevent full width expansion
       filterFn: (row, _id, value) => {
         const cellValue = row.original.properties[property.name];
 

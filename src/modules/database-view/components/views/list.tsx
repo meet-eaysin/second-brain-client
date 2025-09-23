@@ -172,13 +172,13 @@ export function List({ className = "" }: { className?: string }) {
 
     return records.map((record: TRecord) => {
       const titleValue = titleProperty
-        ? record.properties[titleProperty.name] ?? "Untitled"
+        ? record.properties[titleProperty.id] ?? "Untitled"
         : "Untitled";
       const title = String(titleValue);
 
       // Get status/grouping value
       const statusValue = groupingProperty
-        ? record.properties[groupingProperty.name]
+        ? record.properties[groupingProperty.id]
         : "ungrouped";
       const statusId = String(statusValue || "ungrouped");
 
@@ -237,14 +237,7 @@ export function List({ className = "" }: { className?: string }) {
     );
   }
 
-  // Show message if no grouping property
-  if (!groupingProperty) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="List view requires a SELECT property for grouping" />
-      </div>
-    );
-  }
+  // Allow list view to work without grouping property - records will be in "ungrouped" group
 
   return (
     <div className={`w-full h-full overflow-auto ${className}`}>
@@ -277,7 +270,7 @@ export function List({ className = "" }: { className?: string }) {
                         <div className="mt-1 space-y-1">
                           {displayProperties.map((property) => {
                             const value =
-                              feature.record.properties[property.name];
+                              feature.record.properties[property.id];
                             if (
                               value === null ||
                               value === undefined ||

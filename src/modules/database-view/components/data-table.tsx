@@ -124,6 +124,7 @@ export function DataTable({
     enableRowSelection: true,
     enableSorting,
     enableFilters: enableFiltering,
+    enableColumnResizing: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -132,6 +133,7 @@ export function DataTable({
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getRowId: (row) => row.id,
+    columnResizeMode: "onChange",
   });
 
   const calculateStat = (columnId: string, statType: string): string => {
@@ -321,19 +323,30 @@ export function DataTable({
         )}
       </div>
 
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="min-w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="relative"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
                           header.getContext()
                         )}
+                    {header.column.getCanResize() && (
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-border opacity-0 hover:opacity-100"
+                      />
+                    )}
                   </TableHead>
                 ))}
                 <TableHead className="w-12">
@@ -366,7 +379,11 @@ export function DataTable({
                   className="group hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="relative group/cell">
+                    <TableCell
+                      key={cell.id}
+                      style={{ width: cell.column.getSize() }}
+                      className="relative group/cell"
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -457,20 +474,112 @@ export function DataTable({
 
           <tfoot>
             <tr>
-              {table.getHeaderGroups()[0]?.headers.map((header) => (
-                <td key={header.id} className="border-t p-1 group">
-                  <div className="relative">
-                    {columnStats[header.id] ? (
-                      <div className="flex items-center justify-between h-6 px-2 text-xs text-muted-foreground">
-                        <span>{columnStats[header.id]}</span>
+              <td className="border-t p-1" style={{ width: 50 }}></td>
+              {table
+                .getHeaderGroups()[0]
+                ?.headers.filter((header) => header.id !== "select")
+                .map((header) => (
+                  <td
+                    key={header.id}
+                    style={{ width: header.getSize() }}
+                    className="border-t p-1 group"
+                  >
+                    <div className="relative">
+                      {columnStats[header.id] ? (
+                        <div className="flex items-center justify-between h-6 px-2 text-xs text-muted-foreground">
+                          <span>{columnStats[header.id]}</span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <ChevronDown className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start" className="w-48">
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(header.id, "count-all")
+                                }
+                              >
+                                Count all
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(header.id, "count-values")
+                                }
+                              >
+                                Count values
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(header.id, "count-unique")
+                                }
+                              >
+                                Count unique values
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(header.id, "count-empty")
+                                }
+                              >
+                                Count empty
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(
+                                    header.id,
+                                    "count-not-empty"
+                                  )
+                                }
+                              >
+                                Count not empty
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(
+                                    header.id,
+                                    "percent-empty"
+                                  )
+                                }
+                              >
+                                Percent empty
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  handleStatSelection(
+                                    header.id,
+                                    "percent-not-empty"
+                                  )
+                                }
+                              >
+                                Percent not empty
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setColumnStats((prev) => ({
+                                    ...prev,
+                                    [header.id]: "",
+                                  }))
+                                }
+                                className="text-destructive"
+                              >
+                                Clear
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      ) : (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="h-6 w-full opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground hover:text-foreground"
                             >
-                              <ChevronDown className="h-3 w-3" />
+                              Count <ChevronDown className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="start" className="w-48">
@@ -529,90 +638,12 @@ export function DataTable({
                             >
                               Percent not empty
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                setColumnStats((prev) => ({
-                                  ...prev,
-                                  [header.id]: "",
-                                }))
-                              }
-                              className="text-destructive"
-                            >
-                              Clear
-                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </div>
-                    ) : (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-full opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground hover:text-foreground"
-                          >
-                            Count <ChevronDown className="h-3 w-3" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(header.id, "count-all")
-                            }
-                          >
-                            Count all
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(header.id, "count-values")
-                            }
-                          >
-                            Count values
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(header.id, "count-unique")
-                            }
-                          >
-                            Count unique values
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(header.id, "count-empty")
-                            }
-                          >
-                            Count empty
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(header.id, "count-not-empty")
-                            }
-                          >
-                            Count not empty
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(header.id, "percent-empty")
-                            }
-                          >
-                            Percent empty
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleStatSelection(
-                                header.id,
-                                "percent-not-empty"
-                              )
-                            }
-                          >
-                            Percent not empty
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
-                  </div>
-                </td>
-              ))}
+                      )}
+                    </div>
+                  </td>
+                ))}
               <td className="border-t p-1 w-12"></td>
             </tr>
           </tfoot>

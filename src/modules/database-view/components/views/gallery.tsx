@@ -43,7 +43,6 @@ export function Gallery({ className = "" }: { className?: string }) {
     onRecordEdit,
     onRecordDelete,
     onRecordCreate,
-    onDialogOpen,
     onLoadMoreRecords,
   } = useDatabaseView();
 
@@ -125,7 +124,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     if (records && Array.isArray(records)) {
       records.forEach((record: TRecord) => {
         const groupValue = groupingProperty
-          ? record.properties[groupingProperty.name]
+          ? record.properties[groupingProperty.id]
           : "ungrouped";
 
         const groupId = String(groupValue || "ungrouped");
@@ -146,7 +145,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     const titleProperty =
       properties.find((p) => p.type === EPropertyType.TEXT) || properties[0];
     const titleValue = titleProperty
-      ? record.properties[titleProperty.name] ?? "Untitled"
+      ? record.properties[titleProperty.id] ?? "Untitled"
       : "Untitled";
     const title = String(titleValue);
 
@@ -189,7 +188,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                       <EditableCell
                         record={record}
                         property={titleProperty}
-                        value={record.properties[titleProperty.name]}
+                        value={record.properties[titleProperty.id]}
                       />
                     ) : (
                       <CardTitle className="text-sm font-medium line-clamp-2">
@@ -237,7 +236,7 @@ export function Gallery({ className = "" }: { className?: string }) {
               <CardContent className="pt-0">
                 <div className="space-y-2">
                   {visibleProperties.map((property) => {
-                    const value = record.properties[property.name];
+                    const value = record.properties[property.id];
                     return (
                       <div
                         key={property.id}
@@ -282,17 +281,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     );
   }
 
-  if (!groupingProperty) {
-    return (
-      <NoDataMessage
-        message="Gallery view requires a SELECT property for grouping"
-        action={{
-          label: "Add SELECT Property",
-          onClick: () => onDialogOpen?.("create-property"),
-        }}
-      />
-    );
-  }
+  // Allow gallery view to work without grouping property - records will be in "ungrouped" group
 
   return (
     <div className={`space-y-4 ${className}`}>
