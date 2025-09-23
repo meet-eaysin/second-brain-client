@@ -6,7 +6,6 @@ import {
   Users,
   Shield,
   BookOpen,
-  Search,
   FileText,
   Bookmark,
   Bell,
@@ -37,12 +36,6 @@ export const sidebarData = {
           isDynamic: true,
         },
         {
-          title: "Users",
-          url: "/app/users",
-          icon: Users,
-          tooltip: "Manage workspace members and user accounts",
-        },
-        {
           title: "Notifications",
           url: "/app/notifications",
           icon: Bell,
@@ -57,78 +50,61 @@ export const sidebarData = {
           title: "Dashboard",
           url: "/app/second-brain/dashboard",
           icon: BarChart3,
-          tooltip: "Central hub for second brain overview and quick access",
         },
         {
           title: "Tasks",
           url: "/app/second-brain/tasks",
           icon: CheckSquare,
-          tooltip:
-            "Task management with priorities, due dates, and project linking",
+        },
+        {
+          title: "Tasks",
+          url: "/app/second-brain/tasks",
+          icon: CheckSquare,
         },
         {
           title: "Notes",
           url: "/app/second-brain/notes",
           icon: FileText,
-          tooltip: "Knowledge management with rich-text content and linking",
         },
         {
           title: "Projects",
           url: "/app/second-brain/projects",
           icon: Target,
-          tooltip:
-            "Project management with timelines, goals, and task tracking",
         },
         {
           title: "Goals",
           url: "/app/second-brain/goals",
           icon: Target,
-          tooltip:
-            "Goal setting and progress tracking with deadlines and milestones",
         },
         {
           title: "People",
           url: "/app/second-brain/people",
           icon: Users,
-          tooltip: "Contact management and relationship tracking",
         },
         {
           title: "Finance",
           url: "/app/second-brain/finance",
           icon: DollarSign,
-          tooltip:
-            "Personal finance tracking with income, expenses, and budgeting",
         },
         {
           title: "Habits",
           url: "/app/second-brain/habits",
           icon: Repeat,
-          tooltip:
-            "Habit tracking and streak management for personal development",
         },
         {
           title: "Journal",
           url: "/app/second-brain/journal",
           icon: BookOpen,
-          tooltip: "Daily journaling and reflection with mood tracking",
         },
         {
-          title: "Mood Tracker",
+          title: "Mood",
           url: "/app/second-brain/mood-tracker",
           icon: Heart,
-          tooltip: "Track daily moods and emotional patterns",
         },
         {
           title: "Resources",
           url: "/app/second-brain/resources",
           icon: Bookmark,
-          tooltip: "Knowledge resources, bookmarks, and reference materials",
-        },
-        {
-          title: "Search",
-          url: "/app/second-brain/search",
-          icon: Search,
-          tooltip: "Search across all Second Brain modules",
         },
       ],
     },
@@ -154,7 +130,6 @@ export const sidebarData = {
           title: "Settings",
           url: "/app/settings",
           icon: Settings,
-          tooltip: "Manage your account, preferences, and workspace settings",
         },
         {
           title: "Help Center",

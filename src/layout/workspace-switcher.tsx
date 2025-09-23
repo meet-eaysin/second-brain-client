@@ -16,33 +16,49 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/modules/auth/store/authStore";
-import {
-  useUserWorkspaces,
-  useCreateWorkspace,
-} from "@/modules/workspaces/services/workspace-queries";
+import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
 import { WorkspaceForm } from "@/modules/workspaces/components/workspace-form";
 import type { CreateWorkspaceRequest } from "@/types/workspace.types";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const { currentWorkspace, setCurrentWorkspace } = useAuthStore();
+  const {
+    currentWorkspace,
+    setCurrentWorkspace,
+    workspaces,
+    isAuthenticated,
+    addWorkspace,
+  } = useAuthStore();
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] =
     React.useState(false);
 
   console.log("current", currentWorkspace);
 
   // Use React Query hooks for data fetching and mutations
-  const { data: workspacesData, isLoading: isLoadingWorkspaces } =
-    useUserWorkspaces();
   const createWorkspaceMutation = useCreateWorkspace();
 
-  const workspaces = workspacesData?.data || [];
   const hasWorkspaces = workspaces.length > 0;
+  const isLoadingWorkspaces = !isAuthenticated;
   console.log("workspaces", workspaces);
 
   const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
     try {
-      await createWorkspaceMutation.mutateAsync(data);
+      const createdWorkspace = await createWorkspaceMutation.mutateAsync(data);
+      // Convert Workspace to UserWorkspace
+      const userWorkspace = {
+        id: createdWorkspace.id,
+        name: createdWorkspace.name,
+        description: createdWorkspace.description,
+        type: createdWorkspace.type,
+        role: "owner" as const,
+        isDefault: workspaces.length === 0, // First workspace is default
+        memberCount: createdWorkspace.memberCount,
+        databaseCount: createdWorkspace.databaseCount,
+        createdAt: createdWorkspace.createdAt,
+        updatedAt: createdWorkspace.updatedAt,
+      };
+      addWorkspace(userWorkspace);
+      setCurrentWorkspace(createdWorkspace);
       setIsCreateWorkspaceOpen(false);
     } catch (error) {
       console.error("Failed to create workspace:", error);
@@ -124,7 +140,7 @@ export function TeamSwitcher() {
                           backgroundColor: "#3b82f6", // Default color
                         }}
                       >
-                        {workspace.icon?.value || "🏢"}
+                        🏢
                       </div>
                       <div className="flex-1">
                         <div className="font-medium">{workspace.name}</div>

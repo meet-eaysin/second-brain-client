@@ -6,7 +6,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { sidebarData } from "./data/sidebar-data";
-import { TeamSwitcher } from "@/layout/team-switcher.tsx";
+import { TeamSwitcher } from "@/layout/workspace-switcher.tsx";
 import { NavGroup } from "@/layout/nav-group.tsx";
 import { NavUser } from "@/layout/nav-user.tsx";
 

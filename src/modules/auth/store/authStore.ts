@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { User } from "@/modules/auth/types/auth.types.ts";
+import type { User, UserWorkspace } from "@/modules/auth/types/auth.types.ts";
 import type { Workspace } from "@/types/workspace.types";
 
 interface AuthState {
@@ -12,7 +12,7 @@ interface AuthState {
   intendedPath: string | null;
 
   // Workspace state
-  workspaces: Workspace[];
+  workspaces: UserWorkspace[];
   currentWorkspace: Workspace | null;
   workspaceLoading: boolean;
   needsWorkspaceSetup: boolean;
@@ -63,6 +63,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           error: null,
           isInitialized: true,
+          workspaces: user.workspaces || [],
         }),
 
       clearUser: () =>
