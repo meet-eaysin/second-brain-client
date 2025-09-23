@@ -1,31 +1,138 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { CheckSquare, Activity, Calendar } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  TrendingUp,
+  Users,
+  FileText,
+  Clock,
+} from "lucide-react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import { useDashboardOverview } from "../services/dashboard-queries";
-import { useUpcomingEvents } from "@/modules/calendar/services/calendar-queries";
-import { DatabaseView, EDatabaseType } from "@/modules/database-view";
-import { formatDistanceToNow, format } from "date-fns";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 import { useWorkspace } from "@/modules/workspaces/context";
+import { useNavigate } from "react-router-dom";
+
+// Mock demo data
+const mockDashboardData = {
+  recentActivity: [
+    {
+      id: "1",
+      title: "New note created",
+      description: "Added a new note about project planning",
+      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+    },
+    {
+      id: "2",
+      title: "Task completed",
+      description: "Finished reviewing quarterly goals",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+    },
+    {
+      id: "3",
+      title: "File uploaded",
+      description: "Uploaded presentation slides for team meeting",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
+    },
+    {
+      id: "4",
+      title: "Goal updated",
+      description: "Updated progress on Q4 objectives",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
+    },
+    {
+      id: "5",
+      title: "Collaboration started",
+      description: "Began collaborating on research document",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
+    },
+  ],
+  workspaceStats: {
+    totalNotes: 1247,
+    totalTasks: 89,
+    activeProjects: 12,
+    completedGoals: 34,
+    systemUptime: "99.9%",
+    lastBackup: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
+  },
+  recentlyVisited: [
+    {
+      id: "1",
+      name: "Notes",
+      type: "page",
+      preview: "View and manage your knowledge base",
+      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+      icon: "📝",
+      color: "#3b82f6",
+      route: "/notes",
+      moduleType: "notes",
+    },
+    {
+      id: "2",
+      name: "Tasks",
+      type: "page",
+      preview: "Track and manage your tasks",
+      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+      icon: "✅",
+      color: "#10b981",
+      route: "/tasks",
+      moduleType: "tasks",
+    },
+    {
+      id: "3",
+      name: "Goals",
+      type: "page",
+      preview: "Set and track your objectives",
+      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4 hours ago
+      icon: "🎯",
+      color: "#8b5cf6",
+      route: "/goals",
+      moduleType: "goals",
+    },
+    {
+      id: "4",
+      name: "Projects",
+      type: "page",
+      preview: "Manage your projects and initiatives",
+      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
+      icon: "📁",
+      color: "#f59e0b",
+      route: "/projects",
+      moduleType: "projects",
+    },
+    {
+      id: "5",
+      name: "Habits",
+      type: "page",
+      preview: "Build and maintain good habits",
+      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 8), // 8 hours ago
+      icon: "🔥",
+      color: "#ef4444",
+      route: "/habits",
+      moduleType: "habits",
+    },
+    {
+      id: "6",
+      name: "Finance",
+      type: "page",
+      preview: "Track income and expenses",
+      lastVisitedAt: new Date(Date.now() - 1000 * 60 * 60 * 12), // 12 hours ago
+      icon: "💰",
+      color: "#059669",
+      route: "/finance",
+      moduleType: "finance",
+    },
+  ],
+};
 
 export function HomePage() {
-  const navigate = useNavigate();
   const { currentWorkspace } = useWorkspace();
-  const {
-    data: dashboardData,
-    isLoading,
-    error,
-    refetch,
-  } = useDashboardOverview();
-
-  const { data: upcomingEvents, isLoading: isLoadingEvents } =
-    useUpcomingEvents({ limit: 5 });
+  const navigate = useNavigate();
+  // Using mock data instead of API call
+  const dashboardData = mockDashboardData;
+  const isLoading = false;
 
   // Dynamic greeting based on time of day
   const getGreeting = () => {
@@ -33,64 +140,6 @@ export function HomePage() {
     if (hour < 12) return "Good morning";
     if (hour < 17) return "Good afternoon";
     return "Good evening";
-  };
-
-  // Navigation handlers
-  const handleQuickAction = (action: string) => {
-    switch (action) {
-      case "task":
-        navigate("/app/second-brain/tasks");
-        break;
-      case "note":
-        navigate("/app/second-brain/notes");
-        break;
-      case "goal":
-        navigate("/app/second-brain/goals");
-        break;
-      case "habit":
-        navigate("/app/second-brain/habits");
-        break;
-      case "finance":
-        navigate("/app/second-brain/finance");
-        break;
-      case "journal":
-        navigate("/app/second-brain/journal");
-        break;
-      default:
-        toast.info("Feature coming soon!");
-    }
-  };
-
-  const handleRefresh = async () => {
-    try {
-      await refetch();
-      toast.success("Dashboard refreshed");
-    } catch (error) {
-      toast.error("Failed to refresh dashboard");
-    }
-  };
-
-  const handleViewAll = (section: string) => {
-    switch (section) {
-      case "notes":
-        navigate("/app/second-brain/notes");
-        break;
-      case "goals":
-        navigate("/app/second-brain/goals");
-        break;
-      case "habits":
-        navigate("/app/second-brain/habits");
-        break;
-      case "tasks":
-        navigate("/app/second-brain/tasks");
-        break;
-      case "activity":
-        // Could navigate to activity page or show modal
-        toast.info("Activity page coming soon!");
-        break;
-      default:
-        break;
-    }
   };
 
   if (isLoading) {
@@ -239,39 +288,7 @@ export function HomePage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-2">
-            Failed to load dashboard data
-          </p>
-          <p className="text-xs text-muted-foreground mb-4">
-            Please check your connection and try again
-          </p>
-          <div className="flex gap-2 justify-center">
-            <Button variant="outline" onClick={handleRefresh}>
-              Try Again
-            </Button>
-            <Button variant="ghost" onClick={() => window.location.reload()}>
-              Reload Page
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const {
-    quickStats,
-    recentActivity,
-    upcomingTasks,
-    recentNotes,
-    goalProgress,
-    habitStreaks,
-    financeSummary,
-    workspaceStats,
-  } = dashboardData || {};
+  const { recentActivity, recentlyVisited } = dashboardData;
 
   return (
     <>
@@ -337,172 +354,108 @@ export function HomePage() {
           </Card>
         </div>
 
+        {/* Recently Visited */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Upcoming Tasks</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleViewAll("tasks")}
-            >
-              View All
-            </Button>
+            <h2 className="text-xl font-semibold">Recently Visited</h2>
           </div>
-          <Card>
-            <CardContent className="p-6">
-              {upcomingTasks && upcomingTasks.length > 0 ? (
-                <div className="space-y-3">
-                  {upcomingTasks.slice(0, 5).map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-lg"
-                      onClick={() => navigate("/app/second-brain/tasks")}
-                    >
-                      <CheckSquare className="h-4 w-4 text-muted-foreground" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recentlyVisited && recentlyVisited.length > 0 ? (
+              recentlyVisited.slice(0, 6).map((item) => (
+                <Card
+                  key={item.id}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(item.route)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                        style={{
+                          backgroundColor: `${item.color}20`,
+                          color: item.color,
+                        }}
+                      >
+                        {item.icon}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {task.name}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge
-                            variant={
-                              task.priority === "urgent"
-                                ? "destructive"
-                                : task.priority === "high"
-                                ? "default"
-                                : "secondary"
-                            }
-                            className="text-xs"
-                          >
-                            {task.priority}
-                          </Badge>
+                        <h3 className="font-medium text-sm line-clamp-2">
+                          {item.name}
+                        </h3>
+                        {item.preview && (
+                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                            {item.preview}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between mt-2">
                           <span className="text-xs text-muted-foreground">
-                            {task.daysUntilDue === 0
-                              ? "Today"
-                              : task.daysUntilDue === 1
-                              ? "Tomorrow"
-                              : `In ${task.daysUntilDue} days`}
+                            Last visited{" "}
+                            {formatDistanceToNow(item.lastVisitedAt, {
+                              addSuffix: true,
+                            })}
                           </span>
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    No upcoming tasks
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickAction("task")}
-                  >
-                    Create Task
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Upcoming Events */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Upcoming Events</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/app/calendar")}
-            >
-              View Calendar
-            </Button>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-sm text-muted-foreground">
+                  No recently visited items
+                </p>
+              </div>
+            )}
           </div>
-          <Card>
-            <CardContent className="p-6">
-              {isLoadingEvents ? (
-                <div className="space-y-3">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex items-start gap-3 p-3">
-                      <div className="w-4 h-4 bg-muted animate-pulse rounded mt-1"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 w-3/4 bg-muted animate-pulse rounded"></div>
-                        <div className="h-3 w-1/2 bg-muted animate-pulse rounded"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : upcomingEvents && upcomingEvents.length > 0 ? (
-                <div className="space-y-3">
-                  {upcomingEvents.slice(0, 5).map((event) => (
-                    <div
-                      key={event.id}
-                      className="flex items-start gap-3 p-3 hover:bg-muted/50 cursor-pointer rounded-lg"
-                      onClick={() => navigate("/app/calendar")}
-                    >
-                      <Calendar className="h-4 w-4 text-muted-foreground mt-1" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{event.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-muted-foreground">
-                            {event.isAllDay
-                              ? format(event.startTime, "MMM d, yyyy")
-                              : format(event.startTime, "MMM d, h:mm a")}
-                          </span>
-                          {event.location && (
-                            <Badge variant="outline" className="text-xs">
-                              📍 {event.location}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    No upcoming events
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate("/app/calendar")}
-                  >
-                    Create Event
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* System Activity */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">System Activity</h2>
-              <p className="text-muted-foreground">
-                Monitor system-wide activities and events
-              </p>
-            </div>
+            <h2 className="text-xl font-semibold">System Activity</h2>
           </div>
-          <DatabaseView moduleType={EDatabaseType.ACTIVITY} />
-        </div>
-
-        {/* System Analytics */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">System Analytics</h2>
-              <p className="text-muted-foreground">
-                Comprehensive analytics and insights
-              </p>
-            </div>
-          </div>
-          <DatabaseView moduleType={EDatabaseType.ANALYSIS} />
+          <Card>
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
+                  <Activity className="h-4 w-4 text-green-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">
+                      System backup completed
+                    </p>
+                    <p className="text-xs text-muted-foreground">2 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
+                  <Users className="h-4 w-4 text-blue-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">New user registered</p>
+                    <p className="text-xs text-muted-foreground">4 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
+                  <FileText className="h-4 w-4 text-purple-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">
+                      Content sync completed
+                    </p>
+                    <p className="text-xs text-muted-foreground">6 hours ago</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg">
+                  <Clock className="h-4 w-4 text-orange-500" />
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">
+                      Scheduled maintenance finished
+                    </p>
+                    <p className="text-xs text-muted-foreground">1 day ago</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Learn */}
