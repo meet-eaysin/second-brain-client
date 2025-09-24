@@ -92,59 +92,111 @@ const mockParaItems: IParaItem[] = [
 ];
 
 const mockParaStats: IParaStats = {
-  totalItems: 2,
+  totalItems: 24,
   byCategory: {
-    [EParaCategory.PROJECTS]: 1,
-    [EParaCategory.AREAS]: 1,
-    [EParaCategory.RESOURCES]: 0,
-    [EParaCategory.ARCHIVE]: 0,
+    [EParaCategory.PROJECTS]: 8,
+    [EParaCategory.AREAS]: 6,
+    [EParaCategory.RESOURCES]: 7,
+    [EParaCategory.ARCHIVE]: 3,
   },
   byStatus: {
-    [EParaStatus.ACTIVE]: 2,
-    [EParaStatus.INACTIVE]: 0,
-    [EParaStatus.COMPLETED]: 0,
-    [EParaStatus.ON_HOLD]: 0,
-    [EParaStatus.ARCHIVED]: 0,
-  },
-  byPriority: {
-    [EParaPriority.LOW]: 0,
-    [EParaPriority.MEDIUM]: 1,
-    [EParaPriority.HIGH]: 1,
-    [EParaPriority.CRITICAL]: 0,
-  },
-  areas: {
-    total: 1,
-    byType: { professional: 1 },
-    maintenanceOverdue: 0,
-    reviewsOverdue: 0,
-  },
-  archives: {
-    total: 0,
-    byOriginalCategory: {
-      [EParaCategory.PROJECTS]: 0,
-      [EParaCategory.AREAS]: 0,
+    [EParaStatus.ACTIVE]: {
+      [EParaCategory.PROJECTS]: 6,
+      [EParaCategory.AREAS]: 5,
+      [EParaCategory.RESOURCES]: 5,
+      [EParaCategory.ARCHIVE]: 0,
+    },
+    [EParaStatus.INACTIVE]: {
+      [EParaCategory.PROJECTS]: 1,
+      [EParaCategory.AREAS]: 1,
       [EParaCategory.RESOURCES]: 0,
       [EParaCategory.ARCHIVE]: 0,
     },
-    byArchiveReason: {},
-    recentlyArchived: 0,
+    [EParaStatus.COMPLETED]: {
+      [EParaCategory.PROJECTS]: 1,
+      [EParaCategory.AREAS]: 0,
+      [EParaCategory.RESOURCES]: 1,
+      [EParaCategory.ARCHIVE]: 0,
+    },
+    [EParaStatus.ON_HOLD]: {
+      [EParaCategory.PROJECTS]: 0,
+      [EParaCategory.AREAS]: 0,
+      [EParaCategory.RESOURCES]: 1,
+      [EParaCategory.ARCHIVE]: 0,
+    },
+    [EParaStatus.ARCHIVED]: {
+      [EParaCategory.PROJECTS]: 0,
+      [EParaCategory.AREAS]: 0,
+      [EParaCategory.RESOURCES]: 0,
+      [EParaCategory.ARCHIVE]: 1,
+    },
+  } as any,
+  byPriority: {
+    [EParaPriority.LOW]: 5,
+    [EParaPriority.MEDIUM]: 12,
+    [EParaPriority.HIGH]: 6,
+    [EParaPriority.CRITICAL]: 1,
+  },
+  areas: {
+    total: 6,
+    byType: {
+      professional: 3,
+      personal: 2,
+      health: 1,
+    },
+    maintenanceOverdue: 2,
+    reviewsOverdue: 1,
+  },
+  archives: {
+    total: 3,
+    byOriginalCategory: {
+      [EParaCategory.PROJECTS]: 1,
+      [EParaCategory.AREAS]: 1,
+      [EParaCategory.RESOURCES]: 1,
+      [EParaCategory.ARCHIVE]: 0,
+    },
+    byArchiveReason: {
+      completed: 2,
+      no_longer_relevant: 1,
+    },
+    recentlyArchived: 1,
   },
   linkedItems: {
-    projects: 0,
-    resources: 0,
-    tasks: 0,
-    notes: 0,
-    goals: 0,
-    people: 0,
+    projects: 12,
+    resources: 8,
+    tasks: 15,
+    notes: 6,
+    goals: 4,
+    people: 3,
   },
-  reviewsOverdue: 0,
-  reviewsDueThisWeek: 0,
+  reviewsOverdue: 3,
+  reviewsDueThisWeek: 5,
   completionRates: {
-    projects: 0,
-    areas: 0,
+    projects: 75,
+    areas: 60,
   },
-  recentlyCreated: [],
-  recentlyArchived: [],
+  recentlyCreated: [
+    {
+      id: "recent1",
+      title: "Mobile App Development",
+      category: EParaCategory.PROJECTS,
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    },
+    {
+      id: "recent2",
+      title: "Health & Fitness Tracking",
+      category: EParaCategory.AREAS,
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+    },
+  ],
+  recentlyArchived: [
+    {
+      id: "archived1",
+      title: "Old Marketing Campaign",
+      originalCategory: EParaCategory.PROJECTS,
+      archivedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+    },
+  ],
 };
 
 // Helper function to handle API calls with fallback to mock data

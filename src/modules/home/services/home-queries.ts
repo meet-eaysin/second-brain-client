@@ -36,9 +36,9 @@ export const SYSTEM_KEYS = {
   activityById: (id: string) => [...SYSTEM_KEYS.all, "activity", id] as const,
   workspaceActivityOverview: () =>
     [...SYSTEM_KEYS.all, "workspace-activity-overview"] as const,
-  auditTrail: (params?: any) =>
+  auditTrail: (params?: Record<string, unknown>) =>
     [...SYSTEM_KEYS.all, "audit-trail", params] as const,
-  securityEvents: (params?: any) =>
+  securityEvents: (params?: Record<string, unknown>) =>
     [...SYSTEM_KEYS.all, "security-events", params] as const,
   complianceReport: (params?: { period?: string }) =>
     [...SYSTEM_KEYS.all, "compliance-report", params] as const,
@@ -165,10 +165,11 @@ export const useActivities = (params?: IActivityQueryOptions) => {
   });
 };
 
-export const useRecentActivityFeed = (params?: { limit?: number }) => {
+export const useRecentActivityFeed = (workspaceId: string, limit = 10) => {
   return useQuery({
-    queryKey: SYSTEM_KEYS.activityFeed(params),
-    queryFn: () => systemApi.getRecentActivityFeed(params),
+    queryKey: SYSTEM_KEYS.activityFeed({ workspaceId, limit }),
+    queryFn: () => systemApi.getRecentActivityFeed({ workspaceId, limit }),
+    enabled: !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

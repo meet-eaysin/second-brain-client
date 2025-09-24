@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   CheckSquare,
   Target,
   BookOpen,
@@ -18,7 +25,10 @@ import {
   ArrowRight,
   Star,
   Lightbulb,
+  Activity,
+  Filter,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { useDashboardOverview } from "../services/dashboard-queries";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
@@ -26,6 +36,8 @@ import { useWorkspace } from "@/modules/workspaces/context";
 
 export function SecondBrainDashboard() {
   const { currentWorkspace } = useWorkspace();
+  const [activityFilter, setActivityFilter] = useState<string>("all");
+
   const {
     data: dashboardData,
     isLoading,
@@ -74,12 +86,19 @@ export function SecondBrainDashboard() {
 
   const {
     quickStats,
+    recentActivity = [],
     upcomingTasks = [],
     recentNotes = [],
     goalProgress = [],
     habitStreaks = [],
     recentlyVisited = [],
   } = dashboardOverview;
+
+  // Filter activities based on selected filter
+  const filteredActivities = recentActivity.filter((activity) => {
+    if (activityFilter === "all") return true;
+    return activity.type === activityFilter;
+  });
 
   return (
     <>
@@ -144,24 +163,6 @@ export function SecondBrainDashboard() {
                   </p>
                   <p className="text-2xl font-bold">
                     {quickStats?.totalNotes || 0}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-orange-50 rounded-lg">
-                  <Zap className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Active Habits
-                  </p>
-                  <p className="text-2xl font-bold">
-                    {quickStats?.activeHabits || 0}
                   </p>
                 </div>
               </div>
@@ -243,115 +244,68 @@ export function SecondBrainDashboard() {
               )}
             </CardContent>
           </Card>
-
-          {/* Current Goals */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                Current Goals
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="gap-1">
-                View All <ArrowRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {goalProgress.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No active goals</p>
-              ) : (
-                goalProgress.slice(0, 3).map((goal) => (
-                  <div
-                    key={goal.id}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
-                  >
-                    <Target className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">{goal.title}</span>
-                      <p className="text-xs text-muted-foreground">
-                        {goal.type}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {goal.progressPercentage || 0}%
-                    </Badge>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Secondary Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Notes */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Recent Notes
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="gap-1">
-                View All <ArrowRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {recentNotes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No recent notes</p>
-              ) : (
-                recentNotes.slice(0, 4).map((note) => (
-                  <div
-                    key={note.id}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
-                  >
-                    <Lightbulb className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex-1">
-                      <span className="text-sm font-medium">{note.title}</span>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(note.updatedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      {note.type}
-                    </Badge>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Today's Habits */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base font-medium flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                Today's Habits
-              </CardTitle>
-              <Button variant="ghost" size="sm" className="gap-1">
-                View All <ArrowRight className="h-3 w-3" />
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {habitStreaks.length === 0 ? (
+        {/* Recent Activity Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-lg font-medium flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Select value={activityFilter} onValueChange={setActivityFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Activities</SelectItem>
+                  <SelectItem value="task_created">Tasks</SelectItem>
+                  <SelectItem value="note_created">Notes</SelectItem>
+                  <SelectItem value="goal_updated">Goals</SelectItem>
+                  <SelectItem value="habit_completed">Habits</SelectItem>
+                  <SelectItem value="journal_entry">Journal</SelectItem>
+                  <SelectItem value="finance_added">Finance</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {filteredActivities.length === 0 ? (
+              <div className="text-center py-8">
+                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">
-                  No active habits
+                  {activityFilter === "all"
+                    ? "No recent activity"
+                    : `No ${activityFilter.replace("_", " ")} activity`}
                 </p>
-              ) : (
-                habitStreaks.slice(0, 4).map((habit) => (
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredActivities.slice(0, 10).map((activity) => (
                   <div
-                    key={habit.id}
-                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
+                    key={activity.id}
+                    className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
                   >
-                    <CheckSquare className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm flex-1">{habit.name}</span>
-                    <Badge variant="outline" className="text-xs">
-                      {habit.streak} days
-                    </Badge>
+                    <Activity className="h-4 w-4 text-muted-foreground mt-1" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {activity.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formatDistanceToNow(activity.timestamp, {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    </div>
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </Main>
     </>
   );

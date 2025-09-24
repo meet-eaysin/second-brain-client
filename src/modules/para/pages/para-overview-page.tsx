@@ -1,16 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Target,
   Layers,
@@ -18,34 +11,51 @@ import {
   Archive,
   BarChart3,
   CheckSquare,
-  Plus,
-  TrendingUp,
-  Users,
   Calendar,
+  TrendingUp,
+  Plus,
 } from "lucide-react";
-import { DatabaseView, EDatabaseType } from "@/modules/database-view";
 import { useParaStats } from "../services/para-queries";
 import { EParaCategory, EParaStatus } from "../types/para.types";
 import { useWorkspace } from "@/modules/workspaces/context";
 
 export function PARAOverviewPage() {
-  const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const { currentWorkspace } = useWorkspace();
-
-  // Fetch PARA stats
   const { data: paraStats } = useParaStats({
     databaseId: currentWorkspace?.id,
   });
+
+  const totalItems = paraStats?.totalItems || 0;
+
+  const quickStats = [
+    { label: "Total Items", value: totalItems, icon: Target },
+    {
+      label: "Active",
+      value:
+        Object.values(paraStats?.byStatus[EParaStatus.ACTIVE] || {}).reduce(
+          (sum, v) => sum + (v as number),
+          0
+        ) || 0,
+      icon: CheckSquare,
+    },
+    {
+      label: "Due This Week",
+      value: paraStats?.reviewsDueThisWeek || 0,
+      icon: Calendar,
+    },
+    {
+      label: "Overdue",
+      value: paraStats?.reviewsOverdue || 0,
+      icon: TrendingUp,
+    },
+  ];
 
   const paraAreas = [
     {
       id: EParaCategory.PROJECTS,
       title: "Projects",
-      description: "Things with a deadline and specific outcome",
       icon: Target,
-      color: "bg-blue-500",
-      items: {
-        total: paraStats?.byCategory[EParaCategory.PROJECTS] || 0,
+      stats: {
         active:
           paraStats?.byStatus[EParaStatus.ACTIVE]?.[EParaCategory.PROJECTS] ||
           0,
@@ -53,28 +63,25 @@ export function PARAOverviewPage() {
           paraStats?.byStatus[EParaStatus.COMPLETED]?.[
             EParaCategory.PROJECTS
           ] || 0,
+        total: paraStats?.byCategory[EParaCategory.PROJECTS] || 0,
       },
     },
     {
       id: EParaCategory.AREAS,
       title: "Areas",
-      description: "Ongoing responsibilities to maintain",
       icon: Layers,
-      color: "bg-green-500",
-      items: {
-        total: paraStats?.byCategory[EParaCategory.AREAS] || 0,
+      stats: {
         active:
           paraStats?.byStatus[EParaStatus.ACTIVE]?.[EParaCategory.AREAS] || 0,
         maintenance: paraStats?.areas.maintenanceOverdue || 0,
+        total: paraStats?.byCategory[EParaCategory.AREAS] || 0,
       },
     },
     {
       id: EParaCategory.RESOURCES,
       title: "Resources",
-      description: "Topics of ongoing interest for future reference",
       icon: BookOpen,
-      color: "bg-purple-500",
-      items: {
+      stats: {
         total: paraStats?.byCategory[EParaCategory.RESOURCES] || 0,
         linked: paraStats?.linkedItems.resources || 0,
       },
@@ -82,128 +89,149 @@ export function PARAOverviewPage() {
     {
       id: EParaCategory.ARCHIVE,
       title: "Archive",
-      description: "Inactive items from the other three categories",
       icon: Archive,
-      color: "bg-gray-500",
-      items: {
+      stats: {
         total: paraStats?.byCategory[EParaCategory.ARCHIVE] || 0,
         recentlyArchived: paraStats?.archives.recentlyArchived || 0,
       },
     },
   ];
 
-  const totalItems = paraStats?.totalItems || 0;
-
   return (
     <>
       <EnhancedHeader />
-
-      <Main className="space-y-8">
-        {/* Clean Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">PARA System</h1>
-            <p className="text-muted-foreground">
-              Projects, Areas, Resources, and Archives - Your organizational
-              framework
+      <Main className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              PARA Overview
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Your personal productivity system at a glance
             </p>
           </div>
-          <Button className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            View Analytics
+          <Button variant="outline" className="gap-2">
+            <BarChart3 className="h-4 w-4" /> Analytics
           </Button>
         </div>
 
-        {/* PARA Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {paraAreas.map((area) => {
-            const AreaIcon = area.icon;
-            const percentage =
-              totalItems > 0 ? (area.items.total / totalItems) * 100 : 0;
-
+        {/* Key Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {quickStats.map((stat) => {
+            const Icon = stat.icon;
             return (
               <Card
-                key={area.id}
-                className={`hover:shadow-md transition-all cursor-pointer ${
-                  selectedArea === area.id ? "ring-2 ring-primary" : ""
-                }`}
-                onClick={() =>
-                  setSelectedArea(selectedArea === area.id ? null : area.id)
-                }
+                key={stat.label}
+                className="hover:shadow-md transition-shadow"
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${area.color} text-white`}>
-                      <AreaIcon className="h-5 w-5" />
-                    </div>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle className="text-lg">{area.title}</CardTitle>
-                      <Badge variant="outline" className="text-xs">
-                        {area.items.total} items
-                      </Badge>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {stat.label}
+                      </p>
+                      <p className="text-2xl font-bold">{stat.value}</p>
+                    </div>
+                    <div className="p-2 bg-muted rounded-md">
+                      <Icon className="h-5 w-5 text-muted-foreground" />
                     </div>
                   </div>
-                  <CardDescription className="text-sm">
-                    {area.description}
-                  </CardDescription>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* PARA System Overview */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {paraAreas.map((area) => {
+            const AreaIcon = area.icon;
+            return (
+              <Card key={area.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-muted rounded-md">
+                        <AreaIcon className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <CardTitle className="text-lg">{area.title}</CardTitle>
+                    </div>
+                    <Badge variant="secondary">{area.stats.total}</Badge>
+                  </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {/* Distribution */}
+                  {/* Detailed Stats */}
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Distribution</span>
-                      <span>{Math.round(percentage)}%</span>
-                    </div>
-                    <Progress value={percentage} className="h-2" />
-                  </div>
-
-                  {/* Item Breakdown */}
-                  <div className="grid grid-cols-2 gap-3 text-sm">
                     {area.id === EParaCategory.PROJECTS && (
                       <>
-                        <div className="flex items-center gap-2">
-                          <Target className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.active} active</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Active</span>
+                          <span className="font-medium">
+                            {area.stats.active}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <CheckSquare className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.completed} completed</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Completed
+                          </span>
+                          <span className="font-medium">
+                            {area.stats.completed}
+                          </span>
                         </div>
                       </>
                     )}
                     {area.id === EParaCategory.AREAS && (
                       <>
-                        <div className="flex items-center gap-2">
-                          <Layers className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.active} active</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Active</span>
+                          <span className="font-medium">
+                            {area.stats.active}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.maintenance} maintenance</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Maintenance
+                          </span>
+                          <span className="font-medium">
+                            {area.stats.maintenance}
+                          </span>
                         </div>
                       </>
                     )}
                     {area.id === EParaCategory.RESOURCES && (
                       <>
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.total} total</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Total</span>
+                          <span className="font-medium">
+                            {area.stats.total}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.linked} linked</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Linked</span>
+                          <span className="font-medium">
+                            {area.stats.linked}
+                          </span>
                         </div>
                       </>
                     )}
                     {area.id === EParaCategory.ARCHIVE && (
                       <>
-                        <div className="flex items-center gap-2">
-                          <Archive className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.total} archived</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Total Archived
+                          </span>
+                          <span className="font-medium">
+                            {area.stats.total}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-3 w-3 text-muted-foreground" />
-                          <span>{area.items.recentlyArchived} recent</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">
+                            Recently
+                          </span>
+                          <span className="font-medium">
+                            {area.stats.recentlyArchived}
+                          </span>
                         </div>
                       </>
                     )}
@@ -211,12 +239,11 @@ export function PARAOverviewPage() {
 
                   {/* Quick Actions */}
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      View All
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <Plus className="h-3 w-3 mr-1" /> Add
                     </Button>
-                    <Button size="sm" className="gap-1">
-                      <Plus className="h-3 w-3" />
-                      Add
+                    <Button size="sm" variant="outline" className="flex-1">
+                      View All
                     </Button>
                   </div>
                 </CardContent>
@@ -225,76 +252,28 @@ export function PARAOverviewPage() {
           })}
         </div>
 
-        {/* Detailed View */}
-        {selectedArea && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">
-                  {paraAreas.find((a) => a.id === selectedArea)?.title}
-                </h2>
-                <p className="text-muted-foreground">
-                  {paraAreas.find((a) => a.id === selectedArea)?.description}
-                </p>
-              </div>
-              <Button variant="outline" className="gap-2">
-                <BarChart3 className="h-4 w-4" />
-                View Analytics
-              </Button>
-            </div>
-
-            {/* Database View for the selected category */}
-            <DatabaseView
-              moduleType={
-                selectedArea === EParaCategory.PROJECTS
-                  ? EDatabaseType.PARA_PROJECTS
-                  : selectedArea === EParaCategory.AREAS
-                  ? EDatabaseType.PARA_AREAS
-                  : selectedArea === EParaCategory.RESOURCES
-                  ? EDatabaseType.PARA_RESOURCES
-                  : EDatabaseType.PARA_ARCHIVE
-              }
-            />
-          </div>
-        )}
-
         {/* Quick Actions */}
-        <Card>
+        <Card className="mt-6">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
-              Organize your Second Brain with the PARA method
-            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button variant="outline" className="gap-2 h-auto p-4 flex-col">
-                <Target className="h-6 w-6" />
-                <span>Create Project</span>
-                <span className="text-xs text-muted-foreground">
-                  Start a new goal-oriented project
-                </span>
+            <div className="flex flex-wrap gap-3">
+              <Button variant="outline" className="gap-2">
+                <Target className="h-4 w-4" />
+                New Project
               </Button>
-              <Button variant="outline" className="gap-2 h-auto p-4 flex-col">
-                <Layers className="h-6 w-6" />
-                <span>Define Area</span>
-                <span className="text-xs text-muted-foreground">
-                  Set up ongoing responsibility
-                </span>
+              <Button variant="outline" className="gap-2">
+                <Layers className="h-4 w-4" />
+                Add Area
               </Button>
-              <Button variant="outline" className="gap-2 h-auto p-4 flex-col">
-                <BookOpen className="h-6 w-6" />
-                <span>Save Resource</span>
-                <span className="text-xs text-muted-foreground">
-                  Store reference material
-                </span>
+              <Button variant="outline" className="gap-2">
+                <BookOpen className="h-4 w-4" />
+                Save Resource
               </Button>
-              <Button variant="outline" className="gap-2 h-auto p-4 flex-col">
-                <Archive className="h-6 w-6" />
-                <span>Review Archive</span>
-                <span className="text-xs text-muted-foreground">
-                  Clean up completed items
-                </span>
+              <Button variant="outline" className="gap-2">
+                <Archive className="h-4 w-4" />
+                Review Archive
               </Button>
             </div>
           </CardContent>

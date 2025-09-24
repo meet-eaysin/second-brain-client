@@ -1,43 +1,157 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, FileText } from "lucide-react";
+import { FileText, Clock, Quote } from "lucide-react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, addHours } from "date-fns";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { useNavigate } from "react-router-dom";
-import {
-  useDashboardOverview,
-  useRecentlyVisited,
-} from "../services/dashboard-queries";
-import { useSystemActivityFeed } from "../services/system-queries";
+import { useDashboardOverview } from "../services/home-queries";
 import { systemApi } from "../services/system-api";
+import {
+  GanttProvider,
+  GanttSidebar,
+  GanttTimeline,
+  GanttHeader,
+  GanttFeatureList,
+  GanttFeatureListGroup,
+  GanttFeatureItem,
+  GanttToday,
+  type GanttFeature,
+} from "@/components/ui/kibo-ui/gantt";
+import { useTodayEvents } from "@/modules/calendar/services/calendar-queries";
 
 export function HomePage() {
   const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
-  const {
-    data: dashboardData,
-    isLoading,
-    error,
-    refetch,
-  } = useDashboardOverview();
+  const { data, isLoading, error, refetch } = useDashboardOverview();
 
-  const { data: systemActivityData, isLoading: systemActivityLoading } =
-    useSystemActivityFeed(currentWorkspace?.id || "", 5);
+  // Get today's calendar events for time-blocking preview
+  const { data: todayEvents } = useTodayEvents();
 
-  const { data: recentlyVisitedData, isLoading: recentlyVisitedLoading } =
-    useRecentlyVisited(6);
+  // Convert calendar events to Gantt features for time-blocking preview
+  const todayScheduleFeatures: GanttFeature[] =
+    todayEvents?.events?.map((event) => ({
+      id: event.id,
+      name: event.title,
+      startAt: event.startTime,
+      endAt: event.endTime || addHours(event.startTime, 1), // Default 1 hour if no end time
+      status: {
+        id: event.type || "event",
+        name: event.type || "Event",
+        color: getEventColor(event.type),
+      },
+    })) || [];
+
+  // Fallback: Show default time blocks if no events
+  const defaultScheduleFeatures: GanttFeature[] = [
+    {
+      id: "morning-focus",
+      name: "Morning Focus",
+      startAt: addHours(new Date().setHours(9, 0, 0, 0), 0),
+      endAt: addHours(new Date().setHours(11, 0, 0, 0), 0),
+      status: { id: "focus", name: "Focus", color: "hsl(var(--primary))" },
+    },
+    {
+      id: "lunch-break",
+      name: "Lunch Break",
+      startAt: addHours(new Date().setHours(12, 0, 0, 0), 0),
+      endAt: addHours(new Date().setHours(13, 0, 0, 0), 0),
+      status: {
+        id: "break",
+        name: "Break",
+        color: "hsl(var(--muted-foreground))",
+      },
+    },
+    {
+      id: "afternoon-work",
+      name: "Afternoon Work",
+      startAt: addHours(new Date().setHours(14, 0, 0, 0), 0),
+      endAt: addHours(new Date().setHours(17, 0, 0, 0), 0),
+      status: { id: "work", name: "Work", color: "hsl(var(--chart-2))" },
+    },
+  ];
+
+  // Use live data if available, otherwise show default schedule
+  const displayFeatures =
+    todayScheduleFeatures.length > 0
+      ? todayScheduleFeatures
+      : defaultScheduleFeatures;
+
+  // Helper function to get color based on event type
+  const getEventColor = (eventType?: string): string => {
+    switch (eventType) {
+      case "meeting":
+        return "hsl(var(--chart-1))";
+      case "task":
+        return "hsl(var(--chart-2))";
+      case "personal":
+        return "hsl(var(--chart-3))";
+      case "work":
+        return "hsl(var(--chart-4))";
+      default:
+        return "hsl(var(--primary))";
+    }
+  };
+
+  // Motivational quotes based on time of day
+  const getMotivationalQuote = () => {
+    const hour = new Date().getHours();
+    const quotes = {
+      morning: [
+        "Every morning is a fresh beginning. Every day is the world made new.",
+        "The way to get started is to quit talking and begin doing.",
+        "Your only limit is you.",
+      ],
+      afternoon: [
+        "The afternoon knows what the morning never suspected.",
+        "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+        "The best way to predict the future is to create it.",
+      ],
+      evening: [
+        "Evening is a time of real experimentation. You never want to look the same way.",
+        "What we achieve inwardly will change outer reality.",
+        "Rest when you're weary. Refresh and renew yourself.",
+      ],
+    };
+
+    let timeOfDay: keyof typeof quotes = "morning";
+    if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
+    else if (hour >= 17) timeOfDay = "evening";
+
+    const timeQuotes = quotes[timeOfDay];
+    return timeQuotes[Math.floor(Math.random() * timeQuotes.length)];
+  };
+
+  // Find items not visited recently for re-engagement
+  const getReengagementPrompt = () => {
+    if (!data?.recentlyVisited || data.recentlyVisited.length === 0)
+      return null;
+
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    // Find items not visited in the last week
+    const oldItems = data.recentlyVisited.filter(
+      (item) => item.lastVisitedAt < oneWeekAgo
+    );
+
+    if (oldItems.length === 0) return null;
+
+    // Return a random old item
+    const randomItem = oldItems[Math.floor(Math.random() * oldItems.length)];
+    return randomItem;
+  };
 
   // Record page visit
   useEffect(() => {
     if (currentWorkspace?.id) {
       systemApi
-        .recordPageVisit("/home", currentWorkspace.id)
+        .recordPageVisit(location.pathname, currentWorkspace.id)
         .catch(console.error);
     }
-  }, [currentWorkspace?.id]);
+  }, [currentWorkspace?.id, location.pathname]);
 
   // Dynamic greeting based on time of day
   const getGreeting = () => {
@@ -216,8 +330,6 @@ export function HomePage() {
     );
   }
 
-  const { recentActivity } = dashboardData || {};
-
   return (
     <>
       <EnhancedHeader />
@@ -242,45 +354,109 @@ export function HomePage() {
           </div>
         </div>
 
+        {/* Time-blocking Calendar Preview */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Recent Activity</h2>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Today's Schedule
+            </h2>
+            <Button variant="outline" size="sm">
+              View Calendar
+            </Button>
           </div>
           <Card>
-            <CardContent className="p-6">
-              {recentActivity && recentActivity.length > 0 ? (
-                <div className="space-y-3">
-                  {recentActivity.slice(0, 5).map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
-                    >
-                      <Activity className="h-4 w-4 text-muted-foreground mt-1" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{activity.title}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {activity.description}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(activity.timestamp, {
-                            addSuffix: true,
-                          })}
-                        </p>
-                      </div>
+            <CardContent className="p-4">
+              <div className="h-64 overflow-hidden rounded border">
+                <GanttProvider range="daily" zoom={150}>
+                  <GanttSidebar>
+                    <div className="p-2">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Time Blocks
+                      </p>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">
-                    No recent activity
-                  </p>
-                </div>
-              )}
+                  </GanttSidebar>
+                  <GanttTimeline>
+                    <GanttHeader />
+                    <GanttFeatureList>
+                      <GanttFeatureListGroup>
+                        {displayFeatures.map((feature) => (
+                          <div className="flex" key={feature.id}>
+                            <GanttFeatureItem {...feature}>
+                              <p className="flex-1 truncate text-xs">
+                                {feature.name}
+                              </p>
+                            </GanttFeatureItem>
+                          </div>
+                        ))}
+                      </GanttFeatureListGroup>
+                    </GanttFeatureList>
+                    <GanttToday />
+                  </GanttTimeline>
+                </GanttProvider>
+              </div>
+              <div className="mt-4 pt-3 border-t">
+                <p className="text-xs text-muted-foreground text-center">
+                  Time-blocking helps you focus and be more productive
+                </p>
+              </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Re-engagement Prompt */}
+        {getReengagementPrompt() && (
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Clock className="h-4 w-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary">
+                    It's been a while since you visited...
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {getReengagementPrompt()?.name} - Last visited{" "}
+                    {formatDistanceToNow(
+                      getReengagementPrompt()?.lastVisitedAt || new Date(),
+                      {
+                        addSuffix: true,
+                      }
+                    )}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() =>
+                      navigate(getReengagementPrompt()?.route || "")
+                    }
+                  >
+                    Visit Now
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Motivational Quote */}
+        <Card className="bg-muted/30 border-muted">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-3">
+              <Quote className="h-5 w-5 text-primary mt-1" />
+              <div>
+                <p className="text-sm italic text-foreground">
+                  "{getMotivationalQuote()}"
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Daily inspiration
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Recently Visited */}
         <div className="space-y-4">
@@ -288,17 +464,17 @@ export function HomePage() {
             <h2 className="text-xl font-semibold">Recently Visited</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentlyVisitedData && recentlyVisitedData.length > 0 ? (
-              recentlyVisitedData.slice(0, 6).map((item) => (
+            {data?.recentlyVisited && data.recentlyVisited.length > 0 ? (
+              data.recentlyVisited.slice(0, 6).map((item) => (
                 <Card
                   key={item.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  className="hover:bg-muted/50 transition-colors cursor-pointer"
                   onClick={() => navigate(item.route)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg"
+                        className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
                         style={{
                           backgroundColor: `${item.color}20`,
                           color: item.color,
@@ -339,52 +515,6 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* System Activity */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">System Activity</h2>
-          </div>
-          <Card>
-            <CardContent className="p-6">
-              {systemActivityData && systemActivityData.length > 0 ? (
-                <div className="space-y-3">
-                  {systemActivityData.slice(0, 5).map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
-                    >
-                      <Activity className="h-4 w-4 text-muted-foreground mt-1" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{activity.title}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {activity.description}
-                        </p>
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-xs text-muted-foreground">
-                            {activity.userName || "System"}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(activity.timestamp, {
-                              addSuffix: true,
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">
-                    No recent system activity
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
         {/* Learn */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -392,13 +522,13 @@ export function HomePage() {
           </div>
           <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
             <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-blue-400 to-blue-600 relative">
-                <div className="absolute inset-0 bg-black/20"></div>
+              <div className="h-32 bg-primary relative">
+                <div className="absolute inset-0 bg-background/20"></div>
                 <div className="absolute bottom-3 left-4 flex items-center gap-2">
-                  <span className="text-xs font-medium text-white/90 uppercase tracking-wide bg-white/20 px-2 py-1 rounded">
+                  <span className="text-xs font-medium text-primary-foreground/90 uppercase tracking-wide bg-primary-foreground/20 px-2 py-1 rounded">
                     Guide
                   </span>
-                  <span className="text-xs font-medium text-white bg-orange-500 px-2 py-1 rounded uppercase tracking-wide">
+                  <span className="text-xs font-medium text-primary-foreground bg-destructive px-2 py-1 rounded uppercase tracking-wide">
                     Upcoming
                   </span>
                 </div>
@@ -427,10 +557,10 @@ export function HomePage() {
             </Card>
 
             <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-green-400 to-green-600 relative">
-                <div className="absolute inset-0 bg-black/20"></div>
+              <div className="h-32 bg-chart-2 relative">
+                <div className="absolute inset-0 bg-background/20"></div>
                 <div className="absolute bottom-3 left-4">
-                  <span className="text-xs font-medium text-white/90 uppercase tracking-wide bg-white/20 px-2 py-1 rounded">
+                  <span className="text-xs font-medium text-chart-2-foreground uppercase tracking-wide bg-background/20 px-2 py-1 rounded">
                     Strategy
                   </span>
                 </div>
@@ -459,13 +589,13 @@ export function HomePage() {
             </Card>
 
             <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-purple-400 to-purple-600 relative">
-                <div className="absolute inset-0 bg-black/20"></div>
+              <div className="h-32 bg-chart-3 relative">
+                <div className="absolute inset-0 bg-background/20"></div>
                 <div className="absolute bottom-3 left-4 flex items-center gap-2">
-                  <span className="text-xs font-medium text-white/90 uppercase tracking-wide bg-white/20 px-2 py-1 rounded">
+                  <span className="text-xs font-medium text-chart-3-foreground uppercase tracking-wide bg-background/20 px-2 py-1 rounded">
                     Productivity
                   </span>
-                  <span className="text-xs font-medium text-white bg-blue-500 px-2 py-1 rounded uppercase tracking-wide">
+                  <span className="text-xs font-medium text-chart-3-foreground bg-primary px-2 py-1 rounded uppercase tracking-wide">
                     New
                   </span>
                 </div>
@@ -494,10 +624,10 @@ export function HomePage() {
             </Card>
 
             <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden">
-              <div className="h-32 bg-gradient-to-br from-orange-400 to-orange-600 relative">
-                <div className="absolute inset-0 bg-black/20"></div>
+              <div className="h-32 bg-chart-4 relative">
+                <div className="absolute inset-0 bg-background/20"></div>
                 <div className="absolute bottom-3 left-4">
-                  <span className="text-xs font-medium text-white/90 uppercase tracking-wide bg-white/20 px-2 py-1 rounded">
+                  <span className="text-xs font-medium text-chart-4-foreground uppercase tracking-wide bg-background/20 px-2 py-1 rounded">
                     Habits
                   </span>
                 </div>
@@ -520,6 +650,47 @@ export function HomePage() {
                     className="text-xs p-0 h-auto"
                   >
                     Read →
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="flex-shrink-0 w-80 hover:shadow-lg cursor-pointer transition-all duration-300 overflow-hidden opacity-60">
+              <div className="h-32 bg-muted relative">
+                <div className="absolute inset-0 bg-background/10"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-2xl mb-2">🚀</div>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Coming Soon
+                    </p>
+                  </div>
+                </div>
+                <div className="absolute bottom-3 left-4">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide bg-background/20 px-2 py-1 rounded">
+                    Upcoming
+                  </span>
+                </div>
+              </div>
+              <div className="p-6">
+                <h3 className="font-semibold text-base leading-tight mb-2">
+                  Advanced Features Guide
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                  Discover powerful advanced features and integrations to
+                  supercharge your productivity workflow.
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    Coming soon
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs p-0 h-auto opacity-50 cursor-not-allowed"
+                    disabled
+                  >
+                    Soon →
                   </Button>
                 </div>
               </div>
