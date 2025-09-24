@@ -264,24 +264,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     );
   };
 
-  // Show loading state only for initial load
-  if (isPropertiesLoading || isInitialLoading) {
-    return <GallerySkeleton />;
-  }
-
-  // Show empty state if no records
-  if (!records || records.length === 0) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">No records found</p>
-          <Button onClick={onRecordCreate}>Create First Record</Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Allow gallery view to work without grouping property - records will be in "ungrouped" group
+  if (isPropertiesLoading || isInitialLoading) return <GallerySkeleton />;
 
   return (
     <div className={`space-y-4 ${className}`}>

@@ -53,27 +53,7 @@ export function Table({ className = "" }: TableProps) {
     return generateDocumentColumns(properties, handleUpdateRecord);
   }, [properties, database?.id, updateRecordMutation]);
 
-  // Show loading state only for initial load
-  if (isPropertiesLoading || isInitialLoading) {
-    return <TableSkeleton />;
-  }
-
-  // Show empty state if no records
-  if (!records || records.length === 0) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">No records found</p>
-          <button
-            onClick={onRecordCreate}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Create First Record
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (isPropertiesLoading || isInitialLoading) return <TableSkeleton />;
 
   return (
     <div className={`space-y-4 ${className}`}>
