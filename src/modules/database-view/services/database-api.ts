@@ -742,6 +742,18 @@ export const databaseApi = {
     );
     return response.data;
   },
+
+  // MODULE INITIALIZATION
+  initializeSpecificModules: async (
+    modules: string[],
+    createSampleData = false
+  ) => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.MODULES.INITIALIZE_SPECIFIC,
+      { modules, createSampleData }
+    );
+    return response.data;
+  },
 };
 
 export const {

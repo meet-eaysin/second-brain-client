@@ -74,7 +74,7 @@ export const sidebarData = {
         },
         {
           title: "Finance",
-          url: "/app/second-brain/finance",
+          url: "/app/second-brain/finances",
           icon: DollarSign,
         },
         {

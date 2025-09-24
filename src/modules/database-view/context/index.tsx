@@ -22,6 +22,7 @@ import {
   useDeleteRecord,
   useDuplicateRecord,
   useUpdateViewFilters,
+  useInitializeSpecificModules,
 } from "../services/database-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { DATABASE_KEYS } from "../services/database-queries";
@@ -78,7 +79,6 @@ interface DatabaseViewContextValue {
   isRecordsLoading: boolean;
   isInitialLoading: boolean;
   isCurrentViewLoading: boolean;
-  isDatabasesByTypeLoading: boolean;
   isLoadingMore: boolean;
   hasMoreRecords: boolean;
 
@@ -141,6 +141,7 @@ export function DatabaseViewProvider({
   const [currentOffset, setCurrentOffset] = useState(0);
   const [accumulatedRecords, setAccumulatedRecords] = useState<TRecord[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [sorts, setSorts] = useState<TSortConfig[]>([]);
 
   const { currentWorkspace } = useAuthStore();
   const queryClient = useQueryClient();
@@ -149,15 +150,73 @@ export function DatabaseViewProvider({
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
   const updateViewFiltersMutation = useUpdateViewFilters();
+  const initializeModulesMutation = useInitializeSpecificModules();
 
-  const { data: databasesByType, isLoading: isDatabasesByTypeLoading } =
-    useDatabaseByModuleType(moduleType);
-  const currentDatabaseId = databaseId || databasesByType?.data[0]?.id || "";
+  // Custom hook for sophisticated database retrieval
+  const useDatabaseWithInitialization = (
+    moduleType: EDatabaseType,
+    providedDatabaseId?: string
+  ) => {
+    const [resolvedDatabaseId, setResolvedDatabaseId] = useState<string | null>(
+      null
+    );
 
-  const { data: database, isLoading: isDatabaseLoading } =
-    useDatabase(currentDatabaseId);
-  const { data: viewsResponse, isLoading: isViewsLoading } =
-    useViews(currentDatabaseId);
+    const { data: databasesByType, isLoading: isDatabasesByTypeLoading } =
+      useDatabaseByModuleType(moduleType);
+
+    // Step 1: If databaseId is provided by parent, use it directly
+    useEffect(() => {
+      if (providedDatabaseId) {
+        setResolvedDatabaseId(providedDatabaseId);
+        return;
+      }
+
+      // Step 2: If not provided, try to find database by moduleType
+      if (databasesByType?.data && databasesByType.data.length > 0) {
+        setResolvedDatabaseId(databasesByType.data[0].id);
+        return;
+      }
+
+      // Step 3: If no database found, initialize the module
+      if (
+        !isDatabasesByTypeLoading &&
+        databasesByType?.data &&
+        databasesByType.data.length === 0
+      ) {
+        // Initialize the module using React Query mutation
+        initializeModulesMutation.mutate({
+          modules: [moduleType],
+          createSampleData: false,
+        });
+      }
+    }, [providedDatabaseId, databasesByType, moduleType, currentWorkspace?.id]);
+
+    // Step 4: After initialization, get the database ID from the refetched data
+    useEffect(() => {
+      if (
+        !providedDatabaseId &&
+        databasesByType?.data &&
+        databasesByType.data.length > 0
+      ) {
+        setResolvedDatabaseId(databasesByType.data[0].id);
+      }
+    }, [providedDatabaseId, databasesByType]);
+
+    return {
+      databaseId: resolvedDatabaseId,
+      isLoading: isDatabasesByTypeLoading || initializeModulesMutation.isPending,
+    };
+  };
+
+  const { databaseId: currentDatabaseId, isLoading: isDatabaseIdLoading } =
+    useDatabaseWithInitialization(moduleType, databaseId);
+
+  const { data: database, isLoading: isDatabaseLoading } = useDatabase(
+    currentDatabaseId || ""
+  );
+  const { data: viewsResponse, isLoading: isViewsLoading } = useViews(
+    currentDatabaseId || ""
+  );
 
   const defaultViewId =
     viewsResponse?.data?.find((view) => view?.isDefault)?.id || "";
@@ -318,7 +377,7 @@ export function DatabaseViewProvider({
   };
 
   const onRecordDelete = (recordId: string) => {
-    if (currentDatabaseId && !isDatabasesByTypeLoading) {
+    if (currentDatabaseId) {
       deleteRecordMutation.mutate(
         {
           databaseId: currentDatabaseId,
@@ -336,7 +395,7 @@ export function DatabaseViewProvider({
   };
 
   const onRecordDuplicate = (recordId: string) => {
-    if (currentDatabaseId && !isDatabasesByTypeLoading) {
+    if (currentDatabaseId) {
       duplicateRecordMutation.mutate(
         {
           databaseId: currentDatabaseId,
@@ -354,7 +413,7 @@ export function DatabaseViewProvider({
   };
 
   const onRecordCreate = () => {
-    if (currentDatabaseId && !isDatabasesByTypeLoading) {
+    if (currentDatabaseId) {
       createRecordMutation.mutate(
         {
           databaseId: currentDatabaseId,
@@ -385,7 +444,7 @@ export function DatabaseViewProvider({
     currentRecord,
     currentProperty,
 
-    isDatabaseIdLoading: isDatabasesByTypeLoading,
+    isDatabaseIdLoading,
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,
@@ -393,7 +452,6 @@ export function DatabaseViewProvider({
     isRecordsLoading,
     isInitialLoading,
     isCurrentViewLoading,
-    isDatabasesByTypeLoading,
     isLoadingMore,
     hasMoreRecords,
 
@@ -406,7 +464,7 @@ export function DatabaseViewProvider({
     setTempFilters: () => {}, // Placeholder - not used in current implementation
     tempSorts,
     setTempSorts: () => {}, // Placeholder - not used in current implementation
-    sorts: [],
+    sorts,
 
     onDialogOpen,
     onViewChange,

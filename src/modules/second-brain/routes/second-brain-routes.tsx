@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { SecondBrainDashboard } from "@/modules/second-brain-dashboard/pages/second-brain-dashboard";
 import { ProjectsPage } from "@/modules/projects/pages/projects-page";
+import { TasksPage } from "@/modules/tasks/pages/tasks-page";
 import { MyDayPage } from "@/modules/my-day/pages/my-day-page";
 import NotesPage from "@/modules/notes/pages/notes-page";
 import { PeoplePage } from "@/modules/people/pages/people-page";
@@ -60,6 +61,7 @@ export function SecondBrainRoutes() {
       <Route path="search" element={<SearchPage />} />
 
       {/* Core Modules */}
+      <Route path="tasks" element={<TasksPage />} />
       <Route path="projects" element={<ProjectsPage />} />
       <Route path="notes" element={<NotesPage />} />
       <Route path="people" element={<PeoplePage />} />

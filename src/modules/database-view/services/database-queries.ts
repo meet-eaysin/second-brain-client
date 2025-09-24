@@ -1527,3 +1527,27 @@ export const useApplyDatabaseFilterPreset = () => {
     },
   });
 };
+
+// Module initialization hooks
+export const useInitializeSpecificModules = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<{ initialized: string[]; failed: string[] }>,
+    AxiosError<ApiError>,
+    { modules: string[]; createSampleData?: boolean }
+  >({
+    mutationFn: ({ modules, createSampleData = false }) =>
+      databaseApi.initializeSpecificModules(modules, createSampleData),
+    onSuccess: () => {
+      // Invalidate database queries to refetch the newly initialized databases
+      queryClient.invalidateQueries({ queryKey: DATABASE_KEYS.lists() });
+      toast.success("Modules initialized successfully");
+    },
+    onError: (error) => {
+      toast.error(
+        error.response?.data?.message || "Failed to initialize modules"
+      );
+    },
+  });
+};
