@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/card.tsx";
 import {
   Database,
-  Palette,
   Settings,
   Shield,
   Users,
@@ -196,10 +195,7 @@ export function DatabaseForm() {
                     <FormItem>
                       <FormLabel>Database Name *</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Enter database name"
-                          {...field}
-                        />
+                        <Input placeholder="Enter database name" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -223,71 +219,6 @@ export function DatabaseForm() {
                     </FormItem>
                   )}
                 />
-
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                  <span className="text-2xl">🔧</span>
-                  <div>
-                    <div className="font-medium">Custom Database</div>
-                    <div className="text-sm text-muted-foreground">
-                      Create a custom database for any purpose with full
-                      flexibility
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Palette className="h-4 w-4" />
-                  Appearance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="icon"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Icon</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter emoji or icon URL"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Use an emoji (📝) or image URL
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="cover"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cover Image</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter cover image URL"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Optional background image URL
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
               </CardContent>
             </Card>
 

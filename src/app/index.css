@@ -215,7 +215,7 @@
 /* Appearance settings styles */
 
 /* Font sizes - Force consistent application across all elements */
-.font-small {
+/* .font-small {
   font-size: 14px !important;
 }
 
@@ -288,7 +288,7 @@
 .font-large a {
   font-size: 18px !important;
   line-height: 1.6 !important;
-}
+} */
 
 /* Compact mode - reduce spacing */
 .compact-mode .space-y-6 > * + * {

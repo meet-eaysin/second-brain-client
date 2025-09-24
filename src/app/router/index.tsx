@@ -4,7 +4,6 @@ import { authRoutes } from "@/modules/auth";
 import { lazy } from "react";
 import {
   getAuthParentLink,
-  getHomeLink,
   getAppLink,
   getDataTablesLink,
   getUsersLink,
@@ -13,7 +12,6 @@ import {
 import {
   AuthenticatedLayout,
   CalendarPage,
-  LandingPage,
   DataTablePage,
   UsersPage,
   TagsPage,
@@ -33,7 +31,6 @@ import {
   ProtectedRoute,
 } from "@/app/router/lazy-components";
 import AIAssistantPage from "@/modules/ai-assistant/pages/ai-assistant-page";
-import { KnowledgeGraphPage } from "@/modules/knowledge-graph/pages/knowledge-graph-page";
 import NotesPage from "@/modules/notes/pages/notes-page";
 import SearchPage from "@/modules/search/pages/search-page";
 import { SecondBrainRoutes } from "@/modules/second-brain/routes/second-brain-routes";
@@ -44,14 +41,6 @@ const UnauthorizedPage = lazy(
 );
 
 const router = createBrowserRouter([
-  {
-    path: getHomeLink(),
-    element: (
-      <ErrorBoundary>
-        <LandingPage />
-      </ErrorBoundary>
-    ),
-  },
   {
     path: getAuthParentLink(),
     element: <PublicRoute />,
@@ -88,10 +77,6 @@ const router = createBrowserRouter([
       {
         path: "ai-assistant",
         element: <AIAssistantPage />,
-      },
-      {
-        path: "knowledge-graph",
-        element: <KnowledgeGraphPage />,
       },
       {
         path: "notes",

@@ -71,7 +71,6 @@ export const NotificationSettingsPage = withLazyLoading(
 export const WorkspaceSettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/WorkspaceSettingsPage")
 );
-export const LandingPage = withLazyLoading(() => import("@/modules/home"));
 export const AuthenticatedLayout = withLazyLoading(
   () => import("@/layout/authenticated-layout")
 );

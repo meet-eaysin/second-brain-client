@@ -30,9 +30,7 @@ import {
 } from "@/components/ui/card.tsx";
 import {
   Database,
-  Palette,
   Settings,
-  Shield,
   FileText,
   Save,
   TableIcon,
@@ -41,11 +39,9 @@ import {
   Grid,
   Calendar,
   Clock,
-  ChartArea,
 } from "lucide-react";
 import { useCreateDatabase } from "@/modules/database-view/services/database-queries";
 import type { TCreateDatabase } from "@/modules/database-view/types";
-import { EViewType } from "@/modules/database-view/types";
 import {
   createDatabaseSchema,
   type CreateDatabaseFormData,
@@ -342,76 +338,10 @@ export function CreateDatabaseForm({
                     </FormItem>
                   )}
                 />
-
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                  <span className="text-2xl">🔧</span>
-                  <div>
-                    <div className="font-medium">Custom Database</div>
-                    <div className="text-sm text-muted-foreground">
-                      Create a custom database for any purpose with full
-                      flexibility
-                    </div>
-                  </div>
-                </div>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Palette className="h-4 w-4" />
-                  Appearance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="icon"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Icon</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter emoji or icon URL"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Enter an emoji (e.g., 📝) for the database icon
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="cover"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cover Image</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter cover image URL"
-                            disabled={isLoading}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Enter a color value (e.g., #ff0000) for the database
-                          cover
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Shield className="h-4 w-4" />
@@ -443,7 +373,7 @@ export function CreateDatabaseForm({
                   )}
                 />
               </CardContent>
-            </Card>
+            </Card> */}
 
             <Card>
               <CardHeader>

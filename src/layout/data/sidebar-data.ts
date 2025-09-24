@@ -11,10 +11,8 @@ import {
   Bell,
   CheckSquare,
   Target,
-  Heart,
   DollarSign,
   BarChart3,
-  Repeat,
   Calendar,
   Archive,
   FolderOpen,
@@ -70,11 +68,6 @@ export const sidebarData = {
           icon: FileText,
         },
         {
-          title: "Goals",
-          url: "/app/second-brain/goals",
-          icon: Target,
-        },
-        {
           title: "People",
           url: "/app/second-brain/people",
           icon: Users,
@@ -85,19 +78,9 @@ export const sidebarData = {
           icon: DollarSign,
         },
         {
-          title: "Habits",
-          url: "/app/second-brain/habits",
-          icon: Repeat,
-        },
-        {
           title: "Journal",
           url: "/app/second-brain/journal",
           icon: BookOpen,
-        },
-        {
-          title: "Mood",
-          url: "/app/second-brain/mood-tracker",
-          icon: Heart,
         },
       ],
     },

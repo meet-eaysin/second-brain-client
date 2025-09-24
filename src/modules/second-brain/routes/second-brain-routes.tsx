@@ -2,15 +2,11 @@ import { Routes, Route } from "react-router-dom";
 import { SecondBrainDashboard } from "@/modules/second-brain-dashboard/pages/second-brain-dashboard";
 import { ProjectsPage } from "@/modules/projects/pages/projects-page";
 import { MyDayPage } from "@/modules/my-day/pages/my-day-page";
-import { GoalsPage } from "@/modules/goals/pages/goals-page";
 import NotesPage from "@/modules/notes/pages/notes-page";
 import { PeoplePage } from "@/modules/people/pages/people-page";
-import { HabitsPage } from "@/modules/habits/pages/habits-page";
 import { JournalPage } from "@/modules/journal/pages/journal-page";
 import { BooksPage } from "@/modules/books/pages/books-page";
-import { ContentHubPage } from "@/modules/content-hub/pages/content-hub-page";
 import { FinancesPage } from "@/modules/finances/pages/finances-page";
-import { MoodTrackerPage } from "@/modules/mood-tracker/pages/mood-tracker-page";
 import SearchPage from "@/modules/search/pages/search-page";
 import { QuickCapture } from "../components/quick-capture";
 import { RecentCaptures } from "../components/recent-captures";
@@ -67,13 +63,9 @@ export function SecondBrainRoutes() {
       <Route path="projects" element={<ProjectsPage />} />
       <Route path="notes" element={<NotesPage />} />
       <Route path="people" element={<PeoplePage />} />
-      <Route path="goals" element={<GoalsPage />} />
-      <Route path="habits" element={<HabitsPage />} />
       <Route path="journal" element={<JournalPage />} />
       <Route path="books" element={<BooksPage />} />
-      <Route path="content" element={<ContentHubPage />} />
       <Route path="finances" element={<FinancesPage />} />
-      <Route path="mood" element={<MoodTrackerPage />} />
       <Route path="search" element={<SearchPage />} />
 
       {/* PARA System */}
