@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import SkipToMain from "@/components/skip-to-main";
 import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/layout/app-sidebar.tsx";
+import { PageVisitTracker } from "@/modules/home/components/page-visit-tracker";
 import React from "react";
 
 interface Props {
@@ -17,6 +18,7 @@ function AuthenticatedLayout({ children }: Props) {
     <SearchProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
         <SkipToMain />
+        <PageVisitTracker />
         <AppSidebar />
         <div
           id="content"

@@ -36,4 +36,27 @@ export const systemApi = {
       workspaceId,
     });
   },
+
+  // Get recently visited items
+  getRecentlyVisited: async (limit = 15): Promise<IRecentlyVisitedItem[]> => {
+    const response = await apiClient.get<ApiResponse<IRecentlyVisitedItem[]>>(
+      "/system/activity/recently-visited",
+      {
+        params: { limit },
+      }
+    );
+    return response.data.data || [];
+  },
 };
+
+export interface IRecentlyVisitedItem {
+  id: string;
+  name: string;
+  type: "page";
+  preview?: string;
+  route: string;
+  lastVisitedAt: Date;
+  icon?: string;
+  color?: string;
+  moduleType: string;
+}

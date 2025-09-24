@@ -196,17 +196,16 @@ export function DatabasesPage() {
             </TableHeader>
             <TableBody>
               {databases.map((database: TDatabase) => (
-                <TableRow key={database.id}>
+                <TableRow
+                  key={database.id}
+                  onClick={() => handleViewDatabase(database.id)}
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Database className="h-5 w-5 text-muted-foreground" />
                       <div>
-                        <div
-                          className="font-medium cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => handleViewDatabase(database.id)}
-                        >
-                          {database.name}
-                        </div>
+                        <div className="font-medium">{database.name}</div>
                       </div>
                     </div>
                   </TableCell>

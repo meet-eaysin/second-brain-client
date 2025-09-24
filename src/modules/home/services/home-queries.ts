@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { dashboardApi, systemApi } from "./home-api";
 import type { IDashboardQueryParams } from "../types";
 import type { IActivityQueryOptions, IAnalyticsQueryParams } from "../types";
@@ -292,5 +292,21 @@ export const useWorkspaceAnalytics = (params?: IAnalyticsQueryParams) => {
     queryKey: SYSTEM_KEYS.workspaceAnalytics(params),
     queryFn: () => systemApi.getWorkspaceAnalytics(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// Record Page Visit Mutation
+export const useRecordPageVisit = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { page: string; workspaceId: string }>({
+    mutationFn: ({ page, workspaceId }) =>
+      systemApi.recordPageVisit(page, workspaceId),
+    onSuccess: () => {
+      // Invalidate recently visited query to refresh data
+      queryClient.invalidateQueries({
+        queryKey: [...SYSTEM_KEYS.all, "recently-visited"],
+      });
+    },
   });
 };
