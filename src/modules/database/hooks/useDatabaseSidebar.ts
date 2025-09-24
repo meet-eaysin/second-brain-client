@@ -11,7 +11,7 @@ export function useDatabaseSidebar(
     type: EDatabaseType.CUSTOM,
   });
 
-  const databases = databasesResponse?.data?.databases || [];
+  const databases = databasesResponse?.data || [];
 
   // Create database navigation items
   const databaseNavItems = {
@@ -24,24 +24,24 @@ export function useDatabaseSidebar(
         url: getDatabasesLink(),
         icon: DatabaseIcon,
       },
+      ...databases.slice(0, 5).map((database) => ({
+        title: database.name,
+        url: getDatabaseLink(database.id),
+        icon: DatabaseIcon, // Use common database icon for all databases
+      })),
       {
         title: "Create Database",
         url: "#",
         icon: Plus,
         onClick: onCreateDatabase,
       },
-      {
-        title: "Create Category",
-        url: "#",
-        icon: Plus,
-        onClick: onCreateCategory, // Add click handler
-      },
+      // {
+      //   title: "Create Category",
+      //   url: "#",
+      //   icon: Plus,
+      //   onClick: onCreateCategory, // Add click handler
+      // },
       // Add individual database items (limit to first 5 to avoid clutter)
-      ...databases.slice(0, 5).map((database) => ({
-        title: database.name,
-        url: getDatabaseLink(database.id),
-        icon: DatabaseIcon, // Use common database icon for all databases
-      })),
     ],
   };
 

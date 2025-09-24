@@ -6,21 +6,18 @@ import {
   Trash2,
   Calendar,
   User,
-  MessageCircle,
   Target,
   RotateCcw,
   Folder,
   DollarSign,
   Settings,
   Users,
-  AlertTriangle,
-  Clock,
   CheckCircle,
   UserCheck,
   MessageSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -35,13 +32,8 @@ import {
   useMarkNotificationAsRead,
   useMarkAllNotificationsAsRead,
   useDeleteNotification,
-  useMarkBulkNotificationsAsRead,
-  useDeleteBulkNotifications,
 } from "../services/notificationsQueries";
-import type {
-  NotificationQueryParams,
-  ENotificationPriority,
-} from "@/types/notifications.types";
+import type { NotificationQueryParams } from "@/types/notifications.types";
 
 export const NotificationsPanel: React.FC = () => {
   const [filterType, setFilterType] = useState<string>("all");
@@ -261,77 +253,81 @@ export const NotificationsPanel: React.FC = () => {
       </div>
 
       {/* Notifications List */}
-      <ScrollArea className="h-[600px]">
-        <div className="space-y-3">
-          {notifications.map((notification) => (
-            <Card
-              key={notification.id}
-              className={`transition-all hover:shadow-md ${
-                !notification.isRead
-                  ? "border-l-4 border-l-primary bg-primary/5"
-                  : ""
-              }`}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between space-x-3">
-                  <div className="flex items-start space-x-3 flex-1 min-w-0">
-                    <div className="text-2xl mt-1">
-                      {getNotificationIcon(notification.type)}
+      {notifications.length > 0 ? (
+        <ScrollArea className="h-[600px]">
+          <div className="space-y-3">
+            {notifications.map((notification) => (
+              <Card
+                key={notification.id}
+                className={`transition-all hover:shadow-md ${
+                  !notification.isRead
+                    ? "border-l-4 border-l-primary bg-primary/5"
+                    : ""
+                }`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between space-x-3">
+                    <div className="flex items-start space-x-3 flex-1 min-w-0">
+                      <div className="text-2xl mt-1">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="font-medium text-sm">
+                            {notification.title}
+                          </h3>
+                          <Badge
+                            variant="secondary"
+                            className={`text-xs ${getNotificationTypeColor(
+                              notification.type
+                            )}`}
+                          >
+                            {notification.type.replace("_", " ")}
+                          </Badge>
+                          {getPriorityBadge(notification.priority)}
+                          {!notification.isRead && (
+                            <div className="w-2 h-2 bg-primary rounded-full"></div>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {notification.message}
+                        </p>
+                        <div className="text-xs text-muted-foreground">
+                          {notification.timeAgo}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="font-medium text-sm">
-                          {notification.title}
-                        </h3>
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs ${getNotificationTypeColor(
-                            notification.type
-                          )}`}
+                    <div className="flex items-center space-x-1">
+                      {!notification.isRead && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleMarkAsRead(notification.id)}
+                          disabled={markAsReadMutation.isPending}
+                          title="Mark as read"
                         >
-                          {notification.type.replace("_", " ")}
-                        </Badge>
-                        {getPriorityBadge(notification.priority)}
-                        {!notification.isRead && (
-                          <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {notification.message}
-                      </p>
-                      <div className="text-xs text-muted-foreground">
-                        {notification.timeAgo}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {!notification.isRead && (
+                          <Check className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleMarkAsRead(notification.id)}
-                        disabled={markAsReadMutation.isPending}
-                        title="Mark as read"
+                        onClick={() =>
+                          handleDeleteNotification(notification.id)
+                        }
+                        disabled={deleteNotificationMutation.isPending}
+                        title="Delete notification"
                       >
-                        <Check className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteNotification(notification.id)}
-                      disabled={deleteNotificationMutation.isPending}
-                      title="Delete notification"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </ScrollArea>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+      ) : null}
 
       {notifications.length === 0 && (
         <div className="text-center py-12">
