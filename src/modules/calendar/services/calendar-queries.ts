@@ -32,6 +32,8 @@ export const CALENDAR_KEYS = {
   upcoming: () => [...CALENDAR_KEYS.events(), "upcoming"] as const,
   today: () => [...CALENDAR_KEYS.events(), "today"] as const,
   stats: () => [...CALENDAR_KEYS.all, "stats"] as const,
+  config: () => [...CALENDAR_KEYS.all, "config"] as const,
+  preferences: () => [...CALENDAR_KEYS.all, "preferences"] as const,
   connections: () => [...CALENDAR_KEYS.all, "connections"] as const,
   connectionDetail: (id: string) =>
     [...CALENDAR_KEYS.connections(), id] as const,
@@ -96,6 +98,24 @@ export const useCalendarStats = () => {
     queryKey: CALENDAR_KEYS.stats(),
     queryFn: () => calendarApi.getCalendarStats(),
     staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Calendar Config
+export const useCalendarConfig = () => {
+  return useQuery({
+    queryKey: CALENDAR_KEYS.config(),
+    queryFn: () => calendarApi.getCalendarConfig(),
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+};
+
+// Calendar Preferences
+export const useCalendarPreferences = () => {
+  return useQuery({
+    queryKey: CALENDAR_KEYS.preferences(),
+    queryFn: () => calendarApi.getCalendarPreferences(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -317,6 +337,44 @@ export const useSyncTimeRelatedModules = () => {
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.events() });
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.upcoming() });
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.today() });
+    },
+  });
+};
+
+export const useUpdateCalendarPreferences = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: {
+      defaultCalendarId?: string;
+      timeZone?: string;
+      displayPreferences?: {
+        showWeekends?: boolean;
+        showDeclinedEvents?: boolean;
+        use24HourFormat?: boolean;
+      };
+      syncSettings?: {
+        autoSyncEnabled?: boolean;
+        syncFrequency?: number;
+        conflictResolution?: "local" | "remote" | "manual";
+      };
+      notificationSettings?: {
+        emailNotifications?: boolean;
+        pushNotifications?: boolean;
+        smsNotifications?: boolean;
+        defaultEmailReminder?: number;
+        defaultPopupReminder?: number;
+      };
+    }) => {
+      console.log("Updating calendar preferences:", data);
+      return calendarApi.updateCalendarPreferences(data);
+    },
+    onSuccess: () => {
+      console.log("Preferences updated successfully");
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.preferences() });
+    },
+    onError: (error) => {
+      console.error("Failed to update preferences:", error);
     },
   });
 };

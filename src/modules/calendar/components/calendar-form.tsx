@@ -31,6 +31,7 @@ import {
 import {
   useCreateCalendar,
   useUpdateCalendar,
+  useCalendarConfig,
 } from "../services/calendar-queries";
 import type { Calendar } from "@/types/calendar";
 import { ECalendarType } from "@/types/calendar";
@@ -40,15 +41,7 @@ const calendarFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
   description: z.string().max(500, "Description too long").optional(),
   color: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format"),
-  type: z.enum([
-    "personal",
-    "work",
-    "shared",
-    "project",
-    "team",
-    "holiday",
-    "birthday",
-  ] as const),
+  type: z.nativeEnum(ECalendarType),
   timeZone: z.string().min(1, "Time zone is required"),
   isDefault: z.boolean().optional(),
   isVisible: z.boolean().optional(),
@@ -64,42 +57,16 @@ interface CalendarFormProps {
 }
 
 const CALENDAR_TYPES: { value: ECalendarType; label: string }[] = [
-  { value: "personal", label: "Personal" },
-  { value: "work", label: "Work" },
-  { value: "shared", label: "Shared" },
-  { value: "project", label: "Project" },
-  { value: "team", label: "Team" },
-  { value: "holiday", label: "Holiday" },
-  { value: "birthday", label: "Birthday" },
+  { value: ECalendarType.PERSONAL, label: "Personal" },
+  { value: ECalendarType.WORK, label: "Work" },
+  { value: ECalendarType.SHARED, label: "Shared" },
+  { value: ECalendarType.PROJECT, label: "Project" },
+  { value: ECalendarType.TEAM, label: "Team" },
+  { value: ECalendarType.HOLIDAY, label: "Holiday" },
+  { value: ECalendarType.BIRTHDAY, label: "Birthday" },
 ];
 
-const TIME_ZONES = [
-  "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Kolkata",
-  "Asia/Dhaka",
-  "Australia/Sydney",
-  "Pacific/Auckland",
-];
-
-const PRESET_COLORS = [
-  "#3B82F6", // Blue
-  "#EF4444", // Red
-  "#10B981", // Green
-  "#F59E0B", // Yellow
-  "#8B5CF6", // Purple
-  "#EC4899", // Pink
-  "#6B7280", // Gray
-  "#F97316", // Orange
-];
+// These will be replaced with config data from backend
 
 export function CalendarForm({
   open,
@@ -110,6 +77,7 @@ export function CalendarForm({
   const isEditing = !!calendar;
   const createCalendarMutation = useCreateCalendar();
   const updateCalendarMutation = useUpdateCalendar();
+  const { data: config, isLoading: configLoading } = useCalendarConfig();
 
   const form = useForm<CalendarFormData>({
     resolver: zodResolver(calendarFormSchema),
@@ -140,7 +108,7 @@ export function CalendarForm({
         name: "",
         description: "",
         color: "#3B82F6",
-        type: "personal",
+        type: ECalendarType.PERSONAL,
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         isDefault: false,
         isVisible: true,
@@ -260,7 +228,7 @@ export function CalendarForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {TIME_ZONES.map((tz) => (
+                        {config?.timeZones?.map((tz) => (
                           <SelectItem key={tz} value={tz}>
                             {tz}
                           </SelectItem>
@@ -282,7 +250,7 @@ export function CalendarForm({
                   <FormControl>
                     <div className="space-y-2">
                       <div className="flex flex-wrap gap-2">
-                        {PRESET_COLORS.map((color) => (
+                        {config?.presetColors?.map((color) => (
                           <button
                             key={color}
                             type="button"

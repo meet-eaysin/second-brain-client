@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,16 +39,16 @@ import {
   useSyncCalendarConnection,
   useTestCalendarConnection,
   useResetCalendarConnectionErrors,
-  useUpdateCalendarConnection,
 } from "../services/calendar-queries";
-import type { CalendarConnection, CalendarProvider } from "@/types/calendar";
+import type {
+  CalendarConnection,
+  ConnectCalendarRequest,
+} from "@/types/calendar";
 import { toast } from "sonner";
 import { ConnectCalendarForm } from "./connect-calendar-form";
 
 export function CalendarConnections() {
   const [showConnectDialog, setShowConnectDialog] = useState(false);
-  const [selectedProvider, setSelectedProvider] =
-    useState<CalendarProvider | null>(null);
 
   const { data: connections = [], isLoading: connectionsLoading } =
     useCalendarConnections();
@@ -59,15 +59,13 @@ export function CalendarConnections() {
   const syncMutation = useSyncCalendarConnection();
   const testMutation = useTestCalendarConnection();
   const resetErrorsMutation = useResetCalendarConnectionErrors();
-  const updateMutation = useUpdateCalendarConnection();
 
-  const handleConnect = async (data: any) => {
+  const handleConnect = async (data: ConnectCalendarRequest) => {
     try {
       await connectMutation.mutateAsync(data);
       setShowConnectDialog(false);
-      setSelectedProvider(null);
       toast.success("Calendar connected successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to connect calendar");
     }
   };
@@ -76,7 +74,7 @@ export function CalendarConnections() {
     try {
       await disconnectMutation.mutateAsync(connection.id);
       toast.success("Calendar disconnected successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to disconnect calendar");
     }
   };
@@ -85,7 +83,7 @@ export function CalendarConnections() {
     try {
       await syncMutation.mutateAsync(connection.id);
       toast.success("Calendar sync initiated");
-    } catch (error) {
+    } catch {
       toast.error("Failed to sync calendar");
     }
   };
@@ -100,7 +98,7 @@ export function CalendarConnections() {
       } else {
         toast.error(`Connection test failed: ${result.error}`);
       }
-    } catch (error) {
+    } catch {
       toast.error("Connection test failed");
     }
   };
@@ -109,7 +107,7 @@ export function CalendarConnections() {
     try {
       await resetErrorsMutation.mutateAsync(connection.id);
       toast.success("Connection errors reset");
-    } catch (error) {
+    } catch {
       toast.error("Failed to reset errors");
     }
   };
@@ -347,7 +345,6 @@ export function CalendarConnections() {
                   key={provider.id}
                   className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
                   onClick={() => {
-                    setSelectedProvider(provider);
                     setShowConnectDialog(true);
                   }}
                 >

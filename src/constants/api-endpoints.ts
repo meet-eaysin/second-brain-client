@@ -419,6 +419,8 @@ export const API_ENDPOINTS = {
       `/calendar/events/entity/${entityType}/${entityId}`,
 
     // Views and stats
+    CONFIG: "/calendar/config",
+    PREFERENCES: "/calendar/preferences",
     VIEW_CALENDAR: "/calendar/view/calendar",
     VIEW_BUSY_TIMES: "/calendar/view/busy-times",
     STATS: "/calendar/stats",

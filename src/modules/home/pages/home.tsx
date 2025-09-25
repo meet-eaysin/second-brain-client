@@ -19,6 +19,7 @@ import {
   type GanttFeature,
 } from "@/components/ui/kibo-ui/gantt";
 import { useTodayEvents } from "@/modules/calendar/services/calendar-queries";
+import { useUpdateEvent } from "@/modules/calendar/services/calendar-queries";
 
 export function HomePage() {
   const { currentWorkspace } = useWorkspace();
@@ -28,68 +29,97 @@ export function HomePage() {
   // Get today's calendar events for time-blocking preview
   const { data: todayEvents } = useTodayEvents();
 
-  // Convert calendar events to Gantt features for time-blocking preview
-  const todayScheduleFeatures: GanttFeature[] =
-    todayEvents?.events?.map((event) => ({
-      id: event.id,
-      name: event.title,
-      startAt: event.startTime,
-      endAt: event.endTime || addHours(event.startTime, 1), // Default 1 hour if no end time
-      status: {
-        id: event.type || "event",
-        name: event.type || "Event",
-        color: getEventColor(event.type),
-      },
-    })) || [];
-
-  // Fallback: Show default time blocks if no events
-  const defaultScheduleFeatures: GanttFeature[] = [
-    {
-      id: "morning-focus",
-      name: "Morning Focus",
-      startAt: addHours(new Date().setHours(9, 0, 0, 0), 0),
-      endAt: addHours(new Date().setHours(11, 0, 0, 0), 0),
-      status: { id: "focus", name: "Focus", color: "hsl(var(--primary))" },
-    },
-    {
-      id: "lunch-break",
-      name: "Lunch Break",
-      startAt: addHours(new Date().setHours(12, 0, 0, 0), 0),
-      endAt: addHours(new Date().setHours(13, 0, 0, 0), 0),
-      status: {
-        id: "break",
-        name: "Break",
-        color: "hsl(var(--muted-foreground))",
-      },
-    },
-    {
-      id: "afternoon-work",
-      name: "Afternoon Work",
-      startAt: addHours(new Date().setHours(14, 0, 0, 0), 0),
-      endAt: addHours(new Date().setHours(17, 0, 0, 0), 0),
-      status: { id: "work", name: "Work", color: "hsl(var(--chart-2))" },
-    },
-  ];
-
-  // Use live data if available, otherwise show default schedule
-  const displayFeatures =
-    todayScheduleFeatures.length > 0
-      ? todayScheduleFeatures
-      : defaultScheduleFeatures;
+  // Update event mutation for drag-to-reschedule
+  const { mutateAsync: updateEventMutation } = useUpdateEvent();
 
   // Helper function to get color based on event type
   const getEventColor = (eventType?: string): string => {
     switch (eventType) {
       case "meeting":
-        return "hsl(var(--chart-1))";
+        return "hsl(var(--chart-1))"; // Blue
       case "task":
-        return "hsl(var(--chart-2))";
+        return "hsl(var(--chart-2))"; // Green
       case "personal":
-        return "hsl(var(--chart-3))";
+        return "hsl(var(--chart-3))"; // Purple
       case "work":
-        return "hsl(var(--chart-4))";
+        return "hsl(var(--chart-4))"; // Orange
+      case "reminder":
+        return "hsl(var(--chart-5))"; // Yellow
+      case "appointment":
+        return "hsl(var(--destructive))"; // Red
+      case "focus_time":
+        return "hsl(var(--primary))"; // Primary
+      case "break":
+        return "hsl(var(--muted-foreground))"; // Gray
+      case "deadline":
+        return "hsl(var(--destructive))"; // Red
+      case "habit":
+        return "hsl(var(--chart-3))"; // Purple
+      case "goal_review":
+        return "hsl(var(--primary))"; // Primary
+      case "travel":
+        return "hsl(var(--chart-2))"; // Green
+      case "milestone":
+        return "hsl(var(--chart-1))"; // Blue
       default:
         return "hsl(var(--primary))";
+    }
+  };
+
+  // Convert calendar events to Gantt features for time-blocking preview
+  const displayFeatures: GanttFeature[] =
+    todayEvents?.events
+      ?.filter((event) => {
+        // Only show events that are scheduled for today
+        const today = new Date();
+        const eventDate = new Date(event.startTime);
+        return (
+          eventDate.getDate() === today.getDate() &&
+          eventDate.getMonth() === today.getMonth() &&
+          eventDate.getFullYear() === today.getFullYear()
+        );
+      })
+      ?.map((event) => {
+        // Ensure dates are Date objects
+        const startAt = new Date(event.startTime);
+        const endAt = event.endTime
+          ? new Date(event.endTime)
+          : addHours(startAt, 1);
+
+        return {
+          id: event.id,
+          name: event.title,
+          startAt,
+          endAt,
+          status: {
+            id: event.type || "event",
+            name: event.type || "Event",
+            color: getEventColor(event.type),
+          },
+        };
+      }) || [];
+
+  // Handle moving/rescheduling events by dragging
+  const handleMoveFeature = async (
+    id: string,
+    startAt: Date,
+    endAt: Date | null
+  ) => {
+    if (!endAt) return;
+
+    const event = displayFeatures.find((f) => f.id === id);
+    if (!event) return;
+
+    try {
+      await updateEventMutation({
+        eventId: id,
+        data: {
+          startTime: startAt,
+          endTime: endAt,
+        },
+      });
+    } catch {
+      // Error handling is done in the mutation hook
     }
   };
 
@@ -317,44 +347,74 @@ export function HomePage() {
               <Clock className="h-5 w-5" />
               Today's Schedule
             </h2>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate("/calendar")}
+            >
               View Calendar
             </Button>
           </div>
           <Card>
             <CardContent className="p-4">
-              <div className="h-64 overflow-hidden rounded border">
-                <GanttProvider range="daily" zoom={150}>
-                  <GanttSidebar>
-                    <div className="p-2">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">
-                        Time Blocks
-                      </p>
-                    </div>
-                  </GanttSidebar>
-                  <GanttTimeline>
-                    <GanttHeader />
-                    <GanttFeatureList>
-                      <GanttFeatureListGroup>
-                        {displayFeatures.map((feature) => (
-                          <div className="flex" key={feature.id}>
-                            <GanttFeatureItem {...feature}>
-                              <p className="flex-1 truncate text-xs">
-                                {feature.name}
-                              </p>
-                            </GanttFeatureItem>
-                          </div>
-                        ))}
-                      </GanttFeatureListGroup>
-                    </GanttFeatureList>
-                    <GanttToday />
-                  </GanttTimeline>
-                </GanttProvider>
-              </div>
+              {displayFeatures.length > 0 ? (
+                <div className="h-64 overflow-hidden rounded border">
+                  <GanttProvider range="monthly" zoom={80}>
+                    <GanttSidebar>
+                      <div className="p-2">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">
+                          Time Blocks
+                        </p>
+                      </div>
+                    </GanttSidebar>
+                    <GanttTimeline>
+                      <GanttHeader />
+                      <GanttFeatureList>
+                        <GanttFeatureListGroup>
+                          {displayFeatures.map((feature) => (
+                            <div className="flex" key={feature.id}>
+                              <GanttFeatureItem
+                                onMove={handleMoveFeature}
+                                {...feature}
+                              >
+                                <p className="flex-1 truncate text-xs">
+                                  {feature.name}
+                                </p>
+                              </GanttFeatureItem>
+                            </div>
+                          ))}
+                        </GanttFeatureListGroup>
+                      </GanttFeatureList>
+                      <GanttToday />
+                    </GanttTimeline>
+                  </GanttProvider>
+                </div>
+              ) : (
+                <div className="h-64 flex items-center justify-center border rounded">
+                  <div className="text-center">
+                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground">
+                      No events scheduled for today
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your calendar is free today
+                    </p>
+                  </div>
+                </div>
+              )}
               <div className="mt-4 pt-3 border-t">
-                <p className="text-xs text-muted-foreground text-center">
-                  Time-blocking helps you focus and be more productive
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {displayFeatures.length > 0
+                      ? `${displayFeatures.length} ${
+                          displayFeatures.length === 1 ? "event" : "events"
+                        } scheduled today`
+                      : "No events scheduled for today"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Time-blocking helps you focus and be more productive
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>

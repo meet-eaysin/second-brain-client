@@ -31,7 +31,7 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { useCalendars } from "../services/calendar-queries";
+import { useCalendars, useCalendarConfig } from "../services/calendar-queries";
 import type {
   CreateEventRequest,
   EEventType,
@@ -105,33 +105,7 @@ interface EventFormProps {
   submitLabel?: string;
 }
 
-const EVENT_TYPES: { value: EEventType; label: string; icon: string }[] = [
-  { value: "event", label: "Event", icon: "📅" },
-  { value: "meeting", label: "Meeting", icon: "👥" },
-  { value: "task", label: "Task", icon: "📋" },
-  { value: "reminder", label: "Reminder", icon: "🔔" },
-  { value: "deadline", label: "Deadline", icon: "⏰" },
-  { value: "appointment", label: "Appointment", icon: "📆" },
-  { value: "focus_time", label: "Focus Time", icon: "🎯" },
-  { value: "break", label: "Break", icon: "☕" },
-];
-
-const TIME_ZONES = [
-  "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Kolkata",
-  "Asia/Dhaka",
-  "Australia/Sydney",
-  "Pacific/Auckland",
-];
+// Event types and time zones will be loaded from config
 
 export default function EventForm({
   initialStart,
@@ -142,6 +116,7 @@ export default function EventForm({
   submitLabel = "Create Event",
 }: EventFormProps) {
   const { data: calendars = [] } = useCalendars();
+  const { data: config } = useCalendarConfig();
   const [showAdvanced, setShowAdvanced] = React.useState(false);
 
   const form = useForm<EventFormData>({
@@ -300,7 +275,7 @@ export default function EventForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {EVENT_TYPES.map((type) => (
+                    {config?.eventTypes?.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         <div className="flex items-center gap-2">
                           <span>{type.icon}</span>
@@ -578,7 +553,7 @@ export default function EventForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {TIME_ZONES.map((tz) => (
+                    {config?.timeZones?.map((tz) => (
                       <SelectItem key={tz} value={tz}>
                         {tz}
                       </SelectItem>

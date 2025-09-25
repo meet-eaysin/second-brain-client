@@ -4,12 +4,21 @@ import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import {
   Calendar as CalendarIcon,
   Plus,
@@ -19,11 +28,16 @@ import {
   CalendarDays,
   Clock,
   Activity,
+  Loader2,
 } from "lucide-react";
 import {
   useCalendars,
   useCalendarStats,
   useCreateEvent,
+  useCalendarPreferences,
+  useUpdateCalendarPreferences,
+  useCalendarConnectionStats,
+  useDeleteCalendar,
 } from "../services/calendar-queries";
 import { CalendarList } from "../components/calendar-list";
 import { CalendarForm } from "../components/calendar-form";
@@ -41,10 +55,15 @@ export default function CalendarPage() {
   const [editingCalendar, setEditingCalendar] = useState<Calendar | null>(null);
   const [eventStartTime, setEventStartTime] = useState<Date | undefined>();
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const { data: calendars = [], isLoading: calendarsLoading } = useCalendars();
   const { data: stats } = useCalendarStats();
+  const { data: preferences } = useCalendarPreferences();
+  const { data: connectionStats } = useCalendarConnectionStats();
   const createEventMutation = useCreateEvent();
+  const updatePreferencesMutation = useUpdateCalendarPreferences();
+  const deleteCalendarMutation = useDeleteCalendar();
 
   React.useEffect(() => {
     if (calendars.length > 0 && selectedCalendars.length === 0) {
@@ -85,6 +104,48 @@ export default function CalendarPage() {
   const handleCalendarSuccess = () => {
     setShowCreateCalendar(false);
     setEditingCalendar(null);
+  };
+
+  const handleResetAllCalendars = () => {
+    setShowResetConfirm(true);
+  };
+
+  const handleConfirmResetAllCalendars = async () => {
+    try {
+      // Delete all non-default calendars
+      const calendarsToDelete = calendars.filter((c) => !c.isDefault);
+      await Promise.all(
+        calendarsToDelete.map((calendar) =>
+          deleteCalendarMutation.mutateAsync(calendar.id)
+        )
+      );
+      toast.success("All calendars reset successfully");
+      setShowResetConfirm(false);
+    } catch {
+      toast.error("Failed to reset calendars");
+    }
+  };
+
+  const handleExportCalendarData = () => {
+    const dataToExport = {
+      calendars,
+      stats,
+      preferences,
+      exportedAt: new Date().toISOString(),
+    };
+
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `calendar-data-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Calendar data exported successfully");
   };
 
   const contextActions = (
@@ -134,7 +195,7 @@ export default function CalendarPage() {
         <EnhancedHeader />
         <Main className="space-y-8">
           <div className="flex items-center justify-center h-96">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </Main>
       </>
@@ -170,89 +231,61 @@ export default function CalendarPage() {
 
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <button
+          <Button
             onClick={() => setActiveTab("calendar")}
-            className={`p-4 rounded-lg border transition-all duration-200 ${
-              activeTab === "calendar"
-                ? "bg-primary/10 border-primary text-primary"
-                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
-            }`}
+            variant={activeTab === "calendar" ? "default" : "outline"}
+            className="p-4 h-auto justify-start"
           >
             <div className="flex items-center gap-3">
-              <CalendarIcon
-                className={`h-5 w-5 ${
-                  activeTab === "calendar" ? "text-primary" : ""
-                }`}
-              />
+              <CalendarIcon className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium text-sm">Calendar</div>
                 <div className="text-xs opacity-70">View & manage events</div>
               </div>
             </div>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setActiveTab("connections")}
-            className={`p-4 rounded-lg border transition-all duration-200 ${
-              activeTab === "connections"
-                ? "bg-primary/10 border-primary text-primary"
-                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
-            }`}
+            variant={activeTab === "connections" ? "default" : "outline"}
+            className="p-4 h-auto justify-start"
           >
             <div className="flex items-center gap-3">
-              <ExternalLink
-                className={`h-5 w-5 ${
-                  activeTab === "connections" ? "text-primary" : ""
-                }`}
-              />
+              <ExternalLink className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium text-sm">Connections</div>
                 <div className="text-xs opacity-70">External calendars</div>
               </div>
             </div>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setActiveTab("analytics")}
-            className={`p-4 rounded-lg border transition-all duration-200 ${
-              activeTab === "analytics"
-                ? "bg-primary/10 border-primary text-primary"
-                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
-            }`}
+            variant={activeTab === "analytics" ? "default" : "outline"}
+            className="p-4 h-auto justify-start"
           >
             <div className="flex items-center gap-3">
-              <BarChart3
-                className={`h-5 w-5 ${
-                  activeTab === "analytics" ? "text-primary" : ""
-                }`}
-              />
+              <BarChart3 className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium text-sm">Analytics</div>
                 <div className="text-xs opacity-70">Calendar insights</div>
               </div>
             </div>
-          </button>
+          </Button>
 
-          <button
+          <Button
             onClick={() => setActiveTab("settings")}
-            className={`p-4 rounded-lg border transition-all duration-200 ${
-              activeTab === "settings"
-                ? "bg-primary/10 border-primary text-primary"
-                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
-            }`}
+            variant={activeTab === "settings" ? "default" : "outline"}
+            className="p-4 h-auto justify-start"
           >
             <div className="flex items-center gap-3">
-              <Settings
-                className={`h-5 w-5 ${
-                  activeTab === "settings" ? "text-primary" : ""
-                }`}
-              />
+              <Settings className="h-5 w-5" />
               <div className="text-left">
                 <div className="font-medium text-sm">Settings</div>
                 <div className="text-xs opacity-70">Preferences</div>
               </div>
             </div>
-          </button>
+          </Button>
         </div>
 
         {/* Content based on active tab */}
@@ -724,14 +757,27 @@ export default function CalendarPage() {
                     <label className="text-sm font-medium">
                       Default Calendar
                     </label>
-                    <select className="w-full p-2 border rounded-md bg-background">
-                      {calendars.map((calendar) => (
-                        <option key={calendar.id} value={calendar.id}>
-                          {calendar.name}{" "}
-                          {calendar.isDefault ? "(Default)" : ""}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      value={preferences?.defaultCalendarId || ""}
+                      onValueChange={(value) => {
+                        console.log("Default calendar changed to:", value);
+                        updatePreferencesMutation.mutate({
+                          defaultCalendarId: value,
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select default calendar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {calendars.map((calendar) => (
+                          <SelectItem key={calendar.id} value={calendar.id}>
+                            {calendar.name}{" "}
+                            {calendar.isDefault ? "(Default)" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <p className="text-xs text-muted-foreground">
                       Events will be created in this calendar by default
                     </p>
@@ -739,17 +785,37 @@ export default function CalendarPage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Time Zone</label>
-                    <select className="w-full p-2 border rounded-md bg-background">
-                      <option value="UTC">UTC</option>
-                      <option value="America/New_York">Eastern Time</option>
-                      <option value="America/Chicago">Central Time</option>
-                      <option value="America/Denver">Mountain Time</option>
-                      <option value="America/Los_Angeles">Pacific Time</option>
-                      <option value="Europe/London">London</option>
-                      <option value="Europe/Paris">Paris</option>
-                      <option value="Asia/Tokyo">Tokyo</option>
-                      <option value="Asia/Dhaka">Dhaka</option>
-                    </select>
+                    <Select
+                      value={preferences?.timeZone || "UTC"}
+                      onValueChange={(value) =>
+                        updatePreferencesMutation.mutate({
+                          timeZone: value,
+                        })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select time zone" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="UTC">UTC</SelectItem>
+                        <SelectItem value="America/New_York">
+                          Eastern Time
+                        </SelectItem>
+                        <SelectItem value="America/Chicago">
+                          Central Time
+                        </SelectItem>
+                        <SelectItem value="America/Denver">
+                          Mountain Time
+                        </SelectItem>
+                        <SelectItem value="America/Los_Angeles">
+                          Pacific Time
+                        </SelectItem>
+                        <SelectItem value="Europe/London">London</SelectItem>
+                        <SelectItem value="Europe/Paris">Paris</SelectItem>
+                        <SelectItem value="Asia/Tokyo">Tokyo</SelectItem>
+                        <SelectItem value="Asia/Dhaka">Dhaka</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <p className="text-xs text-muted-foreground">
                       Your local time zone for calendar display
                     </p>
@@ -768,10 +834,18 @@ export default function CalendarPage() {
                           Display Saturday and Sunday in calendar views
                         </p>
                       </div>
-                      <input
-                        type="checkbox"
-                        defaultChecked
-                        className="rounded"
+                      <Checkbox
+                        checked={
+                          preferences?.displayPreferences?.showWeekends ?? true
+                        }
+                        onCheckedChange={(checked) =>
+                          updatePreferencesMutation.mutate({
+                            displayPreferences: {
+                              ...preferences?.displayPreferences,
+                              showWeekends: checked as boolean,
+                            },
+                          })
+                        }
                       />
                     </div>
 
@@ -784,7 +858,20 @@ export default function CalendarPage() {
                           Include events you've declined in calendar views
                         </p>
                       </div>
-                      <input type="checkbox" className="rounded" />
+                      <Checkbox
+                        checked={
+                          preferences?.displayPreferences?.showDeclinedEvents ??
+                          false
+                        }
+                        onCheckedChange={(checked) =>
+                          updatePreferencesMutation.mutate({
+                            displayPreferences: {
+                              ...preferences?.displayPreferences,
+                              showDeclinedEvents: checked as boolean,
+                            },
+                          })
+                        }
+                      />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -796,7 +883,20 @@ export default function CalendarPage() {
                           Use 24-hour time format instead of AM/PM
                         </p>
                       </div>
-                      <input type="checkbox" className="rounded" />
+                      <Checkbox
+                        checked={
+                          preferences?.displayPreferences?.use24HourFormat ??
+                          false
+                        }
+                        onCheckedChange={(checked) =>
+                          updatePreferencesMutation.mutate({
+                            displayPreferences: {
+                              ...preferences?.displayPreferences,
+                              use24HourFormat: checked as boolean,
+                            },
+                          })
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -886,7 +986,19 @@ export default function CalendarPage() {
                         Automatically sync calendars in the background
                       </p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <Checkbox
+                      checked={
+                        preferences?.syncSettings?.autoSyncEnabled ?? true
+                      }
+                      onCheckedChange={(checked) =>
+                        updatePreferencesMutation.mutate({
+                          syncSettings: {
+                            ...preferences?.syncSettings,
+                            autoSyncEnabled: checked as boolean,
+                          },
+                        })
+                      }
+                    />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -894,24 +1006,67 @@ export default function CalendarPage() {
                       <label className="text-sm font-medium">
                         Sync Frequency
                       </label>
-                      <select className="w-full p-2 border rounded-md bg-background">
-                        <option value="5">Every 5 minutes</option>
-                        <option value="15">Every 15 minutes</option>
-                        <option value="30">Every 30 minutes</option>
-                        <option value="60">Every hour</option>
-                        <option value="240">Every 4 hours</option>
-                      </select>
+                      <Select
+                        value={
+                          preferences?.syncSettings?.syncFrequency?.toString() ||
+                          "15"
+                        }
+                        onValueChange={(value) =>
+                          updatePreferencesMutation.mutate({
+                            syncSettings: {
+                              ...preferences?.syncSettings,
+                              syncFrequency: parseInt(value),
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select sync frequency" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">Every 5 minutes</SelectItem>
+                          <SelectItem value="15">Every 15 minutes</SelectItem>
+                          <SelectItem value="30">Every 30 minutes</SelectItem>
+                          <SelectItem value="60">Every hour</SelectItem>
+                          <SelectItem value="240">Every 4 hours</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
                         Conflict Resolution
                       </label>
-                      <select className="w-full p-2 border rounded-md bg-background">
-                        <option value="local">Prefer Local Changes</option>
-                        <option value="remote">Prefer Remote Changes</option>
-                        <option value="manual">Ask Me</option>
-                      </select>
+                      <Select
+                        value={
+                          preferences?.syncSettings?.conflictResolution ||
+                          "manual"
+                        }
+                        onValueChange={(value) =>
+                          updatePreferencesMutation.mutate({
+                            syncSettings: {
+                              ...preferences?.syncSettings,
+                              conflictResolution: value as
+                                | "local"
+                                | "remote"
+                                | "manual",
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select conflict resolution" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="local">
+                            Prefer Local Changes
+                          </SelectItem>
+                          <SelectItem value="remote">
+                            Prefer Remote Changes
+                          </SelectItem>
+                          <SelectItem value="manual">Ask Me</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -919,22 +1074,56 @@ export default function CalendarPage() {
                 <div className="space-y-4">
                   <h4 className="text-sm font-medium">Sync History</h4>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-medium">Last Sync</p>
-                        <p className="text-xs text-muted-foreground">
-                          2 hours ago
-                        </p>
+                    {connectionStats?.recentSyncActivity?.length ? (
+                      connectionStats.recentSyncActivity
+                        .sort(
+                          (a, b) =>
+                            new Date(b.startedAt).getTime() -
+                            new Date(a.startedAt).getTime()
+                        )
+                        .slice(0, 5)
+                        .map((sync) => (
+                          <div
+                            key={sync.connectionId + sync.startedAt}
+                            className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                          >
+                            <div>
+                              <p className="text-sm font-medium">Last Sync</p>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(
+                                  sync.completedAt || sync.startedAt
+                                ).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p
+                                className={`text-sm font-medium ${
+                                  sync.status === "success"
+                                    ? "text-green-600"
+                                    : sync.status === "error"
+                                    ? "text-red-600"
+                                    : "text-yellow-600"
+                                }`}
+                              >
+                                {sync.status.charAt(0).toUpperCase() +
+                                  sync.status.slice(1)}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {sync.eventsProcessed} events synced
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <div>
+                          <p className="text-sm font-medium">No sync history</p>
+                          <p className="text-xs text-muted-foreground">
+                            No recent sync activity found
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium text-green-600">
-                          Success
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          15 events synced
-                        </p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -962,7 +1151,20 @@ export default function CalendarPage() {
                         Receive calendar updates via email
                       </p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <Checkbox
+                      checked={
+                        preferences?.notificationSettings?.emailNotifications ??
+                        true
+                      }
+                      onCheckedChange={(checked) =>
+                        updatePreferencesMutation.mutate({
+                          notificationSettings: {
+                            ...preferences?.notificationSettings,
+                            emailNotifications: checked as boolean,
+                          },
+                        })
+                      }
+                    />
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -974,7 +1176,20 @@ export default function CalendarPage() {
                         Receive push notifications for events
                       </p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded" />
+                    <Checkbox
+                      checked={
+                        preferences?.notificationSettings?.pushNotifications ??
+                        true
+                      }
+                      onCheckedChange={(checked) =>
+                        updatePreferencesMutation.mutate({
+                          notificationSettings: {
+                            ...preferences?.notificationSettings,
+                            pushNotifications: checked as boolean,
+                          },
+                        })
+                      }
+                    />
                   </div>
 
                   <div className="flex items-center justify-between">
@@ -986,7 +1201,20 @@ export default function CalendarPage() {
                         Receive SMS alerts for important events
                       </p>
                     </div>
-                    <input type="checkbox" className="rounded" />
+                    <Checkbox
+                      checked={
+                        preferences?.notificationSettings?.smsNotifications ??
+                        false
+                      }
+                      onCheckedChange={(checked) =>
+                        updatePreferencesMutation.mutate({
+                          notificationSettings: {
+                            ...preferences?.notificationSettings,
+                            smsNotifications: checked as boolean,
+                          },
+                        })
+                      }
+                    />
                   </div>
                 </div>
 
@@ -999,26 +1227,62 @@ export default function CalendarPage() {
                       <label className="text-sm font-medium">
                         Email Reminder
                       </label>
-                      <select className="w-full p-2 border rounded-md bg-background">
-                        <option value="0">No reminder</option>
-                        <option value="5">5 minutes before</option>
-                        <option value="15">15 minutes before</option>
-                        <option value="30">30 minutes before</option>
-                        <option value="60">1 hour before</option>
-                      </select>
+                      <Select
+                        value={
+                          preferences?.notificationSettings?.defaultEmailReminder?.toString() ||
+                          "15"
+                        }
+                        onValueChange={(value) =>
+                          updatePreferencesMutation.mutate({
+                            notificationSettings: {
+                              ...preferences?.notificationSettings,
+                              defaultEmailReminder: parseInt(value),
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select email reminder" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">No reminder</SelectItem>
+                          <SelectItem value="5">5 minutes before</SelectItem>
+                          <SelectItem value="15">15 minutes before</SelectItem>
+                          <SelectItem value="30">30 minutes before</SelectItem>
+                          <SelectItem value="60">1 hour before</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div className="space-y-2">
                       <label className="text-sm font-medium">
                         Popup Reminder
                       </label>
-                      <select className="w-full p-2 border rounded-md bg-background">
-                        <option value="0">No reminder</option>
-                        <option value="5">5 minutes before</option>
-                        <option value="15">15 minutes before</option>
-                        <option value="30">30 minutes before</option>
-                        <option value="60">1 hour before</option>
-                      </select>
+                      <Select
+                        value={
+                          preferences?.notificationSettings?.defaultPopupReminder?.toString() ||
+                          "15"
+                        }
+                        onValueChange={(value) =>
+                          updatePreferencesMutation.mutate({
+                            notificationSettings: {
+                              ...preferences?.notificationSettings,
+                              defaultPopupReminder: parseInt(value),
+                            },
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select popup reminder" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">No reminder</SelectItem>
+                          <SelectItem value="5">5 minutes before</SelectItem>
+                          <SelectItem value="15">15 minutes before</SelectItem>
+                          <SelectItem value="30">30 minutes before</SelectItem>
+                          <SelectItem value="60">1 hour before</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -1047,8 +1311,15 @@ export default function CalendarPage() {
                       action cannot be undone.
                     </p>
                   </div>
-                  <Button variant="destructive" size="sm">
-                    Reset All
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleResetAllCalendars}
+                    disabled={deleteCalendarMutation.isPending}
+                  >
+                    {deleteCalendarMutation.isPending
+                      ? "Resetting..."
+                      : "Reset All"}
                   </Button>
                 </div>
 
@@ -1061,7 +1332,11 @@ export default function CalendarPage() {
                       Download all your calendar data as a backup file.
                     </p>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExportCalendarData}
+                  >
                     Export Data
                   </Button>
                 </div>
@@ -1091,6 +1366,18 @@ export default function CalendarPage() {
           onOpenChange={setShowCreateCalendar}
           calendar={editingCalendar}
           onSuccess={handleCalendarSuccess}
+        />
+
+        {/* Reset All Calendars Confirmation Dialog */}
+        <ConfirmDialog
+          open={showResetConfirm}
+          onOpenChange={setShowResetConfirm}
+          title="Reset All Calendars"
+          desc="This will remove all your calendars and events. This action cannot be undone."
+          confirmText="Reset All Calendars"
+          destructive
+          handleConfirm={handleConfirmResetAllCalendars}
+          isLoading={deleteCalendarMutation.isPending}
         />
       </Main>
     </>

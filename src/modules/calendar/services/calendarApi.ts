@@ -175,6 +175,149 @@ export const calendarApi = {
     return response.data.data;
   },
 
+  getCalendarConfig: async (): Promise<{
+    timeZones: string[];
+    presetColors: string[];
+    eventTypes: { value: string; label: string; icon: string }[];
+    calendarTypes: { value: string; label: string }[];
+  }> => {
+    const response = await apiClient.get<
+      ApiResponse<{
+        timeZones: string[];
+        presetColors: string[];
+        eventTypes: { value: string; label: string; icon: string }[];
+        calendarTypes: { value: string; label: string }[];
+      }>
+    >(API_ENDPOINTS.CALENDAR.CONFIG);
+    return response.data.data;
+  },
+
+  getCalendarPreferences: async (): Promise<{
+    userId: string;
+    defaultCalendarId?: string;
+    timeZone: string;
+    displayPreferences: {
+      showWeekends: boolean;
+      showDeclinedEvents: boolean;
+      use24HourFormat: boolean;
+    };
+    syncSettings: {
+      autoSyncEnabled: boolean;
+      syncFrequency: number;
+      conflictResolution: "local" | "remote" | "manual";
+    };
+    notificationSettings: {
+      emailNotifications: boolean;
+      pushNotifications: boolean;
+      smsNotifications: boolean;
+      defaultEmailReminder: number;
+      defaultPopupReminder: number;
+    };
+    createdAt: string;
+    updatedAt: string;
+  }> => {
+    const response = await apiClient.get<
+      ApiResponse<{
+        userId: string;
+        defaultCalendarId?: string;
+        timeZone: string;
+        displayPreferences: {
+          showWeekends: boolean;
+          showDeclinedEvents: boolean;
+          use24HourFormat: boolean;
+        };
+        syncSettings: {
+          autoSyncEnabled: boolean;
+          syncFrequency: number;
+          conflictResolution: "local" | "remote" | "manual";
+        };
+        notificationSettings: {
+          emailNotifications: boolean;
+          pushNotifications: boolean;
+          smsNotifications: boolean;
+          defaultEmailReminder: number;
+          defaultPopupReminder: number;
+        };
+        createdAt: string;
+        updatedAt: string;
+      }>
+    >(API_ENDPOINTS.CALENDAR.PREFERENCES);
+    return response.data.data;
+  },
+
+  updateCalendarPreferences: async (data: {
+    defaultCalendarId?: string;
+    timeZone?: string;
+    displayPreferences?: {
+      showWeekends?: boolean;
+      showDeclinedEvents?: boolean;
+      use24HourFormat?: boolean;
+    };
+    syncSettings?: {
+      autoSyncEnabled?: boolean;
+      syncFrequency?: number;
+      conflictResolution?: "local" | "remote" | "manual";
+    };
+    notificationSettings?: {
+      emailNotifications?: boolean;
+      pushNotifications?: boolean;
+      smsNotifications?: boolean;
+      defaultEmailReminder?: number;
+      defaultPopupReminder?: number;
+    };
+  }): Promise<{
+    userId: string;
+    defaultCalendarId?: string;
+    timeZone: string;
+    displayPreferences: {
+      showWeekends: boolean;
+      showDeclinedEvents: boolean;
+      use24HourFormat: boolean;
+    };
+    syncSettings: {
+      autoSyncEnabled: boolean;
+      syncFrequency: number;
+      conflictResolution: "local" | "remote" | "manual";
+    };
+    notificationSettings: {
+      emailNotifications: boolean;
+      pushNotifications: boolean;
+      smsNotifications: boolean;
+      defaultEmailReminder: number;
+      defaultPopupReminder: number;
+    };
+    createdAt: string;
+    updatedAt: string;
+  }> => {
+    const response = await apiClient.put<
+      ApiResponse<{
+        userId: string;
+        defaultCalendarId?: string;
+        timeZone: string;
+        displayPreferences: {
+          showWeekends: boolean;
+          showDeclinedEvents: boolean;
+          use24HourFormat: boolean;
+        };
+        syncSettings: {
+          autoSyncEnabled: boolean;
+          syncFrequency: number;
+          conflictResolution: "local" | "remote" | "manual";
+        };
+        notificationSettings: {
+          emailNotifications: boolean;
+          pushNotifications: boolean;
+          smsNotifications: boolean;
+          defaultEmailReminder: number;
+          defaultPopupReminder: number;
+        };
+        createdAt: string;
+        updatedAt: string;
+      }>
+    >(API_ENDPOINTS.CALENDAR.PREFERENCES, data);
+    return response.data.data;
+  },
+
   syncTimeRelatedModules: async (): Promise<void> => {
     await apiClient.post(API_ENDPOINTS.CALENDAR.SYNC_TIME_RELATED);
   },
