@@ -276,11 +276,15 @@ export function DatabaseViewProvider({
     useProperties(currentDatabaseId, allPropertiesQueryParams);
 
   // Records query with offset/limit for Load More pagination
+  // Use higher limit for board/kanban views that need to show all records
+  const isBoardView = currentViewResponse?.data?.type === 'board' || currentViewResponse?.data?.type === 'kanban';
+  const recordLimit = isBoardView ? 1000 : 10;
+
   const recordQueryParams = {
     viewId: effectiveViewId,
     search: searchQuery,
     offset: currentOffset,
-    limit: 10,
+    limit: recordLimit,
     isArchived: false,
     isTemplate: false,
   };
@@ -319,8 +323,8 @@ export function DatabaseViewProvider({
 
   // Derive hasMoreRecords from current query response
   const hasMoreRecords = useMemo(() => {
-    return recordsResponse?.data ? recordsResponse.data.length === 10 : false;
-  }, [recordsResponse?.data]);
+    return recordsResponse?.data ? recordsResponse.data.length === recordLimit : false;
+  }, [recordsResponse?.data, recordLimit]);
 
   const loadMoreRecords = async () => {
     if (isLoadingMore || !hasMoreRecords) return;
@@ -340,7 +344,7 @@ export function DatabaseViewProvider({
           property?.id
         );
       }
-      return property?.isVisible ?? false;
+      return property?.isVisible ?? true;
     }) || [];
 
   const onDialogOpen = (dialog: DatabaseDialogType | null) =>

@@ -24,6 +24,8 @@ export function Board({ className = "" }: { className?: string }) {
     onRecordEdit,
   } = useDatabaseView();
 
+  console.log('Board view data:', { records, properties, currentView });
+
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
   const groupingProperty = useMemo(() => {
@@ -60,16 +62,16 @@ export function Board({ className = "" }: { className?: string }) {
     );
   }, [properties]);
 
-  // Find display properties (excluding title and grouping properties)
+  // Find display properties (excluding only grouping properties)
   const displayProperties = useMemo(() => {
     const excludedIds = new Set(
-      [titleProperty?.id, groupingProperty?.id].filter(Boolean)
+      [groupingProperty?.id].filter(Boolean)
     );
 
-    return properties
-      .filter((p) => !excludedIds.has(p.id) && p.isVisible)
-      .slice(0, 3); // Show max 3 additional properties
-  }, [properties, titleProperty?.id, groupingProperty?.id]);
+    const result = properties.filter((p) => !excludedIds.has(p.id));
+    console.log('Display properties:', result, 'excluded:', excludedIds, 'all properties:', properties);
+    return result;
+  }, [properties, groupingProperty?.id]);
 
   // Helper function to render property values
   const renderPropertyValue = (
@@ -160,16 +162,20 @@ export function Board({ className = "" }: { className?: string }) {
   const kanbanData = useMemo(() => {
     if (!records || !Array.isArray(records)) return [];
 
+    console.log('Creating kanbanData from records:', records.length, 'records');
+
     return records.map((record: TRecord) => {
       const titleValue = titleProperty
-        ? record.properties[titleProperty.id] ?? "Untitled"
+        ? record.properties[titleProperty.name] ?? "Untitled"
         : "Untitled";
       const title = String(titleValue);
 
       const groupValue = groupingProperty
-        ? record.properties[groupingProperty.id]
+        ? record.properties[groupingProperty.name]
         : "ungrouped";
       const column = String(groupValue || "ungrouped");
+
+      console.log('Record:', record.id, 'title:', title, 'column:', column, 'properties:', record.properties);
 
       return {
         id: record.id,
@@ -239,7 +245,11 @@ export function Board({ className = "" }: { className?: string }) {
         onDataChange={handleDataChange}
       >
         {(column) => (
-          <KanbanBoard id={column.id} key={column.id}>
+          <KanbanBoard
+            id={column.id}
+            key={column.id}
+            className={columns.length === 1 ? "max-w-md" : ""}
+          >
             <KanbanHeader>
               <div className="flex items-center gap-2">
                 <div
@@ -258,51 +268,49 @@ export function Board({ className = "" }: { className?: string }) {
               </div>
             </KanbanHeader>
             <KanbanCards id={column.id}>
-              {(item: (typeof kanbanData)[number]) => (
-                <KanbanCard
-                  column={column.id}
-                  id={item.id}
-                  key={item.id}
-                  name={item.name}
-                >
-                  <div
-                    className="p-2 cursor-pointer"
-                    onClick={() => onRecordEdit?.(item.record)}
+              {(item: (typeof kanbanData)[number]) => {
+                console.log('Rendering card for item:', item, 'displayProperties:', displayProperties);
+                return (
+                  <KanbanCard
+                    column={column.id}
+                    id={item.id}
+                    key={item.id}
+                    name={item.name}
                   >
-                    <p className="m-0 font-medium text-sm line-clamp-2">
-                      {item.name}
-                    </p>
-                    {/* Display additional properties */}
-                    {displayProperties.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {displayProperties.map((property) => {
-                          const value = item.record.properties[property.id];
-                          if (
-                            value === null ||
-                            value === undefined ||
-                            value === ""
-                          )
-                            return null;
+                    <div
+                      className="p-2 cursor-pointer"
+                      onClick={() => onRecordEdit?.(item.record)}
+                    >
+                      <p className="m-0 font-medium text-sm line-clamp-2">
+                        {item.name}
+                      </p>
+                      {/* Display additional properties */}
+                      {displayProperties.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {displayProperties.map((property) => {
+                            const value = item.record.properties[property.name];
+                            console.log('Property:', property.name, 'value:', value);
 
-                          return (
-                            <div
-                              key={property.id}
-                              className="flex items-center justify-between"
-                            >
-                              <span className="text-xs text-muted-foreground font-medium">
-                                {property.name}:
-                              </span>
-                              <div className="ml-2">
-                                {renderPropertyValue(property, value)}
+                            return (
+                              <div
+                                key={property.id}
+                                className="flex items-center justify-between"
+                              >
+                                <span className="text-xs text-muted-foreground font-medium">
+                                  {property.name}:
+                                </span>
+                                <div className="ml-2">
+                                  {renderPropertyValue(property, value)}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </KanbanCard>
-              )}
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </KanbanCard>
+                );
+              }}
             </KanbanCards>
           </KanbanBoard>
         )}
