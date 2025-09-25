@@ -16,13 +16,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CalendarIcon, CheckIcon } from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuCheckboxItem,
-} from "@/components/ui/dropdown-menu";
-import { CalendarIcon } from "lucide-react";
+  Tags,
+  TagsContent,
+  TagsEmpty,
+  TagsGroup,
+  TagsInput,
+  TagsItem,
+  TagsList,
+  TagsTrigger,
+  TagsValue,
+} from "@/components/ui/kibo-ui/tags";
+import {
+  Glimpse,
+  GlimpseContent,
+  GlimpseDescription,
+  GlimpseImage,
+  GlimpseTitle,
+  GlimpseTrigger,
+} from "@/components/ui/kibo-ui/glimpse";
+import { apiClient } from "@/services/api-client";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import type {
@@ -52,11 +66,25 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
   const { database } = useDatabaseView();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<TPropertyValue>(value);
+  const [glimpseData, setGlimpseData] = useState<{title: string | null, description: string | null, image: string | null} | null>(null);
 
   const currentSelectedValues = getMultiSelectValues(editValue);
 
   useEffect(() => {
     setEditValue(value);
+  }, [value]);
+
+  useEffect(() => {
+    const urlValue = getStringValue(value);
+    if (urlValue && urlValue.startsWith('http')) {
+      apiClient.get(`/search/glimpse?url=${encodeURIComponent(urlValue)}`)
+        .then(response => {
+          setGlimpseData(response.data.data);
+        })
+        .catch(() => setGlimpseData(null));
+    } else {
+      setGlimpseData(null);
+    }
   }, [value]);
 
   const updateRecordMutation = useUpdateRecord();
@@ -102,6 +130,8 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
           className={`p-1 rounded min-h-[24px] flex items-center ${
             isFrozen
               ? "cursor-not-allowed opacity-60"
+              : property.type === EPropertyType.URL
+              ? "cursor-pointer transition-colors"
               : "cursor-pointer hover:bg-muted/50 transition-colors"
           }`}
           onClick={() => {
@@ -156,79 +186,69 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
           </Select>
         );
 
-      case EPropertyType.MULTI_SELECT:
+      case EPropertyType.MULTI_SELECT: {
+        const handleRemove = (value: string) => {
+          const newValues = currentSelectedValues.filter(id => id !== value);
+          handleSave(newValues);
+        };
+        const handleSelect = (value: string) => {
+          const newValues = currentSelectedValues.includes(value)
+            ? currentSelectedValues.filter(id => id !== value)
+            : [...currentSelectedValues, value];
+          handleSave(newValues);
+        };
         return (
-          <DropdownMenu
-            onOpenChange={(open) => {
-              if (!open) setIsEditing(false);
-            }}
+          <Tags
+            open={isEditing}
+            onOpenChange={(open) => setIsEditing(open)}
+            className="max-w-[250px]"
           >
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="h-8 w-full justify-start">
-                {currentSelectedValues.length > 0 ? (
-                  <div className="flex flex-wrap gap-1 max-w-full">
-                    {currentSelectedValues.slice(0, 2).map((selectedId) => {
-                      const option = property.config?.options?.find(
-                        (opt) => opt.id === selectedId
-                      );
-                      return option ? (
-                        <Badge
-                          key={option.id}
-                          variant="secondary"
-                          className="text-xs"
-                          style={{
-                            backgroundColor: option.color + "20",
-                            color: option.color,
-                          }}
-                        >
-                          {option.label}
-                        </Badge>
-                      ) : null;
-                    })}
-                    {currentSelectedValues.length > 2 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{currentSelectedValues.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <span className="text-muted-foreground">
-                    Select options...
-                  </span>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56">
-              {property.config?.options?.map((option) => {
-                const isSelected = currentSelectedValues.includes(option.id);
-                return (
-                  <DropdownMenuCheckboxItem
+            <TagsTrigger>
+              {currentSelectedValues.map((selectedId) => {
+                const option = property.config?.options?.find(
+                  (opt) => opt.id === selectedId
+                );
+                return option ? (
+                  <TagsValue
                     key={option.id}
-                    checked={isSelected}
-                    onCheckedChange={(checked) => {
-                      const newValues = checked
-                        ? [...currentSelectedValues, option.id]
-                        : currentSelectedValues.filter(
-                            (id) => id !== option.id
-                          );
-                      handleSave(newValues);
+                    onRemove={() => handleRemove(option.id)}
+                    style={{
+                      backgroundColor: option.color + "20",
+                      color: option.color,
                     }}
                   >
-                    <div className="flex items-center space-x-2">
-                      {option.color && (
-                        <div
-                          className="w-3 h-3 rounded-full border border-gray-300"
-                          style={{ backgroundColor: option.color }}
-                        />
-                      )}
-                      <span>{option.label}</span>
-                    </div>
-                  </DropdownMenuCheckboxItem>
-                );
+                    {option.label}
+                  </TagsValue>
+                ) : null;
               })}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </TagsTrigger>
+            <TagsContent>
+              <TagsInput placeholder="Search options..." />
+              <TagsList>
+                <TagsEmpty />
+                <TagsGroup>
+                  {property.config?.options?.map((option) => (
+                    <TagsItem key={option.id} onSelect={() => handleSelect(option.id)} value={option.id}>
+                      <div className="flex items-center space-x-2">
+                        {option.color && (
+                          <div
+                            className="w-3 h-3 rounded-full border border-gray-300"
+                            style={{ backgroundColor: option.color }}
+                          />
+                        )}
+                        <span>{option.label}</span>
+                        {currentSelectedValues.includes(option.id) && (
+                          <CheckIcon className="text-muted-foreground" size={14} />
+                        )}
+                      </div>
+                    </TagsItem>
+                  ))}
+                </TagsGroup>
+              </TagsList>
+            </TagsContent>
+          </Tags>
         );
+      }
 
       case EPropertyType.DATE: {
         const dateValue = getDateValue(editValue);
@@ -389,14 +409,30 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
       case EPropertyType.URL: {
         const urlValue = getStringValue(value);
         return (
-          <a
-            href={urlValue}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:underline"
-          >
-            {urlValue}
-          </a>
+          <Glimpse>
+            <GlimpseTrigger asChild>
+              <span className="hover:underline cursor-pointer">
+                {urlValue}
+              </span>
+            </GlimpseTrigger>
+            <GlimpseContent
+              className="w-80 cursor-pointer"
+              side="bottom"
+              onClick={() => window.open(urlValue, '_blank')}
+            >
+              {glimpseData ? (
+                <>
+                  {glimpseData.image && <GlimpseImage src={glimpseData.image} />}
+                  {glimpseData.title && <GlimpseTitle>{glimpseData.title}</GlimpseTitle>}
+                  {glimpseData.description && <GlimpseDescription>{glimpseData.description}</GlimpseDescription>}
+                </>
+              ) : (
+                <div className="p-4 text-center">
+                  <p className="text-sm text-muted-foreground">Click to visit this URL</p>
+                </div>
+              )}
+            </GlimpseContent>
+          </Glimpse>
         );
       }
 

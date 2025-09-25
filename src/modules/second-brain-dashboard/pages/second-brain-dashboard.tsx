@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -23,12 +22,10 @@ import {
   Clock,
   Zap,
   ArrowRight,
-  Star,
-  Lightbulb,
   Activity,
   Filter,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isValid } from "date-fns";
 import { useDashboardOverview } from "../services/dashboard-queries";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
@@ -89,8 +86,6 @@ export function SecondBrainDashboard() {
     recentActivity = [],
     upcomingTasks = [],
     recentNotes = [],
-    goalProgress = [],
-    habitStreaks = [],
     recentlyVisited = [],
   } = dashboardOverview;
 
@@ -168,6 +163,24 @@ export function SecondBrainDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-orange-50 rounded-lg">
+                  <Zap className="h-5 w-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Completed Tasks
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {quickStats?.completedTasks || 0}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Main Dashboard Grid */}
@@ -204,6 +217,11 @@ export function SecondBrainDashboard() {
                     >
                       {task.priority}
                     </Badge>
+                    {task.dueDate && isValid(new Date(task.dueDate)) && (
+                      <Badge variant="outline" className="text-xs">
+                        Due {formatDistanceToNow(task.dueDate, { addSuffix: true })}
+                      </Badge>
+                    )}
                   </div>
                 ))
               )}
@@ -237,6 +255,44 @@ export function SecondBrainDashboard() {
                       <span className="text-sm font-medium">{item.name}</span>
                       <span className="text-xs text-muted-foreground">
                         {item.type}
+                      </span>
+                      {item.progress !== undefined && (
+                        <Progress value={item.progress} className="mt-1 h-1" />
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Notes */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-base font-medium flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                Recent Notes
+              </CardTitle>
+              <Button variant="ghost" size="sm" className="gap-1">
+                View All <ArrowRight className="h-3 w-3" />
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {recentNotes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  No recent notes
+                </p>
+              ) : (
+                recentNotes.slice(0, 5).map((note) => (
+                  <div
+                    key={note.id}
+                    className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
+                  >
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">{note.title}</span>
+                      <span className="text-xs text-muted-foreground block">
+                        {note.updatedAt && isValid(new Date(note.updatedAt)) ? formatDistanceToNow(note.updatedAt, { addSuffix: true }) : 'Recently'}
                       </span>
                     </div>
                   </div>
