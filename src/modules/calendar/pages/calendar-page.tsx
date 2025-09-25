@@ -4,6 +4,7 @@ import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -14,11 +15,11 @@ import {
   Calendar as CalendarIcon,
   Plus,
   Settings,
-  Filter,
   ExternalLink,
   BarChart3,
-  Users,
+  CalendarDays,
   Clock,
+  Activity,
 } from "lucide-react";
 import {
   useCalendars,
@@ -38,7 +39,6 @@ export default function CalendarPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateCalendar, setShowCreateCalendar] = useState(false);
-  const [showCalendarSettings, setShowCalendarSettings] = useState(false);
   const [editingCalendar, setEditingCalendar] = useState<Calendar | null>(null);
   const [eventStartTime, setEventStartTime] = useState<Date | undefined>();
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>();
@@ -68,7 +68,7 @@ export default function CalendarPage() {
       setEventStartTime(undefined);
       setEventEndTime(undefined);
       toast.success("Event created successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to create event");
     }
   };
@@ -89,32 +89,40 @@ export default function CalendarPage() {
   };
 
   const contextActions = (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-3">
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => setActiveTab("connections")}
+        className="text-muted-foreground hover:text-foreground"
       >
         <ExternalLink className="h-4 w-4 mr-2" />
         Connections
       </Button>
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={() => setActiveTab("analytics")}
+        className="text-muted-foreground hover:text-foreground"
       >
         <BarChart3 className="h-4 w-4 mr-2" />
         Analytics
       </Button>
       <Button
-        variant="outline"
+        variant="ghost"
         size="sm"
-        onClick={() => setShowCalendarSettings(true)}
+        onClick={() => setActiveTab("settings")}
+        className="text-muted-foreground hover:text-foreground"
       >
         <Settings className="h-4 w-4 mr-2" />
         Settings
       </Button>
-      <Button onClick={() => handleCreateEvent()} size="sm">
+      <Separator orientation="vertical" className="h-6" />
+      <Button
+        onClick={() => handleCreateEvent()}
+        size="sm"
+        className="bg-primary hover:bg-primary/90"
+      >
         <Plus className="h-4 w-4 mr-2" />
         New Event
       </Button>
@@ -138,137 +146,169 @@ export default function CalendarPage() {
     <>
       <EnhancedHeader contextActions={contextActions} />
 
-      <Main className="space-y-6">
+      <Main className="space-y-8">
         {/* Calendar Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
-            <p className="text-muted-foreground">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
+            <p className="text-muted-foreground text-lg">
               Manage your events, meetings, and schedule across multiple
               calendars
             </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCreateCalendar}
+              className="hidden md:flex"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Calendar
+            </Button>
           </div>
         </div>
 
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="space-y-6"
+          className="space-y-8"
         >
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-4 h-12">
+            <TabsTrigger
+              value="calendar"
+              className="flex items-center gap-2 text-sm"
+            >
               <CalendarIcon className="h-4 w-4" />
               Calendar
             </TabsTrigger>
             <TabsTrigger
               value="connections"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 text-sm"
             >
               <ExternalLink className="h-4 w-4" />
               Connections
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <TabsTrigger
+              value="analytics"
+              className="flex items-center gap-2 text-sm"
+            >
               <BarChart3 className="h-4 w-4" />
               Analytics
             </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
+            <TabsTrigger
+              value="settings"
+              className="flex items-center gap-2 text-sm"
+            >
               <Settings className="h-4 w-4" />
               Settings
             </TabsTrigger>
           </TabsList>
 
           {/* Calendar Tab */}
-          <TabsContent value="calendar" className="space-y-6">
-            {/* Calendar Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Events
-                  </CardTitle>
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats?.totalEvents || 0}
+          <TabsContent value="calendar" className="space-y-8">
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Total Events
+                    </p>
+                    <p className="text-3xl font-bold">
+                      {stats?.totalEvents || 0}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    All time events
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    This Week
-                  </CardTitle>
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats?.weekEvents || 0}
+                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+                    <CalendarIcon className="h-6 w-6 text-primary" />
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Events this week
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  All time events
+                </p>
+              </div>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Calendars
-                  </CardTitle>
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{calendars.length}</div>
-                  <p className="text-xs text-muted-foreground">
-                    Active calendars
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    This Month
-                  </CardTitle>
-                  <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {stats?.monthEvents || 0}
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      This Week
+                    </p>
+                    <p className="text-3xl font-bold">
+                      {stats?.weekEvents || 0}
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Events this month
-                  </p>
-                </CardContent>
-              </Card>
+                  <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center">
+                    <Activity className="h-6 w-6 text-blue-500" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Events this week
+                </p>
+              </div>
+
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Calendars
+                    </p>
+                    <p className="text-3xl font-bold">{calendars.length}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                    <CalendarDays className="h-6 w-6 text-green-500" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Active calendars
+                </p>
+              </div>
+
+              <div className="bg-card rounded-lg border p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      This Month
+                    </p>
+                    <p className="text-3xl font-bold">
+                      {stats?.monthEvents || 0}
+                    </p>
+                  </div>
+                  <div className="h-12 w-12 bg-orange-500/10 rounded-full flex items-center justify-center">
+                    <Clock className="h-6 w-6 text-orange-500" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Events this month
+                </p>
+              </div>
             </div>
 
             {/* Calendar Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Sidebar */}
-              <div className="lg:col-span-1">
-                <CalendarList
-                  selectedCalendars={selectedCalendars}
-                  onCalendarSelectionChange={setSelectedCalendars}
-                  onCreateCalendar={handleCreateCalendar}
-                  onEditCalendar={handleEditCalendar}
-                  onCalendarSettings={() => setActiveTab("settings")}
-                />
+            <div className="grid grid-cols-1 xl:grid-cols-12">
+              {/* Calendar List - Compact Sidebar */}
+              <div className="xl:col-span-3">
+                <div className="sticky top-6 h-full">
+                  <CalendarList
+                    selectedCalendars={selectedCalendars}
+                    onCalendarSelectionChange={setSelectedCalendars}
+                    onCreateCalendar={handleCreateCalendar}
+                    onEditCalendar={handleEditCalendar}
+                    onCalendarSettings={() => setActiveTab("settings")}
+                  />
+                </div>
               </div>
 
-              {/* Main Calendar */}
-              <div className="lg:col-span-3">
-                <ShadcnBigCalendarComponent
-                  selectedCalendars={selectedCalendars}
-                  showCreateEvent={showCreateEvent}
-                  onCreateEventClose={() => setShowCreateEvent(false)}
-                  onCreateEvent={handleCreateEvent}
-                />
+              {/* Main Calendar - Full Width */}
+              <div className="xl:col-span-9">
+                <div className="bg-card rounded-lg border overflow-hidden">
+                  <ShadcnBigCalendarComponent
+                    selectedCalendars={selectedCalendars}
+                    showCreateEvent={showCreateEvent}
+                    onCreateEventClose={() => setShowCreateEvent(false)}
+                    onCreateEvent={handleCreateEvent}
+                  />
+                </div>
               </div>
             </div>
           </TabsContent>

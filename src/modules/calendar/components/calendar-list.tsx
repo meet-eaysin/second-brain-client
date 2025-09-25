@@ -1,7 +1,5 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Calendar as CalendarIcon,
@@ -66,7 +64,7 @@ export function CalendarList({
         data: { isVisible: !calendar.isVisible },
       });
       toast.success(`Calendar ${calendar.isVisible ? "hidden" : "shown"}`);
-    } catch (error) {
+    } catch {
       toast.error("Failed to update calendar visibility");
     }
   };
@@ -78,7 +76,7 @@ export function CalendarList({
         data: { isDefault: true },
       });
       toast.success("Default calendar updated");
-    } catch (error) {
+    } catch {
       toast.error("Failed to set default calendar");
     }
   };
@@ -95,7 +93,7 @@ export function CalendarList({
     try {
       await deleteCalendarMutation.mutateAsync(calendar.id);
       toast.success("Calendar deleted successfully");
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete calendar");
     }
   };
@@ -155,14 +153,21 @@ export function CalendarList({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
-            Calendars
-          </CardTitle>
-          <div className="flex items-center gap-1">
+    <div className="bg-card rounded-lg border border-r-0 h-full">
+      <div className="p-2 md:p-4 border-b">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CalendarIcon className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-semibold text-lg truncate">Calendars</h3>
+              <p className="text-sm text-muted-foreground">
+                {calendars.length} calendar{calendars.length !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 self-end sm:self-auto">
             <Button variant="ghost" size="sm" onClick={onCalendarSettings}>
               <Settings className="h-4 w-4" />
             </Button>
@@ -171,120 +176,140 @@ export function CalendarList({
             </Button>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+      </div>
+
+      <div className="p-4">
         {calendars.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">No calendars yet</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={onCreateCalendar}
-            >
+          <div className="text-center py-12">
+            <div className="h-16 w-16 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CalendarIcon className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h4 className="font-medium mb-2">No calendars yet</h4>
+            <p className="text-sm text-muted-foreground mb-4">
+              Create your first calendar to get started
+            </p>
+            <Button onClick={onCreateCalendar} size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Create Calendar
             </Button>
           </div>
         ) : (
-          calendars.map((calendar) => (
-            <div
-              key={calendar.id}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50 group"
-            >
-              <Checkbox
-                checked={selectedCalendars.includes(calendar.id)}
-                onCheckedChange={(checked) =>
-                  handleCalendarToggle(calendar.id, checked as boolean)
-                }
-              />
-
+          <div className="space-y-3">
+            {calendars.map((calendar) => (
               <div
-                className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: calendar.color }}
-              />
+                key={calendar.id}
+                className="group relative p-3 rounded-lg border border-transparent hover:border-border hover:bg-muted/30 transition-all duration-200"
+              >
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={selectedCalendars.includes(calendar.id)}
+                    onCheckedChange={(checked) =>
+                      handleCalendarToggle(calendar.id, checked as boolean)
+                    }
+                    className="mt-0.5 flex-shrink-0"
+                  />
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1">
-                  <span className="text-sm font-medium truncate">
-                    {calendar.name}
-                  </span>
-                  {calendar.isDefault && (
-                    <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                  )}
-                  {calendar.provider !== "internal" && (
-                    <Badge variant="secondary" className="text-xs px-1 py-0">
-                      {getProviderIcon(calendar.provider)}{" "}
-                      {getProviderName(calendar.provider)}
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {calendar.type} • {calendar.timeZone}
+                  <div
+                    className="w-4 h-4 rounded-full flex-shrink-0 mt-0.5 border-2 border-white shadow-sm"
+                    style={{ backgroundColor: calendar.color }}
+                  />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                      <span className="font-medium text-sm truncate">
+                        {calendar.name}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1">
+                        {calendar.isDefault && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 rounded-full">
+                            <Star className="h-3 w-3 fill-current" />
+                            <span className="text-xs font-medium">Default</span>
+                          </div>
+                        )}
+                        {calendar.provider !== "internal" && (
+                          <div className="flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-full">
+                            <span className="text-xs">
+                              {getProviderIcon(calendar.provider)}
+                            </span>
+                            <span className="text-xs font-medium hidden sm:inline">
+                              {getProviderName(calendar.provider)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span className="capitalize">{calendar.type}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="truncate">{calendar.timeZone}</span>
+                    </div>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      >
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={() => onEditCalendar(calendar)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Calendar
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleSetAsDefault(calendar)}
+                      >
+                        <Star className="h-4 w-4 mr-2" />
+                        Set as Default
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => handleVisibilityToggle(calendar)}
+                      >
+                        {calendar.isVisible ? (
+                          <>
+                            <EyeOff className="h-4 w-4 mr-2" />
+                            Hide Calendar
+                          </>
+                        ) : (
+                          <>
+                            <Eye className="h-4 w-4 mr-2" />
+                            Show Calendar
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      {calendar.provider !== "internal" && (
+                        <DropdownMenuItem>
+                          <ExternalLink className="h-4 w-4 mr-2" />
+                          View in {getProviderName(calendar.provider)}
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteCalendar(calendar)}
+                        className="text-destructive focus:text-destructive"
+                        disabled={
+                          calendar.isDefault &&
+                          calendars.filter((c) => c.isDefault).length === 1
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Calendar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-                  >
-                    <MoreHorizontal className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => onEditCalendar(calendar)}>
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleSetAsDefault(calendar)}
-                  >
-                    <Star className="h-4 w-4 mr-2" />
-                    Set as Default
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleVisibilityToggle(calendar)}
-                  >
-                    {calendar.isVisible ? (
-                      <>
-                        <EyeOff className="h-4 w-4 mr-2" />
-                        Hide
-                      </>
-                    ) : (
-                      <>
-                        <Eye className="h-4 w-4 mr-2" />
-                        Show
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                  {calendar.provider !== "internal" && (
-                    <DropdownMenuItem>
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View in {getProviderName(calendar.provider)}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    onClick={() => handleDeleteCalendar(calendar)}
-                    className="text-destructive"
-                    disabled={
-                      calendar.isDefault &&
-                      calendars.filter((c) => c.isDefault).length === 1
-                    }
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          ))
+            ))}
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
