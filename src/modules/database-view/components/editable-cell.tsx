@@ -66,7 +66,11 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
   const { database } = useDatabaseView();
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState<TPropertyValue>(value);
-  const [glimpseData, setGlimpseData] = useState<{title: string | null, description: string | null, image: string | null} | null>(null);
+  const [glimpseData, setGlimpseData] = useState<{
+    title: string | null;
+    description: string | null;
+    image: string | null;
+  } | null>(null);
 
   const currentSelectedValues = getMultiSelectValues(editValue);
 
@@ -76,9 +80,10 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   useEffect(() => {
     const urlValue = getStringValue(value);
-    if (urlValue && urlValue.startsWith('http')) {
-      apiClient.get(`/search/glimpse?url=${encodeURIComponent(urlValue)}`)
-        .then(response => {
+    if (urlValue && urlValue.startsWith("http")) {
+      apiClient
+        .get(`/search/glimpse?url=${encodeURIComponent(urlValue)}`)
+        .then((response) => {
           setGlimpseData(response.data.data);
         })
         .catch(() => setGlimpseData(null));
@@ -188,12 +193,12 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.MULTI_SELECT: {
         const handleRemove = (value: string) => {
-          const newValues = currentSelectedValues.filter(id => id !== value);
+          const newValues = currentSelectedValues.filter((id) => id !== value);
           handleSave(newValues);
         };
         const handleSelect = (value: string) => {
           const newValues = currentSelectedValues.includes(value)
-            ? currentSelectedValues.filter(id => id !== value)
+            ? currentSelectedValues.filter((id) => id !== value)
             : [...currentSelectedValues, value];
           handleSave(newValues);
         };
@@ -228,7 +233,11 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                 <TagsEmpty />
                 <TagsGroup>
                   {property.config?.options?.map((option) => (
-                    <TagsItem key={option.id} onSelect={() => handleSelect(option.id)} value={option.id}>
+                    <TagsItem
+                      key={option.id}
+                      onSelect={() => handleSelect(option.id)}
+                      value={option.id}
+                    >
                       <div className="flex items-center space-x-2">
                         {option.color && (
                           <div
@@ -238,7 +247,10 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                         )}
                         <span>{option.label}</span>
                         {currentSelectedValues.includes(option.id) && (
-                          <CheckIcon className="text-muted-foreground" size={14} />
+                          <CheckIcon
+                            className="text-muted-foreground"
+                            size={14}
+                          />
                         )}
                       </div>
                     </TagsItem>
@@ -409,6 +421,43 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         );
       }
 
+      case EPropertyType.DATE_RANGE: {
+        if (value && typeof value === "object" && "start" in value) {
+          const range = value as { start?: string | Date; end?: string | Date };
+          const start = range.start
+            ? format(new Date(range.start), "MMM d, yyyy")
+            : null;
+          const end = range.end
+            ? format(new Date(range.end), "MMM d, yyyy")
+            : null;
+          if (start && end) {
+            return (
+              <span className="text-xs text-muted-foreground">
+                {start} - {end}
+              </span>
+            );
+          } else if (start) {
+            return (
+              <span className="text-xs text-muted-foreground">{start}</span>
+            );
+          } else if (end) {
+            return <span className="text-xs text-muted-foreground">{end}</span>;
+          }
+        }
+        return null;
+      }
+
+      case EPropertyType.CREATED_TIME:
+      case EPropertyType.LAST_EDITED_TIME: {
+        const displayDateValue = getDateValue(value);
+        if (!displayDateValue) return null;
+        return (
+          <span className="text-xs text-muted-foreground">
+            {format(displayDateValue, "MMM d, yyyy")}
+          </span>
+        );
+      }
+
       case EPropertyType.EMAIL: {
         const emailValue = getStringValue(value);
         return (
@@ -423,24 +472,32 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         return (
           <Glimpse>
             <GlimpseTrigger asChild>
-              <span className="hover:underline cursor-pointer">
-                {urlValue}
-              </span>
+              <span className="hover:underline cursor-pointer">{urlValue}</span>
             </GlimpseTrigger>
             <GlimpseContent
               className="w-80 cursor-pointer"
               side="bottom"
-              onClick={() => window.open(urlValue, '_blank')}
+              onClick={() => window.open(urlValue, "_blank")}
             >
               {glimpseData ? (
                 <>
-                  {glimpseData.image && <GlimpseImage src={glimpseData.image} />}
-                  {glimpseData.title && <GlimpseTitle>{glimpseData.title}</GlimpseTitle>}
-                  {glimpseData.description && <GlimpseDescription>{glimpseData.description}</GlimpseDescription>}
+                  {glimpseData.image && (
+                    <GlimpseImage src={glimpseData.image} />
+                  )}
+                  {glimpseData.title && (
+                    <GlimpseTitle>{glimpseData.title}</GlimpseTitle>
+                  )}
+                  {glimpseData.description && (
+                    <GlimpseDescription>
+                      {glimpseData.description}
+                    </GlimpseDescription>
+                  )}
                 </>
               ) : (
                 <div className="p-4 text-center">
-                  <p className="text-sm text-muted-foreground">Click to visit this URL</p>
+                  <p className="text-sm text-muted-foreground">
+                    Click to visit this URL
+                  </p>
                 </div>
               )}
             </GlimpseContent>
@@ -460,9 +517,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
       case EPropertyType.NUMBER:
         return (
           <span className="text-xs font-medium">
-            {typeof value === "number"
-              ? value.toLocaleString()
-              : String(value)}
+            {typeof value === "number" ? value.toLocaleString() : String(value)}
           </span>
         );
 

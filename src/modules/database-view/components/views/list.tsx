@@ -160,6 +160,41 @@ export function List({ className = "" }: { className?: string }) {
           </span>
         );
 
+      case EPropertyType.DATE_RANGE:
+        if (value && typeof value === "object" && "start" in value) {
+          const range = value as { start?: string | Date; end?: string | Date };
+          const start = range.start
+            ? new Date(range.start).toLocaleDateString()
+            : null;
+          const end = range.end
+            ? new Date(range.end).toLocaleDateString()
+            : null;
+          if (start && end) {
+            return (
+              <span className="text-xs text-muted-foreground">
+                {start} - {end}
+              </span>
+            );
+          } else if (start) {
+            return (
+              <span className="text-xs text-muted-foreground">{start}</span>
+            );
+          } else if (end) {
+            return <span className="text-xs text-muted-foreground">{end}</span>;
+          }
+        }
+        return <span className="text-xs text-muted-foreground">-</span>;
+
+      case EPropertyType.CREATED_TIME:
+      case EPropertyType.LAST_EDITED_TIME:
+        return (
+          <span className="text-xs text-muted-foreground">
+            {value
+              ? new Date(value as string | Date).toLocaleDateString()
+              : "-"}
+          </span>
+        );
+
       case EPropertyType.NUMBER:
         return <span className="text-xs font-medium">{String(value)}</span>;
 
@@ -183,10 +218,19 @@ export function List({ className = "" }: { className?: string }) {
       if (titleProperty) {
         const titleValue = record.properties[titleProperty.name];
 
-        if (titleValue !== null && titleValue !== undefined && titleValue !== "") {
+        if (
+          titleValue !== null &&
+          titleValue !== undefined &&
+          titleValue !== ""
+        ) {
           // For select/multi-select, try to get the label
-          if (titleProperty.type === EPropertyType.SELECT || titleProperty.type === EPropertyType.MULTI_SELECT) {
-            const option = titleProperty.config?.options?.find((opt) => opt.id === titleValue);
+          if (
+            titleProperty.type === EPropertyType.SELECT ||
+            titleProperty.type === EPropertyType.MULTI_SELECT
+          ) {
+            const option = titleProperty.config?.options?.find(
+              (opt) => opt.id === titleValue
+            );
             title = option?.label || String(titleValue);
           } else {
             title = String(titleValue);
@@ -199,15 +243,30 @@ export function List({ className = "" }: { className?: string }) {
         for (const prop of properties) {
           if (prop.name !== titleProperty?.name && prop.isVisible) {
             const propValue = record.properties[prop.name];
-            if (propValue !== null && propValue !== undefined && propValue !== "") {
-              if (prop.type === EPropertyType.SELECT || prop.type === EPropertyType.MULTI_SELECT) {
-                const option = prop.config?.options?.find((opt) => opt.id === propValue);
+            if (
+              propValue !== null &&
+              propValue !== undefined &&
+              propValue !== ""
+            ) {
+              if (
+                prop.type === EPropertyType.SELECT ||
+                prop.type === EPropertyType.MULTI_SELECT
+              ) {
+                const option = prop.config?.options?.find(
+                  (opt) => opt.id === propValue
+                );
                 if (option) {
                   title = `${option.label} Item`;
                   break;
                 }
-              } else if (typeof propValue === 'string' && propValue.length > 0) {
-                title = propValue.length > 20 ? propValue.substring(0, 20) + '...' : propValue;
+              } else if (
+                typeof propValue === "string" &&
+                propValue.length > 0
+              ) {
+                title =
+                  propValue.length > 20
+                    ? propValue.substring(0, 20) + "..."
+                    : propValue;
                 break;
               }
             }
@@ -282,7 +341,9 @@ export function List({ className = "" }: { className?: string }) {
     <div className={`w-full h-full overflow-auto ${className}`}>
       <ListProvider onDragEnd={handleDragEnd}>
         {statuses.map((status) => {
-          const filteredFeatures = listFeatures.filter((feature) => feature.status.name === status.name);
+          const filteredFeatures = listFeatures.filter(
+            (feature) => feature.status.name === status.name
+          );
 
           return (
             <ListGroup id={status.name} key={status.name}>
@@ -310,27 +371,41 @@ export function List({ className = "" }: { className?: string }) {
                         className="flex-1 cursor-pointer min-w-0"
                         onClick={() => onRecordEdit?.(feature.record)}
                       >
-                        <div className="font-medium text-sm mb-1">{feature.name}</div>
+                        <div className="font-medium text-sm mb-1">
+                          {feature.name}
+                        </div>
                         {/* Display additional properties */}
                         {displayProperties.length > 0 && (
                           <div className="space-y-1">
                             {displayProperties.map((property) => {
                               // Handle system properties that are stored at record level
                               let value;
-                              if (property.type === EPropertyType.CREATED_TIME) {
+                              if (
+                                property.type === EPropertyType.CREATED_TIME
+                              ) {
                                 value = feature.record.createdAt;
-                              } else if (property.type === EPropertyType.LAST_EDITED_TIME) {
-                                value = feature.record.lastEditedAt || feature.record.updatedAt;
-                              } else if (property.type === EPropertyType.RICH_TEXT) {
+                              } else if (
+                                property.type === EPropertyType.LAST_EDITED_TIME
+                              ) {
+                                value =
+                                  feature.record.lastEditedAt ||
+                                  feature.record.updatedAt;
+                              } else if (
+                                property.type === EPropertyType.RICH_TEXT
+                              ) {
                                 value = feature.record.content;
                               } else {
                                 // Properties are stored by name, not ID
-                                value = feature.record.properties[property.name];
+                                value =
+                                  feature.record.properties[property.name];
                               }
 
                               // Show property even if empty, but with "Not set" or similar
-                              const isEmpty = value === null || value === undefined || value === "" ||
-                                             (Array.isArray(value) && value.length === 0);
+                              const isEmpty =
+                                value === null ||
+                                value === undefined ||
+                                value === "" ||
+                                (Array.isArray(value) && value.length === 0);
 
                               return (
                                 <div
@@ -342,7 +417,9 @@ export function List({ className = "" }: { className?: string }) {
                                   </span>
                                   <div className="ml-2 flex-shrink-0">
                                     {isEmpty ? (
-                                      <span className="text-muted-foreground italic">Not set</span>
+                                      <span className="text-muted-foreground italic">
+                                        Not set
+                                      </span>
                                     ) : (
                                       renderPropertyValue(property, value)
                                     )}

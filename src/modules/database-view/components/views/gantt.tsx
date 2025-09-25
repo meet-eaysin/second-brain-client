@@ -26,7 +26,11 @@ import { NoDataMessage } from "@/components/no-data-message.tsx";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { TRecord } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
-import { useCreateRecord, useDeleteRecord, useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import {
+  useCreateRecord,
+  useDeleteRecord,
+  useUpdateRecord,
+} from "@/modules/database-view/services/database-queries";
 import { useState } from "react";
 
 const groupBy = <T, K extends string | number | symbol>(
@@ -61,7 +65,10 @@ export function Gantt({ className = "" }: { className?: string }) {
 
   // Find date properties for Gantt (DATE and DATE_RANGE)
   const dateProperties = useMemo(() => {
-    return properties.filter((p) => p.type === EPropertyType.DATE || p.type === EPropertyType.DATE_RANGE);
+    return properties.filter(
+      (p) =>
+        p.type === EPropertyType.DATE || p.type === EPropertyType.DATE_RANGE
+    );
   }, [properties]);
 
   // Find grouping property (SELECT or STATUS)
@@ -81,7 +88,6 @@ export function Gantt({ className = "" }: { className?: string }) {
       properties[0]
     );
   }, [properties]);
-
 
   // Transform records for Gantt format
   const ganttFeatures = useMemo(() => {
@@ -114,12 +120,23 @@ export function Gantt({ className = "" }: { className?: string }) {
           // Use actual date property
           const dateValue = record.properties?.[dateSource.name];
 
-          if (dateSource.type === EPropertyType.DATE_RANGE && dateValue && typeof dateValue === 'object') {
+          if (
+            dateSource.type === EPropertyType.DATE_RANGE &&
+            dateValue &&
+            typeof dateValue === "object"
+          ) {
             // Handle DATE_RANGE: { start: Date, end: Date }
-            const range = dateValue as { start?: string | Date; end?: string | Date };
+            const range = dateValue as {
+              start?: string | Date;
+              end?: string | Date;
+            };
             startDate = range.start ? new Date(range.start) : null;
             endDate = range.end ? new Date(range.end) : null;
-          } else if (dateSource.type === EPropertyType.DATE && dateValue && typeof dateValue === 'string') {
+          } else if (
+            dateSource.type === EPropertyType.DATE &&
+            dateValue &&
+            typeof dateValue === "string"
+          ) {
             // Handle DATE: single date string
             startDate = new Date(dateValue);
             endDate = new Date(dateValue); // Single day event
@@ -148,20 +165,30 @@ export function Gantt({ className = "" }: { className?: string }) {
           if (titleProperty) {
             const titleValue = record.properties?.[titleProperty.name];
 
-            if (titleValue !== null && titleValue !== undefined && titleValue !== "") {
+            if (
+              titleValue !== null &&
+              titleValue !== undefined &&
+              titleValue !== ""
+            ) {
               // For select/multi-select, try to get the label
-              if (titleProperty.type === EPropertyType.SELECT || titleProperty.type === EPropertyType.MULTI_SELECT) {
-                const option = titleProperty.config?.options?.find((opt) => opt.id === titleValue);
+              if (
+                titleProperty.type === EPropertyType.SELECT ||
+                titleProperty.type === EPropertyType.MULTI_SELECT
+              ) {
+                const option = titleProperty.config?.options?.find(
+                  (opt) => opt.id === titleValue
+                );
                 name = option?.label || String(titleValue);
               } else {
                 name = String(titleValue);
               }
             } else {
               // Fallback: try other text properties or use record ID
-              const fallbackProps = properties.filter(p =>
-                p.type === EPropertyType.TEXT &&
-                p.name !== titleProperty.name &&
-                record.properties?.[p.name]
+              const fallbackProps = properties.filter(
+                (p) =>
+                  p.type === EPropertyType.TEXT &&
+                  p.name !== titleProperty.name &&
+                  record.properties?.[p.name]
               );
 
               if (fallbackProps.length > 0) {
@@ -290,7 +317,7 @@ export function Gantt({ className = "" }: { className?: string }) {
       // For DATE_RANGE, update both start and end dates
       payload[dateProperty.name] = {
         start: startAt.toISOString(),
-        end: endAt.toISOString()
+        end: endAt.toISOString(),
       };
     } else {
       // For DATE, just update the single date
@@ -328,7 +355,7 @@ export function Gantt({ className = "" }: { className?: string }) {
         // For DATE_RANGE, create a range starting from the clicked date
         recordData[dateProperty.name] = {
           start: date.toISOString(),
-          end: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString() // 1 day later
+          end: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString(), // 1 day later
         };
       } else if (dateProperty.type === EPropertyType.DATE) {
         // For DATE, set the single date
@@ -340,15 +367,15 @@ export function Gantt({ className = "" }: { className?: string }) {
 
     // Set title if available
     if (titleProperty) {
-      recordData[titleProperty.name] = "New Item";
+      recordData[titleProperty.name] = "Untitled";
     }
 
     try {
       await createRecordMutation({
         databaseId: database.id,
         data: {
-          properties: recordData
-        }
+          properties: recordData,
+        },
       });
     } catch {
       // Error handling is done in the mutation hook

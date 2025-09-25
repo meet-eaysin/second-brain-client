@@ -261,7 +261,7 @@ export function PropertyForm() {
       // Force close any open dropdowns/popovers by dispatching a global click
       // This ensures no lingering backdrops from nested dropdown menus
       setTimeout(() => {
-        document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        document.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       }, 0);
     }
   }, [isOpen]);
@@ -355,21 +355,8 @@ export function PropertyForm() {
               {selectOptions.length !== 1 ? "s" : ""}
             </Badge>
           </div>
-
-          <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
-            <div className="flex flex-col">
-              <span className="text-sm font-medium">Auto-generate colors</span>
-              <span className="text-xs text-muted-foreground">
-                Let the server automatically assign colors to options
-              </span>
-            </div>
-            <Checkbox
-              checked={useAutoColors}
-              onCheckedChange={(checked) => setUseAutoColors(Boolean(checked))}
-            />
-          </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Input
             placeholder="Add option..."
             value={newOptionName}
@@ -382,62 +369,6 @@ export function PropertyForm() {
             }}
             className="flex-1"
           />
-
-          {!useAutoColors && (
-            <DropdownMenu modal={false} onOpenChange={() => {}}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="px-3"
-                >
-                  <div className="w-4 h-4 rounded-full bg-gradient-to-r from-red-500 to-blue-500 mr-2" />
-                  Color
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                <div className="p-2">
-                  <div className="text-xs font-medium mb-2 text-muted-foreground">
-                    Choose Color
-                  </div>
-                  <div className="grid grid-cols-5 gap-1 mb-2">
-                    {OPTION_COLORS.map((color) => (
-                      <Button
-                        key={color}
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 rounded-full border hover:scale-110 transition-transform"
-                        style={{ backgroundColor: color }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          addSelectOption(color);
-                        }}
-                        disabled={!newOptionName.trim()}
-                      />
-                    ))}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      addSelectOption();
-                    }}
-                    disabled={!newOptionName.trim()}
-                  >
-                    <Shuffle className="h-3 w-3 mr-1" />
-                    Random Color
-                  </Button>
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
 
           <Button
             type="button"
@@ -454,7 +385,7 @@ export function PropertyForm() {
             {selectOptions.map((option) => (
               <div
                 key={option.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30"
+                className="flex items-center gap-3 px-3 py-1 rounded-lg border"
               >
                 <div className="flex items-center gap-2 flex-1">
                   {!useAutoColors ? (
@@ -674,49 +605,6 @@ export function PropertyForm() {
                 </FormItem>
               )}
             />
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="isRequired"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Required</FormLabel>
-                      <FormDescription>
-                        This property must have a value
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isVisible"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Visible</FormLabel>
-                      <FormDescription>
-                        Show this property in forms
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
 
             {renderSelectOptionsEditor()}
             <DialogFooter className="flex gap-3 pt-6 border-t px-1">

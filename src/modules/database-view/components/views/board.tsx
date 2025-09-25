@@ -29,7 +29,9 @@ export function Board({ className = "" }: { className?: string }) {
   const groupingProperty = useMemo(() => {
     // First check if view has a configured grouping property
     if (currentView?.settings?.groupBy) {
-      const configuredProperty = properties.find((p) => p.name === currentView.settings.groupBy);
+      const configuredProperty = properties.find(
+        (p) => p.name === currentView.settings.groupBy
+      );
       if (configuredProperty) {
         return configuredProperty;
       }
@@ -71,9 +73,7 @@ export function Board({ className = "" }: { className?: string }) {
 
   // Find display properties (excluding only grouping properties)
   const displayProperties = useMemo(() => {
-    const excludedNames = new Set(
-      [groupingProperty?.name].filter(Boolean)
-    );
+    const excludedNames = new Set([groupingProperty?.name].filter(Boolean));
 
     const result = properties.filter((p) => !excludedNames.has(p.name));
     return result;
@@ -153,6 +153,41 @@ export function Board({ className = "" }: { className?: string }) {
           </span>
         );
 
+      case EPropertyType.DATE_RANGE:
+        if (value && typeof value === "object" && "start" in value) {
+          const range = value as { start?: string | Date; end?: string | Date };
+          const start = range.start
+            ? new Date(range.start).toLocaleDateString()
+            : null;
+          const end = range.end
+            ? new Date(range.end).toLocaleDateString()
+            : null;
+          if (start && end) {
+            return (
+              <span className="text-xs text-muted-foreground">
+                {start} - {end}
+              </span>
+            );
+          } else if (start) {
+            return (
+              <span className="text-xs text-muted-foreground">{start}</span>
+            );
+          } else if (end) {
+            return <span className="text-xs text-muted-foreground">{end}</span>;
+          }
+        }
+        return <span className="text-xs text-muted-foreground">-</span>;
+
+      case EPropertyType.CREATED_TIME:
+      case EPropertyType.LAST_EDITED_TIME:
+        return (
+          <span className="text-xs text-muted-foreground">
+            {value
+              ? new Date(value as string | Date).toLocaleDateString()
+              : "-"}
+          </span>
+        );
+
       case EPropertyType.NUMBER:
         return <span className="text-xs font-medium">{String(value)}</span>;
 
@@ -174,7 +209,6 @@ export function Board({ className = "" }: { className?: string }) {
 
   const kanbanData = useMemo(() => {
     if (!records || !Array.isArray(records)) return [];
-
 
     return records.map((record: TRecord) => {
       const titleValue = titleProperty
@@ -206,7 +240,8 @@ export function Board({ className = "" }: { className?: string }) {
       if (!groupingProperty || !database?.id) continue;
 
       const payload: Record<string, TPropertyValue> = {
-        [groupingProperty.name]: item.column === "ungrouped" ? null : item.column,
+        [groupingProperty.name]:
+          item.column === "ungrouped" ? null : item.column,
       };
 
       try {
@@ -248,83 +283,102 @@ export function Board({ className = "" }: { className?: string }) {
   // Allow board view to work without grouping property - records will be in "ungrouped" column
 
   return (
-      <div className="overflow-x-auto w-full px-4 pb-4">
-        <div className="flex gap-2 min-w-max">
-          <KanbanProvider
-            columns={columns}
-            data={kanbanData}
-            onDataChange={handleDataChange}
-          >
-        {(column) => (
-          <KanbanBoard
-            id={column.id}
-            key={column.id}
-            className="w-full flex-shrink-0"
-          >
-            <KanbanHeader>
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: column.color }}
-                />
-                <span className="font-medium">{column.name}</span>
-                <span className="text-sm text-muted-foreground">
-                  (
-                  {
-                    kanbanData.filter((item) => item.column === column.id)
-                      .length
-                  }
-                  )
-                </span>
-              </div>
-            </KanbanHeader>
-            <KanbanCards id={column.id}>
-              {(item: (typeof kanbanData)[number]) => {
-                return (
-                  <KanbanCard
-                    column={column.id}
-                    id={item.id}
-                    key={item.id}
-                    name={item.name}
-                  >
-                    <div
-                      className="p-2 cursor-pointer max-w-full overflow-hidden"
-                      onClick={() => onRecordEdit?.(item.record)}
+    <div className="overflow-x-auto w-full px-4 pb-4">
+      <div className="flex gap-2 min-w-max">
+        <KanbanProvider
+          columns={columns}
+          data={kanbanData}
+          onDataChange={handleDataChange}
+        >
+          {(column) => (
+            <KanbanBoard
+              id={column.id}
+              key={column.id}
+              className="w-full flex-shrink-0"
+            >
+              <KanbanHeader>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="h-2 w-2 rounded-full"
+                    style={{ backgroundColor: column.color }}
+                  />
+                  <span className="font-medium">{column.name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    (
+                    {
+                      kanbanData.filter((item) => item.column === column.id)
+                        .length
+                    }
+                    )
+                  </span>
+                </div>
+              </KanbanHeader>
+              <KanbanCards id={column.id}>
+                {(item: (typeof kanbanData)[number]) => {
+                  return (
+                    <KanbanCard
+                      column={column.id}
+                      id={item.id}
+                      key={item.id}
+                      name={item.name}
                     >
-                      <p className="m-0 font-medium text-sm line-clamp-2">
-                        {item.name}
-                      </p>
-                      {/* Display additional properties */}
-                      {displayProperties.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          {displayProperties.map((property) => {
-                            const value = item.record.properties[property.name];
+                      <div
+                        className="p-2 cursor-pointer max-w-full overflow-hidden"
+                        onClick={() => onRecordEdit?.(item.record)}
+                      >
+                        <p className="m-0 font-medium text-sm line-clamp-2">
+                          {item.name}
+                        </p>
+                        {/* Display additional properties */}
+                        {displayProperties.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {displayProperties.map((property) => {
+                              // Handle system properties that are stored at record level
+                              let value;
+                              if (
+                                property.type === EPropertyType.CREATED_TIME
+                              ) {
+                                value = item.record.createdAt;
+                              } else if (
+                                property.type === EPropertyType.LAST_EDITED_TIME
+                              ) {
+                                value =
+                                  item.record.lastEditedAt ||
+                                  item.record.updatedAt;
+                              } else if (
+                                property.type === EPropertyType.RICH_TEXT
+                              ) {
+                                value = item.record.content;
+                              } else {
+                                // Properties are stored by name, not ID
+                                value = item.record.properties[property.name];
+                              }
 
-                            return (
-                              <div
-                                key={property.name}
-                                className="flex items-center justify-between"
-                              >
-                                <span className="text-xs text-muted-foreground font-medium truncate">
-                                  {property.name}:
-                                </span>
-                                <div className="ml-2 truncate max-w-[140px]">
-                                  {renderPropertyValue(property, value)}
+                              return (
+                                <div
+                                  key={property.name}
+                                  className="flex items-center justify-between"
+                                >
+                                  <span className="text-xs text-muted-foreground font-medium truncate">
+                                    {property.name}:
+                                  </span>
+                                  <div className="ml-2 truncate max-w-[140px]">
+                                    {renderPropertyValue(property, value)}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </KanbanCard>
-                );
-              }}
-            </KanbanCards>
-          </KanbanBoard>
-        )}
-      </KanbanProvider>
-        </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </KanbanCard>
+                  );
+                }}
+              </KanbanCards>
+            </KanbanBoard>
+          )}
+        </KanbanProvider>
+      </div>
     </div>
   );
 }

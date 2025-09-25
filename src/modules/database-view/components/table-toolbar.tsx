@@ -1,31 +1,29 @@
-import {Badge} from "@/components/ui/badge";
-import {SearchBar} from "./search-bar";
-import {FilterManager} from "./filter-manager";
-import {SortManager} from "./sort-manager";
+import { Badge } from "@/components/ui/badge";
+import { SearchBar } from "./search-bar";
+import { FilterManager } from "./filter-manager";
+import { SortManager } from "./sort-manager";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import {ColumnVisibilityMenu} from "./column-visibility-menu";
-import {useDatabaseView} from "@/modules/database-view/context";
+import { ColumnVisibilityMenu } from "./column-visibility-menu";
+import { useDatabaseView } from "@/modules/database-view/context";
 
 export function TableToolbar() {
-  const {currentView, records, moduleType} = useDatabaseView()
+  const { currentView, records, moduleType } = useDatabaseView();
 
   const activeFiltersCount = currentView?.filters?.length || 0;
   const activeSortsCount = currentView?.sorts?.length || 0;
-  const hiddenPropertiesCount = currentView?.settings?.hiddenProperties?.length || 0;
+  const hiddenPropertiesCount =
+    currentView?.settings?.hiddenProperties?.length || 0;
 
   return (
     <TooltipProvider>
       <div className={`space-y-4`}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 max-w-lg">
-            <SearchBar
-              placeholder="Search records..."
-              className="w-full"
-            />
+            <SearchBar placeholder="Search records..." className="w-full" />
           </div>
 
           <div className="flex items-center gap-2">
@@ -59,17 +57,11 @@ export function TableToolbar() {
               </Tooltip>
             )}
 
-            <Badge variant="outline" className="text-sm hidden sm:flex">
-              {records?.length} record{records?.length !== 1 ? "s" : ""}
-            </Badge>
-
             <FilterManager />
 
-            <SortManager  />
+            <SortManager />
 
-            {currentView && moduleType && (
-              <ColumnVisibilityMenu />
-            )}
+            {currentView && moduleType && <ColumnVisibilityMenu />}
           </div>
         </div>
       </div>

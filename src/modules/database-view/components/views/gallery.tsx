@@ -51,7 +51,7 @@ export function Gallery({ className = "" }: { className?: string }) {
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
   const toggleCardExpansion = (recordId: string) => {
-    setExpandedCards(prev => {
+    setExpandedCards((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(recordId)) {
         newSet.delete(recordId);
@@ -166,13 +166,13 @@ export function Gallery({ className = "" }: { className?: string }) {
 
     // Get all visible properties except the grouping property and title property
     const visibleProperties = properties.filter(
-      (p) =>
-        p.name !== groupingProperty?.name &&
-        p.name !== titleProperty?.name
+      (p) => p.name !== groupingProperty?.name && p.name !== titleProperty?.name
     );
 
     const isExpanded = expandedCards.has(record.id);
-    const displayedProperties = isExpanded ? visibleProperties : visibleProperties.slice(0, 5);
+    const displayedProperties = isExpanded
+      ? visibleProperties
+      : visibleProperties.slice(0, 5);
 
     return (
       <Draggable key={record.id} draggableId={record.id} index={index}>
@@ -254,23 +254,40 @@ export function Gallery({ className = "" }: { className?: string }) {
             {visibleProperties.length > 0 && (
               <CardContent className="pt-0 max-h-64 overflow-y-auto">
                 <div className="space-y-2">
-                  {displayedProperties.map((property) => (
-                    <div
-                      key={property.id}
-                      className="flex items-start gap-2 min-h-[28px]"
-                    >
-                      <span className="text-xs text-muted-foreground font-medium flex-shrink-0 leading-5">
-                        {property.name}:
-                      </span>
-                      <div className="flex-1 min-w-0 overflow-hidden">
-                        <EditableCell
-                          record={record}
-                          property={property}
-                          value={record.properties[property.name]}
-                        />
+                  {displayedProperties.map((property) => {
+                    // Handle system properties that are stored at record level
+                    let value;
+                    if (property.type === EPropertyType.CREATED_TIME) {
+                      value = record.createdAt;
+                    } else if (
+                      property.type === EPropertyType.LAST_EDITED_TIME
+                    ) {
+                      value = record.lastEditedAt || record.updatedAt;
+                    } else if (property.type === EPropertyType.RICH_TEXT) {
+                      value = record.content;
+                    } else {
+                      // Properties are stored by name, not ID
+                      value = record.properties[property.name];
+                    }
+
+                    return (
+                      <div
+                        key={property.id}
+                        className="flex items-start gap-2 min-h-[28px]"
+                      >
+                        <span className="text-xs text-muted-foreground font-medium flex-shrink-0 leading-5">
+                          {property.name}:
+                        </span>
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <EditableCell
+                            record={record}
+                            property={property}
+                            value={value}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   {visibleProperties.length > 5 && (
                     <div
                       className="text-xs text-muted-foreground text-center py-1 cursor-pointer hover:text-foreground transition-colors"
@@ -278,8 +295,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                     >
                       {isExpanded
                         ? "Show less"
-                        : `+${visibleProperties.length - 5} more properties`
-                      }
+                        : `+${visibleProperties.length - 5} more properties`}
                     </div>
                   )}
                 </div>

@@ -19,12 +19,8 @@ interface CalendarProps {
 }
 
 export function Calendar({ className = "" }: CalendarProps) {
-  const {
-    properties,
-    records,
-    isRecordsLoading,
-    isPropertiesLoading,
-  } = useDatabaseView();
+  const { properties, records, isRecordsLoading, isPropertiesLoading } =
+    useDatabaseView();
 
   // Find date properties for calendar display
   const dateProperties = useMemo(() => {
@@ -44,7 +40,9 @@ export function Calendar({ className = "" }: CalendarProps) {
   // Find display properties (excluding title and date properties)
   const displayProperties = useMemo(() => {
     const excludedIds = new Set(
-      [titleProperty?.name, ...dateProperties.map(p => p.name)].filter(Boolean)
+      [titleProperty?.name, ...dateProperties.map((p) => p.name)].filter(
+        Boolean
+      )
     );
 
     return properties.filter((p) => !excludedIds.has(p.name) && p.isVisible);
@@ -66,7 +64,10 @@ export function Calendar({ className = "" }: CalendarProps) {
             return (
               <span
                 className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
-                style={{ backgroundColor: option.color + "20", color: option.color }}
+                style={{
+                  backgroundColor: option.color + "20",
+                  color: option.color,
+                }}
               >
                 {option.label}
               </span>
@@ -87,14 +88,19 @@ export function Calendar({ className = "" }: CalendarProps) {
                   <span
                     key={val}
                     className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
-                    style={{ backgroundColor: option?.color + "20", color: option?.color }}
+                    style={{
+                      backgroundColor: option?.color + "20",
+                      color: option?.color,
+                    }}
                   >
                     {option?.label || String(val)}
                   </span>
                 );
               })}
               {value.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{value.length - 2}</span>
+                <span className="text-xs text-muted-foreground">
+                  +{value.length - 2}
+                </span>
               )}
             </div>
           );
@@ -103,7 +109,9 @@ export function Calendar({ className = "" }: CalendarProps) {
 
       case EPropertyType.CHECKBOX:
         return (
-          <span className={`text-xs ${value ? 'text-green-600' : 'text-red-600'}`}>
+          <span
+            className={`text-xs ${value ? "text-green-600" : "text-red-600"}`}
+          >
             {value ? "✓" : "✗"}
           </span>
         );
@@ -112,6 +120,41 @@ export function Calendar({ className = "" }: CalendarProps) {
         return (
           <span className="text-xs text-muted-foreground">
             {value ? new Date(String(value)).toLocaleDateString() : "-"}
+          </span>
+        );
+
+      case EPropertyType.DATE_RANGE:
+        if (value && typeof value === "object" && "start" in value) {
+          const range = value as { start?: string | Date; end?: string | Date };
+          const start = range.start
+            ? new Date(range.start).toLocaleDateString()
+            : null;
+          const end = range.end
+            ? new Date(range.end).toLocaleDateString()
+            : null;
+          if (start && end) {
+            return (
+              <span className="text-xs text-muted-foreground">
+                {start} - {end}
+              </span>
+            );
+          } else if (start) {
+            return (
+              <span className="text-xs text-muted-foreground">{start}</span>
+            );
+          } else if (end) {
+            return <span className="text-xs text-muted-foreground">{end}</span>;
+          }
+        }
+        return <span className="text-xs text-muted-foreground">-</span>;
+
+      case EPropertyType.CREATED_TIME:
+      case EPropertyType.LAST_EDITED_TIME:
+        return (
+          <span className="text-xs text-muted-foreground">
+            {value
+              ? new Date(value as string | Date).toLocaleDateString()
+              : "-"}
           </span>
         );
 
@@ -168,20 +211,30 @@ export function Calendar({ className = "" }: CalendarProps) {
           if (titleProperty) {
             const titleValue = record.properties[titleProperty.name];
 
-            if (titleValue !== null && titleValue !== undefined && titleValue !== "") {
+            if (
+              titleValue !== null &&
+              titleValue !== undefined &&
+              titleValue !== ""
+            ) {
               // For select/multi-select, try to get the label
-              if (titleProperty.type === EPropertyType.SELECT || titleProperty.type === EPropertyType.MULTI_SELECT) {
-                const option = titleProperty.config?.options?.find((opt) => opt.id === titleValue);
+              if (
+                titleProperty.type === EPropertyType.SELECT ||
+                titleProperty.type === EPropertyType.MULTI_SELECT
+              ) {
+                const option = titleProperty.config?.options?.find(
+                  (opt) => opt.id === titleValue
+                );
                 name = option?.label || String(titleValue);
               } else {
                 name = String(titleValue);
               }
             } else {
               // Fallback: try other text properties or use record ID
-              const fallbackProps = properties.filter(p =>
-                p.type === EPropertyType.TEXT &&
-                p.name !== titleProperty.name &&
-                record.properties[p.name]
+              const fallbackProps = properties.filter(
+                (p) =>
+                  p.type === EPropertyType.TEXT &&
+                  p.name !== titleProperty.name &&
+                  record.properties[p.name]
               );
 
               if (fallbackProps.length > 0) {
@@ -329,19 +382,40 @@ export function Calendar({ className = "" }: CalendarProps) {
                     className="h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: feature.status.color }}
                   />
-                  <span className="font-medium text-sm truncate">{feature.name}</span>
+                  <span className="font-medium text-sm truncate">
+                    {feature.name}
+                  </span>
                 </div>
 
                 {/* Display additional properties */}
                 {displayProperties.length > 0 && (
                   <div className="space-y-1">
                     {displayProperties.slice(0, 2).map((property) => {
-                      const value = record.properties[property.name];
-                      if (value === null || value === undefined || value === "") return null;
+                      // Handle system properties that are stored at record level
+                      let value;
+                      if (property.type === EPropertyType.CREATED_TIME) {
+                        value = record.createdAt;
+                      } else if (
+                        property.type === EPropertyType.LAST_EDITED_TIME
+                      ) {
+                        value = record.lastEditedAt || record.updatedAt;
+                      } else if (property.type === EPropertyType.RICH_TEXT) {
+                        value = record.content;
+                      } else {
+                        // Properties are stored by name, not ID
+                        value = record.properties[property.name];
+                      }
+                      if (value === null || value === undefined || value === "")
+                        return null;
 
                       return (
-                        <div key={property.name} className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{property.name}:</span>
+                        <div
+                          key={property.name}
+                          className="flex items-center justify-between text-xs"
+                        >
+                          <span className="text-muted-foreground">
+                            {property.name}:
+                          </span>
                           <div className="flex-shrink-0 ml-1">
                             {renderPropertyValue(property, value)}
                           </div>

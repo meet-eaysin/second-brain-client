@@ -175,6 +175,23 @@ const renderCellValue = (property: TProperty, value: unknown) => {
     case "date":
       return value ? new Date(value as string).toLocaleDateString() : "-";
 
+    case "date_range":
+      if (value && typeof value === "object" && "start" in value) {
+        const range = value as { start?: string | Date; end?: string | Date };
+        const start = range.start
+          ? new Date(range.start).toLocaleDateString()
+          : null;
+        const end = range.end ? new Date(range.end).toLocaleDateString() : null;
+        if (start && end) {
+          return `${start} - ${end}`;
+        } else if (start) {
+          return start;
+        } else if (end) {
+          return end;
+        }
+      }
+      return "-";
+
     case "url":
       return (
         <a
@@ -301,7 +318,17 @@ export const generateDocumentColumns = (
         );
       },
       cell: ({ row }) => {
-        const value = row.original.properties[property.name];
+        // Handle system properties that are stored at record level
+        let value;
+        if (property.type === "created_time") {
+          value = row.original.createdAt;
+        } else if (property.type === "last_edited_time") {
+          value = row.original.lastEditedAt || row.original.updatedAt;
+        } else if (property.type === "rich_text") {
+          value = row.original.content;
+        } else {
+          value = row.original.properties[property.name];
+        }
 
         if (onUpdateRecord) {
           return (
