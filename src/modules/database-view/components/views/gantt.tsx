@@ -23,9 +23,11 @@ import {
 } from "@/components/ui/context-menu";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { TRecord } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
-import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import { useCreateRecord, useDeleteRecord, useUpdateRecord } from "@/modules/database-view/services/database-queries";
+import { useState } from "react";
 
 const groupBy = <T, K extends string | number | symbol>(
   array: T[],
@@ -50,11 +52,16 @@ export function Gantt({ className = "" }: { className?: string }) {
     isPropertiesLoading,
   } = useDatabaseView();
 
-  const { mutateAsync: updateRecordMutation } = useUpdateRecord();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [featureToDelete, setFeatureToDelete] = useState<string | null>(null);
 
-  // Find date properties for Gantt
+  const { mutateAsync: updateRecordMutation } = useUpdateRecord();
+  const { mutateAsync: createRecordMutation } = useCreateRecord();
+  const { mutateAsync: deleteRecordMutation } = useDeleteRecord();
+
+  // Find date properties for Gantt (DATE and DATE_RANGE)
   const dateProperties = useMemo(() => {
-    return properties.filter((p) => p.type === EPropertyType.DATE);
+    return properties.filter((p) => p.type === EPropertyType.DATE || p.type === EPropertyType.DATE_RANGE);
   }, [properties]);
 
   // Find grouping property (SELECT or STATUS)
@@ -75,91 +82,6 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }, [properties]);
 
-  // Find display properties (excluding title and date properties)
-  const displayProperties = useMemo(() => {
-    const excludedIds = new Set(
-      [titleProperty?.name, ...dateProperties.map(p => p.name)].filter(Boolean)
-    );
-
-    return properties.filter((p) => !excludedIds.has(p.name) && p.isVisible);
-  }, [properties, titleProperty?.name, dateProperties]);
-
-  const renderPropertyValue = (
-    property: (typeof properties)[0],
-    value: TPropertyValue
-  ) => {
-    if (value === null || value === undefined || value === "") return null;
-
-    switch (property.type) {
-      case EPropertyType.SELECT:
-        if (property.config?.options) {
-          const option = property.config.options.find(
-            (opt) => opt.id === value
-          );
-          if (option) {
-            return (
-              <span
-                className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
-                style={{ backgroundColor: option.color + "20", color: option.color }}
-              >
-                {option.label}
-              </span>
-            );
-          }
-        }
-        return <span className="text-xs">{String(value)}</span>;
-
-      case EPropertyType.MULTI_SELECT:
-        if (Array.isArray(value) && property.config?.options) {
-          return (
-            <div className="flex flex-wrap gap-1">
-              {value.slice(0, 2).map((val) => {
-                const option = property?.config?.options?.find(
-                  (opt) => opt.id === val
-                );
-                return (
-                  <span
-                    key={val}
-                    className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
-                    style={{ backgroundColor: option?.color + "20", color: option?.color }}
-                  >
-                    {option?.label || String(val)}
-                  </span>
-                );
-              })}
-              {value.length > 2 && (
-                <span className="text-xs text-muted-foreground">+{value.length - 2}</span>
-              )}
-            </div>
-          );
-        }
-        return null;
-
-      case EPropertyType.CHECKBOX:
-        return (
-          <span className={`text-xs ${value ? 'text-green-600' : 'text-red-600'}`}>
-            {value ? "✓" : "✗"}
-          </span>
-        );
-
-      case EPropertyType.DATE:
-        return (
-          <span className="text-xs text-muted-foreground">
-            {value ? new Date(String(value)).toLocaleDateString() : "-"}
-          </span>
-        );
-
-      case EPropertyType.NUMBER:
-        return <span className="text-xs font-medium">{String(value)}</span>;
-
-      default:
-        return (
-          <span className="text-xs text-muted-foreground truncate max-w-[100px]">
-            {String(value)}
-          </span>
-        );
-    }
-  };
 
   // Transform records for Gantt format
   const ganttFeatures = useMemo(() => {
@@ -182,23 +104,45 @@ export function Gantt({ className = "" }: { className?: string }) {
       const dateSources =
         dateProperties.length > 0
           ? dateProperties
-          : [{ id: "createdAt", name: "Created Date", type: "date" }];
+          : [{ id: "createdAt", name: "createdAt", type: "date" }];
 
       dateSources.forEach((dateSource) => {
-        let dateValue: string | null = null;
+        let startDate: Date | null = null;
+        let endDate: Date | null = null;
 
         if (dateProperties.length > 0) {
           // Use actual date property
-          dateValue = record.properties?.[dateSource.name] as string;
+          const dateValue = record.properties?.[dateSource.name];
+
+          if (dateSource.type === EPropertyType.DATE_RANGE && dateValue && typeof dateValue === 'object') {
+            // Handle DATE_RANGE: { start: Date, end: Date }
+            const range = dateValue as { start?: string | Date; end?: string | Date };
+            startDate = range.start ? new Date(range.start) : null;
+            endDate = range.end ? new Date(range.end) : null;
+          } else if (dateSource.type === EPropertyType.DATE && dateValue && typeof dateValue === 'string') {
+            // Handle DATE: single date string
+            startDate = new Date(dateValue);
+            endDate = new Date(dateValue); // Single day event
+          }
+
+          // If date value is empty/null, fall back to createdAt timestamp
+          if (!startDate || !endDate) {
+            const createdAt = record.createdAt || record.created_at;
+            if (createdAt) {
+              startDate = new Date(createdAt);
+              endDate = new Date(createdAt);
+            }
+          }
         } else {
           // Fall back to createdAt timestamp
-          dateValue = record.createdAt || record.created_at;
+          const createdAt = record.createdAt || record.created_at;
+          if (createdAt) {
+            startDate = new Date(createdAt);
+            endDate = new Date(createdAt);
+          }
         }
 
-        if (dateValue && typeof dateValue === "string") {
-          const startDate = new Date(dateValue);
-          const endDate = new Date(dateValue); // Single day event
-
+        if (startDate && endDate) {
           // Use title property for name
           let name = "Untitled";
           if (titleProperty) {
@@ -248,7 +192,7 @@ export function Gantt({ className = "" }: { className?: string }) {
           };
 
           features.push({
-            id: `${record.id}-${dateSource.id}`,
+            id: `${record.id}-${dateSource.name}`,
             name,
             startAt: startDate,
             endAt: endDate,
@@ -277,22 +221,46 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }, [groupedFeatures]);
 
-  // Handle feature interactions - disabled to prevent modal opening
-  const handleViewFeature = (id: string) => {
-    // Click handlers disabled as requested
-    console.log(`Feature clicked: ${id}`);
+  // Handle feature interactions
+  const handleViewFeature = () => {
+    // Gantt view doesn't open edit sheet on click
+    // This keeps the timeline view clean and focused
   };
 
   const handleCopyLink = (id: string) => {
-    console.log(`Copy link: ${id}`);
+    // Copy link to clipboard
+    const url = `${window.location.origin}/database/${database?.id}/record/${id}`;
+    navigator.clipboard.writeText(url);
   };
 
-  const handleRemoveFeature = (id: string) => {
-    console.log(`Remove feature: ${id}`);
+  const handleRemoveFeature = (featureId: string) => {
+    setFeatureToDelete(featureId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteFeature = async () => {
+    if (!featureToDelete || !database?.id) return;
+
+    // Find the feature to get the record ID
+    const feature = ganttFeatures.find((f) => f.id === featureToDelete);
+    if (!feature) return;
+
+    try {
+      await deleteRecordMutation({
+        databaseId: database.id,
+        recordId: feature.record.id,
+      });
+    } catch {
+      // Error handling is done in the mutation hook
+    } finally {
+      setDeleteConfirmOpen(false);
+      setFeatureToDelete(null);
+    }
   };
 
   const handleCreateMarker = (date: Date) => {
-    console.log(`Create marker: ${date.toISOString()}`);
+    // Create a new record at the clicked date (same as handleAddFeature)
+    handleAddFeature(date);
   };
 
   const handleMoveFeature = async (
@@ -310,16 +278,24 @@ export function Gantt({ className = "" }: { className?: string }) {
 
     // If using createdAt (fallback), don't allow moving
     if (datePropertyName === "createdAt") {
-      console.log("Cannot move features based on creation date");
       return;
     }
 
     const dateProperty = properties.find((p) => p.name === datePropertyName);
     if (!dateProperty) return;
 
-    const payload: Record<string, string> = {
-      [dateProperty.name]: startAt.toISOString(),
-    };
+    const payload: Record<string, unknown> = {};
+
+    if (dateProperty.type === EPropertyType.DATE_RANGE) {
+      // For DATE_RANGE, update both start and end dates
+      payload[dateProperty.name] = {
+        start: startAt.toISOString(),
+        end: endAt.toISOString()
+      };
+    } else {
+      // For DATE, just update the single date
+      payload[dateProperty.name] = startAt.toISOString();
+    }
 
     try {
       await updateRecordMutation({
@@ -327,13 +303,56 @@ export function Gantt({ className = "" }: { className?: string }) {
         recordId: feature.record.id,
         payload,
       });
-    } catch (error) {
-      console.error("Failed to update record position:", error);
+    } catch {
+      // Error handling is done in the mutation hook
     }
   };
 
-  const handleAddFeature = (date: Date) => {
-    console.log(`Add feature: ${date.toISOString()}`);
+  const handleAddFeature = async (date: Date) => {
+    if (!database?.id) return;
+
+    // Validate the date - use current date if invalid
+    if (!date || isNaN(date.getTime())) {
+      date = new Date();
+    }
+
+    // Prepare the record data
+    const recordData: Record<string, unknown> = {};
+
+    // Find the first available date property to set the timeline
+    const dateProperty = dateProperties[0];
+
+    if (dateProperty) {
+      // Set the date property based on its type
+      if (dateProperty.type === EPropertyType.DATE_RANGE) {
+        // For DATE_RANGE, create a range starting from the clicked date
+        recordData[dateProperty.name] = {
+          start: date.toISOString(),
+          end: new Date(date.getTime() + 24 * 60 * 60 * 1000).toISOString() // 1 day later
+        };
+      } else if (dateProperty.type === EPropertyType.DATE) {
+        // For DATE, set the single date
+        recordData[dateProperty.name] = date.toISOString();
+      }
+    }
+    // If no date properties exist, the record will be created without timeline data
+    // and will use createdAt timestamp for display in the gantt
+
+    // Set title if available
+    if (titleProperty) {
+      recordData[titleProperty.name] = "New Item";
+    }
+
+    try {
+      await createRecordMutation({
+        databaseId: database.id,
+        data: {
+          properties: recordData
+        }
+      });
+    } catch {
+      // Error handling is done in the mutation hook
+    }
   };
 
   // Show loading state
@@ -385,7 +404,7 @@ export function Gantt({ className = "" }: { className?: string }) {
                 <GanttSidebarItem
                   feature={feature}
                   key={feature.id}
-                  onSelectItem={handleViewFeature}
+                  onSelectItem={() => handleViewFeature()}
                 />
               ))}
             </GanttSidebarGroup>
@@ -401,7 +420,7 @@ export function Gantt({ className = "" }: { className?: string }) {
                     <ContextMenu>
                       <ContextMenuTrigger asChild>
                         <button
-                          onClick={() => handleViewFeature(feature.id)}
+                          onClick={() => handleViewFeature()}
                           type="button"
                         >
                           <GanttFeatureItem
@@ -409,29 +428,9 @@ export function Gantt({ className = "" }: { className?: string }) {
                             {...feature}
                           >
                             <div className="flex-1 min-w-0">
-                              <p className="truncate text-xs font-medium mb-1">
+                              <p className="truncate text-xs font-medium">
                                 {feature.name}
                               </p>
-                              {/* Display additional properties */}
-                              {displayProperties.length > 0 && (
-                                <div className="space-y-0.5">
-                                  {displayProperties.slice(0, 1).map((property) => {
-                                    const value = feature.record.properties[property.name];
-                                    if (value === null || value === undefined || value === "") return null;
-
-                                    return (
-                                      <div key={property.name} className="flex items-center justify-between text-xs">
-                                        <span className="text-muted-foreground truncate mr-1">
-                                          {property.name}:
-                                        </span>
-                                        <div className="flex-shrink-0">
-                                          {renderPropertyValue(property, value)}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
                             </div>
                           </GanttFeatureItem>
                         </button>
@@ -439,7 +438,7 @@ export function Gantt({ className = "" }: { className?: string }) {
                       <ContextMenuContent>
                         <ContextMenuItem
                           className="flex items-center gap-2"
-                          onClick={() => handleViewFeature(feature.id)}
+                          onClick={() => handleViewFeature()}
                         >
                           <EyeIcon
                             className="text-muted-foreground"
@@ -475,6 +474,16 @@ export function Gantt({ className = "" }: { className?: string }) {
           <GanttCreateMarkerTrigger onCreateMarker={handleCreateMarker} />
         </GanttTimeline>
       </GanttProvider>
+
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete Record"
+        desc="Are you sure you want to delete this record? This action cannot be undone."
+        confirmText="Delete"
+        destructive={true}
+        handleConfirm={confirmDeleteFeature}
+      />
     </div>
   );
 }

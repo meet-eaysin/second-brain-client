@@ -27,11 +27,20 @@ export function Board({ className = "" }: { className?: string }) {
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
   const groupingProperty = useMemo(() => {
+    // First check if view has a configured grouping property
+    if (currentView?.settings?.groupBy) {
+      const configuredProperty = properties.find((p) => p.name === currentView.settings.groupBy);
+      if (configuredProperty) {
+        return configuredProperty;
+      }
+    }
+
+    // Fallback to finding SELECT or STATUS properties
     return (
       properties.find((p) => p.type === EPropertyType.SELECT) ||
       properties.find((p) => p.type === EPropertyType.STATUS)
     );
-  }, [properties]);
+  }, [properties, currentView?.settings?.groupBy]);
 
   const columns = useMemo(() => {
     if (!groupingProperty?.config?.options) {
@@ -62,13 +71,13 @@ export function Board({ className = "" }: { className?: string }) {
 
   // Find display properties (excluding only grouping properties)
   const displayProperties = useMemo(() => {
-    const excludedIds = new Set(
-      [groupingProperty?.id].filter(Boolean)
+    const excludedNames = new Set(
+      [groupingProperty?.name].filter(Boolean)
     );
 
-    const result = properties.filter((p) => !excludedIds.has(p.id));
+    const result = properties.filter((p) => !excludedNames.has(p.name));
     return result;
-  }, [properties, groupingProperty?.id]);
+  }, [properties, groupingProperty?.name]);
 
   // Helper function to render property values
   const renderPropertyValue = (
@@ -87,7 +96,7 @@ export function Board({ className = "" }: { className?: string }) {
             return (
               <Badge
                 variant="outline"
-                className="text-xs text-white border-0"
+                className="text-xs text-white border-0 truncate"
                 style={{ backgroundColor: option.color || "#6b7280" }}
               >
                 {option.label}
@@ -113,7 +122,7 @@ export function Board({ className = "" }: { className?: string }) {
                   <Badge
                     key={String(val) || index}
                     variant="outline"
-                    className="text-xs text-white border-0"
+                    className="text-xs text-white border-0 truncate"
                     style={{ backgroundColor: option?.color || "#6b7280" }}
                   >
                     {option?.label || String(val)}
@@ -146,6 +155,13 @@ export function Board({ className = "" }: { className?: string }) {
 
       case EPropertyType.NUMBER:
         return <span className="text-xs font-medium">{String(value)}</span>;
+
+      case EPropertyType.URL:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+            {String(value)}
+          </span>
+        );
 
       default:
         return (
@@ -190,7 +206,7 @@ export function Board({ className = "" }: { className?: string }) {
       if (!groupingProperty || !database?.id) continue;
 
       const payload: Record<string, TPropertyValue> = {
-        [groupingProperty.id]: item.column === "ungrouped" ? null : item.column,
+        [groupingProperty.name]: item.column === "ungrouped" ? null : item.column,
       };
 
       try {
@@ -232,17 +248,18 @@ export function Board({ className = "" }: { className?: string }) {
   // Allow board view to work without grouping property - records will be in "ungrouped" column
 
   return (
-    <div className={`w-full h-full ${className}`}>
-      <KanbanProvider
-        columns={columns}
-        data={kanbanData}
-        onDataChange={handleDataChange}
-      >
+      <div className="overflow-x-auto w-full px-4 pb-4">
+        <div className="flex gap-2 min-w-max">
+          <KanbanProvider
+            columns={columns}
+            data={kanbanData}
+            onDataChange={handleDataChange}
+          >
         {(column) => (
           <KanbanBoard
             id={column.id}
             key={column.id}
-            className={columns.length === 1 ? "max-w-md" : ""}
+            className="w-full flex-shrink-0"
           >
             <KanbanHeader>
               <div className="flex items-center gap-2">
@@ -271,7 +288,7 @@ export function Board({ className = "" }: { className?: string }) {
                     name={item.name}
                   >
                     <div
-                      className="p-2 cursor-pointer"
+                      className="p-2 cursor-pointer max-w-full overflow-hidden"
                       onClick={() => onRecordEdit?.(item.record)}
                     >
                       <p className="m-0 font-medium text-sm line-clamp-2">
@@ -285,13 +302,13 @@ export function Board({ className = "" }: { className?: string }) {
 
                             return (
                               <div
-                                key={property.id}
+                                key={property.name}
                                 className="flex items-center justify-between"
                               >
-                                <span className="text-xs text-muted-foreground font-medium">
+                                <span className="text-xs text-muted-foreground font-medium truncate">
                                   {property.name}:
                                 </span>
-                                <div className="ml-2">
+                                <div className="ml-2 truncate max-w-[140px]">
                                   {renderPropertyValue(property, value)}
                                 </div>
                               </div>
@@ -307,6 +324,7 @@ export function Board({ className = "" }: { className?: string }) {
           </KanbanBoard>
         )}
       </KanbanProvider>
+        </div>
     </div>
   );
 }
