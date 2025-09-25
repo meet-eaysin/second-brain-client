@@ -163,7 +163,7 @@ export function CalendarForm({
 
       onOpenChange(false);
       onSuccess?.();
-    } catch (error) {
+    } catch {
       toast.error(
         isEditing ? "Failed to update calendar" : "Failed to create calendar"
       );

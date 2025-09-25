@@ -5,7 +5,7 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import moment from "moment";
 import { useEvents } from "../services/calendar-queries";
 import { useCreateEvent, useUpdateEvent } from "../services/calendar-queries";
-import { EEventType, EEventStatus, EEventVisibility } from "@/types/calendar";
+import type { CreateEventRequest } from "@/types/calendar";
 import {
   Dialog,
   DialogContent,
@@ -72,13 +72,13 @@ export default function ShadcnBigCalendarComponent({
   );
 
   // Fetch events for current view
-  const { data: events = [] } = useEvents(queryParams);
+  const { data: eventsResponse } = useEvents(queryParams);
 
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
 
   // Transform events to react-big-calendar format
-  const calendarEvents = events.map((event) => ({
+  const calendarEvents = (eventsResponse?.events || []).map((event) => ({
     id: event.id,
     title: event.title,
     start: new Date(event.startTime),
@@ -102,26 +102,9 @@ export default function ShadcnBigCalendarComponent({
     setSelectedSlot(slotInfo);
   };
 
-  const handleCreateEvent = async (data: {
-    title: string;
-    start: string;
-    end: string;
-    description?: string;
-    location?: string;
-  }) => {
+  const handleCreateEvent = async (data: CreateEventRequest) => {
     try {
-      await createEventMutation.mutateAsync({
-        calendarId: selectedCalendars[0] || "",
-        title: data.title,
-        description: data.description || "",
-        location: data.location || "",
-        startTime: new Date(data.start),
-        endTime: new Date(data.end),
-        isAllDay: false,
-        type: EEventType.EVENT,
-        status: EEventStatus.CONFIRMED,
-        visibility: EEventVisibility.PUBLIC,
-      });
+      await createEventMutation.mutateAsync(data);
       setSelectedSlot(null);
     } catch (error) {
       console.error("Failed to create event:", error);
@@ -165,8 +148,9 @@ export default function ShadcnBigCalendarComponent({
           </DialogHeader>
           {(selectedSlot || showCreateEvent) && (
             <EventForm
-              start={selectedSlot?.start || new Date()}
-              end={selectedSlot?.end || new Date(Date.now() + 60 * 60 * 1000)}
+              initialStart={selectedSlot?.start}
+              initialEnd={selectedSlot?.end}
+              calendarId={selectedCalendars[0]}
               onSubmit={handleCreateEvent}
               onCancel={handleDialogClose}
             />

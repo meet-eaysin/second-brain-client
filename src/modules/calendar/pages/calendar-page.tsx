@@ -3,7 +3,6 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
@@ -169,44 +168,96 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-8"
-        >
-          <TabsList className="grid w-full grid-cols-4 h-12">
-            <TabsTrigger
-              value="calendar"
-              className="flex items-center gap-2 text-sm"
-            >
-              <CalendarIcon className="h-4 w-4" />
-              Calendar
-            </TabsTrigger>
-            <TabsTrigger
-              value="connections"
-              className="flex items-center gap-2 text-sm"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Connections
-            </TabsTrigger>
-            <TabsTrigger
-              value="analytics"
-              className="flex items-center gap-2 text-sm"
-            >
-              <BarChart3 className="h-4 w-4" />
-              Analytics
-            </TabsTrigger>
-            <TabsTrigger
-              value="settings"
-              className="flex items-center gap-2 text-sm"
-            >
-              <Settings className="h-4 w-4" />
-              Settings
-            </TabsTrigger>
-          </TabsList>
+        {/* Navigation Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab("calendar")}
+            className={`p-4 rounded-lg border transition-all duration-200 ${
+              activeTab === "calendar"
+                ? "bg-primary/10 border-primary text-primary"
+                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <CalendarIcon
+                className={`h-5 w-5 ${
+                  activeTab === "calendar" ? "text-primary" : ""
+                }`}
+              />
+              <div className="text-left">
+                <div className="font-medium text-sm">Calendar</div>
+                <div className="text-xs opacity-70">View & manage events</div>
+              </div>
+            </div>
+          </button>
 
-          {/* Calendar Tab */}
-          <TabsContent value="calendar" className="space-y-8">
+          <button
+            onClick={() => setActiveTab("connections")}
+            className={`p-4 rounded-lg border transition-all duration-200 ${
+              activeTab === "connections"
+                ? "bg-primary/10 border-primary text-primary"
+                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <ExternalLink
+                className={`h-5 w-5 ${
+                  activeTab === "connections" ? "text-primary" : ""
+                }`}
+              />
+              <div className="text-left">
+                <div className="font-medium text-sm">Connections</div>
+                <div className="text-xs opacity-70">External calendars</div>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("analytics")}
+            className={`p-4 rounded-lg border transition-all duration-200 ${
+              activeTab === "analytics"
+                ? "bg-primary/10 border-primary text-primary"
+                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <BarChart3
+                className={`h-5 w-5 ${
+                  activeTab === "analytics" ? "text-primary" : ""
+                }`}
+              />
+              <div className="text-left">
+                <div className="font-medium text-sm">Analytics</div>
+                <div className="text-xs opacity-70">Calendar insights</div>
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`p-4 rounded-lg border transition-all duration-200 ${
+              activeTab === "settings"
+                ? "bg-primary/10 border-primary text-primary"
+                : "bg-card hover:bg-muted/50 border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Settings
+                className={`h-5 w-5 ${
+                  activeTab === "settings" ? "text-primary" : ""
+                }`}
+              />
+              <div className="text-left">
+                <div className="font-medium text-sm">Settings</div>
+                <div className="text-xs opacity-70">Preferences</div>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Content based on active tab */}
+        {activeTab === "calendar" && (
+          <div className="space-y-8">
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="bg-card rounded-lg border p-6">
@@ -311,35 +362,141 @@ export default function CalendarPage() {
                 </div>
               </div>
             </div>
-          </TabsContent>
+          </div>
+        )}
 
-          {/* Connections Tab */}
-          <TabsContent value="connections">
-            <CalendarConnections />
-          </TabsContent>
+        {activeTab === "connections" && <CalendarConnections />}
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {activeTab === "analytics" && (
+          <div className="space-y-8">
+            {/* Overview Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Total Events
+                      </p>
+                      <p className="text-3xl font-bold">
+                        {stats?.totalEvents || 0}
+                      </p>
+                    </div>
+                    <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center">
+                      <CalendarIcon className="h-6 w-6 text-blue-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Upcoming
+                      </p>
+                      <p className="text-3xl font-bold">
+                        {stats?.upcomingEvents || 0}
+                      </p>
+                    </div>
+                    <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-green-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        This Week
+                      </p>
+                      <p className="text-3xl font-bold">
+                        {stats?.weekEvents || 0}
+                      </p>
+                    </div>
+                    <div className="h-12 w-12 bg-orange-500/10 rounded-full flex items-center justify-center">
+                      <CalendarDays className="h-6 w-6 text-orange-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        This Month
+                      </p>
+                      <p className="text-3xl font-bold">
+                        {stats?.monthEvents || 0}
+                      </p>
+                    </div>
+                    <div className="h-12 w-12 bg-purple-500/10 rounded-full flex items-center justify-center">
+                      <Activity className="h-6 w-6 text-purple-500" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Detailed Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Events by Type */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Events by Type</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Events by Type
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {stats?.byType &&
-                      Object.entries(stats.byType).map(([type, count]) => (
-                        <div
-                          key={type}
-                          className="flex justify-between items-center"
-                        >
-                          <span className="text-sm capitalize">
-                            {type.replace("_", " ")}
-                          </span>
-                          <span className="font-medium">{count}</span>
-                        </div>
-                      ))}
+                    Object.entries(stats.byType).length > 0 ? (
+                      Object.entries(stats.byType)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([type, count]) => (
+                          <div
+                            key={type}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-3 h-3 rounded-full bg-primary/60"></div>
+                              <span className="text-sm capitalize">
+                                {type.replace("_", " ")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-muted rounded-full h-2">
+                                <div
+                                  className="bg-primary h-2 rounded-full"
+                                  style={{
+                                    width: `${
+                                      (count /
+                                        Math.max(
+                                          ...Object.values(stats.byType)
+                                        )) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="font-medium text-sm w-8 text-right">
+                                {count}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        No events found
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -347,65 +504,571 @@ export default function CalendarPage() {
               {/* Events by Status */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Events by Status</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Events by Status
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {stats?.byStatus &&
-                      Object.entries(stats.byStatus).map(([status, count]) => (
-                        <div
-                          key={status}
-                          className="flex justify-between items-center"
-                        >
-                          <span className="text-sm capitalize">
-                            {status.replace("_", " ")}
-                          </span>
-                          <span className="font-medium">{count}</span>
-                        </div>
-                      ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Events by Calendar */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Events by Calendar</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {stats?.byCalendar &&
-                      Object.entries(stats.byCalendar).map(
-                        ([calendar, count]) => (
+                    Object.entries(stats.byStatus).length > 0 ? (
+                      Object.entries(stats.byStatus)
+                        .sort(([, a], [, b]) => b - a)
+                        .map(([status, count]) => (
                           <div
-                            key={calendar}
-                            className="flex justify-between items-center"
+                            key={status}
+                            className="flex items-center justify-between"
                           >
-                            <span className="text-sm truncate">{calendar}</span>
-                            <span className="font-medium">{count}</span>
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={`w-3 h-3 rounded-full ${
+                                  status === "confirmed"
+                                    ? "bg-green-500"
+                                    : status === "tentative"
+                                    ? "bg-yellow-500"
+                                    : status === "cancelled"
+                                    ? "bg-red-500"
+                                    : "bg-gray-500"
+                                }`}
+                              ></div>
+                              <span className="text-sm capitalize">
+                                {status.replace("_", " ")}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 bg-muted rounded-full h-2">
+                                <div
+                                  className="bg-primary h-2 rounded-full"
+                                  style={{
+                                    width: `${
+                                      (count /
+                                        Math.max(
+                                          ...Object.values(stats.byStatus)
+                                        )) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="font-medium text-sm w-8 text-right">
+                                {count}
+                              </span>
+                            </div>
                           </div>
-                        )
-                      )}
+                        ))
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        No events found
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
 
-          {/* Settings Tab */}
-          <TabsContent value="settings" className="space-y-6">
+            {/* Events by Calendar */}
             <Card>
               <CardHeader>
-                <CardTitle>Calendar Settings</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5" />
+                  Events by Calendar
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">
-                  Calendar settings and preferences will be implemented here.
-                </p>
+                <div className="space-y-4">
+                  {stats?.byCalendar &&
+                  Object.entries(stats.byCalendar).length > 0 ? (
+                    Object.entries(stats.byCalendar)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([calendarName, count]) => {
+                        const calendar = calendars.find(
+                          (c) => c.name === calendarName
+                        );
+                        return (
+                          <div
+                            key={calendarName}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                                style={{
+                                  backgroundColor: calendar?.color || "#3B82F6",
+                                }}
+                              ></div>
+                              <span className="text-sm font-medium">
+                                {calendarName}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-24 bg-muted rounded-full h-2">
+                                <div
+                                  className="bg-primary h-2 rounded-full"
+                                  style={{
+                                    width: `${
+                                      (count /
+                                        Math.max(
+                                          ...Object.values(stats.byCalendar)
+                                        )) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                              <span className="font-medium text-sm w-8 text-right">
+                                {count}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                  ) : (
+                    <p className="text-muted-foreground text-sm">
+                      No events found
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+
+            {/* Productivity Insights */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Productivity Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Focus Time</span>
+                      <span className="font-medium">
+                        {stats?.productivity?.focusTime || 0}h
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Meeting Time</span>
+                      <span className="font-medium">
+                        {stats?.productivity?.meetingTime || 0}h
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Break Time</span>
+                      <span className="font-medium">
+                        {stats?.productivity?.breakTime || 0}h
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Free Time</span>
+                      <span className="font-medium">
+                        {stats?.productivity?.freeTime || 0}h
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("calendar")}
+                    >
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      View Calendar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => handleCreateEvent()}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Event
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => setActiveTab("settings")}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Calendar Settings
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="space-y-8">
+            {/* General Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  General Settings
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configure your calendar preferences and default settings
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Default Calendar
+                    </label>
+                    <select className="w-full p-2 border rounded-md bg-background">
+                      {calendars.map((calendar) => (
+                        <option key={calendar.id} value={calendar.id}>
+                          {calendar.name}{" "}
+                          {calendar.isDefault ? "(Default)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      Events will be created in this calendar by default
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Time Zone</label>
+                    <select className="w-full p-2 border rounded-md bg-background">
+                      <option value="UTC">UTC</option>
+                      <option value="America/New_York">Eastern Time</option>
+                      <option value="America/Chicago">Central Time</option>
+                      <option value="America/Denver">Mountain Time</option>
+                      <option value="America/Los_Angeles">Pacific Time</option>
+                      <option value="Europe/London">London</option>
+                      <option value="Europe/Paris">Paris</option>
+                      <option value="Asia/Tokyo">Tokyo</option>
+                      <option value="Asia/Dhaka">Dhaka</option>
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      Your local time zone for calendar display
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Display Preferences</h4>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium">
+                          Show Weekends
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Display Saturday and Sunday in calendar views
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        defaultChecked
+                        className="rounded"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium">
+                          Show Declined Events
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Include events you've declined in calendar views
+                        </p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="text-sm font-medium">
+                          24-Hour Format
+                        </label>
+                        <p className="text-xs text-muted-foreground">
+                          Use 24-hour time format instead of AM/PM
+                        </p>
+                      </div>
+                      <input type="checkbox" className="rounded" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Calendar Management */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5" />
+                  Calendar Management
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Manage your calendars, colors, and visibility settings
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {calendars.map((calendar) => (
+                    <div
+                      key={calendar.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
+                          style={{ backgroundColor: calendar.color }}
+                        ></div>
+                        <div>
+                          <p className="font-medium">{calendar.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {calendar.type} •{" "}
+                            {calendar.isVisible ? "Visible" : "Hidden"}
+                            {calendar.isDefault && " • Default"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditCalendar(calendar)}
+                        >
+                          Edit
+                        </Button>
+                        {!calendar.isDefault && (
+                          <Button variant="outline" size="sm">
+                            Delete
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  <Button
+                    onClick={handleCreateCalendar}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Calendar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Sync Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ExternalLink className="h-5 w-5" />
+                  Synchronization Settings
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configure how your calendars sync with external providers
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium">
+                        Auto-sync Enabled
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Automatically sync calendars in the background
+                      </p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="rounded" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Sync Frequency
+                      </label>
+                      <select className="w-full p-2 border rounded-md bg-background">
+                        <option value="5">Every 5 minutes</option>
+                        <option value="15">Every 15 minutes</option>
+                        <option value="30">Every 30 minutes</option>
+                        <option value="60">Every hour</option>
+                        <option value="240">Every 4 hours</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Conflict Resolution
+                      </label>
+                      <select className="w-full p-2 border rounded-md bg-background">
+                        <option value="local">Prefer Local Changes</option>
+                        <option value="remote">Prefer Remote Changes</option>
+                        <option value="manual">Ask Me</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Sync History</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium">Last Sync</p>
+                        <p className="text-xs text-muted-foreground">
+                          2 hours ago
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-green-600">
+                          Success
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          15 events synced
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notification Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Notification Settings
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configure how you receive calendar notifications and reminders
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium">
+                        Email Notifications
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Receive calendar updates via email
+                      </p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="rounded" />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium">
+                        Push Notifications
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Receive push notifications for events
+                      </p>
+                    </div>
+                    <input type="checkbox" defaultChecked className="rounded" />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-medium">
+                        SMS Notifications
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Receive SMS alerts for important events
+                      </p>
+                    </div>
+                    <input type="checkbox" className="rounded" />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">
+                    Default Reminder Settings
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Email Reminder
+                      </label>
+                      <select className="w-full p-2 border rounded-md bg-background">
+                        <option value="0">No reminder</option>
+                        <option value="5">5 minutes before</option>
+                        <option value="15">15 minutes before</option>
+                        <option value="30">30 minutes before</option>
+                        <option value="60">1 hour before</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        Popup Reminder
+                      </label>
+                      <select className="w-full p-2 border rounded-md bg-background">
+                        <option value="0">No reminder</option>
+                        <option value="5">5 minutes before</option>
+                        <option value="15">15 minutes before</option>
+                        <option value="30">30 minutes before</option>
+                        <option value="60">1 hour before</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Danger Zone */}
+            <Card className="border-red-200">
+              <CardHeader>
+                <CardTitle className="text-red-600 flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Danger Zone
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Irreversible actions that affect your calendar data
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50/50">
+                  <div>
+                    <p className="font-medium text-red-900">
+                      Reset All Calendars
+                    </p>
+                    <p className="text-sm text-red-700">
+                      This will remove all your calendars and events. This
+                      action cannot be undone.
+                    </p>
+                  </div>
+                  <Button variant="destructive" size="sm">
+                    Reset All
+                  </Button>
+                </div>
+
+                <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50/50">
+                  <div>
+                    <p className="font-medium text-red-900">
+                      Export Calendar Data
+                    </p>
+                    <p className="text-sm text-red-700">
+                      Download all your calendar data as a backup file.
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Export Data
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Create Event Dialog */}
         <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
