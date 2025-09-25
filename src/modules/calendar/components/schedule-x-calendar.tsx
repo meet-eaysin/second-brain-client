@@ -5,7 +5,7 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import moment from "moment";
 import { useEvents } from "../services/calendar-queries";
 import { useCreateEvent, useUpdateEvent } from "../services/calendar-queries";
-import type { CreateEventRequest } from "@/types/calendar";
+import type { CreateEventRequest, UpdateEventRequest } from "@/types/calendar";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,9 @@ export default function ShadcnBigCalendarComponent({
   onCreateEventClose,
 }: ShadcnBigCalendarComponentProps) {
   const [selectedSlot, setSelectedSlot] = useState<SlotInfo | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
+    null
+  );
   const [view, setView] = useState<(typeof Views)[keyof typeof Views]>(
     Views.WEEK
   );
@@ -100,14 +103,32 @@ export default function ShadcnBigCalendarComponent({
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
     setSelectedSlot(slotInfo);
+    setSelectedEvent(null);
   };
 
-  const handleCreateEvent = async (data: CreateEventRequest) => {
+  const handleSelectEvent = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setSelectedSlot(null);
+  };
+
+  const handleCreateEvent = async (
+    data: CreateEventRequest | UpdateEventRequest
+  ) => {
     try {
-      await createEventMutation.mutateAsync(data);
+      if (selectedEvent) {
+        // Update existing event
+        await updateEventMutation.mutateAsync({
+          eventId: selectedEvent.id,
+          data: data as UpdateEventRequest,
+        });
+      } else {
+        // Create new event
+        await createEventMutation.mutateAsync(data as CreateEventRequest);
+      }
       setSelectedSlot(null);
+      setSelectedEvent(null);
     } catch (error) {
-      console.error("Failed to create event:", error);
+      console.error("Failed to save event:", error);
     }
   };
 
@@ -133,23 +154,29 @@ export default function ShadcnBigCalendarComponent({
 
   const handleDialogClose = () => {
     setSelectedSlot(null);
+    setSelectedEvent(null);
     onCreateEventClose?.();
   };
 
   return (
     <div className="space-y-4">
       <Dialog
-        open={selectedSlot !== null || showCreateEvent}
+        open={
+          selectedSlot !== null || selectedEvent !== null || showCreateEvent
+        }
         onOpenChange={handleDialogClose}
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create Event</DialogTitle>
+            <DialogTitle>
+              {selectedEvent ? "Edit Event" : "Create Event"}
+            </DialogTitle>
           </DialogHeader>
-          {(selectedSlot || showCreateEvent) && (
+          {(selectedSlot || selectedEvent || showCreateEvent) && (
             <EventForm
-              initialStart={selectedSlot?.start}
-              initialEnd={selectedSlot?.end}
+              eventId={selectedEvent?.id}
+              initialStart={selectedSlot?.start || selectedEvent?.start}
+              initialEnd={selectedSlot?.end || selectedEvent?.end}
               calendarId={selectedCalendars[0]}
               onSubmit={handleCreateEvent}
               onCancel={handleDialogClose}
@@ -172,6 +199,7 @@ export default function ShadcnBigCalendarComponent({
         resizableAccessor={() => true}
         events={calendarEvents}
         onSelectSlot={handleSelectSlot}
+        onSelectEvent={handleSelectEvent}
         onEventDrop={handleEventDrop}
         onEventResize={handleEventResize}
       />

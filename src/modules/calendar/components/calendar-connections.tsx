@@ -1,29 +1,8 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Plus,
-  RefreshCw,
-  Trash2,
   ExternalLink,
   CheckCircle,
   XCircle,
@@ -34,83 +13,13 @@ import {
 import {
   useCalendarConnections,
   useCalendarProviders,
-  useConnectCalendar,
-  useDisconnectCalendar,
-  useSyncCalendarConnection,
-  useTestCalendarConnection,
-  useResetCalendarConnectionErrors,
 } from "../services/calendar-queries";
-import type {
-  CalendarConnection,
-  ConnectCalendarRequest,
-} from "@/types/calendar";
-import { toast } from "sonner";
-import { ConnectCalendarForm } from "./connect-calendar-form";
+import type { CalendarConnection } from "@/types/calendar";
 
 export function CalendarConnections() {
-  const [showConnectDialog, setShowConnectDialog] = useState(false);
-
   const { data: connections = [], isLoading: connectionsLoading } =
     useCalendarConnections();
   const { data: providers = [] } = useCalendarProviders();
-
-  const connectMutation = useConnectCalendar();
-  const disconnectMutation = useDisconnectCalendar();
-  const syncMutation = useSyncCalendarConnection();
-  const testMutation = useTestCalendarConnection();
-  const resetErrorsMutation = useResetCalendarConnectionErrors();
-
-  const handleConnect = async (data: ConnectCalendarRequest) => {
-    try {
-      await connectMutation.mutateAsync(data);
-      setShowConnectDialog(false);
-      toast.success("Calendar connected successfully");
-    } catch {
-      toast.error("Failed to connect calendar");
-    }
-  };
-
-  const handleDisconnect = async (connection: CalendarConnection) => {
-    try {
-      await disconnectMutation.mutateAsync(connection.id);
-      toast.success("Calendar disconnected successfully");
-    } catch {
-      toast.error("Failed to disconnect calendar");
-    }
-  };
-
-  const handleSync = async (connection: CalendarConnection) => {
-    try {
-      await syncMutation.mutateAsync(connection.id);
-      toast.success("Calendar sync initiated");
-    } catch {
-      toast.error("Failed to sync calendar");
-    }
-  };
-
-  const handleTest = async (connection: CalendarConnection) => {
-    try {
-      const result = await testMutation.mutateAsync(connection.id);
-      if (result.status === "connected") {
-        toast.success(
-          `Connection test successful - ${result.calendarsFound} calendars found`
-        );
-      } else {
-        toast.error(`Connection test failed: ${result.error}`);
-      }
-    } catch {
-      toast.error("Connection test failed");
-    }
-  };
-
-  const handleResetErrors = async (connection: CalendarConnection) => {
-    try {
-      await resetErrorsMutation.mutateAsync(connection.id);
-      toast.success("Connection errors reset");
-    } catch {
-      toast.error("Failed to reset errors");
-    }
-  };
 
   const getStatusIcon = (connection: CalendarConnection) => {
     if (!connection.isActive)
@@ -165,28 +74,14 @@ export function CalendarConnections() {
             <CardTitle className="flex items-center gap-2">
               <ExternalLink className="h-5 w-5" />
               External Calendar Connections
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                Upcoming
+              </Badge>
             </CardTitle>
-            <Dialog
-              open={showConnectDialog}
-              onOpenChange={setShowConnectDialog}
-            >
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Connect Calendar
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Connect External Calendar</DialogTitle>
-                </DialogHeader>
-                <ConnectCalendarForm
-                  providers={providers}
-                  onSubmit={handleConnect}
-                  onCancel={() => setShowConnectDialog(false)}
-                />
-              </DialogContent>
-            </Dialog>
+            <Button disabled>
+              <Plus className="h-4 w-4 mr-2" />
+              Connect Calendar
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -204,7 +99,7 @@ export function CalendarConnections() {
                 Connect your Google, Outlook, or other calendar services to sync
                 events automatically.
               </p>
-              <Button onClick={() => setShowConnectDialog(true)}>
+              <Button disabled>
                 <Plus className="h-4 w-4 mr-2" />
                 Connect Your First Calendar
               </Button>
@@ -261,68 +156,23 @@ export function CalendarConnections() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleTest(connection)}
-                        disabled={testMutation.isPending}
-                      >
+                      <Button variant="outline" size="sm" disabled>
                         Test
                       </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleSync(connection)}
-                        disabled={syncMutation.isPending}
-                      >
-                        <RefreshCw
-                          className={`h-4 w-4 ${
-                            syncMutation.isPending ? "animate-spin" : ""
-                          }`}
-                        />
+                      <Button variant="outline" size="sm" disabled>
+                        <RefreshCw className="h-4 w-4" />
                       </Button>
 
                       {connection.errorCount > 0 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleResetErrors(connection)}
-                          disabled={resetErrorsMutation.isPending}
-                        >
+                        <Button variant="outline" size="sm" disabled>
                           Reset
                         </Button>
                       )}
 
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Disconnect Calendar
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to disconnect{" "}
-                              {connection.accountEmail}? This will stop syncing
-                              events from this calendar and may delete
-                              associated data.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDisconnect(connection)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Disconnect
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <Button variant="outline" size="sm" disabled>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 );
@@ -343,10 +193,7 @@ export function CalendarConnections() {
               {providers.map((provider) => (
                 <div
                   key={provider.id}
-                  className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                  onClick={() => {
-                    setShowConnectDialog(true);
-                  }}
+                  className="p-4 border rounded-lg opacity-60"
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-2xl">

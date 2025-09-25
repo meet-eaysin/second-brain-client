@@ -31,9 +31,14 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
-import { useCalendars, useCalendarConfig } from "../services/calendar-queries";
+import {
+  useCalendars,
+  useCalendarConfig,
+  useEvent,
+} from "../services/calendar-queries";
 import type {
   CreateEventRequest,
+  UpdateEventRequest,
   EEventType,
   EEventStatus,
   EEventVisibility,
@@ -97,10 +102,11 @@ const eventFormSchema = z.object({
 type EventFormData = z.infer<typeof eventFormSchema>;
 
 interface EventFormProps {
+  eventId?: string;
   initialStart?: Date;
   initialEnd?: Date;
   calendarId?: string;
-  onSubmit: (data: CreateEventRequest) => void;
+  onSubmit: (data: CreateEventRequest | UpdateEventRequest) => void;
   onCancel: () => void;
   submitLabel?: string;
 }
@@ -108,33 +114,50 @@ interface EventFormProps {
 // Event types and time zones will be loaded from config
 
 export default function EventForm({
+  eventId,
   initialStart,
   initialEnd,
   calendarId,
   onSubmit,
   onCancel,
-  submitLabel = "Create Event",
+  submitLabel,
 }: EventFormProps) {
   const { data: calendars = [] } = useCalendars();
   const { data: config } = useCalendarConfig();
+  const { data: existingEvent } = useEvent(eventId || "");
   const [showAdvanced, setShowAdvanced] = React.useState(false);
+
+  const isEditing = !!eventId;
+  const finalSubmitLabel =
+    submitLabel || (isEditing ? "Update Event" : "Create Event");
 
   const form = useForm<EventFormData>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      calendarId: calendarId || "",
-      title: "",
-      description: "",
-      location: "",
-      startTime: initialStart || new Date(),
-      endTime: initialEnd || new Date(Date.now() + 60 * 60 * 1000), // 1 hour later
-      isAllDay: false,
-      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      type: "event",
-      status: "confirmed",
-      visibility: "public",
-      reminders: [],
-      attendees: [],
+      calendarId: existingEvent?.calendarId || calendarId || "",
+      title: existingEvent?.title || "",
+      description: existingEvent?.description || "",
+      location: existingEvent?.location || "",
+      startTime: existingEvent
+        ? new Date(existingEvent.startTime)
+        : initialStart || new Date(),
+      endTime: existingEvent
+        ? new Date(existingEvent.endTime)
+        : initialEnd || new Date(Date.now() + 60 * 60 * 1000),
+      isAllDay: existingEvent?.isAllDay || false,
+      timeZone:
+        existingEvent?.timeZone ||
+        Intl.DateTimeFormat().resolvedOptions().timeZone,
+      type: existingEvent?.type || "event",
+      status: existingEvent?.status || "confirmed",
+      visibility: existingEvent?.visibility || "public",
+      reminders: existingEvent?.reminders || [],
+      attendees:
+        existingEvent?.attendees?.map((attendee) => ({
+          email: attendee.email,
+          name: attendee.name || "",
+          role: attendee.role,
+        })) || [],
     },
   });
 
@@ -150,28 +173,52 @@ export default function EventForm({
   }, [watchedStartTime, form]);
 
   const handleSubmit = (data: EventFormData) => {
-    const eventData: CreateEventRequest = {
-      calendarId: data.calendarId,
-      title: data.title,
-      description: data.description,
-      location: data.location,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      isAllDay: data.isAllDay,
-      timeZone: data.timeZone,
-      type: data.type,
-      status: data.status,
-      visibility: data.visibility,
-      reminders: data.reminders,
-      attendees: data.attendees?.map((attendee) => ({
-        email: attendee.email,
-        name: attendee.name,
-        status: "needs_action",
-        role: attendee.role,
-      })),
-    };
-
-    onSubmit(eventData);
+    if (isEditing) {
+      // Update existing event
+      const updateData: UpdateEventRequest = {
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        isAllDay: data.isAllDay,
+        timeZone: data.timeZone,
+        type: data.type,
+        status: data.status,
+        visibility: data.visibility,
+        reminders: data.reminders,
+        attendees: data.attendees?.map((attendee) => ({
+          email: attendee.email,
+          name: attendee.name,
+          status: "needs_action",
+          role: attendee.role,
+        })),
+      };
+      onSubmit(updateData);
+    } else {
+      // Create new event
+      const createData: CreateEventRequest = {
+        calendarId: data.calendarId,
+        title: data.title,
+        description: data.description,
+        location: data.location,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        isAllDay: data.isAllDay,
+        timeZone: data.timeZone,
+        type: data.type,
+        status: data.status,
+        visibility: data.visibility,
+        reminders: data.reminders,
+        attendees: data.attendees?.map((attendee) => ({
+          email: attendee.email,
+          name: attendee.name,
+          status: "needs_action",
+          role: attendee.role,
+        })),
+      };
+      onSubmit(createData);
+    }
   };
 
   const addReminder = () => {
@@ -836,7 +883,7 @@ export default function EventForm({
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">{submitLabel}</Button>
+          <Button type="submit">{finalSubmitLabel}</Button>
         </div>
       </form>
     </Form>
