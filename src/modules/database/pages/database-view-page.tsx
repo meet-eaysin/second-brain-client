@@ -2,12 +2,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatabaseView } from "@/modules/database-view";
-import { EDatabaseType } from "@/modules/database-view/types";
 
 export function DatabaseViewPage() {
   const { databaseId } = useParams<{ databaseId: string }>();
   const navigate = useNavigate();
-  console.log("## databaseId", databaseId)
 
   if (!databaseId) {
     return (

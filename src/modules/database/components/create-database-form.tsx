@@ -71,7 +71,6 @@ export function CreateDatabaseForm({
   onSuccess,
 }: CreateDatabaseFormProps) {
   const { currentWorkspace, isCurrentWorkspaceLoading } = useWorkspace();
-  console.log("$$ TEST", currentWorkspace);
   const createDatabaseMutation = useCreateDatabase();
 
   const form = useForm<CreateDatabaseFormData>({

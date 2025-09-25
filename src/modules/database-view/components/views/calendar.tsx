@@ -5,14 +5,13 @@ import {
   CalendarDatePagination,
   CalendarDatePicker,
   CalendarHeader,
-  CalendarItem,
   CalendarMonthPicker,
   CalendarProvider,
   CalendarYearPicker,
 } from "@/components/ui/kibo-ui/calendar";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
-import type { TRecord } from "@/modules/database-view/types";
+import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 
 interface CalendarProps {
@@ -25,7 +24,6 @@ export function Calendar({ className = "" }: CalendarProps) {
     records,
     isRecordsLoading,
     isPropertiesLoading,
-    onRecordEdit,
   } = useDatabaseView();
 
   // Find date properties for calendar display
@@ -42,6 +40,92 @@ export function Calendar({ className = "" }: CalendarProps) {
       properties[0]
     );
   }, [properties]);
+
+  // Find display properties (excluding title and date properties)
+  const displayProperties = useMemo(() => {
+    const excludedIds = new Set(
+      [titleProperty?.name, ...dateProperties.map(p => p.name)].filter(Boolean)
+    );
+
+    return properties.filter((p) => !excludedIds.has(p.name) && p.isVisible);
+  }, [properties, titleProperty?.name, dateProperties]);
+
+  const renderPropertyValue = (
+    property: (typeof properties)[0],
+    value: TPropertyValue
+  ) => {
+    if (value === null || value === undefined || value === "") return null;
+
+    switch (property.type) {
+      case EPropertyType.SELECT:
+        if (property.config?.options) {
+          const option = property.config.options.find(
+            (opt) => opt.id === value
+          );
+          if (option) {
+            return (
+              <span
+                className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
+                style={{ backgroundColor: option.color + "20", color: option.color }}
+              >
+                {option.label}
+              </span>
+            );
+          }
+        }
+        return <span className="text-xs">{String(value)}</span>;
+
+      case EPropertyType.MULTI_SELECT:
+        if (Array.isArray(value) && property.config?.options) {
+          return (
+            <div className="flex flex-wrap gap-1">
+              {value.slice(0, 2).map((val) => {
+                const option = property?.config?.options?.find(
+                  (opt) => opt.id === val
+                );
+                return (
+                  <span
+                    key={val}
+                    className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
+                    style={{ backgroundColor: option?.color + "20", color: option?.color }}
+                  >
+                    {option?.label || String(val)}
+                  </span>
+                );
+              })}
+              {value.length > 2 && (
+                <span className="text-xs text-muted-foreground">+{value.length - 2}</span>
+              )}
+            </div>
+          );
+        }
+        return null;
+
+      case EPropertyType.CHECKBOX:
+        return (
+          <span className={`text-xs ${value ? 'text-green-600' : 'text-red-600'}`}>
+            {value ? "✓" : "✗"}
+          </span>
+        );
+
+      case EPropertyType.DATE:
+        return (
+          <span className="text-xs text-muted-foreground">
+            {value ? new Date(String(value)).toLocaleDateString() : "-"}
+          </span>
+        );
+
+      case EPropertyType.NUMBER:
+        return <span className="text-xs font-medium">{String(value)}</span>;
+
+      default:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+            {String(value)}
+          </span>
+        );
+    }
+  };
 
   // Transform records for calendar format
   const calendarFeatures = useMemo(() => {
@@ -80,10 +164,35 @@ export function Calendar({ className = "" }: CalendarProps) {
           const endDate = new Date(dateValue); // Single day event
 
           // Use title property for name
-          const titleValue = titleProperty
-            ? record.properties[titleProperty.name] ?? "Untitled"
-            : "Untitled";
-          const name = String(titleValue);
+          let name = "Untitled";
+          if (titleProperty) {
+            const titleValue = record.properties[titleProperty.name];
+
+            if (titleValue !== null && titleValue !== undefined && titleValue !== "") {
+              // For select/multi-select, try to get the label
+              if (titleProperty.type === EPropertyType.SELECT || titleProperty.type === EPropertyType.MULTI_SELECT) {
+                const option = titleProperty.config?.options?.find((opt) => opt.id === titleValue);
+                name = option?.label || String(titleValue);
+              } else {
+                name = String(titleValue);
+              }
+            } else {
+              // Fallback: try other text properties or use record ID
+              const fallbackProps = properties.filter(p =>
+                p.type === EPropertyType.TEXT &&
+                p.name !== titleProperty.name &&
+                record.properties[p.name]
+              );
+
+              if (fallbackProps.length > 0) {
+                const fallbackValue = record.properties[fallbackProps[0].name];
+                name = String(fallbackValue);
+              } else {
+                // Use short record ID as last resort
+                name = `Untitled`;
+              }
+            }
+          }
 
           // Create status based on date source
           const status = {
@@ -207,13 +316,40 @@ export function Calendar({ className = "" }: CalendarProps) {
         <CalendarBody features={calendarFeatures}>
           {({ feature }) => {
             const record = recordMap.get(feature.id);
+            if (!record) return null;
+
             return (
               <div
                 key={feature.id}
-                className="cursor-pointer"
-                onClick={() => record && onRecordEdit?.(record)}
+                className="bg-background border rounded-md p-2 shadow-sm hover:shadow-md transition-shadow"
               >
-                <CalendarItem feature={feature} />
+                {/* Title and status */}
+                <div className="flex items-center gap-2 mb-1">
+                  <div
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: feature.status.color }}
+                  />
+                  <span className="font-medium text-sm truncate">{feature.name}</span>
+                </div>
+
+                {/* Display additional properties */}
+                {displayProperties.length > 0 && (
+                  <div className="space-y-1">
+                    {displayProperties.slice(0, 2).map((property) => {
+                      const value = record.properties[property.name];
+                      if (value === null || value === undefined || value === "") return null;
+
+                      return (
+                        <div key={property.name} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{property.name}:</span>
+                          <div className="flex-shrink-0 ml-1">
+                            {renderPropertyValue(property, value)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           }}

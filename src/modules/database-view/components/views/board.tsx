@@ -24,8 +24,6 @@ export function Board({ className = "" }: { className?: string }) {
     onRecordEdit,
   } = useDatabaseView();
 
-  console.log('Board view data:', { records, properties, currentView });
-
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
 
   const groupingProperty = useMemo(() => {
@@ -69,7 +67,6 @@ export function Board({ className = "" }: { className?: string }) {
     );
 
     const result = properties.filter((p) => !excludedIds.has(p.id));
-    console.log('Display properties:', result, 'excluded:', excludedIds, 'all properties:', properties);
     return result;
   }, [properties, groupingProperty?.id]);
 
@@ -162,7 +159,6 @@ export function Board({ className = "" }: { className?: string }) {
   const kanbanData = useMemo(() => {
     if (!records || !Array.isArray(records)) return [];
 
-    console.log('Creating kanbanData from records:', records.length, 'records');
 
     return records.map((record: TRecord) => {
       const titleValue = titleProperty
@@ -174,8 +170,6 @@ export function Board({ className = "" }: { className?: string }) {
         ? record.properties[groupingProperty.name]
         : "ungrouped";
       const column = String(groupValue || "ungrouped");
-
-      console.log('Record:', record.id, 'title:', title, 'column:', column, 'properties:', record.properties);
 
       return {
         id: record.id,
@@ -269,7 +263,6 @@ export function Board({ className = "" }: { className?: string }) {
             </KanbanHeader>
             <KanbanCards id={column.id}>
               {(item: (typeof kanbanData)[number]) => {
-                console.log('Rendering card for item:', item, 'displayProperties:', displayProperties);
                 return (
                   <KanbanCard
                     column={column.id}
@@ -289,7 +282,6 @@ export function Board({ className = "" }: { className?: string }) {
                         <div className="mt-2 space-y-1">
                           {displayProperties.map((property) => {
                             const value = item.record.properties[property.name];
-                            console.log('Property:', property.name, 'value:', value);
 
                             return (
                               <div

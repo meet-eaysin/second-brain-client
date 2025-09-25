@@ -48,7 +48,6 @@ export function Gantt({ className = "" }: { className?: string }) {
     records,
     isRecordsLoading,
     isPropertiesLoading,
-    onRecordEdit,
   } = useDatabaseView();
 
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
@@ -75,6 +74,92 @@ export function Gantt({ className = "" }: { className?: string }) {
       properties[0]
     );
   }, [properties]);
+
+  // Find display properties (excluding title and date properties)
+  const displayProperties = useMemo(() => {
+    const excludedIds = new Set(
+      [titleProperty?.name, ...dateProperties.map(p => p.name)].filter(Boolean)
+    );
+
+    return properties.filter((p) => !excludedIds.has(p.name) && p.isVisible);
+  }, [properties, titleProperty?.name, dateProperties]);
+
+  const renderPropertyValue = (
+    property: (typeof properties)[0],
+    value: TPropertyValue
+  ) => {
+    if (value === null || value === undefined || value === "") return null;
+
+    switch (property.type) {
+      case EPropertyType.SELECT:
+        if (property.config?.options) {
+          const option = property.config.options.find(
+            (opt) => opt.id === value
+          );
+          if (option) {
+            return (
+              <span
+                className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
+                style={{ backgroundColor: option.color + "20", color: option.color }}
+              >
+                {option.label}
+              </span>
+            );
+          }
+        }
+        return <span className="text-xs">{String(value)}</span>;
+
+      case EPropertyType.MULTI_SELECT:
+        if (Array.isArray(value) && property.config?.options) {
+          return (
+            <div className="flex flex-wrap gap-1">
+              {value.slice(0, 2).map((val) => {
+                const option = property?.config?.options?.find(
+                  (opt) => opt.id === val
+                );
+                return (
+                  <span
+                    key={val}
+                    className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
+                    style={{ backgroundColor: option?.color + "20", color: option?.color }}
+                  >
+                    {option?.label || String(val)}
+                  </span>
+                );
+              })}
+              {value.length > 2 && (
+                <span className="text-xs text-muted-foreground">+{value.length - 2}</span>
+              )}
+            </div>
+          );
+        }
+        return null;
+
+      case EPropertyType.CHECKBOX:
+        return (
+          <span className={`text-xs ${value ? 'text-green-600' : 'text-red-600'}`}>
+            {value ? "✓" : "✗"}
+          </span>
+        );
+
+      case EPropertyType.DATE:
+        return (
+          <span className="text-xs text-muted-foreground">
+            {value ? new Date(String(value)).toLocaleDateString() : "-"}
+          </span>
+        );
+
+      case EPropertyType.NUMBER:
+        return <span className="text-xs font-medium">{String(value)}</span>;
+
+      default:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+            {String(value)}
+          </span>
+        );
+    }
+  };
 
   // Transform records for Gantt format
   const ganttFeatures = useMemo(() => {
@@ -104,7 +189,7 @@ export function Gantt({ className = "" }: { className?: string }) {
 
         if (dateProperties.length > 0) {
           // Use actual date property
-          dateValue = record.properties?.[dateSource.id] as string;
+          dateValue = record.properties?.[dateSource.name] as string;
         } else {
           // Fall back to createdAt timestamp
           dateValue = record.createdAt || record.created_at;
@@ -115,10 +200,35 @@ export function Gantt({ className = "" }: { className?: string }) {
           const endDate = new Date(dateValue); // Single day event
 
           // Use title property for name
-          const titleValue = titleProperty
-            ? record.properties?.[titleProperty.id] ?? "Untitled"
-            : "Untitled";
-          const name = String(titleValue);
+          let name = "Untitled";
+          if (titleProperty) {
+            const titleValue = record.properties?.[titleProperty.name];
+
+            if (titleValue !== null && titleValue !== undefined && titleValue !== "") {
+              // For select/multi-select, try to get the label
+              if (titleProperty.type === EPropertyType.SELECT || titleProperty.type === EPropertyType.MULTI_SELECT) {
+                const option = titleProperty.config?.options?.find((opt) => opt.id === titleValue);
+                name = option?.label || String(titleValue);
+              } else {
+                name = String(titleValue);
+              }
+            } else {
+              // Fallback: try other text properties or use record ID
+              const fallbackProps = properties.filter(p =>
+                p.type === EPropertyType.TEXT &&
+                p.name !== titleProperty.name &&
+                record.properties?.[p.name]
+              );
+
+              if (fallbackProps.length > 0) {
+                const fallbackValue = record.properties[fallbackProps[0].name];
+                name = String(fallbackValue);
+              } else {
+                // Use short record ID as last resort
+                name = `Item ${record.id.slice(-4)}`;
+              }
+            }
+          }
 
           // Create status based on date source
           const status = {
@@ -129,11 +239,11 @@ export function Gantt({ className = "" }: { className?: string }) {
 
           // Create group based on grouping property or default
           const groupValue = groupingProperty
-            ? record.properties?.[groupingProperty.id]
+            ? record.properties?.[groupingProperty.name]
             : "ungrouped";
           const groupName = String(groupValue || "Ungrouped");
           const group = {
-            id: groupingProperty?.id || "default",
+            id: groupingProperty?.name || "default",
             name: groupName,
           };
 
@@ -167,12 +277,10 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }, [groupedFeatures]);
 
-  // Handle feature interactions
+  // Handle feature interactions - disabled to prevent modal opening
   const handleViewFeature = (id: string) => {
-    const feature = ganttFeatures.find((f) => f.id === id);
-    if (feature && onRecordEdit) {
-      onRecordEdit(feature.record);
-    }
+    // Click handlers disabled as requested
+    console.log(`Feature clicked: ${id}`);
   };
 
   const handleCopyLink = (id: string) => {
@@ -198,19 +306,19 @@ export function Gantt({ className = "" }: { className?: string }) {
     if (!feature) return;
 
     // Find the date property used for this feature
-    const datePropertyId = id.split("-").slice(1).join("-");
+    const datePropertyName = id.split("-").slice(1).join("-");
 
     // If using createdAt (fallback), don't allow moving
-    if (datePropertyId === "createdAt") {
+    if (datePropertyName === "createdAt") {
       console.log("Cannot move features based on creation date");
       return;
     }
 
-    const dateProperty = properties.find((p) => p.id === datePropertyId);
+    const dateProperty = properties.find((p) => p.name === datePropertyName);
     if (!dateProperty) return;
 
     const payload: Record<string, string> = {
-      [dateProperty.id]: startAt.toISOString(),
+      [dateProperty.name]: startAt.toISOString(),
     };
 
     try {
@@ -300,9 +408,31 @@ export function Gantt({ className = "" }: { className?: string }) {
                             onMove={handleMoveFeature}
                             {...feature}
                           >
-                            <p className="flex-1 truncate text-xs">
-                              {feature.name}
-                            </p>
+                            <div className="flex-1 min-w-0">
+                              <p className="truncate text-xs font-medium mb-1">
+                                {feature.name}
+                              </p>
+                              {/* Display additional properties */}
+                              {displayProperties.length > 0 && (
+                                <div className="space-y-0.5">
+                                  {displayProperties.slice(0, 1).map((property) => {
+                                    const value = feature.record.properties[property.name];
+                                    if (value === null || value === undefined || value === "") return null;
+
+                                    return (
+                                      <div key={property.name} className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground truncate mr-1">
+                                          {property.name}:
+                                        </span>
+                                        <div className="flex-shrink-0">
+                                          {renderPropertyValue(property, value)}
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                           </GanttFeatureItem>
                         </button>
                       </ContextMenuTrigger>

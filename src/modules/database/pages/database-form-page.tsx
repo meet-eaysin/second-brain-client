@@ -31,7 +31,6 @@ export function DatabaseFormPage() {
   const [showTemplates, setShowTemplates] = useState(true);
 
   const { currentWorkspace } = useWorkspace();
-  console.log("DATA currentWorkspace", currentWorkspace);
 
   const { data: featuredTemplates } = useFeaturedTemplates();
   const { data: officialTemplates } = useOfficialTemplates();
