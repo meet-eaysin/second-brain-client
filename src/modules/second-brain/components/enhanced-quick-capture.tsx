@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { 
     Plus, CheckSquare, BookOpen, Target, Users, 
-    Calendar, Zap, DollarSign, Lightbulb, X,
+    Calendar, Zap, Lightbulb, X,
     Mic, Camera, Link, Hash, Send
 } from 'lucide-react';
 import { secondBrainApi } from '../services/second-brain-api';

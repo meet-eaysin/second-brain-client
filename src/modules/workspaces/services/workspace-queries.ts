@@ -1,6 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { workspaceApi } from "./workspace-api";
-import type { IUpdateWorkspaceRequest } from "@/types/workspace.types";
+import type {
+  UpdateWorkspaceRequest,
+  GetWorkspacesQuery,
+  SearchWorkspacesQuery,
+  GetWorkspaceMembersQuery,
+  CreateWorkspaceRequest,
+  InviteMemberRequest,
+  UpdateMemberRoleRequest,
+  TransferOwnershipRequest,
+  BulkMemberOperationRequest,
+} from "@/types/workspace.types";
 import { toast } from "sonner";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { EDatabaseType } from "@/modules/database-view";
@@ -23,6 +33,13 @@ export const WORKSPACE_KEYS = {
   stats: () => [...WORKSPACE_KEYS.all, "stats"] as const,
   access: () => [...WORKSPACE_KEYS.all, "access"] as const,
   modules: () => [...WORKSPACE_KEYS.all, "modules"] as const,
+  lists: () => [...WORKSPACE_KEYS.all, "lists"] as const,
+  detail: (id: string) => [...WORKSPACE_KEYS.all, "detail", id] as const,
+  public: () => [...WORKSPACE_KEYS.all, "public"] as const,
+  search: (params: SearchWorkspacesQuery) => [...WORKSPACE_KEYS.all, "search", params] as const,
+  members: (workspaceId: string) => [...WORKSPACE_KEYS.all, "members", workspaceId] as const,
+  permissions: (workspaceId: string) => [...WORKSPACE_KEYS.all, "permissions", workspaceId] as const,
+  activity: (workspaceId: string) => [...WORKSPACE_KEYS.all, "activity", workspaceId] as const,
 };
 
 // Get user's workspaces
@@ -129,7 +146,7 @@ export const useUpdateCurrentWorkspace = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: IUpdateWorkspaceRequest) =>
+    mutationFn: (data: UpdateWorkspaceRequest) =>
       workspaceApi.updateCurrentWorkspace(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.current() });
@@ -195,7 +212,7 @@ export const useGetWorkspaceMembers = (
 export const useGetWorkspacePermissions = (workspaceId: string) => {
   return useQuery({
     queryKey: WORKSPACE_KEYS.permissions(workspaceId),
-    queryFn: () => workspaceApi.getWorkspacePermissions(workspaceId),
+    queryFn: () => workspaceApi.getWorkspacePermissions(),
     enabled: !!workspaceId,
     staleTime: 10 * 60 * 1000,
   });
@@ -204,7 +221,7 @@ export const useGetWorkspacePermissions = (workspaceId: string) => {
 export const useGetWorkspaceActivity = (workspaceId: string) => {
   return useQuery({
     queryKey: WORKSPACE_KEYS.activity(workspaceId),
-    queryFn: () => workspaceApi.getWorkspaceActivity(workspaceId),
+    queryFn: () => workspaceApi.getWorkspaceActivity(),
     enabled: !!workspaceId,
     staleTime: 2 * 60 * 1000,
   });
@@ -297,7 +314,7 @@ export const useLeaveWorkspace = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => workspaceApi.leaveWorkspace(id),
+    mutationFn: () => workspaceApi.leaveWorkspace(),
     onSuccess: (_, id) => {
       queryClient.removeQueries({ queryKey: WORKSPACE_KEYS.detail(id) });
 
@@ -316,11 +333,12 @@ export const useInviteMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ data }: { data: InviteMemberRequest }) =>
+    mutationFn: (data: InviteMemberRequest) =>
       workspaceApi.inviteMember(data),
-    onSuccess: (_, { workspaceId }) => {
+    onSuccess: () => {
+      // Since we don't have workspaceId in the response, we'll invalidate all member queries
       queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.members(workspaceId),
+        queryKey: WORKSPACE_KEYS.all,
       });
 
       toast.success("Member invited successfully");

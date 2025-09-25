@@ -64,10 +64,11 @@ export const API_ENDPOINTS = {
     REORDER: "/categories/reorder",
   },
   WORKSPACES: {
+    BASE: "/workspaces",
     LIST: "/workspaces",
     CREATE: "/workspaces",
     CURRENT: "/workspaces/current",
-    BY_ID: "/workspaces/current",
+    BY_ID: (id: string) => `/workspaces/${id}`,
     UPDATE: "/workspaces/current",
     DELETE: "/workspaces/current",
     CURRENT_STATS: "/workspaces/current/stats",
