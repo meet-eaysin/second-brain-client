@@ -30,9 +30,7 @@ import {
   PublicRoute,
   ProtectedRoute,
 } from "@/app/router/lazy-components";
-import AIAssistantPage from "@/modules/ai-assistant/pages/ai-assistant-page";
 import NotesPage from "@/modules/notes/pages/notes-page";
-import SearchPage from "@/modules/search/pages/search-page";
 import { SecondBrainRoutes } from "@/modules/second-brain/routes/second-brain-routes";
 import { DatabaseRoutes } from "@/modules/database/routes/database-routes";
 import HelpCenterPage from "@/modules/help-center";
@@ -77,39 +75,7 @@ const router = createBrowserRouter([
         element: <DatabaseRoutes />,
       },
       {
-        path: "ai-assistant",
-        element: <AIAssistantPage />,
-      },
-      {
         path: "notes",
-        element: <NotesPage />,
-      },
-      {
-        path: "ideas",
-        element: <NotesPage />,
-      },
-      {
-        path: "capture",
-        element: <NotesPage />,
-      },
-      {
-        path: "collections",
-        element: <NotesPage />,
-      },
-      {
-        path: "favorites",
-        element: <NotesPage />,
-      },
-      {
-        path: "recent",
-        element: <NotesPage />,
-      },
-      {
-        path: "search",
-        element: <SearchPage />,
-      },
-      {
-        path: "templates",
         element: <NotesPage />,
       },
       {

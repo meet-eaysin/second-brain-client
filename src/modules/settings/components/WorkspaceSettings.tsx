@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useAuthStore } from "@/modules/auth/store/authStore";
-import { workspaceApi } from "@/modules/workspaces/services/workspace-api";
 import { Button } from "@/components/ui/button";
 import {
   Card,

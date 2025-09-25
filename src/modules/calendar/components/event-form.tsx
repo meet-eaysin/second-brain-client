@@ -28,7 +28,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import {
@@ -36,13 +35,7 @@ import {
   useCalendarConfig,
   useEvent,
 } from "../services/calendar-queries";
-import type {
-  CreateEventRequest,
-  UpdateEventRequest,
-  EEventType,
-  EEventStatus,
-  EEventVisibility,
-} from "@/types/calendar";
+import type { CreateEventRequest, UpdateEventRequest } from "@/types/calendar";
 
 const eventFormSchema = z.object({
   calendarId: z.string().min(1, "Calendar is required"),
@@ -108,6 +101,7 @@ interface EventFormProps {
   calendarId?: string;
   onSubmit: (data: CreateEventRequest | UpdateEventRequest) => void;
   onCancel: () => void;
+  onDelete?: (eventId: string) => void;
   submitLabel?: string;
 }
 
@@ -120,6 +114,7 @@ export default function EventForm({
   calendarId,
   onSubmit,
   onCancel,
+  onDelete,
   submitLabel,
 }: EventFormProps) {
   const { data: calendars = [] } = useCalendars();
@@ -879,11 +874,25 @@ export default function EventForm({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-          <Button type="submit">{finalSubmitLabel}</Button>
+        <div className="flex justify-between gap-3">
+          <div>
+            {isEditing && onDelete && eventId && (
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                onClick={() => onDelete(eventId)}
+              >
+                Delete Event
+              </Button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button type="submit">{finalSubmitLabel}</Button>
+          </div>
         </div>
       </form>
     </Form>

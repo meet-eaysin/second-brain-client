@@ -37,14 +37,12 @@ export const NotificationSettings: React.FC = () => {
   const [weeklyDigest, setWeeklyDigest] = useState(false);
   const [notificationFrequency, setNotificationFrequency] =
     useState("immediate");
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Load settings from backend
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        setIsLoading(true);
         const settings = await settingsApi.getNotifications();
         setEmailNotifications(settings.emailNotifications);
         setPushNotifications(settings.pushNotifications);
@@ -56,8 +54,6 @@ export const NotificationSettings: React.FC = () => {
       } catch (error) {
         console.error("Failed to load notification settings:", error);
         toast.error("Failed to load notification settings");
-      } finally {
-        setIsLoading(false);
       }
     };
 

@@ -1,4 +1,3 @@
-import React from "react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Badge } from "@/components/ui/badge";

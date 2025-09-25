@@ -5,6 +5,13 @@ import type {
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
   WorkspaceStatsResponse,
+  GetWorkspacesQuery,
+  SearchWorkspacesQuery,
+  GetWorkspaceMembersQuery,
+  InviteMemberRequest,
+  UpdateMemberRoleRequest,
+  TransferOwnershipRequest,
+  BulkMemberOperationRequest,
 } from "@/types/workspace.types";
 import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
 import { EDatabaseType } from "@/modules/database-view";
@@ -21,9 +28,7 @@ export const workspaceApi = {
   },
 
   // Create workspace
-  createWorkspace: async (
-    data: CreateWorkspaceRequest
-  ): Promise<Workspace> => {
+  createWorkspace: async (data: CreateWorkspaceRequest): Promise<Workspace> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.BASE,
       data
@@ -123,7 +128,10 @@ export const workspaceApi = {
   },
 
   // Update workspace by ID
-  updateWorkspace: async (id: string, data: UpdateWorkspaceRequest): Promise<Workspace> => {
+  updateWorkspace: async (
+    id: string,
+    data: UpdateWorkspaceRequest
+  ): Promise<Workspace> => {
     const response = await apiClient.put<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.BY_ID(id),
       data
@@ -137,7 +145,10 @@ export const workspaceApi = {
   },
 
   // Duplicate workspace
-  duplicateWorkspace: async (_id: string, name?: string): Promise<Workspace> => {
+  duplicateWorkspace: async (
+    _id: string,
+    name?: string
+  ): Promise<Workspace> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.DUPLICATE,
       { name }
@@ -151,20 +162,33 @@ export const workspaceApi = {
   },
 
   // Get public workspaces
-  getPublicWorkspaces: async (params?: Record<string, unknown>): Promise<ApiResponse<Workspace[]>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.PUBLIC, { params });
+  getPublicWorkspaces: async (
+    params?: GetWorkspacesQuery
+  ): Promise<ApiResponse<Workspace[]>> => {
+    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.PUBLIC, {
+      params,
+    });
     return response.data;
   },
 
   // Search workspaces
-  searchWorkspaces: async (params: Record<string, unknown>): Promise<ApiResponse<Workspace[]>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.SEARCH, { params });
+  searchWorkspaces: async (
+    params: SearchWorkspacesQuery
+  ): Promise<ApiResponse<Workspace[]>> => {
+    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.SEARCH, {
+      params,
+    });
     return response.data;
   },
 
   // Get workspace members
-  getMembers: async (_workspaceId: string, params?: Record<string, unknown>): Promise<ApiResponse<unknown[]>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.MEMBERS, { params });
+  getMembers: async (
+    _workspaceId: string,
+    params?: GetWorkspaceMembersQuery
+  ): Promise<ApiResponse<unknown[]>> => {
+    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.MEMBERS, {
+      params,
+    });
     return response.data;
   },
 
@@ -181,14 +205,26 @@ export const workspaceApi = {
   },
 
   // Invite member
-  inviteMember: async (data: Record<string, unknown>): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.post(API_ENDPOINTS.WORKSPACES.INVITE, data);
+  inviteMember: async (
+    data: InviteMemberRequest
+  ): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORKSPACES.INVITE,
+      data
+    );
     return response.data;
   },
 
   // Update member role
-  updateMemberRole: async (_workspaceId: string, userId: string, data: Record<string, unknown>): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.put(API_ENDPOINTS.WORKSPACES.MEMBER_ROLE(userId), data);
+  updateMemberRole: async (
+    _workspaceId: string,
+    userId: string,
+    data: UpdateMemberRoleRequest
+  ): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.put(
+      API_ENDPOINTS.WORKSPACES.MEMBER_ROLE(userId),
+      data
+    );
     return response.data;
   },
 
@@ -198,14 +234,26 @@ export const workspaceApi = {
   },
 
   // Transfer ownership
-  transferOwnership: async (_workspaceId: string, data: Record<string, unknown>): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.post(API_ENDPOINTS.WORKSPACES.TRANSFER_OWNERSHIP, data);
+  transferOwnership: async (
+    _workspaceId: string,
+    data: TransferOwnershipRequest
+  ): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORKSPACES.TRANSFER_OWNERSHIP,
+      data
+    );
     return response.data;
   },
 
   // Bulk member operation
-  bulkMemberOperation: async (_workspaceId: string, data: Record<string, unknown>): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.post(API_ENDPOINTS.WORKSPACES.BULK_MEMBER_OPERATION, data);
+  bulkMemberOperation: async (
+    _workspaceId: string,
+    data: BulkMemberOperationRequest
+  ): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.post(
+      API_ENDPOINTS.WORKSPACES.BULK_MEMBER_OPERATION,
+      data
+    );
     return response.data;
   },
 };

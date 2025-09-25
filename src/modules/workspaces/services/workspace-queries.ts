@@ -36,10 +36,14 @@ export const WORKSPACE_KEYS = {
   lists: () => [...WORKSPACE_KEYS.all, "lists"] as const,
   detail: (id: string) => [...WORKSPACE_KEYS.all, "detail", id] as const,
   public: () => [...WORKSPACE_KEYS.all, "public"] as const,
-  search: (params: SearchWorkspacesQuery) => [...WORKSPACE_KEYS.all, "search", params] as const,
-  members: (workspaceId: string) => [...WORKSPACE_KEYS.all, "members", workspaceId] as const,
-  permissions: (workspaceId: string) => [...WORKSPACE_KEYS.all, "permissions", workspaceId] as const,
-  activity: (workspaceId: string) => [...WORKSPACE_KEYS.all, "activity", workspaceId] as const,
+  search: (params: SearchWorkspacesQuery) =>
+    [...WORKSPACE_KEYS.all, "search", params] as const,
+  members: (workspaceId: string) =>
+    [...WORKSPACE_KEYS.all, "members", workspaceId] as const,
+  permissions: (workspaceId: string) =>
+    [...WORKSPACE_KEYS.all, "permissions", workspaceId] as const,
+  activity: (workspaceId: string) =>
+    [...WORKSPACE_KEYS.all, "activity", workspaceId] as const,
 };
 
 // Get user's workspaces
@@ -315,9 +319,7 @@ export const useLeaveWorkspace = () => {
 
   return useMutation({
     mutationFn: () => workspaceApi.leaveWorkspace(),
-    onSuccess: (_, id) => {
-      queryClient.removeQueries({ queryKey: WORKSPACE_KEYS.detail(id) });
-
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
 
@@ -333,8 +335,7 @@ export const useInviteMember = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: InviteMemberRequest) =>
-      workspaceApi.inviteMember(data),
+    mutationFn: (data: InviteMemberRequest) => workspaceApi.inviteMember(data),
     onSuccess: () => {
       // Since we don't have workspaceId in the response, we'll invalidate all member queries
       queryClient.invalidateQueries({

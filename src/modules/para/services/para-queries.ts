@@ -1,15 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { paraApi } from "./para-api";
 import type {
-  IParaItem,
-  IParaStats,
   ICreateParaItemRequest,
   IUpdateParaItemRequest,
   IParaQueryParams,
   IMoveToArchiveRequest,
   IRestoreFromArchiveRequest,
   ICategorizeExistingItemRequest,
-  EParaCategory,
   EParaStatus,
   EParaPriority,
 } from "../types/para.types";

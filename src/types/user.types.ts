@@ -47,34 +47,6 @@ export interface UpdateUserRoleRequest {
     role: UserRole;
 }
 
-// User Statistics
-export interface UserStatsResponse {
-    totalUsers: number;
-    activeUsers: number;
-    newUsers: number;
-    usersByRole: {
-        USER: number;
-        MODERATOR: number;
-        ADMIN: number;
-    };
-    usersByProvider: {
-        LOCAL: number;
-        GOOGLE: number;
-    };
-    recentActivity: Array<{
-        date: string;
-        count: number;
-    }>;
-}
-
-// Paginated Users Response
-export interface PaginatedUsersResponse {
-    users: User[];
-    total: number;
-    totalPages: number;
-    currentPage: number;
-}
-
 // User Query Parameters
 export interface UserQueryParams {
     page?: number;
@@ -92,10 +64,4 @@ export interface UserStatsQueryParams {
     period?: 'day' | 'week' | 'month' | 'year';
     startDate?: string;
     endDate?: string;
-}
-
-// Bulk Update Response
-export interface BulkUpdateResponse {
-    updated: number;
-    errors: string[];
 }

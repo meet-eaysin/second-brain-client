@@ -1,10 +1,5 @@
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -219,7 +214,8 @@ export function SecondBrainDashboard() {
                     </Badge>
                     {task.dueDate && isValid(new Date(task.dueDate)) && (
                       <Badge variant="outline" className="text-xs">
-                        Due {formatDistanceToNow(task.dueDate, { addSuffix: true })}
+                        Due{" "}
+                        {formatDistanceToNow(task.dueDate, { addSuffix: true })}
                       </Badge>
                     )}
                   </div>
@@ -279,9 +275,7 @@ export function SecondBrainDashboard() {
             </CardHeader>
             <CardContent className="space-y-2">
               {recentNotes.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No recent notes
-                </p>
+                <p className="text-sm text-muted-foreground">No recent notes</p>
               ) : (
                 recentNotes.slice(0, 5).map((note) => (
                   <div
@@ -292,7 +286,11 @@ export function SecondBrainDashboard() {
                     <div className="flex-1">
                       <span className="text-sm font-medium">{note.title}</span>
                       <span className="text-xs text-muted-foreground block">
-                        {note.updatedAt && isValid(new Date(note.updatedAt)) ? formatDistanceToNow(note.updatedAt, { addSuffix: true }) : 'Recently'}
+                        {note.updatedAt && isValid(new Date(note.updatedAt))
+                          ? formatDistanceToNow(note.updatedAt, {
+                              addSuffix: true,
+                            })
+                          : "Recently"}
                       </span>
                     </div>
                   </div>
