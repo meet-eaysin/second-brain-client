@@ -35,6 +35,7 @@ import NotesPage from "@/modules/notes/pages/notes-page";
 import SearchPage from "@/modules/search/pages/search-page";
 import { SecondBrainRoutes } from "@/modules/second-brain/routes/second-brain-routes";
 import { DatabaseRoutes } from "@/modules/database/routes/database-routes";
+import HelpCenterPage from "@/modules/help-center";
 
 const UnauthorizedPage = lazy(
   () => import("@/modules/auth/pages/unauthorized-page")
@@ -54,6 +55,7 @@ const router = createBrowserRouter([
       </ErrorBoundary>
     ),
   },
+
   {
     path: getAppLink(),
     element: (
@@ -133,6 +135,14 @@ const router = createBrowserRouter([
       {
         path: getNotificationsLink().replace("/app/", ""),
         element: <NotificationsPage />,
+      },
+      {
+        path: "/app/help-center",
+        element: (
+          <ErrorBoundary>
+            <HelpCenterPage />
+          </ErrorBoundary>
+        ),
       },
       {
         path: "settings",

@@ -181,7 +181,7 @@ export const sidebarData = {
       items: [
         {
           title: "Help Center",
-          url: "/help-center",
+          url: "/app/help-center",
           icon: LucideHelpCircle,
         },
       ],
