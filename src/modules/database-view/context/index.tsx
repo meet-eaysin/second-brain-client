@@ -204,7 +204,8 @@ export function DatabaseViewProvider({
 
     return {
       databaseId: resolvedDatabaseId,
-      isLoading: isDatabasesByTypeLoading || initializeModulesMutation.isPending,
+      isLoading:
+        isDatabasesByTypeLoading || initializeModulesMutation.isPending,
     };
   };
 
@@ -277,7 +278,9 @@ export function DatabaseViewProvider({
 
   // Records query with offset/limit for Load More pagination
   // Use higher limit for board/kanban views that need to show all records
-  const isBoardView = currentViewResponse?.data?.type === 'board' || currentViewResponse?.data?.type === 'kanban';
+  const isBoardView =
+    currentViewResponse?.data?.type === "board" ||
+    currentViewResponse?.data?.type === "kanban";
   const recordLimit = isBoardView ? 1000 : 10;
 
   const recordQueryParams = {
@@ -323,7 +326,9 @@ export function DatabaseViewProvider({
 
   // Derive hasMoreRecords from current query response
   const hasMoreRecords = useMemo(() => {
-    return recordsResponse?.data ? recordsResponse.data.length === recordLimit : false;
+    return recordsResponse?.data
+      ? recordsResponse.data.length === recordLimit
+      : false;
   }, [recordsResponse?.data, recordLimit]);
 
   const loadMoreRecords = async () => {

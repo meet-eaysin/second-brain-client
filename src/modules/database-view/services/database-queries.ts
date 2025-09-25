@@ -93,10 +93,7 @@ export const DATABASE_KEYS = {
 };
 
 export const useDatabases = (params?: TDatabaseQueryParams) => {
-  return useQuery<
-    ApiResponse<TDatabase[]>,
-    AxiosError
-  >({
+  return useQuery<ApiResponse<TDatabase[]>, AxiosError>({
     queryKey: DATABASE_KEYS.list(params || {}),
     queryFn: () => databaseApi.getDatabases(params),
   });
@@ -732,6 +729,10 @@ export const useDeleteView = () => {
       queryClient.removeQueries({
         queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
       });
+
+      // Reset current view to trigger default view selection
+      // This will be handled by the context's useEffect that switches to default view
+      // when currentViewId is empty
 
       toast.success("View deleted successfully");
     },
