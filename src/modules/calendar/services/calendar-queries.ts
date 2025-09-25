@@ -1,11 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { calendarService } from "./calendar.service";
+import { calendarApi } from "./calendarApi";
 import type {
+  Calendar,
+  CalendarEvent,
+  CalendarConnection,
+  CalendarStats,
   CreateCalendarRequest,
   UpdateCalendarRequest,
   CreateEventRequest,
   UpdateEventRequest,
   CalendarEventsQuery,
+  ConnectCalendarRequest,
+  CalendarProvider,
+  ConnectionTestResponse,
+  ConnectionLogsResponse,
+  CalendarConnectionStats,
 } from "@/types/calendar";
 
 // Query Keys
@@ -23,13 +32,17 @@ export const CALENDAR_KEYS = {
   upcoming: () => [...CALENDAR_KEYS.events(), "upcoming"] as const,
   today: () => [...CALENDAR_KEYS.events(), "today"] as const,
   stats: () => [...CALENDAR_KEYS.all, "stats"] as const,
+  connections: () => [...CALENDAR_KEYS.all, "connections"] as const,
+  connectionDetail: (id: string) =>
+    [...CALENDAR_KEYS.connections(), id] as const,
+  providers: () => [...CALENDAR_KEYS.connections(), "providers"] as const,
 };
 
 // Calendar Queries
 export const useCalendars = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.lists(),
-    queryFn: () => calendarService.getCalendars(),
+    queryFn: () => calendarApi.getCalendars(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -37,7 +50,7 @@ export const useCalendars = () => {
 export const useCalendar = (calendarId: string) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.detail(calendarId),
-    queryFn: () => calendarService.getCalendar(calendarId),
+    queryFn: () => calendarApi.getCalendarById(calendarId),
     enabled: !!calendarId,
     staleTime: 5 * 60 * 1000,
   });
@@ -47,7 +60,7 @@ export const useCalendar = (calendarId: string) => {
 export const useEvents = (query: CalendarEventsQuery) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.eventsList(query),
-    queryFn: () => calendarService.getEvents(query),
+    queryFn: () => calendarApi.getEvents(query),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -55,7 +68,7 @@ export const useEvents = (query: CalendarEventsQuery) => {
 export const useEvent = (eventId: string) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.eventDetail(eventId),
-    queryFn: () => calendarService.getEvent(eventId),
+    queryFn: () => calendarApi.getEventById(eventId),
     enabled: !!eventId,
     staleTime: 5 * 60 * 1000,
   });
@@ -64,7 +77,7 @@ export const useEvent = (eventId: string) => {
 export const useUpcomingEvents = (limit: number = 10, days: number = 7) => {
   return useQuery({
     queryKey: [...CALENDAR_KEYS.upcoming(), { limit, days }],
-    queryFn: () => calendarService.getUpcomingEvents(limit, days),
+    queryFn: () => calendarApi.getUpcomingEvents(limit, days),
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -72,8 +85,51 @@ export const useUpcomingEvents = (limit: number = 10, days: number = 7) => {
 export const useTodayEvents = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.today(),
-    queryFn: () => calendarService.getTodayEvents(),
+    queryFn: () => calendarApi.getTodayEvents(),
     staleTime: 2 * 60 * 1000,
+  });
+};
+
+// Calendar Stats
+export const useCalendarStats = () => {
+  return useQuery({
+    queryKey: CALENDAR_KEYS.stats(),
+    queryFn: () => calendarApi.getCalendarStats(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
+// Calendar Connections
+export const useCalendarConnections = (activeOnly = true) => {
+  return useQuery({
+    queryKey: [...CALENDAR_KEYS.connections(), { activeOnly }],
+    queryFn: () => calendarApi.getCalendarConnections(activeOnly),
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCalendarConnection = (id: string) => {
+  return useQuery({
+    queryKey: CALENDAR_KEYS.connectionDetail(id),
+    queryFn: () => calendarApi.getCalendarConnectionById(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCalendarProviders = () => {
+  return useQuery({
+    queryKey: CALENDAR_KEYS.providers(),
+    queryFn: () => calendarApi.getCalendarProviders(),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useCalendarConnectionStats = () => {
+  return useQuery({
+    queryKey: [...CALENDAR_KEYS.connections(), "stats"],
+    queryFn: () => calendarApi.getCalendarConnectionsStats(),
+    staleTime: 10 * 60 * 1000,
   });
 };
 
@@ -83,7 +139,7 @@ export const useCreateCalendar = () => {
 
   return useMutation({
     mutationFn: (data: CreateCalendarRequest) =>
-      calendarService.createCalendar(data),
+      calendarApi.createCalendar(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.lists() });
     },
@@ -100,7 +156,7 @@ export const useUpdateCalendar = () => {
     }: {
       calendarId: string;
       data: UpdateCalendarRequest;
-    }) => calendarService.updateCalendar(calendarId, data),
+    }) => calendarApi.updateCalendar(calendarId, data),
     onSuccess: (_, { calendarId }) => {
       queryClient.invalidateQueries({
         queryKey: CALENDAR_KEYS.detail(calendarId),
@@ -114,8 +170,7 @@ export const useDeleteCalendar = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (calendarId: string) =>
-      calendarService.deleteCalendar(calendarId),
+    mutationFn: (calendarId: string) => calendarApi.deleteCalendar(calendarId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.lists() });
     },
@@ -127,7 +182,7 @@ export const useCreateEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateEventRequest) => calendarService.createEvent(data),
+    mutationFn: (data: CreateEventRequest) => calendarApi.createEvent(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.events() });
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.upcoming() });
@@ -146,7 +201,7 @@ export const useUpdateEvent = () => {
     }: {
       eventId: string;
       data: UpdateEventRequest;
-    }) => calendarService.updateEvent(eventId, data),
+    }) => calendarApi.updateEvent(eventId, data),
     onSuccess: (_, { eventId }) => {
       queryClient.invalidateQueries({
         queryKey: CALENDAR_KEYS.eventDetail(eventId),
@@ -162,7 +217,7 @@ export const useDeleteEvent = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (eventId: string) => calendarService.deleteEvent(eventId),
+    mutationFn: (eventId: string) => calendarApi.deleteEvent(eventId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.events() });
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.upcoming() });
@@ -171,15 +226,97 @@ export const useDeleteEvent = () => {
   });
 };
 
-// Calendar Stats - TODO: Implement when backend supports it
-// export const useCalendarStats = () => {
-//   return useQuery({
-export const useCalendarStats = () => {
-  return useQuery({
-    queryKey: CALENDAR_KEYS.stats(),
-    queryFn: () => calendarService.getCalendarStats(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
+// Connection Mutations
+export const useConnectCalendar = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: ConnectCalendarRequest) =>
+      calendarApi.connectCalendar(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.connections() });
+    },
   });
 };
-//   });
-// };
+
+export const useUpdateCalendarConnection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: {
+        syncEnabled?: boolean;
+        syncFrequency?: number;
+        syncSettings?: Partial<CalendarConnection["syncSettings"]>;
+      };
+    }) => calendarApi.updateCalendarConnection(id, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({
+        queryKey: CALENDAR_KEYS.connectionDetail(id),
+      });
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.connections() });
+    },
+  });
+};
+
+export const useDisconnectCalendar = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => calendarApi.disconnectCalendar(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.connections() });
+    },
+  });
+};
+
+export const useSyncCalendarConnection = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => calendarApi.syncCalendarConnection(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: CALENDAR_KEYS.connectionDetail(id),
+      });
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.connections() });
+    },
+  });
+};
+
+export const useTestCalendarConnection = () => {
+  return useMutation({
+    mutationFn: (id: string) => calendarApi.testCalendarConnection(id),
+  });
+};
+
+export const useResetCalendarConnectionErrors = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => calendarApi.resetCalendarConnectionErrors(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({
+        queryKey: CALENDAR_KEYS.connectionDetail(id),
+      });
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.connections() });
+    },
+  });
+};
+
+export const useSyncTimeRelatedModules = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => calendarApi.syncTimeRelatedModules(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.events() });
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.upcoming() });
+      queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.today() });
+    },
+  });
+};

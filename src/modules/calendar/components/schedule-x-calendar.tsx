@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import type { SlotInfo, View } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
@@ -61,12 +61,18 @@ export default function ShadcnBigCalendarComponent({
   );
   const [date, setDate] = useState(new Date());
 
+  // Memoize query parameters to prevent infinite re-renders
+  const queryParams = useMemo(
+    () => ({
+      startDate: new Date(date.getFullYear(), date.getMonth() - 1, 1),
+      endDate: new Date(date.getFullYear(), date.getMonth() + 2, 0),
+      calendarIds: selectedCalendars.length > 0 ? selectedCalendars : undefined,
+    }),
+    [date, selectedCalendars]
+  );
+
   // Fetch events for current view
-  const { data: events = [] } = useEvents({
-    startDate: new Date(date.getFullYear(), date.getMonth() - 1, 1),
-    endDate: new Date(date.getFullYear(), date.getMonth() + 2, 0),
-    calendarIds: selectedCalendars.length > 0 ? selectedCalendars : undefined,
-  });
+  const { data: events = [] } = useEvents(queryParams);
 
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();

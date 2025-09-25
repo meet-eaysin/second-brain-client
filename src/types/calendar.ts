@@ -370,3 +370,60 @@ export interface BusyTimesResponse {
   };
   count: number;
 }
+
+// Calendar Provider Info
+export interface CalendarProvider {
+  id: ECalendarProvider;
+  name: string;
+  description: string;
+  authType: "oauth2" | "basic" | "caldav" | "none";
+  features: string[];
+  setupInstructions: string;
+}
+
+// Connection Test Response
+export interface ConnectionTestResponse {
+  status: "connected" | "error";
+  error?: string;
+  calendarsFound?: number;
+  provider: ECalendarProvider;
+  accountEmail: string;
+}
+
+// Connection Logs Response
+export interface ConnectionLogsResponse {
+  logs: CalendarSyncLog[];
+  connectionId: string;
+  total: number;
+}
+
+// Sync Log
+export interface CalendarSyncLog {
+  id: string;
+  connectionId: string;
+  syncType: "full" | "incremental" | "manual";
+  status: "success" | "error" | "partial";
+  startedAt: Date;
+  completedAt?: Date;
+  eventsProcessed: number;
+  eventsCreated: number;
+  eventsUpdated: number;
+  eventsDeleted: number;
+  error?: string;
+  metadata: Record<string, unknown>;
+}
+
+// Connection Stats
+export interface CalendarConnectionStats {
+  totalConnections: number;
+  activeConnections: number;
+  syncEnabledConnections: number;
+  connectionsByProvider: Record<string, number>;
+  recentSyncActivity: {
+    connectionId: string;
+    status: string;
+    startedAt: Date;
+    completedAt?: Date;
+    eventsProcessed: number;
+  }[];
+}

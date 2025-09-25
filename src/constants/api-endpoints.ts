@@ -401,4 +401,38 @@ export const API_ENDPOINTS = {
     WORKSPACE: "/settings/workspace",
     RESET: "/settings/reset",
   },
+  CALENDAR: {
+    // Calendar CRUD
+    LIST: "/calendar",
+    CREATE: "/calendar",
+    BY_ID: (id: string) => `/calendar/${id}`,
+    UPDATE: (id: string) => `/calendar/${id}`,
+    DELETE: (id: string) => `/calendar/${id}`,
+
+    // Events
+    EVENTS: "/calendar/events",
+    EVENT_BY_ID: (id: string) => `/calendar/events/${id}`,
+    EVENTS_UPCOMING: "/calendar/events/upcoming",
+    EVENTS_TODAY: "/calendar/events/today",
+    EVENTS_SEARCH: "/calendar/events/search",
+    EVENTS_BY_ENTITY: (entityType: string, entityId: string) =>
+      `/calendar/events/entity/${entityType}/${entityId}`,
+
+    // Views and stats
+    VIEW_CALENDAR: "/calendar/view/calendar",
+    VIEW_BUSY_TIMES: "/calendar/view/busy-times",
+    STATS: "/calendar/stats",
+    SYNC_TIME_RELATED: "/calendar/sync/time-related",
+
+    // External connections
+    CONNECTIONS_PROVIDERS: "/calendar/connections/providers",
+    CONNECTIONS: "/calendar/connections",
+    CONNECTION_BY_ID: (id: string) => `/calendar/connections/${id}`,
+    CONNECTION_SYNC: (id: string) => `/calendar/connections/${id}/sync`,
+    CONNECTION_TEST: (id: string) => `/calendar/connections/${id}/test`,
+    CONNECTION_RESET_ERRORS: (id: string) =>
+      `/calendar/connections/${id}/reset-errors`,
+    CONNECTION_LOGS: (id: string) => `/calendar/connections/${id}/logs`,
+    CONNECTIONS_STATS: "/calendar/connections/stats",
+  },
 } as const;
