@@ -10,6 +10,8 @@ import { useDashboardOverview } from "../services/home-queries";
 import {
   GanttProvider,
   GanttSidebar,
+  GanttSidebarGroup,
+  GanttSidebarItem,
   GanttTimeline,
   GanttHeader,
   GanttFeatureList,
@@ -361,11 +363,30 @@ export function HomePage() {
                 <div className="h-64 overflow-hidden rounded border">
                   <GanttProvider range="monthly" zoom={80}>
                     <GanttSidebar>
-                      <div className="p-2">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">
-                          Time Blocks
-                        </p>
-                      </div>
+                      <GanttSidebarGroup name="Today's Events">
+                        {displayFeatures.map((feature) => (
+                          <GanttSidebarItem
+                            key={feature.id}
+                            feature={feature}
+                            onSelectItem={(id) => {
+                              // Scroll to the feature in the timeline
+                              const ganttElement = document.querySelector(
+                                '[data-roadmap-ui="gantt-sidebar"]'
+                              )?.parentElement;
+                              if (ganttElement) {
+                                const featureElement =
+                                  ganttElement.querySelector(
+                                    `[data-feature-id="${id}"]`
+                                  );
+                                featureElement?.scrollIntoView({
+                                  behavior: "smooth",
+                                  block: "center",
+                                });
+                              }
+                            }}
+                          />
+                        ))}
+                      </GanttSidebarGroup>
                     </GanttSidebar>
                     <GanttTimeline>
                       <GanttHeader />
