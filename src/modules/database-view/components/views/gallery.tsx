@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,22 @@ export function Gallery({ className = "" }: { className?: string }) {
     onLoadMoreRecords,
   } = useDatabaseView();
 
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
   const { mutateAsync: updateRecordMutation } = useUpdateRecord();
+
+  const toggleCardExpansion = (recordId: string) => {
+    setExpandedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(recordId)) {
+        newSet.delete(recordId);
+      } else {
+        newSet.add(recordId);
+      }
+      return newSet;
+    });
+  };
+
   // Find the grouping property (usually a SELECT property)
   const groupingProperty = useMemo(() => {
     return (
@@ -124,7 +139,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     if (records && Array.isArray(records)) {
       records.forEach((record: TRecord) => {
         const groupValue = groupingProperty
-          ? record.properties[groupingProperty.id]
+          ? record.properties[groupingProperty.name]
           : "ungrouped";
 
         const groupId = String(groupValue || "ungrouped");
@@ -145,17 +160,19 @@ export function Gallery({ className = "" }: { className?: string }) {
     const titleProperty =
       properties.find((p) => p.type === EPropertyType.TEXT) || properties[0];
     const titleValue = titleProperty
-      ? record.properties[titleProperty.id] ?? "Untitled"
+      ? record.properties[titleProperty.name] ?? "Untitled"
       : "Untitled";
     const title = String(titleValue);
 
     // Get all visible properties except the grouping property and title property
     const visibleProperties = properties.filter(
       (p) =>
-        p.id !== groupingProperty?.id &&
-        p.id !== titleProperty?.id &&
-        currentView?.settings?.visibleProperties?.includes(p.id)
+        p.name !== groupingProperty?.name &&
+        p.name !== titleProperty?.name
     );
+
+    const isExpanded = expandedCards.has(record.id);
+    const displayedProperties = isExpanded ? visibleProperties : visibleProperties.slice(0, 5);
 
     return (
       <Draggable key={record.id} draggableId={record.id} index={index}>
@@ -163,18 +180,18 @@ export function Gallery({ className = "" }: { className?: string }) {
           <Card
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`mb-3 hover:shadow-md transition-all duration-200 group ${
+            className={`mb-3 hover:shadow-md transition-all duration-200 group h-fit max-h-96 overflow-hidden ${
               snapshot.isDragging
                 ? "shadow-xl rotate-2 scale-105 bg-background border-primary"
                 : "hover:shadow-md"
             }`}
           >
             <CardHeader className="pb-2">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   <div
                     {...provided.dragHandleProps}
-                    className={`cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-all duration-200 ${
+                    className={`cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-all duration-200 flex-shrink-0 ${
                       snapshot.isDragging
                         ? "text-primary"
                         : "opacity-0 group-hover:opacity-100"
@@ -183,15 +200,17 @@ export function Gallery({ className = "" }: { className?: string }) {
                   >
                     <GripVertical className="h-4 w-4" />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 overflow-hidden">
                     {titleProperty ? (
-                      <EditableCell
-                        record={record}
-                        property={titleProperty}
-                        value={record.properties[titleProperty.id]}
-                      />
+                      <div className="text-sm font-medium line-clamp-2 break-words">
+                        <EditableCell
+                          record={record}
+                          property={titleProperty}
+                          value={record.properties[titleProperty.name]}
+                        />
+                      </div>
                     ) : (
-                      <CardTitle className="text-sm font-medium line-clamp-2">
+                      <CardTitle className="text-sm font-medium line-clamp-2 break-words">
                         {title || "Untitled"}
                       </CardTitle>
                     )}
@@ -202,7 +221,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 flex-shrink-0"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-3 w-3" />
@@ -233,28 +252,36 @@ export function Gallery({ className = "" }: { className?: string }) {
               </div>
             </CardHeader>
             {visibleProperties.length > 0 && (
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 max-h-64 overflow-y-auto">
                 <div className="space-y-2">
-                  {visibleProperties.map((property) => {
-                    const value = record.properties[property.id];
-                    return (
-                      <div
-                        key={property.id}
-                        className="flex items-center gap-2 min-h-[32px]"
-                      >
-                        <span className="text-xs font-medium text-muted-foreground min-w-0 flex-shrink-0">
-                          {property.name}:
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <EditableCell
-                            record={record}
-                            property={property}
-                            value={value}
-                          />
-                        </div>
+                  {displayedProperties.map((property) => (
+                    <div
+                      key={property.id}
+                      className="flex items-start gap-2 min-h-[28px]"
+                    >
+                      <span className="text-xs text-muted-foreground font-medium flex-shrink-0 leading-5">
+                        {property.name}:
+                      </span>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <EditableCell
+                          record={record}
+                          property={property}
+                          value={record.properties[property.name]}
+                        />
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
+                  {visibleProperties.length > 5 && (
+                    <div
+                      className="text-xs text-muted-foreground text-center py-1 cursor-pointer hover:text-foreground transition-colors"
+                      onClick={() => toggleCardExpansion(record.id)}
+                    >
+                      {isExpanded
+                        ? "Show less"
+                        : `+${visibleProperties.length - 5} more properties`
+                      }
+                    </div>
+                  )}
                 </div>
               </CardContent>
             )}

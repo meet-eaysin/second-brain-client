@@ -201,9 +201,9 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
           <Tags
             open={isEditing}
             onOpenChange={(open) => setIsEditing(open)}
-            className="max-w-[250px]"
+            className="max-w-[180px] inline-block"
           >
-            <TagsTrigger>
+            <TagsTrigger className="h-6 px-2 py-1 text-xs">
               {currentSelectedValues.map((selectedId) => {
                 const option = property.config?.options?.find(
                   (opt) => opt.id === selectedId
@@ -224,7 +224,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             </TagsTrigger>
             <TagsContent>
               <TagsInput placeholder="Search options..." />
-              <TagsList>
+              <TagsList className="max-h-[150px]">
                 <TagsEmpty />
                 <TagsGroup>
                   {property.config?.options?.map((option) => (
@@ -337,28 +337,34 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
     switch (property.type) {
       case EPropertyType.CHECKBOX:
-        return <Checkbox checked={Boolean(value)} disabled />;
+        return (
+          <Badge variant={value ? "default" : "secondary"} className="text-xs">
+            {value ? "Yes" : "No"}
+          </Badge>
+        );
 
       case EPropertyType.SELECT:
         if (typeof value === "string" && property.config?.options) {
           const option = property.config.options.find(
             (opt) => opt.id === value
           );
-          return option ? (
-            <Badge
-              variant="secondary"
-              style={{
-                backgroundColor: option.color + "20",
-                color: option.color,
-              }}
-            >
-              {option.label}
-            </Badge>
-          ) : (
-            <span>{value}</span>
-          );
+          if (option) {
+            return (
+              <Badge
+                variant="outline"
+                className="text-xs text-white border-0"
+                style={{ backgroundColor: option.color || "#6b7280" }}
+              >
+                {option.label}
+              </Badge>
+            );
+          }
         }
-        return <span>{String(value)}</span>;
+        return (
+          <Badge variant="secondary" className="text-xs">
+            {String(value)}
+          </Badge>
+        );
 
       case EPropertyType.MULTI_SELECT:
         if (!Array.isArray(value) || value.length === 0) {
@@ -366,35 +372,41 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         }
         return (
           <div className="flex flex-wrap gap-1">
-            {(value as string[]).map((val) => {
+            {(value as string[]).slice(0, 2).map((val) => {
               const option = property.config?.options?.find(
                 (opt) => opt.id === val
               );
               return option ? (
                 <Badge
                   key={option.id}
-                  variant="secondary"
-                  style={{
-                    backgroundColor: option.color + "20",
-                    color: option.color,
-                  }}
-                  className="text-xs"
+                  variant="outline"
+                  className="text-xs text-white border-0"
+                  style={{ backgroundColor: option.color || "#6b7280" }}
                 >
                   {option.label}
                 </Badge>
               ) : (
-                <Badge key={val} variant="outline" className="text-xs">
+                <Badge key={val} variant="secondary" className="text-xs">
                   {val}
                 </Badge>
               );
             })}
+            {value.length > 2 && (
+              <Badge variant="secondary" className="text-xs">
+                +{value.length - 2}
+              </Badge>
+            )}
           </div>
         );
 
       case EPropertyType.DATE: {
         const displayDateValue = getDateValue(value);
         if (!displayDateValue) return null;
-        return format(displayDateValue, "MMM d, yyyy");
+        return (
+          <span className="text-xs text-muted-foreground">
+            {format(displayDateValue, "MMM d, yyyy")}
+          </span>
+        );
       }
 
       case EPropertyType.EMAIL: {
@@ -446,12 +458,20 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
       }
 
       case EPropertyType.NUMBER:
-        return typeof value === "number"
-          ? value.toLocaleString()
-          : String(value);
+        return (
+          <span className="text-xs font-medium">
+            {typeof value === "number"
+              ? value.toLocaleString()
+              : String(value)}
+          </span>
+        );
 
       default:
-        return String(value);
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            {String(value)}
+          </span>
+        );
     }
   };
 

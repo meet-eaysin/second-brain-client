@@ -3,13 +3,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet.tsx";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog.tsx";
 import {
   Form,
   FormControl,
@@ -250,6 +250,22 @@ export function PropertyForm() {
     }
   }, [property, mode, form]);
 
+  // Cleanup effect when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      // Ensure any lingering state is cleaned up
+      setSelectOptions([]);
+      setNewOptionName("");
+      setUseAutoColors(false);
+
+      // Force close any open dropdowns/popovers by dispatching a global click
+      // This ensures no lingering backdrops from nested dropdown menus
+      setTimeout(() => {
+        document.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }, 0);
+    }
+  }, [isOpen]);
+
   const selectedType = form.watch("type");
 
   const handleSubmit = async (data: PropertyFormData) => {
@@ -368,7 +384,7 @@ export function PropertyForm() {
           />
 
           {!useAutoColors && (
-            <DropdownMenu modal={false}>
+            <DropdownMenu modal={false} onOpenChange={() => {}}>
               <DropdownMenuTrigger asChild>
                 <Button
                   type="button"
@@ -442,7 +458,7 @@ export function PropertyForm() {
               >
                 <div className="flex items-center gap-2 flex-1">
                   {!useAutoColors ? (
-                    <DropdownMenu modal={false}>
+                    <DropdownMenu modal={false} onOpenChange={() => {}}>
                       <DropdownMenuTrigger asChild>
                         <Button
                           type="button"
@@ -521,21 +537,30 @@ export function PropertyForm() {
     );
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onDialogOpen(null);
+      onPropertyChange(null);
+    }
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
-      <SheetContent className="overflow-y-auto w-[500px] sm:w-[700px] lg:w-[800px] px-6">
-        <SheetHeader className="space-y-4 pb-3 px-2">
+    <Dialog open={true} onOpenChange={handleOpenChange}>
+      <DialogContent className="overflow-y-auto max-w-[800px] w-full max-h-[90vh] px-6">
+        <DialogHeader className="space-y-4 pb-3 px-2">
           <div>
-            <SheetTitle className="text-xl">
+            <DialogTitle className="text-xl">
               {mode === "create" ? "Create Property" : "Edit Property"}
-            </SheetTitle>
-            <SheetDescription className="text-muted-foreground">
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               {mode === "create"
                 ? "Add a new property to structure your database."
                 : "Modify the property configuration."}
-            </SheetDescription>
+            </DialogDescription>
           </div>
-        </SheetHeader>
+        </DialogHeader>
 
         <Form {...form}>
           <form
@@ -694,11 +719,11 @@ export function PropertyForm() {
             </div>
 
             {renderSelectOptionsEditor()}
-            <SheetFooter className="flex gap-3 pt-6 border-t px-1">
+            <DialogFooter className="flex gap-3 pt-6 border-t px-1">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onDialogOpen(null)}
+                onClick={() => handleOpenChange(false)}
                 disabled={
                   createPropertyMutation.isPending ||
                   updatePropertyMutation.isPending
@@ -729,10 +754,10 @@ export function PropertyForm() {
                   </>
                 )}
               </Button>
-            </SheetFooter>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

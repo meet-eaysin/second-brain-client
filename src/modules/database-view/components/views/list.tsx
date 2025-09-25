@@ -71,16 +71,22 @@ export function List({ className = "" }: { className?: string }) {
     );
   }, [properties]);
 
-  // Find display properties (excluding title and grouping properties)
+  // Find display properties (excluding grouping property, but include title if there are few properties)
   const displayProperties = useMemo(() => {
-    const excludedIds = new Set(
-      [titleProperty?.id, groupingProperty?.id].filter(Boolean)
-    );
+    const excludedIds = new Set([groupingProperty?.id].filter(Boolean));
 
+    // If we have very few visible properties, include the title property too
+    const visibleProperties = properties.filter((p) => p.isVisible);
+    if (visibleProperties.length <= 2) {
+      // Include title property for more information
+      return visibleProperties.filter((p) => !excludedIds.has(p.id));
+    }
+
+    // Otherwise exclude title property
+    excludedIds.add(titleProperty?.id);
     return properties.filter((p) => !excludedIds.has(p.id) && p.isVisible);
   }, [properties, titleProperty?.id, groupingProperty?.id]);
 
-  // Helper function to render property values
   const renderPropertyValue = (
     property: (typeof properties)[0],
     value: TPropertyValue
@@ -170,15 +176,48 @@ export function List({ className = "" }: { className?: string }) {
   const listFeatures = useMemo(() => {
     if (!records || !Array.isArray(records)) return [];
 
-    return records.map((record: TRecord) => {
-      const titleValue = titleProperty
-        ? record.properties[titleProperty.id] ?? "Untitled"
-        : "Untitled";
-      const title = String(titleValue);
+    return records.map((record: TRecord, index: number) => {
+      // Try to get a meaningful title
+      let title = `Item ${index + 1}`; // Use sequential numbering
+
+      if (titleProperty) {
+        const titleValue = record.properties[titleProperty.name];
+
+        if (titleValue !== null && titleValue !== undefined && titleValue !== "") {
+          // For select/multi-select, try to get the label
+          if (titleProperty.type === EPropertyType.SELECT || titleProperty.type === EPropertyType.MULTI_SELECT) {
+            const option = titleProperty.config?.options?.find((opt) => opt.id === titleValue);
+            title = option?.label || String(titleValue);
+          } else {
+            title = String(titleValue);
+          }
+        }
+      }
+
+      // If still default, try to use any non-empty property as title
+      if (title === `Item ${index + 1}`) {
+        for (const prop of properties) {
+          if (prop.name !== titleProperty?.name && prop.isVisible) {
+            const propValue = record.properties[prop.name];
+            if (propValue !== null && propValue !== undefined && propValue !== "") {
+              if (prop.type === EPropertyType.SELECT || prop.type === EPropertyType.MULTI_SELECT) {
+                const option = prop.config?.options?.find((opt) => opt.id === propValue);
+                if (option) {
+                  title = `${option.label} Item`;
+                  break;
+                }
+              } else if (typeof propValue === 'string' && propValue.length > 0) {
+                title = propValue.length > 20 ? propValue.substring(0, 20) + '...' : propValue;
+                break;
+              }
+            }
+          }
+        }
+      }
 
       // Get status/grouping value
       const statusValue = groupingProperty
-        ? record.properties[groupingProperty.id]
+        ? record.properties[groupingProperty.name]
         : "ungrouped";
       const statusId = String(statusValue || "ungrouped");
 
@@ -209,7 +248,7 @@ export function List({ className = "" }: { className?: string }) {
 
     // Update the record in the database
     const payload: Record<string, TPropertyValue> = {
-      [groupingProperty.id]: status.id === "ungrouped" ? null : status.id,
+      [groupingProperty.name]: status.id === "ungrouped" ? null : status.id,
     };
 
     try {
@@ -242,64 +281,85 @@ export function List({ className = "" }: { className?: string }) {
   return (
     <div className={`w-full h-full overflow-auto ${className}`}>
       <ListProvider onDragEnd={handleDragEnd}>
-        {statuses.map((status) => (
-          <ListGroup id={status.name} key={status.name}>
-            <ListHeader color={status.color} name={status.name} />
-            <ListItems>
-              {listFeatures
-                .filter((feature) => feature.status.name === status.name)
-                .map((feature, index) => (
-                  <ListItem
-                    id={feature.id}
-                    index={index}
-                    key={feature.id}
-                    name={feature.name}
-                    parent={feature.status.name}
-                  >
-                    <div
-                      className="h-2 w-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: feature.status.color }}
-                    />
-                    <div
-                      className="flex-1 cursor-pointer"
-                      onClick={() => onRecordEdit?.(feature.record)}
-                    >
-                      <p className="m-0 font-medium text-sm">{feature.name}</p>
-                      {/* Display additional properties */}
-                      {displayProperties.length > 0 && (
-                        <div className="mt-1 space-y-1">
-                          {displayProperties.map((property) => {
-                            const value =
-                              feature.record.properties[property.id];
-                            if (
-                              value === null ||
-                              value === undefined ||
-                              value === ""
-                            )
-                              return null;
+        {statuses.map((status) => {
+          const filteredFeatures = listFeatures.filter((feature) => feature.status.name === status.name);
 
-                            return (
-                              <div
-                                key={property.id}
-                                className="flex items-center justify-between"
-                              >
-                                <span className="text-xs text-muted-foreground font-medium">
-                                  {property.name}:
-                                </span>
-                                <div className="ml-2">
-                                  {renderPropertyValue(property, value)}
+          return (
+            <ListGroup id={status.name} key={status.name}>
+              <ListHeader color={status.color} name={status.name} />
+              <ListItems>
+                {filteredFeatures.length === 0 ? (
+                  <div className="text-xs text-muted-foreground p-2">
+                    No items in {status.name}
+                  </div>
+                ) : (
+                  filteredFeatures.map((feature, index) => (
+                    <ListItem
+                      id={feature.id}
+                      index={index}
+                      key={feature.id}
+                      name={feature.name}
+                      parent={feature.status.name}
+                      className="p-4"
+                    >
+                      <div
+                        className="h-3 w-3 shrink-0 rounded-full mr-3"
+                        style={{ backgroundColor: feature.status.color }}
+                      />
+                      <div
+                        className="flex-1 cursor-pointer min-w-0"
+                        onClick={() => onRecordEdit?.(feature.record)}
+                      >
+                        <div className="font-medium text-sm mb-1">{feature.name}</div>
+                        {/* Display additional properties */}
+                        {displayProperties.length > 0 && (
+                          <div className="space-y-1">
+                            {displayProperties.map((property) => {
+                              // Handle system properties that are stored at record level
+                              let value;
+                              if (property.type === EPropertyType.CREATED_TIME) {
+                                value = feature.record.createdAt;
+                              } else if (property.type === EPropertyType.LAST_EDITED_TIME) {
+                                value = feature.record.lastEditedAt || feature.record.updatedAt;
+                              } else if (property.type === EPropertyType.RICH_TEXT) {
+                                value = feature.record.content;
+                              } else {
+                                // Properties are stored by name, not ID
+                                value = feature.record.properties[property.name];
+                              }
+
+                              // Show property even if empty, but with "Not set" or similar
+                              const isEmpty = value === null || value === undefined || value === "" ||
+                                             (Array.isArray(value) && value.length === 0);
+
+                              return (
+                                <div
+                                  key={property.id}
+                                  className="flex items-center justify-between text-xs"
+                                >
+                                  <span className="text-muted-foreground font-medium">
+                                    {property.name}:
+                                  </span>
+                                  <div className="ml-2 flex-shrink-0">
+                                    {isEmpty ? (
+                                      <span className="text-muted-foreground italic">Not set</span>
+                                    ) : (
+                                      renderPropertyValue(property, value)
+                                    )}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </ListItem>
-                ))}
-            </ListItems>
-          </ListGroup>
-        ))}
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </ListItem>
+                  ))
+                )}
+              </ListItems>
+            </ListGroup>
+          );
+        })}
       </ListProvider>
 
       {/* Load More Button - Full Width like Notion */}

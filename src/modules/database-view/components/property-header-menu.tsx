@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useEffect } from "react";
+import { type ReactNode, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,11 +17,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Edit3,
   Type,
   Hash,
   Mail,
@@ -37,6 +35,7 @@ import {
   ArrowDown,
   Copy,
   Trash2,
+  Settings,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -73,7 +72,7 @@ export const PropertyHeaderMenu = ({
   children,
   property,
 }: PropertyHeaderMenuProps) => {
-  const { database, onFiltersChange, onSortsChange } = useDatabaseView();
+  const { database, onFiltersChange, onSortsChange, onDialogOpen, onPropertyChange } = useDatabaseView();
 
   // API hooks
   const updatePropertyMutation = useUpdateProperty();
@@ -81,8 +80,6 @@ export const PropertyHeaderMenu = ({
   const duplicatePropertyMutation = useDuplicateProperty();
   const changePropertyTypeMutation = useChangePropertyType();
 
-  const [isEditNameOpen, setIsEditNameOpen] = useState(false);
-  const [newName, setNewName] = useState(property.name);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   // Check if any mutation is pending
@@ -92,47 +89,11 @@ export const PropertyHeaderMenu = ({
     duplicatePropertyMutation.isPending ||
     changePropertyTypeMutation.isPending;
 
-  // Update newName when property changes
-  useEffect(() => {
-    setNewName(property.name);
-  }, [property.name]);
 
   // For now, assume no frozen properties - can be enhanced later
   const canEdit = true;
   const canDelete = true;
 
-  const handleEditName = async () => {
-    if (!database?.id) {
-      toast.error("Database not found");
-      return;
-    }
-
-    if (newName.trim() && newName !== property.name) {
-      if (newName.trim().length < 1) {
-        toast.error("Property name cannot be empty");
-        return;
-      }
-      if (newName.trim().length > 100) {
-        toast.error("Property name cannot be longer than 100 characters");
-        return;
-      }
-
-      try {
-        await updatePropertyMutation.mutateAsync({
-          databaseId: database.id,
-          propertyId: property.id,
-          data: { name: newName.trim() },
-        });
-        toast.success("Property name updated");
-        setIsEditNameOpen(false);
-      } catch (error) {
-        console.error("Failed to update property name:", error);
-        toast.error("Failed to update property name");
-      }
-    } else {
-      setIsEditNameOpen(false);
-    }
-  };
 
   const handleChangeType = async (newType: EPropertyType) => {
     if (!database?.id) {
@@ -292,11 +253,14 @@ export const PropertyHeaderMenu = ({
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56" sideOffset={2}>
           <DropdownMenuItem
-            onClick={() => setIsEditNameOpen(true)}
+            onClick={() => {
+              onPropertyChange(property);
+              onDialogOpen("edit-property");
+            }}
             disabled={!canEdit}
           >
-            <Edit3 className="mr-2 h-4 w-4 flex-shrink-0" />
-            <span>Edit Name</span>
+            <Settings className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span>Edit Property</span>
             {!canEdit && (
               <span className="ml-auto text-xs text-muted-foreground">
                 Protected
@@ -415,48 +379,6 @@ export const PropertyHeaderMenu = ({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Dialog open={isEditNameOpen} onOpenChange={setIsEditNameOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Property Name</DialogTitle>
-            <DialogDescription>
-              Change the name of this property. This will update the column
-              header.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Property Name</label>
-              <Input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Enter property name..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleEditName();
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditNameOpen(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleEditName}
-              disabled={!newName.trim() || isLoading}
-            >
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">
