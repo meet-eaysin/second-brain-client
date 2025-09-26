@@ -7,6 +7,7 @@ import { formatDistanceToNow, addHours } from "date-fns";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { useNavigate } from "react-router-dom";
 import { useDashboardOverview } from "../services/home-queries";
+import { useMemo } from "react";
 import {
   GanttProvider,
   GanttSidebar,
@@ -36,70 +37,97 @@ export function HomePage() {
 
   // Helper function to get color based on event type
   const getEventColor = (eventType?: string): string => {
-    switch (eventType) {
-      case "meeting":
-        return "hsl(var(--chart-1))"; // Blue
-      case "task":
-        return "hsl(var(--chart-2))"; // Green
-      case "personal":
-        return "hsl(var(--chart-3))"; // Purple
-      case "work":
-        return "hsl(var(--chart-4))"; // Orange
-      case "reminder":
-        return "hsl(var(--chart-5))"; // Yellow
-      case "appointment":
-        return "hsl(var(--destructive))"; // Red
-      case "focus_time":
-        return "hsl(var(--primary))"; // Primary
-      case "break":
-        return "hsl(var(--muted-foreground))"; // Gray
-      case "deadline":
-        return "hsl(var(--destructive))"; // Red
-      case "habit":
-        return "hsl(var(--chart-3))"; // Purple
-      case "goal_review":
-        return "hsl(var(--primary))"; // Primary
-      case "travel":
-        return "hsl(var(--chart-2))"; // Green
-      case "milestone":
-        return "hsl(var(--chart-1))"; // Blue
-      default:
-        return "hsl(var(--primary))";
+    try {
+      switch (eventType) {
+        case "meeting":
+          return "hsl(var(--chart-1))"; // Blue
+        case "task":
+          return "hsl(var(--chart-2))"; // Green
+        case "personal":
+          return "hsl(var(--chart-3))"; // Purple
+        case "work":
+          return "hsl(var(--chart-4))"; // Orange
+        case "reminder":
+          return "hsl(var(--chart-5))"; // Yellow
+        case "appointment":
+          return "hsl(var(--destructive))"; // Red
+        case "focus_time":
+          return "hsl(var(--primary))"; // Primary
+        case "break":
+          return "hsl(var(--muted-foreground))"; // Gray
+        case "deadline":
+          return "hsl(var(--destructive))"; // Red
+        case "habit":
+          return "hsl(var(--chart-3))"; // Purple
+        case "goal_review":
+          return "hsl(var(--primary))"; // Primary
+        case "travel":
+          return "hsl(var(--chart-2))"; // Green
+        case "milestone":
+          return "hsl(var(--chart-1))"; // Blue
+        default:
+          return "hsl(var(--primary))";
+      }
+    } catch {
+      return "hsl(var(--primary))";
     }
   };
 
   // Convert calendar events to Gantt features for time-blocking preview
-  const displayFeatures: GanttFeature[] =
-    todayEvents?.events
-      ?.filter((event) => {
-        // Only show events that are scheduled for today
-        const today = new Date();
-        const eventDate = new Date(event.startTime);
-        return (
-          eventDate.getDate() === today.getDate() &&
-          eventDate.getMonth() === today.getMonth() &&
-          eventDate.getFullYear() === today.getFullYear()
-        );
-      })
-      ?.map((event) => {
-        // Ensure dates are Date objects
-        const startAt = new Date(event.startTime);
-        const endAt = event.endTime
-          ? new Date(event.endTime)
-          : addHours(startAt, 1);
+  const displayFeatures: GanttFeature[] = useMemo(() => {
+    try {
+      if (!todayEvents?.events || !Array.isArray(todayEvents.events)) {
+        return [];
+      }
 
-        return {
-          id: event.id,
-          name: event.title,
-          startAt,
-          endAt,
-          status: {
-            id: event.type || "event",
-            name: event.type || "Event",
-            color: getEventColor(event.type),
-          },
-        };
-      }) || [];
+      return todayEvents.events
+        .filter((event) => {
+          try {
+            // Only show events that are scheduled for today
+            const today = new Date();
+            const eventDate = new Date(event.startTime);
+            return (
+              eventDate.getDate() === today.getDate() &&
+              eventDate.getMonth() === today.getMonth() &&
+              eventDate.getFullYear() === today.getFullYear()
+            );
+          } catch {
+            return false;
+          }
+        })
+        .map((event) => {
+          try {
+            // Ensure dates are Date objects
+            const startAt = new Date(event.startTime);
+            const endAt = event.endTime
+              ? new Date(event.endTime)
+              : addHours(startAt, 1);
+
+            // Validate dates
+            if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) {
+              return null;
+            }
+
+            return {
+              id: event.id || `event-${Date.now()}`,
+              name: event.title || "Untitled Event",
+              startAt,
+              endAt,
+              status: {
+                id: event.type || "event",
+                name: event.type || "Event",
+                color: getEventColor(event.type),
+              },
+            };
+          } catch {
+            return null;
+          }
+        })
+        .filter((feature): feature is GanttFeature => feature !== null);
+    } catch {
+      return [];
+    }
+  }, [todayEvents]);
 
   // Handle moving/rescheduling events by dragging
   const handleMoveFeature = async (
@@ -107,12 +135,15 @@ export function HomePage() {
     startAt: Date,
     endAt: Date | null
   ) => {
-    if (!endAt) return;
-
-    const event = displayFeatures.find((f) => f.id === id);
-    if (!event) return;
-
     try {
+      if (!endAt || !id) return;
+
+      const event = displayFeatures.find((f) => f.id === id);
+      if (!event) return;
+
+      // Validate dates
+      if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) return;
+
       await updateEventMutation({
         eventId: id,
         data: {
@@ -127,59 +158,81 @@ export function HomePage() {
 
   // Motivational quotes based on time of day
   const getMotivationalQuote = () => {
-    const hour = new Date().getHours();
-    const quotes = {
-      morning: [
-        "Every morning is a fresh beginning. Every day is the world made new.",
-        "The way to get started is to quit talking and begin doing.",
-        "Your only limit is you.",
-      ],
-      afternoon: [
-        "The afternoon knows what the morning never suspected.",
-        "Success is not final, failure is not fatal: It is the courage to continue that counts.",
-        "The best way to predict the future is to create it.",
-      ],
-      evening: [
-        "Evening is a time of real experimentation. You never want to look the same way.",
-        "What we achieve inwardly will change outer reality.",
-        "Rest when you're weary. Refresh and renew yourself.",
-      ],
-    };
+    try {
+      const hour = new Date().getHours();
+      const quotes = {
+        morning: [
+          "Every morning is a fresh beginning. Every day is the world made new.",
+          "The way to get started is to quit talking and begin doing.",
+          "Your only limit is you.",
+        ],
+        afternoon: [
+          "The afternoon knows what the morning never suspected.",
+          "Success is not final, failure is not fatal: It is the courage to continue that counts.",
+          "The best way to predict the future is to create it.",
+        ],
+        evening: [
+          "Evening is a time of real experimentation. You never want to look the same way.",
+          "What we achieve inwardly will change outer reality.",
+          "Rest when you're weary. Refresh and renew yourself.",
+        ],
+      };
 
-    let timeOfDay: keyof typeof quotes = "morning";
-    if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
-    else if (hour >= 17) timeOfDay = "evening";
+      let timeOfDay: keyof typeof quotes = "morning";
+      if (hour >= 12 && hour < 17) timeOfDay = "afternoon";
+      else if (hour >= 17) timeOfDay = "evening";
 
-    const timeQuotes = quotes[timeOfDay];
-    return timeQuotes[Math.floor(Math.random() * timeQuotes.length)];
+      const timeQuotes = quotes[timeOfDay];
+      return timeQuotes[Math.floor(Math.random() * timeQuotes.length)];
+    } catch {
+      return "Stay focused and keep moving forward.";
+    }
   };
 
   // Find items not visited recently for re-engagement
   const getReengagementPrompt = () => {
-    if (!data?.recentlyVisited || data.recentlyVisited.length === 0)
+    try {
+      if (
+        !data?.recentlyVisited ||
+        !Array.isArray(data.recentlyVisited) ||
+        data.recentlyVisited.length === 0
+      )
+        return null;
+
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      // Find items not visited in the last week
+      const oldItems = data.recentlyVisited.filter((item) => {
+        try {
+          return (
+            item?.lastVisitedAt && new Date(item.lastVisitedAt) < oneWeekAgo
+          );
+        } catch {
+          return false;
+        }
+      });
+
+      if (oldItems.length === 0) return null;
+
+      // Return a random old item
+      const randomItem = oldItems[Math.floor(Math.random() * oldItems.length)];
+      return randomItem;
+    } catch {
       return null;
-
-    const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    // Find items not visited in the last week
-    const oldItems = data.recentlyVisited.filter(
-      (item) => item.lastVisitedAt < oneWeekAgo
-    );
-
-    if (oldItems.length === 0) return null;
-
-    // Return a random old item
-    const randomItem = oldItems[Math.floor(Math.random() * oldItems.length)];
-    return randomItem;
+    }
   };
 
   // Dynamic greeting based on time of day
   const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
+    try {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Good morning";
+      if (hour < 17) return "Good afternoon";
+      return "Good evening";
+    } catch {
+      return "Hello";
+    }
   };
 
   if (error) {
@@ -352,7 +405,7 @@ export function HomePage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/calendar")}
+              onClick={() => navigate("/app/calendar")}
             >
               View Calendar
             </Button>
@@ -442,41 +495,51 @@ export function HomePage() {
         </div>
 
         {/* Re-engagement Prompt */}
-        {getReengagementPrompt() && (
-          <Card className="border-l-4 border-l-primary">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
-                  <Clock className="h-4 w-4 text-primary" />
+        {(() => {
+          const reengagementItem = getReengagementPrompt();
+          return reengagementItem ? (
+            <Card className="border-l-4 border-l-primary">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Clock className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-primary">
+                      It's been a while since you visited...
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {reengagementItem.name || "Unknown item"} - Last visited{" "}
+                      {reengagementItem.lastVisitedAt
+                        ? formatDistanceToNow(
+                            new Date(reengagementItem.lastVisitedAt),
+                            {
+                              addSuffix: true,
+                            }
+                          )
+                        : "some time ago"}
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2"
+                      onClick={() => {
+                        try {
+                          if (reengagementItem.route)
+                            navigate(reengagementItem.route);
+                        } catch {
+                          // Ignore navigation errors
+                        }
+                      }}
+                    >
+                      Visit Now
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-primary">
-                    It's been a while since you visited...
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {getReengagementPrompt()?.name} - Last visited{" "}
-                    {formatDistanceToNow(
-                      getReengagementPrompt()?.lastVisitedAt || new Date(),
-                      {
-                        addSuffix: true,
-                      }
-                    )}
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() =>
-                      navigate(getReengagementPrompt()?.route || "")
-                    }
-                  >
-                    Visit Now
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+          ) : null;
+        })()}
 
         {/* Recently Visited */}
         <div className="space-y-4">
@@ -484,45 +547,69 @@ export function HomePage() {
             <h2 className="text-xl font-semibold">Recently Visited</h2>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {data?.recentlyVisited && data.recentlyVisited.length > 0 ? (
-              data.recentlyVisited.slice(0, 6).map((item) => (
-                <Card
-                  key={item.id}
-                  className="flex-shrink-0 w-64 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`${item.route}`)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-start gap-2">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
-                        style={{
-                          backgroundColor: `${item.color}20`,
-                          color: item.color,
+            {data?.recentlyVisited &&
+            Array.isArray(data.recentlyVisited) &&
+            data.recentlyVisited.length > 0 ? (
+              data.recentlyVisited
+                .slice(0, 6)
+                .map((item) => {
+                  try {
+                    return (
+                      <Card
+                        key={item?.id || `item-${Math.random()}`}
+                        className="flex-shrink-0 w-64 hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          try {
+                            if (item?.route) navigate(item.route);
+                          } catch {
+                            // Ignore navigation errors
+                          }
                         }}
                       >
-                        {item.icon}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm line-clamp-1">
-                          {item.name}
-                        </h3>
-                        {item.preview && (
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                            {item.preview}
-                          </p>
-                        )}
-                        <div className="mt-2">
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(item.lastVisitedAt, {
-                              addSuffix: true,
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                        <CardContent className="p-3">
+                          <div className="flex items-start gap-2">
+                            <div
+                              className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
+                              style={{
+                                backgroundColor: `${
+                                  item?.color || "#3b82f6"
+                                }20`,
+                                color: item?.color || "#3b82f6",
+                              }}
+                            >
+                              {item?.icon || "📄"}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-sm line-clamp-1">
+                                {item?.name || "Untitled"}
+                              </h3>
+                              {item?.preview && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                                  {item.preview}
+                                </p>
+                              )}
+                              <div className="mt-2">
+                                <span className="text-xs text-muted-foreground">
+                                  {item?.lastVisitedAt
+                                    ? formatDistanceToNow(
+                                        new Date(item.lastVisitedAt),
+                                        {
+                                          addSuffix: true,
+                                        }
+                                      )
+                                    : "Recently"}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  } catch {
+                    return null;
+                  }
+                })
+                .filter(Boolean)
             ) : (
               <div className="flex-shrink-0 w-full text-center py-8">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
