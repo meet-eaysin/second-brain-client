@@ -58,13 +58,15 @@ export const useAuthStore = create<AuthState>()(
       showWorkspaceSetupWizard: false,
 
       setUser: (user) =>
-        set({
+        set((state) => ({
           user,
           isAuthenticated: true,
           error: null,
           isInitialized: true,
           workspaces: user.workspaces || [],
-        }),
+          needsWorkspaceSetup: (user.workspaces || []).length === 0,
+          showWorkspaceSetupWizard: (user.workspaces || []).length === 0,
+        })),
 
       clearUser: () =>
         set({
@@ -154,9 +156,13 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       skipWorkspaceSetup: () =>
-        set({
-          showWorkspaceSetupWizard: false,
-          needsWorkspaceSetup: false,
+        set((state) => {
+          // If user skips and has no workspaces, we should create a default one
+          // This will be handled by the component that calls this function
+          return {
+            showWorkspaceSetupWizard: false,
+            needsWorkspaceSetup: false,
+          };
         }),
     }),
     {

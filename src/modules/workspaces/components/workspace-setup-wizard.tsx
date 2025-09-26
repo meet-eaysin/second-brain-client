@@ -1,302 +1,465 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { ArrowRight, ArrowLeft, Check, Sparkles, Users, Database, Settings } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { useCreateWorkspace } from '@/modules/workspaces/services/workspace-queries';
-import type { CreateWorkspaceRequest } from '@/types/workspace.types';
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  Sparkles,
+  Users,
+  Database,
+  Settings,
+  Building2,
+  Globe,
+  User,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
+import type {
+  CreateWorkspaceRequest,
+  EWorkspaceType,
+} from "@/types/workspace.types";
 
 const workspaceSetupSchema = z.object({
-    name: z.string().min(1, 'Workspace name is required').max(100, 'Name must be less than 100 characters'),
-    description: z.string().max(500, 'Description must be less than 500 characters').optional(),
-    icon: z.string().optional(),
-    color: z.string().optional(),
-    isPublic: z.boolean(),
-    allowMemberInvites: z.boolean(),
+  name: z
+    .string()
+    .min(1, "Workspace name is required")
+    .max(100, "Name must be less than 100 characters"),
+  description: z
+    .string()
+    .max(500, "Description must be less than 500 characters")
+    .optional(),
+  type: z.enum(["personal", "team", "organization", "public"]),
+  icon: z.string().optional(),
+  isPublic: z.boolean(),
 });
 
 type WorkspaceSetupFormValues = z.infer<typeof workspaceSetupSchema>;
 
 interface WorkspaceSetupWizardProps {
-    open: boolean;
-    onComplete: (workspace: any) => void;
-    onSkip?: () => void;
+  open: boolean;
+  onComplete: (workspace: { id: string; name: string }) => void;
+  onSkip?: () => void;
 }
 
-const WORKSPACE_ICONS = ['🏢', '🚀', '💼', '🎯', '⚡', '🌟', '🔥', '💡', '🎨', '📊', '🛠️', '🎪'];
-const WORKSPACE_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const WORKSPACE_ICONS = [
+  "🏢",
+  "🚀",
+  "💼",
+  "🎯",
+  "⚡",
+  "🌟",
+  "🔥",
+  "💡",
+  "🎨",
+  "📊",
+  "🛠️",
+  "🎪",
+];
+const WORKSPACE_TYPES = [
+  {
+    value: "personal",
+    label: "Personal",
+    description: "For individual use and personal projects",
+    icon: User,
+    color: "text-blue-500",
+  },
+  {
+    value: "team",
+    label: "Team",
+    description: "Collaborate with a small team",
+    icon: Users,
+    color: "text-green-500",
+  },
+  {
+    value: "organization",
+    label: "Organization",
+    description: "For larger organizations and enterprises",
+    icon: Building2,
+    color: "text-purple-500",
+  },
+  {
+    value: "public",
+    label: "Public",
+    description: "Open workspace for community contributions",
+    icon: Globe,
+    color: "text-orange-500",
+  },
+] as const;
 
 const SETUP_STEPS = [
-    {
-        id: 'welcome',
-        title: 'Welcome to Second Brain',
-        description: 'Let\'s set up your first workspace to get started',
-        icon: Sparkles,
-    },
-    {
-        id: 'workspace',
-        title: 'Create Your Workspace',
-        description: 'Give your workspace a name and customize it',
-        icon: Settings,
-    },
-    {
-        id: 'complete',
-        title: 'You\'re All Set!',
-        description: 'Your workspace is ready. Start building your second brain',
-        icon: Check,
-    },
+  {
+    id: "welcome",
+    title: "Welcome to Second Brain",
+    description: "Let's set up your first workspace to get started",
+    icon: Sparkles,
+  },
+  {
+    id: "workspace",
+    title: "Create Your Workspace",
+    description: "Give your workspace a name and customize it",
+    icon: Settings,
+  },
+  {
+    id: "complete",
+    title: "You're All Set!",
+    description: "Your workspace is ready. Start building your second brain",
+    icon: Check,
+  },
 ];
 
 export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
-    open,
-    onComplete,
-    onSkip,
+  open,
+  onComplete,
+  onSkip,
 }) => {
-    const [currentStep, setCurrentStep] = useState(0);
-    const createWorkspaceMutation = useCreateWorkspace();
+  const [currentStep, setCurrentStep] = useState(0);
+  const createWorkspaceMutation = useCreateWorkspace();
 
-    const form = useForm<WorkspaceSetupFormValues>({
-        resolver: zodResolver(workspaceSetupSchema),
-        defaultValues: {
-            name: '',
-            description: '',
-            icon: WORKSPACE_ICONS[0],
-            color: WORKSPACE_COLORS[0],
-            isPublic: false,
-            allowMemberInvites: true,
-        },
-    });
+  const form = useForm<WorkspaceSetupFormValues>({
+    resolver: zodResolver(workspaceSetupSchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      type: "personal",
+      icon: WORKSPACE_ICONS[0],
+      isPublic: false,
+    },
+  });
 
-    const handleNext = () => {
-        if (currentStep < SETUP_STEPS.length - 1) {
-            setCurrentStep(currentStep + 1);
-        }
-    };
+  const handleNext = () => {
+    if (currentStep < SETUP_STEPS.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
 
-    const handlePrevious = () => {
-        if (currentStep > 0) {
-            setCurrentStep(currentStep - 1);
-        }
-    };
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
 
-    const handleSubmit = async (data: WorkspaceSetupFormValues) => {
-        try {
-            const workspaceData: CreateWorkspaceRequest = {
-                name: data.name,
-                description: data.description || undefined,
-                icon: data.icon,
-                color: data.color,
-                isPublic: data.isPublic,
-                allowMemberInvites: data.allowMemberInvites,
-            };
+  const handleSubmit = async (data: WorkspaceSetupFormValues) => {
+    try {
+      const workspaceData: CreateWorkspaceRequest = {
+        name: data.name,
+        description: data.description || undefined,
+        type: data.type as EWorkspaceType,
+        icon: data.icon ? { type: "emoji", value: data.icon } : undefined,
+        isPublic: data.isPublic,
+      };
 
-            const workspace = await createWorkspaceMutation.mutateAsync(workspaceData);
-            setCurrentStep(SETUP_STEPS.length - 1); // Go to completion step
-            
-            // Complete after a short delay to show success
-            setTimeout(() => {
-                onComplete(workspace);
-            }, 2000);
-        } catch (error) {
-            // Error is handled by the mutation
-        }
-    };
+      const workspace = await createWorkspaceMutation.mutateAsync(
+        workspaceData
+      );
+      setCurrentStep(SETUP_STEPS.length - 1); // Go to completion step
 
-    const renderWelcomeStep = () => (
-        <div className="text-center space-y-6">
-            <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-                <Sparkles className="w-10 h-10 text-primary" />
-            </div>
-            <div className="space-y-2">
-                <h2 className="text-2xl font-bold">Welcome to Second Brain!</h2>
-                <p className="text-muted-foreground">
-                    Your personal knowledge management system. Let's create your first workspace to organize your thoughts, ideas, and data.
-                </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                <div className="flex flex-col items-center space-y-2">
-                    <Database className="w-8 h-8 text-blue-500" />
-                    <span className="font-medium">Organize Data</span>
-                    <span className="text-muted-foreground text-center">Create databases to structure your information</span>
-                </div>
-                <div className="flex flex-col items-center space-y-2">
-                    <Users className="w-8 h-8 text-green-500" />
-                    <span className="font-medium">Collaborate</span>
-                    <span className="text-muted-foreground text-center">Invite team members to work together</span>
-                </div>
-                <div className="flex flex-col items-center space-y-2">
-                    <Settings className="w-8 h-8 text-purple-500" />
-                    <span className="font-medium">Customize</span>
-                    <span className="text-muted-foreground text-center">Tailor your workspace to your needs</span>
-                </div>
-            </div>
+      // Complete after a short delay to show success
+      setTimeout(() => {
+        onComplete(workspace);
+      }, 2000);
+    } catch {
+      // Error is handled by the mutation
+    }
+  };
+
+  const renderWelcomeStep = () => (
+    <div className="text-center space-y-6">
+      <div className="space-y-3">
+        <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+          <Sparkles className="w-6 h-6 text-primary" />
         </div>
-    );
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold tracking-tight">
+            Welcome to Second Brain
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            Your intelligent knowledge management system. Let's create your
+            first workspace.
+          </p>
+        </div>
+      </div>
 
-    const renderWorkspaceStep = () => (
+      <Separator className="my-4" />
+
+      <div className="space-y-3">
+        <h3 className="text-base font-semibold">What you can do</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/50">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-full">
+              <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-xs">Organize Data</h4>
+              <p className="text-xs text-muted-foreground text-center">
+                Create structured databases
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/50">
+            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-full">
+              <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-xs">Collaborate</h4>
+              <p className="text-xs text-muted-foreground text-center">
+                Work with team members
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/50">
+            <div className="p-2 bg-purple-100 dark:bg-purple-900/20 rounded-full">
+              <Settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-medium text-xs">Customize</h4>
+              <p className="text-xs text-muted-foreground text-center">
+                Tailor to your workflow
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderWorkspaceStep = () => (
+    <div className="space-y-4">
+      <div className="text-center space-y-2">
+        <h2 className="text-xl font-bold tracking-tight">
+          Create Your Workspace
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          Set up your workspace with a name, type, and customize its appearance
+        </p>
+      </div>
+
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-5">
+        <div className="space-y-3">
+          <Label htmlFor="name" className="text-base font-medium">
+            Workspace Name <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id="name"
+            placeholder="e.g., My Personal Workspace"
+            className="h-11"
+            {...form.register("name")}
+          />
+          {form.formState.errors.name && (
+            <p className="text-sm text-red-500 flex items-center gap-1">
+              {form.formState.errors.name.message}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-base font-medium">
+              Choose Workspace Type
+            </Label>
+            <p className="text-sm text-muted-foreground">
+              Select the type of workspace that best fits your needs
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {WORKSPACE_TYPES.map((type) => {
+              const IconComponent = type.icon;
+              const isSelected = form.watch("type") === type.value;
+              return (
+                <Card
+                  key={type.value}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    isSelected
+                      ? "ring-2 ring-primary border-primary bg-primary/5"
+                      : "hover:border-primary/50"
+                  }`}
+                  onClick={() => form.setValue("type", type.value)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <div
+                        className={`p-2 rounded-lg ${
+                          isSelected ? "bg-primary/10" : "bg-muted"
+                        }`}
+                      >
+                        <IconComponent className={`w-5 h-5 ${type.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm">{type.label}</h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {type.description}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="description" className="text-base font-medium">
+            Description{" "}
+            <span className="text-muted-foreground">(optional)</span>
+          </Label>
+          <Textarea
+            id="description"
+            placeholder="Briefly describe what this workspace is for..."
+            rows={3}
+            className="resize-none"
+            {...form.register("description")}
+          />
+        </div>
+
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-base font-medium">Choose an Icon</Label>
+            <p className="text-sm text-muted-foreground">
+              Pick an icon that represents your workspace
+            </p>
+          </div>
+          <div className="grid grid-cols-8 gap-2 max-h-32 overflow-y-auto p-2 border rounded-lg">
+            {WORKSPACE_ICONS.map((icon) => (
+              <button
+                key={icon}
+                type="button"
+                className={`aspect-square flex items-center justify-center text-xl rounded-md border transition-all hover:scale-110 ${
+                  form.watch("icon") === icon
+                    ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                    : "border-muted hover:border-primary/50"
+                }`}
+                onClick={() => form.setValue("icon", icon)}
+              >
+                {icon}
+              </button>
+            ))}
+          </div>
+        </div>
+      </form>
+    </div>
+  );
+
+  const renderCompleteStep = () => (
+    <div className="text-center space-y-6">
+      <div className="space-y-3">
+        <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+          <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold tracking-tight">You're All Set!</h2>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            Your workspace has been created successfully. You can now start
+            building your second brain.
+          </p>
+        </div>
+      </div>
+
+      <Separator className="my-4" />
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-center">
+          <div className="flex items-center space-x-2 px-3 py-2 bg-muted/50 rounded-full">
+            <div className="animate-spin rounded-full h-3 w-3 border-2 border-primary border-t-transparent"></div>
+            <span className="text-xs font-medium">
+              Setting up your workspace...
+            </span>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          This may take a few moments
+        </p>
+      </div>
+    </div>
+  );
+
+  const currentStepData = SETUP_STEPS[currentStep];
+
+  return (
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-xl" showCloseButton={false}>
+        <DialogHeader>
+          <DialogTitle className="flex items-center space-x-2">
+            <currentStepData.icon className="w-5 h-5" />
+            <span>{currentStepData.title}</span>
+          </DialogTitle>
+        </DialogHeader>
+
         <div className="space-y-6">
-            <div className="text-center space-y-2">
-                <h2 className="text-2xl font-bold">Create Your Workspace</h2>
-                <p className="text-muted-foreground">
-                    Give your workspace a name and customize its appearance
-                </p>
+          {/* Progress indicator */}
+          <div className="flex items-center justify-center space-x-2">
+            {SETUP_STEPS.map((step, index) => (
+              <div
+                key={step.id}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index <= currentStep ? "bg-primary" : "bg-muted"
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Step content */}
+          <div className="min-h-[320px] flex items-center justify-center">
+            {currentStep === 0 && renderWelcomeStep()}
+            {currentStep === 1 && renderWorkspaceStep()}
+            {currentStep === 2 && renderCompleteStep()}
+          </div>
+
+          {/* Navigation */}
+          {currentStep < SETUP_STEPS.length - 1 && (
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-2">
+                {currentStep === 0 && onSkip && (
+                  <Button variant="ghost" onClick={onSkip}>
+                    Skip Setup
+                  </Button>
+                )}
+                {currentStep > 0 && (
+                  <Button variant="outline" onClick={handlePrevious}>
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Previous
+                  </Button>
+                )}
+              </div>
+              <Button
+                onClick={
+                  currentStep === 1
+                    ? form.handleSubmit(handleSubmit)
+                    : handleNext
+                }
+                disabled={
+                  currentStep === 1 && createWorkspaceMutation.isPending
+                }
+              >
+                {currentStep === 1 ? (
+                  createWorkspaceMutation.isPending ? (
+                    "Creating..."
+                  ) : (
+                    "Create Workspace"
+                  )
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
             </div>
-
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <div className="space-y-2">
-                    <Label htmlFor="name">Workspace Name *</Label>
-                    <Input
-                        id="name"
-                        placeholder="My Awesome Workspace"
-                        {...form.register('name')}
-                    />
-                    {form.formState.errors.name && (
-                        <p className="text-sm text-red-500">{form.formState.errors.name.message}</p>
-                    )}
-                </div>
-
-                <div className="space-y-2">
-                    <Label htmlFor="description">Description (optional)</Label>
-                    <Textarea
-                        id="description"
-                        placeholder="Describe what this workspace is for..."
-                        rows={3}
-                        {...form.register('description')}
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Choose an Icon</Label>
-                    <div className="grid grid-cols-6 gap-2">
-                        {WORKSPACE_ICONS.map((icon) => (
-                            <button
-                                key={icon}
-                                type="button"
-                                className={`p-3 text-2xl rounded-lg border-2 transition-colors ${
-                                    form.watch('icon') === icon
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-muted hover:border-primary/50'
-                                }`}
-                                onClick={() => form.setValue('icon', icon)}
-                            >
-                                {icon}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <Label>Choose a Color</Label>
-                    <div className="grid grid-cols-4 gap-2">
-                        {WORKSPACE_COLORS.map((color) => (
-                            <button
-                                key={color}
-                                type="button"
-                                className={`w-12 h-12 rounded-lg border-2 transition-all ${
-                                    form.watch('color') === color
-                                        ? 'border-gray-900 dark:border-gray-100 scale-110'
-                                        : 'border-gray-300 dark:border-gray-600 hover:scale-105'
-                                }`}
-                                style={{ backgroundColor: color }}
-                                onClick={() => form.setValue('color', color)}
-                            />
-                        ))}
-                    </div>
-                </div>
-            </form>
+          )}
         </div>
-    );
-
-    const renderCompleteStep = () => (
-        <div className="text-center space-y-6">
-            <div className="mx-auto w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center">
-                <Check className="w-10 h-10 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="space-y-2">
-                <h2 className="text-2xl font-bold">You're All Set!</h2>
-                <p className="text-muted-foreground">
-                    Your workspace has been created successfully. You can now start building your second brain!
-                </p>
-            </div>
-            <div className="flex items-center justify-center space-x-2">
-                <div className="animate-pulse">
-                    <Badge variant="secondary">Redirecting to your workspace...</Badge>
-                </div>
-            </div>
-        </div>
-    );
-
-    const currentStepData = SETUP_STEPS[currentStep];
-
-    return (
-        <Dialog open={open} onOpenChange={() => {}}>
-            <DialogContent className="sm:max-w-2xl" showCloseButton={false}>
-                <DialogHeader>
-                    <DialogTitle className="flex items-center space-x-2">
-                        <currentStepData.icon className="w-5 h-5" />
-                        <span>{currentStepData.title}</span>
-                    </DialogTitle>
-                </DialogHeader>
-
-                <div className="space-y-6">
-                    {/* Progress indicator */}
-                    <div className="flex items-center justify-center space-x-2">
-                        {SETUP_STEPS.map((step, index) => (
-                            <div
-                                key={step.id}
-                                className={`w-3 h-3 rounded-full transition-colors ${
-                                    index <= currentStep ? 'bg-primary' : 'bg-muted'
-                                }`}
-                            />
-                        ))}
-                    </div>
-
-                    {/* Step content */}
-                    <div className="min-h-[400px] flex items-center justify-center">
-                        {currentStep === 0 && renderWelcomeStep()}
-                        {currentStep === 1 && renderWorkspaceStep()}
-                        {currentStep === 2 && renderCompleteStep()}
-                    </div>
-
-                    {/* Navigation */}
-                    {currentStep < SETUP_STEPS.length - 1 && (
-                        <div className="flex items-center justify-between">
-                            <div className="flex space-x-2">
-                                {currentStep === 0 && onSkip && (
-                                    <Button variant="ghost" onClick={onSkip}>
-                                        Skip Setup
-                                    </Button>
-                                )}
-                                {currentStep > 0 && (
-                                    <Button variant="outline" onClick={handlePrevious}>
-                                        <ArrowLeft className="w-4 h-4 mr-2" />
-                                        Previous
-                                    </Button>
-                                )}
-                            </div>
-                            <Button
-                                onClick={currentStep === 1 ? form.handleSubmit(handleSubmit) : handleNext}
-                                disabled={currentStep === 1 && createWorkspaceMutation.isPending}
-                            >
-                                {currentStep === 1 ? (
-                                    createWorkspaceMutation.isPending ? 'Creating...' : 'Create Workspace'
-                                ) : (
-                                    <>
-                                        Next
-                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    )}
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
+      </DialogContent>
+    </Dialog>
+  );
 };

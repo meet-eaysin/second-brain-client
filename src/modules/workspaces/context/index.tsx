@@ -33,7 +33,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const { data: currentWorkspaceData, isLoading: isCurrentWorkspaceLoading } =
     useCurrentWorkspace();
 
-  console.log("## currentWorkspaceData", currentWorkspaceData)
+  console.log("## currentWorkspaceData", currentWorkspaceData);
 
   // Fetch user's workspaces
   const { data: userWorkspacesData, isLoading: isUserWorkspacesLoading } =
