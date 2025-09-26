@@ -53,11 +53,9 @@ const queryClient = new QueryClient({
             toast.error("Server error. Please try again later.");
           } else if (error.response?.status && error.response.status === 401) {
             toast.error("Session expired. Please log in again.");
-          } else if (error.code === "NETWORK_ERROR" || !error.response) {
-            toast.error("Network error. Please check your connection.");
           }
         } else {
-          toast.error("Network error. Please check your connection.");
+          console.error("Network error. Please check your connection.", error);
         }
       },
     },

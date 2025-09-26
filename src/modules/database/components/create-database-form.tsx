@@ -40,8 +40,15 @@ import {
   Calendar,
   Clock,
 } from "lucide-react";
-import { useCreateDatabase } from "@/modules/database-view/services/database-queries";
-import type { TCreateDatabase } from "@/modules/database-view/types";
+import {
+  useCreateDatabase,
+  useUpdateDatabase,
+} from "@/modules/database-view/services/database-queries";
+import type {
+  TCreateDatabase,
+  TUpdateDatabase,
+  TDatabase,
+} from "@/modules/database-view/types";
 import {
   createDatabaseSchema,
   type CreateDatabaseFormData,
@@ -63,26 +70,30 @@ interface CreateDatabaseFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  database?: TDatabase | null;
 }
 
 export function CreateDatabaseForm({
   open,
   onOpenChange,
   onSuccess,
+  database,
 }: CreateDatabaseFormProps) {
   const { currentWorkspace, isCurrentWorkspaceLoading } = useWorkspace();
   const createDatabaseMutation = useCreateDatabase();
+  const updateDatabaseMutation = useUpdateDatabase();
 
   const form = useForm<CreateDatabaseFormData>({
     resolver: zodResolver(createDatabaseSchema),
     mode: "onChange",
     defaultValues: {
-      name: "",
-      description: "",
-      isPublic: false,
-      icon: "",
-      cover: "",
-      defaultViewType: "TABLE",
+      name: database?.name || "",
+      description: database?.description || "",
+      isPublic: database?.isPublic || false,
+      icon: database?.icon?.value || "",
+      cover: database?.cover?.value || "",
+      defaultViewType:
+        database?.views?.find((v) => v.isDefault)?.type || "TABLE",
     },
   });
 
@@ -98,24 +109,25 @@ export function CreateDatabaseForm({
   useEffect(() => {
     if (open) {
       form.reset({
-        name: "",
-        description: "",
-        isPublic: false,
-        icon: "",
-        cover: "",
-        defaultViewType: "TABLE",
+        name: database?.name || "",
+        description: database?.description || "",
+        isPublic: database?.isPublic || false,
+        icon: database?.icon?.value || "",
+        cover: database?.cover?.value || "",
+        defaultViewType:
+          database?.views?.find((v) => v.isDefault)?.type || "TABLE",
       });
 
       setAdvancedSettings({
-        allowComments: true,
-        allowDuplicates: false,
-        enableVersioning: true,
-        enableAuditLog: false,
-        enableAutoTagging: true,
-        enableSmartSuggestions: true,
+        allowComments: database?.allowComments ?? true,
+        allowDuplicates: database?.allowDuplicates ?? false,
+        enableVersioning: database?.enableVersioning ?? true,
+        enableAuditLog: database?.enableAuditLog ?? false,
+        enableAutoTagging: database?.enableAutoTagging ?? true,
+        enableSmartSuggestions: database?.enableSmartSuggestions ?? true,
       });
     }
-  }, [open, form]);
+  }, [open, form, database]);
 
   const onSubmit = async (data: CreateDatabaseFormData) => {
     // Wait for workspace to load
@@ -134,54 +146,79 @@ export function CreateDatabaseForm({
     }
 
     try {
-      // Prepare the create data, omitting empty icon and cover fields
-      const createData: TCreateDatabase = {
-        workspaceId: currentWorkspace.id,
-        name: data.name,
-        description: data.description || undefined,
-        type: "custom",
-        isPublic: data.isPublic,
-        allowComments: advancedSettings.allowComments,
-        allowDuplicates: advancedSettings.allowDuplicates,
-        enableVersioning: advancedSettings.enableVersioning,
-        enableAuditLog: advancedSettings.enableAuditLog,
-        enableAutoTagging: advancedSettings.enableAutoTagging,
-        enableSmartSuggestions: advancedSettings.enableSmartSuggestions,
-        defaultViewType: data.defaultViewType,
-      };
-
-      // Only include icon if it has a value
-      if (data.icon && data.icon.trim()) {
-        // For now, assume emoji type for simple icons
-        createData.icon = {
-          type: "emoji" as const,
-          value: data.icon.trim(),
+      if (database) {
+        // Update mode
+        const updateData: TUpdateDatabase = {
+          name: data.name,
+          description: data.description || undefined,
+          isPublic: data.isPublic,
         };
+
+        // Only include icon if it has a value
+        if (data.icon && data.icon.trim()) {
+          updateData.icon = data.icon.trim();
+        }
+
+        // Only include cover if it has a value
+        if (data.cover && data.cover.trim()) {
+          updateData.cover = data.cover.trim();
+        }
+
+        await updateDatabaseMutation.mutateAsync({
+          id: database.id,
+          data: updateData,
+        });
+
+        toast.success("Database updated successfully!");
+      } else {
+        // Create mode
+        const createData: TCreateDatabase = {
+          workspaceId: currentWorkspace.id,
+          name: data.name,
+          description: data.description || undefined,
+          type: "custom",
+          isPublic: data.isPublic,
+          allowComments: advancedSettings.allowComments,
+          allowDuplicates: advancedSettings.allowDuplicates,
+          enableVersioning: advancedSettings.enableVersioning,
+          enableAuditLog: advancedSettings.enableAuditLog,
+          enableAutoTagging: advancedSettings.enableAutoTagging,
+          enableSmartSuggestions: advancedSettings.enableSmartSuggestions,
+          defaultViewType: data.defaultViewType,
+        };
+
+        // Only include icon if it has a value
+        if (data.icon && data.icon.trim()) {
+          createData.icon = {
+            type: "emoji" as const,
+            value: data.icon.trim(),
+          };
+        }
+
+        // Only include cover if it has a value
+        if (data.cover && data.cover.trim()) {
+          createData.cover = {
+            type: "color" as const,
+            value: data.cover.trim(),
+          };
+        }
+
+        await createDatabaseMutation.mutateAsync({ data: createData });
+
+        toast.success("Custom database created successfully!");
       }
 
-      // Only include cover if it has a value
-      if (data.cover && data.cover.trim()) {
-        // For now, assume color type for simple covers
-        createData.cover = {
-          type: "color" as const,
-          value: data.cover.trim(),
-        };
-      }
-
-      await createDatabaseMutation.mutateAsync({ data: createData });
-
-      toast.success("Custom database created successfully!");
       onOpenChange(false);
       onSuccess?.();
     } catch (error: unknown) {
-      console.error("Failed to create database:", error);
+      console.error("Failed to save database:", error);
 
       // Show specific error message
       const apiError = error as ApiError;
       const errorMessage =
         apiError?.response?.data?.message ||
         apiError?.message ||
-        "Failed to create database. Please try again.";
+        "Failed to save database. Please try again.";
 
       toast.error(errorMessage);
     }
@@ -201,7 +238,7 @@ export function CreateDatabaseForm({
           <div>
             <DialogTitle className="text-xl flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Create Database
+              {database ? "Edit Database" : "Create Database"}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               {isCurrentWorkspaceLoading
@@ -427,7 +464,7 @@ export function CreateDatabaseForm({
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Create Database
+                      {database ? "Update Database" : "Create Database"}
                     </>
                   )}
                 </Button>

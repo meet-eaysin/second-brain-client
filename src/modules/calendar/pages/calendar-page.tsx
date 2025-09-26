@@ -28,7 +28,6 @@ import {
   CalendarDays,
   Clock,
   Activity,
-  Loader2,
 } from "lucide-react";
 import {
   useCalendars,
@@ -46,6 +45,7 @@ import ShadcnBigCalendarComponent from "../components/schedule-x-calendar";
 import EventForm from "../components/event-form";
 import type { Calendar, CreateEventRequest } from "@/types/calendar";
 import { toast } from "sonner";
+import { CalendarSkeleton } from "../components/calendar-skeleton";
 
 export default function CalendarPage() {
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
@@ -190,16 +190,7 @@ export default function CalendarPage() {
   );
 
   if (calendarsLoading) {
-    return (
-      <>
-        <EnhancedHeader />
-        <Main className="space-y-8">
-          <div className="flex items-center justify-center h-96">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
-        </Main>
-      </>
-    );
+    return <CalendarSkeleton />;
   }
 
   return (
@@ -291,83 +282,6 @@ export default function CalendarPage() {
         {/* Content based on active tab */}
         {activeTab === "calendar" && (
           <div className="space-y-8">
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="bg-card rounded-lg border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Total Events
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {stats?.totalEvents || 0}
-                    </p>
-                  </div>
-                  <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                    <CalendarIcon className="h-6 w-6 text-primary" />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  All time events
-                </p>
-              </div>
-
-              <div className="bg-card rounded-lg border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      This Week
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {stats?.weekEvents || 0}
-                    </p>
-                  </div>
-                  <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center">
-                    <Activity className="h-6 w-6 text-blue-500" />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Events this week
-                </p>
-              </div>
-
-              <div className="bg-card rounded-lg border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Calendars
-                    </p>
-                    <p className="text-3xl font-bold">{calendars.length}</p>
-                  </div>
-                  <div className="h-12 w-12 bg-green-500/10 rounded-full flex items-center justify-center">
-                    <CalendarDays className="h-6 w-6 text-green-500" />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Active calendars
-                </p>
-              </div>
-
-              <div className="bg-card rounded-lg border p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      This Month
-                    </p>
-                    <p className="text-3xl font-bold">
-                      {stats?.monthEvents || 0}
-                    </p>
-                  </div>
-                  <div className="h-12 w-12 bg-orange-500/10 rounded-full flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-orange-500" />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Events this month
-                </p>
-              </div>
-            </div>
-
             {/* Calendar Layout */}
             <div className="grid grid-cols-1 xl:grid-cols-12">
               {/* Calendar List - Compact Sidebar */}

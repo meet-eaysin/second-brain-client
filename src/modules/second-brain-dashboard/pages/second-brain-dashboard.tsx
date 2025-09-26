@@ -25,6 +25,7 @@ import { useDashboardOverview } from "../services/dashboard-queries";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { useWorkspace } from "@/modules/workspaces/context";
+import { DashboardSkeleton } from "../components/dashboard-skeleton";
 
 export function SecondBrainDashboard() {
   const { currentWorkspace } = useWorkspace();
@@ -43,14 +44,7 @@ export function SecondBrainDashboard() {
   });
 
   if (isLoading) {
-    return (
-      <>
-        <EnhancedHeader />
-        <Main className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </Main>
-      </>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
