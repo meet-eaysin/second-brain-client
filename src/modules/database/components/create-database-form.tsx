@@ -196,7 +196,7 @@ export function CreateDatabaseForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-y-auto max-w-6xl max-h-[90vh] px-6">
+      <DialogContent size="xl" className="overflow-y-auto max-h-[90vh] px-6">
         <DialogHeader className="space-y-4 pb-3 px-2">
           <div>
             <DialogTitle className="text-xl flex items-center gap-2">
@@ -270,7 +270,7 @@ export function CreateDatabaseForm({
                     <FormItem>
                       <FormLabel>Default View Type</FormLabel>
                       <FormControl>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           {[
                             {
                               value: "TABLE",
@@ -305,7 +305,7 @@ export function CreateDatabaseForm({
                           ].map((viewType) => (
                             <Card
                               key={viewType.value}
-                              className={`cursor-pointer transition-all duration-200 p-0 hover:scale-105 ${
+                              className={`cursor-pointer p-0 ${
                                 field.value === viewType.value
                                   ? "border-primary bg-primary/10"
                                   : "hover:border-muted-foreground/50"
@@ -340,40 +340,6 @@ export function CreateDatabaseForm({
               </CardContent>
             </Card>
 
-            {/* <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Shield className="h-4 w-4" />
-                  Privacy & Access
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="isPublic"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-base">
-                          Public Database
-                        </FormLabel>
-                        <FormDescription>
-                          Allow anyone with the link to view this database
-                        </FormDescription>
-                      </div>
-                      <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card> */}
-
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -383,26 +349,6 @@ export function CreateDatabaseForm({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label htmlFor="allowComments">Allow Comments</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Enable commenting on records
-                      </p>
-                    </div>
-                    <Switch
-                      id="allowComments"
-                      checked={advancedSettings.allowComments}
-                      onCheckedChange={(checked) =>
-                        setAdvancedSettings((prev) => ({
-                          ...prev,
-                          allowComments: checked,
-                        }))
-                      }
-                      disabled={isLoading}
-                    />
-                  </div>
-
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
                       <Label htmlFor="allowDuplicates">Allow Duplicates</Label>
@@ -425,26 +371,6 @@ export function CreateDatabaseForm({
 
                   <div className="flex items-center justify-between">
                     <div className="space-y-1">
-                      <Label htmlFor="enableVersioning">Version Control</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Track record changes
-                      </p>
-                    </div>
-                    <Switch
-                      id="enableVersioning"
-                      checked={advancedSettings.enableVersioning}
-                      onCheckedChange={(checked) =>
-                        setAdvancedSettings((prev) => ({
-                          ...prev,
-                          enableVersioning: checked,
-                        }))
-                      }
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
                       <Label htmlFor="enableAuditLog">Audit Log</Label>
                       <p className="text-xs text-muted-foreground">
                         Log all database activities
@@ -457,48 +383,6 @@ export function CreateDatabaseForm({
                         setAdvancedSettings((prev) => ({
                           ...prev,
                           enableAuditLog: checked,
-                        }))
-                      }
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label htmlFor="enableAutoTagging">Auto Tagging</Label>
-                      <p className="text-xs text-muted-foreground">
-                        Automatically tag records
-                      </p>
-                    </div>
-                    <Switch
-                      id="enableAutoTagging"
-                      checked={advancedSettings.enableAutoTagging}
-                      onCheckedChange={(checked) =>
-                        setAdvancedSettings((prev) => ({
-                          ...prev,
-                          enableAutoTagging: checked,
-                        }))
-                      }
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <Label htmlFor="enableSmartSuggestions">
-                        Smart Suggestions
-                      </Label>
-                      <p className="text-xs text-muted-foreground">
-                        AI-powered suggestions
-                      </p>
-                    </div>
-                    <Switch
-                      id="enableSmartSuggestions"
-                      checked={advancedSettings.enableSmartSuggestions}
-                      onCheckedChange={(checked) =>
-                        setAdvancedSettings((prev) => ({
-                          ...prev,
-                          enableSmartSuggestions: checked,
                         }))
                       }
                       disabled={isLoading}

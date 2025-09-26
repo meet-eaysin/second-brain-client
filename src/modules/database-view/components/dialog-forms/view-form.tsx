@@ -266,7 +266,7 @@ export function ViewForm() {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onDialogOpen(null)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent className="max-h-[90vh] flex flex-col p-0" size="xl">
         {/* Fixed Header */}
         <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4 border-b">
           <DialogTitle className="text-xl">

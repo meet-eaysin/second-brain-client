@@ -133,9 +133,9 @@ export function DatabasesPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Custom Databases</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
         <p className="text-muted-foreground mt-2">
-          Create and manage your custom databases to organize any type of data.
+          Create and manage your databases to organize any type of data.
         </p>
       </div>
 
@@ -175,7 +175,7 @@ export function DatabasesPage() {
             <div className="space-y-2">
               <h3 className="text-lg font-medium">No databases yet</h3>
               <p className="text-sm text-muted-foreground">
-                Create your first custom database to start organizing your data.
+                Create your first database to start organizing your data.
               </p>
             </div>
           </div>
