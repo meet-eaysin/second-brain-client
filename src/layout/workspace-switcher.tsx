@@ -16,11 +16,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useWorkspace } from "@/modules/workspaces/context";
 import {
   useCreateWorkspace,
   useSwitchWorkspace,
-  useUserWorkspaces,
+  WORKSPACE_KEYS,
 } from "@/modules/workspaces/services/workspace-queries";
+import { useQueryClient } from "@tanstack/react-query";
 import { WorkspaceForm } from "@/modules/workspaces/components/workspace-form";
 import type { CreateWorkspaceRequest } from "@/types/workspace.types";
 
@@ -28,39 +30,63 @@ export function TeamSwitcher() {
   const { isMobile } = useSidebar();
   const { currentWorkspace, addWorkspace, setCurrentWorkspace } =
     useAuthStore();
+  const { userWorkspaces, isUserWorkspacesLoading } = useWorkspace();
+  const queryClient = useQueryClient();
 
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] =
     React.useState(false);
 
   const createWorkspaceMutation = useCreateWorkspace();
   const switchWorkspaceMutation = useSwitchWorkspace();
-  const { data: userWorkspacesResponse, isLoading: isLoadingWorkspaces } =
-    useUserWorkspaces();
 
-  // Use transformed workspaces from React Query (with id field)
-  const workspaces = userWorkspacesResponse?.data || [];
-  const hasWorkspaces = workspaces.length > 0;
+  const hasWorkspaces = userWorkspaces.length > 0;
 
   const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
     try {
-      const createdWorkspace = await createWorkspaceMutation.mutateAsync(data);
+      const response = await createWorkspaceMutation.mutateAsync(data);
+      const createdWorkspace = response.data; // Extract the actual workspace from response.data
       const userWorkspace = {
-        id: createdWorkspace.id,
+        id: createdWorkspace._id, // API returns _id
         name: createdWorkspace.name,
         description: createdWorkspace.description,
         type: createdWorkspace.type,
         role: "owner" as const,
-        isDefault: workspaces.length === 0,
+        isDefault: userWorkspaces.length === 0,
         memberCount: createdWorkspace.memberCount,
         databaseCount: createdWorkspace.databaseCount,
         createdAt: createdWorkspace.createdAt,
         updatedAt: createdWorkspace.updatedAt,
       };
 
+      // Transform the workspace to match the Workspace interface (id instead of _id)
+      const transformedWorkspace = {
+        ...createdWorkspace,
+        id: createdWorkspace._id,
+      };
+
       // Add to workspace list and set as current in one operation
       addWorkspace(userWorkspace);
       // Set the newly created workspace as current
-      setCurrentWorkspace(createdWorkspace);
+      setCurrentWorkspace(transformedWorkspace);
+
+      // Update the React Query cache for current workspace
+      queryClient.setQueryData(WORKSPACE_KEYS.current(), {
+        data: transformedWorkspace,
+        success: true,
+      });
+
+      // Update the userWorkspaces query cache to include the new workspace
+      queryClient.setQueryData(WORKSPACE_KEYS.userWorkspaces(), (oldData) => {
+        if (!oldData || !oldData.data) return oldData;
+        return {
+          ...oldData,
+          data: [...oldData.data, userWorkspace],
+        };
+      });
+
+      // Invalidate queries that depend on workspace data
+      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
+
       setIsCreateWorkspaceOpen(false);
     } catch (error) {
       console.error("Failed to create workspace:", error);
@@ -76,7 +102,7 @@ export function TeamSwitcher() {
               <SidebarMenuButton
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                disabled={isLoadingWorkspaces}
+                disabled={isUserWorkspacesLoading}
               >
                 {hasWorkspaces && currentWorkspace ? (
                   <>
@@ -128,13 +154,13 @@ export function TeamSwitcher() {
                   <DropdownMenuLabel className="text-muted-foreground text-xs">
                     Workspaces
                   </DropdownMenuLabel>
-                  {workspaces.map((workspace, index) => (
+                  {userWorkspaces.map((workspace, index) => (
                     <DropdownMenuItem
                       key={workspace.id}
                       onClick={() =>
                         switchWorkspaceMutation.mutate({
                           workspaceId: workspace.id,
-                          workspaces,
+                          workspaces: userWorkspaces,
                         })
                       }
                       className="gap-2 p-2"

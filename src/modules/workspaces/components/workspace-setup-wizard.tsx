@@ -27,6 +27,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
+import { useAuthStore } from "@/modules/auth/store/authStore";
 import type {
   CreateWorkspaceRequest,
   EWorkspaceType,
@@ -51,7 +52,6 @@ type WorkspaceSetupFormValues = z.infer<typeof workspaceSetupSchema>;
 interface WorkspaceSetupWizardProps {
   open: boolean;
   onComplete: (workspace: { id: string; name: string }) => void;
-  onSkip?: () => void;
   size?: "sm" | "md" | "lg" | "xl" | "xxl";
 }
 
@@ -124,10 +124,10 @@ const SETUP_STEPS = [
 export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
   open,
   onComplete,
-  onSkip,
   size = "xl",
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const { user } = useAuthStore();
   const createWorkspaceMutation = useCreateWorkspace();
 
   const form = useForm<WorkspaceSetupFormValues>({
@@ -166,12 +166,31 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
       const workspace = await createWorkspaceMutation.mutateAsync(
         workspaceData
       );
-      setCurrentStep(SETUP_STEPS.length - 1); // Go to completion step
 
-      // Complete after a short delay to show success
-      setTimeout(() => {
-        onComplete(workspace);
-      }, 2000);
+      // Complete immediately and close dialog
+      onComplete(workspace);
+    } catch {
+      // Error is handled by the mutation
+    }
+  };
+
+  const handleSkip = async () => {
+    try {
+      const defaultName = user
+        ? `${user.firstName || user.name || "User"}'s Workspace`
+        : "My Workspace";
+      const defaultData: CreateWorkspaceRequest = {
+        name: defaultName,
+        description: "",
+        type: "personal",
+        icon: { type: "emoji", value: WORKSPACE_ICONS[0] },
+        isPublic: false,
+      };
+
+      const workspace = await createWorkspaceMutation.mutateAsync(defaultData);
+
+      // Complete immediately and close dialog
+      onComplete({ id: workspace.id, name: workspace.name });
     } catch {
       // Error is handled by the mutation
     }
@@ -427,8 +446,8 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
           {currentStep < SETUP_STEPS.length - 1 && (
             <div className="flex items-center justify-between pt-4 border-t">
               <div className="flex space-x-2">
-                {currentStep === 0 && onSkip && (
-                  <Button variant="ghost" onClick={onSkip}>
+                {currentStep === 0 && (
+                  <Button variant="ghost" onClick={handleSkip}>
                     Skip Setup
                   </Button>
                 )}

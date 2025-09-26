@@ -22,6 +22,26 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
   return defaultMessage;
 };
 
+// Query keys that should be invalidated when switching workspaces
+export const WORKSPACE_DEPENDENT_QUERIES = [
+  ["databases"],
+  ["tasks"],
+  ["notes"],
+  ["projects"],
+  ["calendar"],
+  ["dashboard"],
+  ["analytics"],
+  ["second-brain"],
+  ["people-database-view"],
+  ["people-views"],
+  ["notes-database-view"],
+  ["notes-with-view"],
+  ["recently-visited"],
+  ["files"],
+  ["templates"],
+  ["system"],
+] as const;
+
 export const WORKSPACE_KEYS = {
   all: ["workspaces"] as const,
   userWorkspaces: () => [...WORKSPACE_KEYS.all, "user"] as const,
@@ -110,13 +130,16 @@ export const usePrimaryWorkspace = () => {
 
 // Get or create default workspace
 export const useGetOrCreateDefaultWorkspace = () => {
-  const { isAuthenticated } = useAuthStore();
+  const queryClient = useQueryClient();
 
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.primary(),
-    queryFn: () => workspaceApi.getOrCreateDefaultWorkspace(),
-    enabled: isAuthenticated,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  return useMutation({
+    mutationFn: (userInfo?: Record<string, unknown>) =>
+      workspaceApi.getOrCreateDefaultWorkspace(userInfo),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
+    },
   });
 };
 
@@ -228,8 +251,6 @@ export const useSearchWorkspaces = (params: SearchWorkspacesQuery) => {
 };
 
 export const useCreateWorkspace = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (data: CreateWorkspaceRequest) => {
       // Use fetch with longer timeout for workspace creation (30 seconds)
@@ -265,11 +286,6 @@ export const useCreateWorkspace = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.userWorkspaces(),
-      });
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
-
       toast.success("Workspace created successfully");
     },
     onError: (error: unknown) => {
@@ -434,22 +450,9 @@ export const useSwitchWorkspace = () => {
       });
 
       // Invalidate all workspace-dependent queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: ["databases"] });
-      queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["calendar"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["analytics"] });
-      queryClient.invalidateQueries({ queryKey: ["second-brain"] });
-      queryClient.invalidateQueries({ queryKey: ["people-database-view"] });
-      queryClient.invalidateQueries({ queryKey: ["people-views"] });
-      queryClient.invalidateQueries({ queryKey: ["notes-database-view"] });
-      queryClient.invalidateQueries({ queryKey: ["notes-with-view"] });
-      queryClient.invalidateQueries({ queryKey: ["recently-visited"] });
-      queryClient.invalidateQueries({ queryKey: ["files"] });
-      queryClient.invalidateQueries({ queryKey: ["templates"] });
-      queryClient.invalidateQueries({ queryKey: ["system"] });
+      WORKSPACE_DEPENDENT_QUERIES.forEach((queryKey) => {
+        queryClient.invalidateQueries({ queryKey });
+      });
 
       toast.success(`Switched to ${workspace.name}`);
     },

@@ -7,8 +7,11 @@ import { AppSidebar } from "@/layout/app-sidebar.tsx";
 import { PageVisitTracker } from "@/modules/home/components/page-visit-tracker";
 import { WorkspaceSetupWizard } from "@/modules/workspaces/components/workspace-setup-wizard";
 import { useAuthStore } from "@/modules/auth/store/authStore";
-import { useGetOrCreateDefaultWorkspace } from "@/modules/workspaces/services/workspace-queries";
+import { WORKSPACE_DEPENDENT_QUERIES } from "@/modules/workspaces/services/workspace-queries";
 import { SetupWrapper } from "@/modules/admin/components/setup-wrapper";
+import { useQueryClient } from "@tanstack/react-query";
+import { useWorkspace } from "@/modules/workspaces/context";
+import { LoadingSpinner } from "@/components/loading-spinner";
 import React from "react";
 
 interface Props {
@@ -20,40 +23,99 @@ function AuthenticatedLayout({ children }: Props) {
   const {
     showWorkspaceSetupWizard,
     completeWorkspaceSetup,
-    skipWorkspaceSetup,
+    addWorkspace,
+    setWorkspaces,
+    setCurrentWorkspace,
   } = useAuthStore();
-  const getOrCreateDefaultWorkspace = useGetOrCreateDefaultWorkspace();
+  const queryClient = useQueryClient();
+  const {
+    currentWorkspace: contextCurrentWorkspace,
+    userWorkspaces: contextUserWorkspaces,
+    isCurrentWorkspaceLoading,
+    isUserWorkspacesLoading,
+  } = useWorkspace();
 
-  const handleWorkspaceComplete = (workspace: { id: string; name: string }) => {
-    // Create a minimal workspace object for the store
-    const minimalWorkspace = {
-      id: workspace.id,
-      name: workspace.name,
-      type: "personal" as const,
-      config: {},
-      isPublic: false,
-      isArchived: false,
-      ownerId: "",
-      memberCount: 1,
-      databaseCount: 0,
-      recordCount: 0,
-      storageUsed: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    completeWorkspaceSetup(minimalWorkspace);
+  // Sync workspace data to store when loaded
+  React.useEffect(() => {
+    if (!isUserWorkspacesLoading && contextUserWorkspaces.length > 0) {
+      setWorkspaces(contextUserWorkspaces);
+      if (contextCurrentWorkspace) {
+        setCurrentWorkspace(contextCurrentWorkspace);
+      }
+    }
+  }, [
+    contextUserWorkspaces,
+    contextCurrentWorkspace,
+    isUserWorkspacesLoading,
+    setWorkspaces,
+    setCurrentWorkspace,
+  ]);
+
+  // Determine if wizard should be shown
+  const shouldShowWizard =
+    !isUserWorkspacesLoading && contextUserWorkspaces.length === 0;
+
+  // Show loading spinner while fetching workspace data
+  if (isUserWorkspacesLoading || isCurrentWorkspaceLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  // Helper function to invalidate workspace-dependent queries
+  const invalidateWorkspaceQueries = () => {
+    WORKSPACE_DEPENDENT_QUERIES.forEach((queryKey) => {
+      queryClient.invalidateQueries({ queryKey });
+    });
   };
 
-  const handleWorkspaceSkip = async () => {
-    try {
-      // Create default workspace when user skips
-      const defaultWorkspace = await getOrCreateDefaultWorkspace.mutateAsync();
-      completeWorkspaceSetup(defaultWorkspace);
-    } catch (error) {
-      console.error("Failed to create default workspace:", error);
-      // Still hide the wizard even if creation fails
-      skipWorkspaceSetup();
-    }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleWorkspaceComplete = (response: { data: any }) => {
+    const workspace = response.data; // Extract workspace from response.data
+    // Transform the workspace to match the Workspace interface (id instead of _id)
+    const transformedWorkspace = {
+      ...workspace,
+      id: workspace._id,
+    };
+    completeWorkspaceSetup(transformedWorkspace);
+
+    // Add to workspaces list (create UserWorkspace object)
+    const userWorkspace = {
+      id: workspace._id,
+      name: workspace.name,
+      description: workspace.description,
+      type: workspace.type,
+      role: "owner" as const,
+      isDefault: true,
+      memberCount: workspace.memberCount,
+      databaseCount: workspace.databaseCount,
+      createdAt: workspace.createdAt,
+      updatedAt: workspace.updatedAt,
+    };
+    addWorkspace(userWorkspace);
+
+    // Update the React Query cache for current workspace
+    queryClient.setQueryData(["workspaces", "current"], {
+      data: transformedWorkspace,
+      success: true,
+    });
+
+    // Update the userWorkspaces query cache to include the new workspace
+    queryClient.setQueryData(["workspaces", "user"], (oldData) => {
+      if (!oldData || !oldData.data) return oldData;
+      return {
+        ...oldData,
+        data: [...oldData.data, userWorkspace],
+      };
+    });
+
+    // Invalidate workspace stats to ensure fresh data
+    queryClient.invalidateQueries({ queryKey: ["workspaces", "stats"] });
+
+    // Invalidate workspace-dependent queries to ensure fresh data
+    invalidateWorkspaceQueries();
   };
 
   return (
@@ -78,9 +140,8 @@ function AuthenticatedLayout({ children }: Props) {
         </div>
 
         <WorkspaceSetupWizard
-          open={showWorkspaceSetupWizard}
+          open={shouldShowWizard || showWorkspaceSetupWizard}
           onComplete={handleWorkspaceComplete}
-          onSkip={handleWorkspaceSkip}
           size="xl"
         />
       </SidebarProvider>

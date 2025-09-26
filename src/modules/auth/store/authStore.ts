@@ -58,15 +58,36 @@ export const useAuthStore = create<AuthState>()(
       showWorkspaceSetupWizard: false,
 
       setUser: (user) =>
-        set((state) => ({
-          user,
-          isAuthenticated: true,
-          error: null,
-          isInitialized: true,
-          workspaces: user.workspaces || [],
-          needsWorkspaceSetup: (user.workspaces || []).length === 0,
-          showWorkspaceSetupWizard: (user.workspaces || []).length === 0,
-        })),
+        set((state) => {
+          const userWorkspaces = user.workspaces || [];
+          const storeWorkspaces = state.workspaces || [];
+          const totalWorkspaces = Math.max(
+            userWorkspaces.length,
+            storeWorkspaces.length
+          );
+          const hasNoWorkspaces = totalWorkspaces === 0;
+
+          // Once setup is completed (showWorkspaceSetupWizard is false), never show it again
+          // Only show for completely new users who have never completed setup
+          let shouldShowWizard = false;
+          if (state.showWorkspaceSetupWizard !== false && hasNoWorkspaces) {
+            // New user with no workspaces and setup never completed
+            shouldShowWizard = true;
+          }
+
+          return {
+            user,
+            isAuthenticated: true,
+            error: null,
+            isInitialized: true,
+            workspaces:
+              userWorkspaces.length > storeWorkspaces.length
+                ? userWorkspaces
+                : storeWorkspaces,
+            needsWorkspaceSetup: hasNoWorkspaces,
+            showWorkspaceSetupWizard: shouldShowWizard,
+          };
+        }),
 
       clearUser: () =>
         set({
@@ -156,7 +177,7 @@ export const useAuthStore = create<AuthState>()(
         }),
 
       skipWorkspaceSetup: () =>
-        set((state) => {
+        set(() => {
           // If user skips and has no workspaces, we should create a default one
           // This will be handled by the component that calls this function
           return {
@@ -170,6 +191,8 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         intendedPath: state.intendedPath,
         currentWorkspace: state.currentWorkspace,
+        needsWorkspaceSetup: state.needsWorkspaceSetup,
+        showWorkspaceSetupWizard: state.showWorkspaceSetupWizard,
       }),
     }
   )

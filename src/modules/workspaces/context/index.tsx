@@ -10,7 +10,6 @@ interface WorkspaceContextValue {
   currentWorkspace: Workspace | null;
   isCurrentWorkspaceLoading: boolean;
 
-  // User's workspaces
   userWorkspaces: Workspace[];
   isUserWorkspacesLoading: boolean;
 
@@ -32,8 +31,6 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   // Fetch current workspace
   const { data: currentWorkspaceData, isLoading: isCurrentWorkspaceLoading } =
     useCurrentWorkspace();
-
-  console.log("## currentWorkspaceData", currentWorkspaceData);
 
   // Fetch user's workspaces
   const { data: userWorkspacesData, isLoading: isUserWorkspacesLoading } =
