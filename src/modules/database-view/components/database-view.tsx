@@ -76,16 +76,28 @@ function DocumentViewInternal({ className }: DocumentViewProps) {
       </div>
 
       <div className="flex-1 overflow-auto">
-        {isDatabaseLoading && <TableSkeleton />}
-        {!isDatabaseLoading && isCurrentViewLoading && <TableSkeleton />}
-        {!isDatabaseLoading && !isCurrentViewLoading && !currentView && (
-          <NoDataMessage
-            title="No View Available"
-            message={"No view has been selected"}
-          />
+        {/* Show skeleton during any loading state */}
+        {(isDatabaseLoading || isViewsLoading || isCurrentViewLoading) && (
+          <TableSkeleton />
         )}
-        {!isDatabaseLoading && !isCurrentViewLoading && currentView && (
-          <Renderer />
+
+        {/* Show content when all loading is complete */}
+        {!isDatabaseLoading && !isViewsLoading && !isCurrentViewLoading && (
+          <>
+            {views.length === 0 && database && (
+              <NoDataMessage
+                title="No Views Available"
+                message="This database has no views configured"
+              />
+            )}
+            {views.length > 0 && !currentView && (
+              <NoDataMessage
+                title="No View Selected"
+                message="Please select a view to display"
+              />
+            )}
+            {views.length > 0 && currentView && <Renderer />}
+          </>
         )}
       </div>
 
