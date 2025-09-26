@@ -15,12 +15,7 @@ import { Loader2, Shield, CheckCircle, AlertCircle } from "lucide-react";
 import {
   useSetupStatus,
   useCreateInitialSuperAdmin,
-} from "../services/adminQueries";
-
-interface SetupStatus {
-  setupNeeded: boolean;
-  message: string;
-}
+} from "../services/admin-queries";
 
 interface SetupFormData {
   email: string;

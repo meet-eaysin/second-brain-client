@@ -1,7 +1,6 @@
-import { ApiResponse } from "@/types/api.types.ts";
+import type { ApiResponse } from "@/types/api.types";
 import { apiClient } from "@/services/api-client";
 import { API_ENDPOINTS } from "@/constants/api-endpoints";
-import type { ApiResponse } from "@/types/api.types";
 
 export interface User {
   id: string;
@@ -10,6 +9,7 @@ export interface User {
   email: string;
   role: "admin" | "moderator" | "user";
   status: "active" | "inactive" | "suspended";
+  isActive: boolean;
   avatar?: string;
   createdAt: string;
   updatedAt: string;
@@ -52,10 +52,10 @@ export interface UserStats {
 export const usersApi = {
   // Profile management
   getProfile: async (): Promise<ApiResponse<User>> => {
-    const response = await apiClient.get<ApiResponse<>>(
+    const response = await apiClient.get<ApiResponse<User>>(
       API_ENDPOINTS.USERS.PROFILE
     );
-    return response.data!;
+    return response.data;
   },
 
   updateProfile: async (
@@ -86,30 +86,32 @@ export const usersApi = {
         },
       }
     );
-    return response.data!;
+    return response.data;
   },
 
   deleteAvatar: async (): Promise<ApiResponse<User>> => {
     const response = await apiClient.delete<ApiResponse<User>>(
       `${API_ENDPOINTS.USERS.PROFILE}/avatar`
     );
-    return response.data!;
+    return response.data;
   },
 
   // Admin/Moderator functions
-  getUsers: async (params?: GetUsersQuery): Promise<UsersListResponse> => {
+  getUsers: async (
+    params?: GetUsersQuery
+  ): Promise<ApiResponse<UsersListResponse>> => {
     const response = await apiClient.get<ApiResponse<UsersListResponse>>(
       API_ENDPOINTS.USERS.LIST,
       { params }
     );
-    return response.data!;
+    return response.data;
   },
 
   getUserById: async (id: string): Promise<ApiResponse<User>> => {
     const response = await apiClient.get<ApiResponse<User>>(
       API_ENDPOINTS.USERS.BY_ID(id)
     );
-    return response.data!;
+    return response.data;
   },
 
   updateUser: async (
@@ -120,7 +122,7 @@ export const usersApi = {
       API_ENDPOINTS.USERS.UPDATE(id),
       data
     );
-    return response.data!;
+    return response.data;
   },
 
   deleteUser: async (id: string): Promise<void> => {
@@ -131,15 +133,18 @@ export const usersApi = {
     const response = await apiClient.patch<ApiResponse<User>>(
       API_ENDPOINTS.USERS.STATUS(id)
     );
-    return response.data!;
+    return response.data;
   },
 
-  updateUserRole: async (id: string, role: string): Promise<User> => {
+  updateUserRole: async (
+    id: string,
+    role: string
+  ): Promise<ApiResponse<User>> => {
     const response = await apiClient.patch<ApiResponse<User>>(
       API_ENDPOINTS.USERS.ROLE(id),
       { role }
     );
-    return response.data!;
+    return response.data;
   },
 
   // Bulk operations
@@ -154,10 +159,10 @@ export const usersApi = {
   },
 
   // Statistics
-  getUserStats: async (): Promise<UserStats> => {
+  getUserStats: async (): Promise<ApiResponse<UserStats>> => {
     const response = await apiClient.get<ApiResponse<UserStats>>(
       API_ENDPOINTS.USERS.STATS
     );
-    return response.data!;
+    return response.data;
   },
 };

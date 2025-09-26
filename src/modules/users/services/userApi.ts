@@ -23,7 +23,7 @@ export const userApi = {
       API_ENDPOINTS.USERS.LIST,
       { params }
     );
-    return response.data.data!;
+    return response.data;
   },
 
   // Get current user profile
@@ -31,7 +31,7 @@ export const userApi = {
     const response = await apiClient.get<ApiResponse<User>>(
       API_ENDPOINTS.USERS.PROFILE
     );
-    return response.data.data!;
+    return response.data;
   },
 
   // Update current user profile
@@ -42,7 +42,7 @@ export const userApi = {
       API_ENDPOINTS.USERS.PROFILE,
       data
     );
-    return response.data.data!;
+    return response.data;
   },
 
   // Delete current user account
@@ -55,7 +55,7 @@ export const userApi = {
     const response = await apiClient.get<ApiResponse<User>>(
       API_ENDPOINTS.USERS.BY_ID(id)
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Update user by ID (Admin only)
@@ -67,7 +67,7 @@ export const userApi = {
       API_ENDPOINTS.USERS.UPDATE(id),
       data
     );
-    return response.data!;
+    return response.data;
   },
 
   // Delete user by ID (Admin only)
@@ -80,7 +80,7 @@ export const userApi = {
     const response = await apiClient.patch<ApiResponse<User>>(
       API_ENDPOINTS.USERS.STATUS(id)
     );
-    return response.data!;
+    return response.data;
   },
 
   // Update user role (Admin only)
@@ -92,18 +92,18 @@ export const userApi = {
       API_ENDPOINTS.USERS.ROLE(id),
       data
     );
-    return response.data!;
+    return response.data;
   },
 
   // Get user statistics (Admin only)
   getUserStats: async (
     params?: UserStatsQueryParams
-  ): Promise<UserStatsResponse> => {
+  ): Promise<ApiResponse<UserStatsResponse>> => {
     const response = await apiClient.get<ApiResponse<UserStatsResponse>>(
       API_ENDPOINTS.USERS.STATS,
       { params }
     );
-    return response.data!;
+    return response.data;
   },
 
   // Bulk update users (Admin only)

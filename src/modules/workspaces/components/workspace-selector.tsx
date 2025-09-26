@@ -21,7 +21,8 @@ import { useWorkspace } from "../context";
 import { useCreateWorkspace } from "../services/workspace-queries";
 import { WorkspaceForm } from "./workspace-form";
 import type {
-  ICreateWorkspaceRequest,
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
   Workspace,
 } from "@/types/workspace.types";
 import { cn } from "@/lib/utils";
@@ -43,8 +44,10 @@ export const WorkspaceSelector: React.FC = () => {
     setOpen(false);
   };
 
-  const handleCreateWorkspace = async (data: ICreateWorkspaceRequest) => {
-    await createWorkspaceMutation.mutateAsync(data);
+  const handleCreateWorkspace = async (
+    data: CreateWorkspaceRequest | UpdateWorkspaceRequest
+  ) => {
+    await createWorkspaceMutation.mutateAsync(data as CreateWorkspaceRequest);
     setShowCreateForm(false);
   };
 
@@ -63,6 +66,16 @@ export const WorkspaceSelector: React.FC = () => {
     return isWorkspaceOwner(workspace.id) ? "owner" : "member";
   };
 
+  const renderIcon = (icon: Workspace["icon"]) => {
+    if (typeof icon === "string") {
+      return icon;
+    }
+    if (icon && typeof icon === "object") {
+      return icon.value;
+    }
+    return "🏢";
+  };
+
   return (
     <>
       <TooltipWrapper content="Switch between workspaces or create a new one">
@@ -78,7 +91,7 @@ export const WorkspaceSelector: React.FC = () => {
                 {currentWorkspace ? (
                   <>
                     <span className="text-lg">
-                      {currentWorkspace.icon || "🏢"}
+                      {renderIcon(currentWorkspace.icon)}
                     </span>
                     <span className="truncate">{currentWorkspace.name}</span>
                     <Badge
@@ -112,7 +125,7 @@ export const WorkspaceSelector: React.FC = () => {
                     >
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">
-                          {workspace.icon || "🏢"}
+                          {renderIcon(workspace.icon)}
                         </span>
                         <div className="flex flex-col">
                           <span className="font-medium">{workspace.name}</span>

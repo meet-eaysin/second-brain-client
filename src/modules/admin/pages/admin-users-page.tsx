@@ -26,7 +26,7 @@ import {
   useDeleteUser,
   useToggleUserStatus,
   useUpdateUserRole,
-} from "../services/adminQueries";
+} from "../services/admin-queries";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 import type { User } from "@/types/user.types";
 

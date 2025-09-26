@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { adminApi, CreateSuperAdminRequest } from "./adminApi";
+import { adminApi } from "./admin-api";
+import type { CreateSuperAdminRequest } from "./admin-api";
 
 // Query keys
 export const adminQueryKeys = {

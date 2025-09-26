@@ -10,11 +10,12 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   type SortingState,
+  type Table,
   useReactTable,
   type VisibilityState,
 } from "@tanstack/react-table";
 import {
-  Table,
+  Table as TableComponent,
   TableBody,
   TableCell,
   TableHead,
@@ -74,7 +75,7 @@ export function DataTable<TData, TValue>({
     <div className="space-y-4">
       {Toolbar ? <Toolbar table={table} /> : <DataTableToolbar table={table} />}
       <div className="rounded-md border">
-        <Table>
+        <TableComponent>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
@@ -125,7 +126,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </TableComponent>
       </div>
       <DataTablePagination table={table} />
     </div>

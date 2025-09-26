@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { workspaceApi } from "./workspace-api";
+import type { ApiResponse } from "@/types/api.types";
 import type {
   UpdateWorkspaceRequest,
   GetWorkspacesQuery,
   SearchWorkspacesQuery,
   CreateWorkspaceRequest,
   EWorkspaceType,
+  Workspace,
 } from "@/types/workspace.types";
 import { toast } from "sonner";
 import { useAuthStore } from "@/modules/auth/store/authStore";
@@ -101,7 +103,7 @@ export const useUserWorkspaces = () => {
 export const useCurrentWorkspace = () => {
   const { isAuthenticated, currentWorkspace } = useAuthStore();
 
-  return useQuery({
+  return useQuery<ApiResponse<Workspace>, Error>({
     queryKey: WORKSPACE_KEYS.current(),
     queryFn: () => workspaceApi.getCurrentWorkspace(),
     enabled: isAuthenticated,
@@ -111,7 +113,12 @@ export const useCurrentWorkspace = () => {
     refetchOnWindowFocus: true,
     // Use initial data from store if available
     initialData: currentWorkspace
-      ? { data: currentWorkspace, success: true }
+      ? {
+          data: currentWorkspace,
+          success: true,
+          message: "",
+          timestamp: new Date().toISOString(),
+        }
       : undefined,
   });
 };
@@ -406,10 +413,10 @@ export const useSwitchWorkspace = () => {
       // For workspace switching, we need full workspace data
       // Since we don't have an API to get workspace by ID, we'll create a workspace object
       // with the available data and default config
-      const workspaceData = {
-        id: userWorkspace.id,
-        name: userWorkspace.name,
-        description: userWorkspace.description || "",
+      const workspaceData: Workspace = {
+        id: userWorkspace.id as string,
+        name: userWorkspace.name as string,
+        description: (userWorkspace.description as string) || "",
         type: userWorkspace.type as EWorkspaceType,
         icon: { type: "emoji" as const, value: "🏢" }, // Default icon
         config: {
@@ -429,12 +436,12 @@ export const useSwitchWorkspace = () => {
         isPublic: false,
         isArchived: false,
         ownerId: "", // We don't have this info from UserWorkspace
-        memberCount: userWorkspace.memberCount,
-        databaseCount: userWorkspace.databaseCount,
+        memberCount: userWorkspace.memberCount as number,
+        databaseCount: userWorkspace.databaseCount as number,
         recordCount: 0,
         storageUsed: 0,
-        createdAt: userWorkspace.createdAt,
-        updatedAt: userWorkspace.updatedAt,
+        createdAt: userWorkspace.createdAt as string,
+        updatedAt: userWorkspace.updatedAt as string,
       };
 
       return workspaceData;

@@ -17,9 +17,11 @@ export interface User {
   username: string;
   firstName?: string;
   lastName?: string;
+  name?: string;
   role: string;
   authProvider: "email" | "google";
   isEmailVerified: boolean;
+  avatar?: string;
   createdAt: string;
   updatedAt: string;
   workspaces?: UserWorkspace[];

@@ -28,10 +28,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
 import { useAuthStore } from "@/modules/auth/store/authStore";
-import type {
-  CreateWorkspaceRequest,
-  EWorkspaceType,
-} from "@/types/workspace.types";
+import type { CreateWorkspaceRequest } from "@/types/workspace.types";
+import { EWorkspaceType } from "@/types/workspace.types";
 
 const workspaceSetupSchema = z.object({
   name: z
@@ -182,7 +180,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
       const defaultData: CreateWorkspaceRequest = {
         name: defaultName,
         description: "",
-        type: "personal",
+        type: EWorkspaceType.PERSONAL,
         icon: { type: "emoji", value: WORKSPACE_ICONS[0] },
         isPublic: false,
       };

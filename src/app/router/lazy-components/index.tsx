@@ -27,9 +27,6 @@ export const AuthErrorPage = withLazyLoading(
   () => import("@/modules/auth/pages/auth-error-page")
 );
 export const HomePage = withLazyLoading(homePageImport);
-export const DataTablePage = withLazyLoading(
-  () => import("@/modules/data-table")
-);
 export const UsersPage = withLazyLoading(
   () => import("@/modules/users/pages/users-page")
 );

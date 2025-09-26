@@ -12,7 +12,6 @@ import {
 import {
   AuthenticatedLayout,
   CalendarPage,
-  DataTablePage,
   UsersPage,
   TagsPage,
   NotificationsPage,
@@ -96,10 +95,6 @@ const router = createBrowserRouter([
       {
         path: "archive",
         element: <NotesPage />,
-      },
-      {
-        path: getDataTablesLink().replace("/app/", ""),
-        element: <DataTablePage />,
       },
       {
         path: getUsersLink().replace("/app/", ""),

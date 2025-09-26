@@ -29,6 +29,7 @@ import type {
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
 } from "@/types/workspace.types";
+import { EWorkspaceType } from "@/types/workspace.types";
 
 const workspaceFormSchema = z.object({
   name: z
@@ -39,7 +40,12 @@ const workspaceFormSchema = z.object({
     .string()
     .max(1000, "Description must be less than 1000 characters")
     .optional(),
-  type: z.enum(["personal", "team", "organization", "public"]),
+  type: z.enum([
+    EWorkspaceType.PERSONAL,
+    EWorkspaceType.TEAM,
+    EWorkspaceType.ORGANIZATION,
+    EWorkspaceType.PUBLIC,
+  ]),
   icon: z.string().max(10, "Icon must be less than 10 characters").optional(),
   isPublic: z.boolean().optional(),
 });
@@ -85,7 +91,7 @@ export function WorkspaceForm({
     defaultValues: {
       name: "",
       description: "",
-      type: "personal",
+      type: EWorkspaceType.PERSONAL,
       icon: "🏢",
       isPublic: false,
     },
@@ -107,7 +113,7 @@ export function WorkspaceForm({
         const defaultData = {
           name: "",
           description: "",
-          type: "personal",
+          type: EWorkspaceType.PERSONAL,
           icon: "🏢",
           isPublic: false,
         };
@@ -210,22 +216,22 @@ export function WorkspaceForm({
                     <div className="flex gap-2 flex-wrap">
                       {[
                         {
-                          value: "personal",
+                          value: EWorkspaceType.PERSONAL,
                           label: "Personal",
                           description: "For individual use",
                         },
                         {
-                          value: "team",
+                          value: EWorkspaceType.TEAM,
                           label: "Team",
                           description: "For small teams",
                         },
                         {
-                          value: "organization",
+                          value: EWorkspaceType.ORGANIZATION,
                           label: "Organization",
                           description: "For large organizations",
                         },
                         {
-                          value: "public",
+                          value: EWorkspaceType.PUBLIC,
                           label: "Public",
                           description: "Open to everyone",
                         },

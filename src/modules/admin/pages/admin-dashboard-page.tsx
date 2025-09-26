@@ -25,7 +25,7 @@ import {
 import {
   useAdminDashboardStats,
   useSystemHealth,
-} from "../services/adminQueries";
+} from "../services/admin-queries";
 
 export const AdminDashboardPage: React.FC = () => {
   const {
