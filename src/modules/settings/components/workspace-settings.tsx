@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useAuthStore } from "@/modules/auth/store/authStore";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,28 +26,34 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Settings,
-  Users,
   Shield,
   Trash2,
   Copy,
   Crown,
-  UserPlus,
   Globe,
   Edit3,
 } from "lucide-react";
-import { toast } from "sonner";
+import { useWorkspace } from "@/modules/workspaces/context";
+import {
+  useUpdateCurrentWorkspace,
+  useDeleteCurrentWorkspace,
+  useDuplicateWorkspace,
+} from "@/modules/workspaces/services/workspace-queries";
 
 export const WorkspaceSettings: React.FC = () => {
-  const { currentWorkspace, updateWorkspace, removeWorkspace } = useAuthStore();
+  const { currentWorkspace } = useWorkspace();
+  const updateWorkspaceMutation = useUpdateCurrentWorkspace();
+  const deleteWorkspaceMutation = useDeleteCurrentWorkspace();
+  const duplicateWorkspaceMutation = useDuplicateWorkspace();
+
+  console.log("Workspace settings currentWorkspaceData", currentWorkspace);
+
   const [isEditing, setIsEditing] = useState(false);
   const [workspaceName, setWorkspaceName] = useState(
     currentWorkspace?.name || ""
   );
   const [workspaceDescription, setWorkspaceDescription] = useState(
     currentWorkspace?.description || ""
-  );
-  const [allowMemberInvites, setAllowMemberInvites] = useState(
-    currentWorkspace?.allowMemberInvites || false
   );
   const [isPublic, setIsPublic] = useState(currentWorkspace?.isPublic || false);
 
@@ -61,32 +66,26 @@ export const WorkspaceSettings: React.FC = () => {
   }
 
   const handleSaveChanges = async () => {
-    try {
-      await updateWorkspace(currentWorkspace.id, {
-        name: workspaceName,
-        description: workspaceDescription,
-        allowMemberInvites,
-        isPublic,
-      });
-      setIsEditing(false);
-      toast.success("Workspace settings updated");
-    } catch (error) {
-      toast.error("Failed to update workspace settings");
-    }
+    await updateWorkspaceMutation.mutateAsync({
+      name: workspaceName,
+      description: workspaceDescription,
+      isPublic,
+      config: {
+        enablePublicSharing: isPublic,
+      },
+    });
+    setIsEditing(false);
   };
 
   const handleDeleteWorkspace = async () => {
-    try {
-      await removeWorkspace(currentWorkspace.id);
-      toast.success("Workspace deleted");
-    } catch (error) {
-      toast.error("Failed to delete workspace");
-    }
+    await deleteWorkspaceMutation.mutateAsync();
   };
 
-  const handleDuplicateWorkspace = () => {
-    // TODO: Implement workspace duplication
-    toast.info("Workspace duplication coming soon");
+  const handleDuplicateWorkspace = async () => {
+    await duplicateWorkspaceMutation.mutateAsync({
+      id: currentWorkspace.id,
+      name: `${currentWorkspace.name} (Copy)`,
+    });
   };
 
   return (
@@ -152,10 +151,6 @@ export const WorkspaceSettings: React.FC = () => {
               <Crown className="h-3 w-3" />
               Owner
             </Badge>
-            <Badge variant="outline" className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
-              {currentWorkspace.memberCount || 1} members
-            </Badge>
           </div>
 
           {isEditing && (
@@ -187,22 +182,6 @@ export const WorkspaceSettings: React.FC = () => {
               </p>
             </div>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                Member Invites
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Allow members to invite others to this workspace
-              </p>
-            </div>
-            <Switch
-              checked={allowMemberInvites}
-              onCheckedChange={setAllowMemberInvites}
-            />
           </div>
         </CardContent>
       </Card>

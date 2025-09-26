@@ -4,7 +4,7 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Monitor } from "lucide-react";
-import { DisplaySettings } from "../components/DisplaySettings";
+import { DisplaySettings } from "../components/display-settings.tsx";
 
 export const DisplaySettingsPage: React.FC = () => {
   return (

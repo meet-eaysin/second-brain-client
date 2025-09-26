@@ -113,7 +113,6 @@ export const useAuthStore = create<AuthState>()(
       addWorkspace: (workspace) =>
         set((state) => ({
           workspaces: [...state.workspaces, workspace],
-          currentWorkspace: workspace,
           needsWorkspaceSetup: false,
         })),
 

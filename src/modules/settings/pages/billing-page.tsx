@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Palette } from "lucide-react";
-import { AppearanceSettings } from "../components/AppearanceSettings";
+import { ArrowLeft, Download } from "lucide-react";
+import { BillingSettings } from "../components/billing-settings.tsx";
 
-export const AppearanceSettingsPage: React.FC = () => {
+export const BillingPage: React.FC = () => {
   return (
     <>
       <EnhancedHeader
@@ -19,8 +19,8 @@ export const AppearanceSettingsPage: React.FC = () => {
               </Link>
             </Button>
             <Button size="sm" className="h-8 gap-2">
-              <Palette className="h-4 w-4" />
-              Reset Theme
+              <Download className="h-4 w-4" />
+              Download Invoice
             </Button>
           </>
         }
@@ -28,16 +28,16 @@ export const AppearanceSettingsPage: React.FC = () => {
 
       <Main className="space-y-6">
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold">Appearance Settings</h1>
+          <h1 className="text-2xl font-bold">Billing</h1>
           <p className="text-muted-foreground">
-            Customize the look and feel of your workspace
+            Manage your subscription, billing, and payment methods
           </p>
         </div>
 
-        <AppearanceSettings />
+        <BillingSettings />
       </Main>
     </>
   );
 };
 
-export default AppearanceSettingsPage;
+export default BillingPage;

@@ -4,7 +4,7 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Bell } from "lucide-react";
-import { NotificationSettings } from "../components/NotificationSettings";
+import { NotificationSettings } from "../components/notification-settings.tsx";
 
 export const NotificationSettingsPage: React.FC = () => {
   return (

@@ -26,7 +26,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { settingsApi } from "../services/settingsApi";
+import { settingsApi } from "../services/settings-api.ts";
 
 export const NotificationSettings: React.FC = () => {
   const [emailNotifications, setEmailNotifications] = useState(true);

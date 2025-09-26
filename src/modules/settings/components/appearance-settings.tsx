@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Switch } from "@/components/ui/switch";
 import { Monitor, Moon, Sun, Palette, Eye, Zap, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { settingsApi } from "../services/settingsApi";
+import { settingsApi } from "../services/settings-api.ts";
 
 export const AppearanceSettings: React.FC = () => {
   const { appearance, setAppearance } = useTheme();

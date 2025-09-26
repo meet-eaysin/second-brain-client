@@ -7,11 +7,6 @@ import type {
   WorkspaceStatsResponse,
   GetWorkspacesQuery,
   SearchWorkspacesQuery,
-  GetWorkspaceMembersQuery,
-  InviteMemberRequest,
-  UpdateMemberRoleRequest,
-  TransferOwnershipRequest,
-  BulkMemberOperationRequest,
 } from "@/types/workspace.types";
 import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
 import { EDatabaseType } from "@/modules/database-view";
@@ -178,82 +173,6 @@ export const workspaceApi = {
     const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.SEARCH, {
       params,
     });
-    return response.data;
-  },
-
-  // Get workspace members
-  getMembers: async (
-    _workspaceId: string,
-    params?: GetWorkspaceMembersQuery
-  ): Promise<ApiResponse<unknown[]>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.MEMBERS, {
-      params,
-    });
-    return response.data;
-  },
-
-  // Get workspace permissions
-  getWorkspacePermissions: async (): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.PERMISSIONS);
-    return response.data;
-  },
-
-  // Get workspace activity
-  getWorkspaceActivity: async (): Promise<ApiResponse<unknown[]>> => {
-    const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.ACTIVITY);
-    return response.data;
-  },
-
-  // Invite member
-  inviteMember: async (
-    data: InviteMemberRequest
-  ): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.post(
-      API_ENDPOINTS.WORKSPACES.INVITE,
-      data
-    );
-    return response.data;
-  },
-
-  // Update member role
-  updateMemberRole: async (
-    _workspaceId: string,
-    userId: string,
-    data: UpdateMemberRoleRequest
-  ): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.put(
-      API_ENDPOINTS.WORKSPACES.MEMBER_ROLE(userId),
-      data
-    );
-    return response.data;
-  },
-
-  // Remove member
-  removeMember: async (_workspaceId: string, userId: string): Promise<void> => {
-    await apiClient.delete(API_ENDPOINTS.WORKSPACES.MEMBER_ROLE(userId));
-  },
-
-  // Transfer ownership
-  transferOwnership: async (
-    _workspaceId: string,
-    data: TransferOwnershipRequest
-  ): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.post(
-      API_ENDPOINTS.WORKSPACES.TRANSFER_OWNERSHIP,
-      data
-    );
-    return response.data;
-  },
-
-  // Bulk member operation
-  bulkMemberOperation: async (
-    _workspaceId: string,
-    data: BulkMemberOperationRequest
-  ): Promise<ApiResponse<unknown>> => {
-    const response = await apiClient.post(
-      API_ENDPOINTS.WORKSPACES.BULK_MEMBER_OPERATION,
-      data
-    );
     return response.data;
   },
 };

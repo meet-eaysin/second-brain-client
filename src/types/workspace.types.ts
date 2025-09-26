@@ -56,10 +56,6 @@ export interface Workspace {
     type: "emoji" | "icon" | "image";
     value: string;
   };
-  cover?: {
-    type: "color" | "gradient" | "image";
-    value: string;
-  };
 
   // Settings
   config: WorkspaceConfig;
@@ -102,10 +98,6 @@ export interface CreateWorkspaceRequest {
     type: "emoji" | "icon" | "image";
     value: string;
   };
-  cover?: {
-    type: "color" | "gradient" | "image";
-    value: string;
-  };
   config?: Partial<WorkspaceConfig>;
   isPublic?: boolean;
 }
@@ -115,10 +107,6 @@ export interface UpdateWorkspaceRequest {
   description?: string;
   icon?: {
     type: "emoji" | "icon" | "image";
-    value: string;
-  };
-  cover?: {
-    type: "color" | "gradient" | "image";
     value: string;
   };
   config?: Partial<WorkspaceConfig>;
@@ -182,7 +170,6 @@ export interface SearchWorkspacesQuery {
   limit?: number;
 }
 
-
 export interface WorkspaceStatsResponse {
   workspaceId: string;
   memberCount: number;
@@ -192,4 +179,3 @@ export interface WorkspaceStatsResponse {
   storageLimit: number;
   lastActivity?: string;
 }
-

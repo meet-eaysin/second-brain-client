@@ -1,15 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { workspaceApi } from "./workspace-api";
 import type {
   UpdateWorkspaceRequest,
   GetWorkspacesQuery,
   SearchWorkspacesQuery,
-  GetWorkspaceMembersQuery,
   CreateWorkspaceRequest,
-  InviteMemberRequest,
-  UpdateMemberRoleRequest,
-  TransferOwnershipRequest,
-  BulkMemberOperationRequest,
+  EWorkspaceType,
 } from "@/types/workspace.types";
 import { toast } from "sonner";
 import { useAuthStore } from "@/modules/auth/store/authStore";
@@ -50,23 +47,52 @@ export const WORKSPACE_KEYS = {
 export const useUserWorkspaces = () => {
   const { isAuthenticated } = useAuthStore();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: WORKSPACE_KEYS.userWorkspaces(),
     queryFn: () => workspaceApi.getUserWorkspaces(),
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    // Always refetch to ensure we have the latest workspace data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  // Transform API response to match UserWorkspace interface (convert _id to id)
+  const transformedData = useMemo(() => {
+    if (!query.data?.data) return query.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const transformedWorkspaces = query.data.data.map((workspace: any) => ({
+      ...workspace,
+      id: workspace._id,
+    }));
+    return {
+      ...query.data,
+      data: transformedWorkspaces,
+    };
+  }, [query.data]);
+
+  return {
+    ...query,
+    data: transformedData,
+  };
 };
 
 // Get current workspace
 export const useCurrentWorkspace = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, currentWorkspace } = useAuthStore();
 
   return useQuery({
     queryKey: WORKSPACE_KEYS.current(),
     queryFn: () => workspaceApi.getCurrentWorkspace(),
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    // Always refetch to ensure we have the latest workspace data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    // Use initial data from store if available
+    initialData: currentWorkspace
+      ? { data: currentWorkspace, success: true }
+      : undefined,
   });
 };
 
@@ -201,54 +227,54 @@ export const useSearchWorkspaces = (params: SearchWorkspacesQuery) => {
   });
 };
 
-export const useGetWorkspaceMembers = (
-  workspaceId: string,
-  params?: GetWorkspaceMembersQuery
-) => {
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.members(workspaceId),
-    queryFn: () => workspaceApi.getMembers(workspaceId, params),
-    enabled: !!workspaceId,
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-export const useGetWorkspacePermissions = (workspaceId: string) => {
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.permissions(workspaceId),
-    queryFn: () => workspaceApi.getWorkspacePermissions(),
-    enabled: !!workspaceId,
-    staleTime: 10 * 60 * 1000,
-  });
-};
-
-export const useGetWorkspaceActivity = (workspaceId: string) => {
-  return useQuery({
-    queryKey: WORKSPACE_KEYS.activity(workspaceId),
-    queryFn: () => workspaceApi.getWorkspaceActivity(),
-    enabled: !!workspaceId,
-    staleTime: 2 * 60 * 1000,
-  });
-};
-
 export const useCreateWorkspace = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateWorkspaceRequest) =>
-      workspaceApi.createWorkspace(data),
+    mutationFn: async (data: CreateWorkspaceRequest) => {
+      // Use fetch with longer timeout for workspace creation (30 seconds)
+      // since it involves module initialization
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL}/workspaces`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+            },
+            body: JSON.stringify(data),
+            signal: controller.signal,
+          }
+        );
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || "Failed to create workspace");
+        }
+
+        return response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        throw error;
+      }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
 
       toast.success("Workspace created successfully");
     },
     onError: (error: unknown) => {
       const message =
-        error instanceof Error && "response" in error
-          ? (error as { response?: { data?: { message?: string } } }).response
-              ?.data?.message
-          : "Failed to create workspace";
+        error instanceof Error ? error.message : "Failed to create workspace";
       toast.error(message);
     },
   });
@@ -265,7 +291,9 @@ export const useUpdateWorkspace = () => {
       queryClient.setQueryData(WORKSPACE_KEYS.detail(id), updatedWorkspace);
 
       // Invalidate lists to reflect changes
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
 
       toast.success("Workspace updated successfully");
     },
@@ -284,7 +312,9 @@ export const useDeleteWorkspace = () => {
       queryClient.removeQueries({ queryKey: WORKSPACE_KEYS.detail(id) });
 
       // Invalidate lists to reflect changes
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
 
       toast.success("Workspace deleted successfully");
@@ -303,7 +333,9 @@ export const useDuplicateWorkspace = () => {
       workspaceApi.duplicateWorkspace(id, name),
     onSuccess: () => {
       // Invalidate and refetch workspaces list
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
 
       toast.success("Workspace duplicated successfully");
@@ -320,7 +352,9 @@ export const useLeaveWorkspace = () => {
   return useMutation({
     mutationFn: () => workspaceApi.leaveWorkspace(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
+      queryClient.invalidateQueries({
+        queryKey: WORKSPACE_KEYS.userWorkspaces(),
+      });
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
 
       toast.success("Left workspace successfully");
@@ -331,124 +365,96 @@ export const useLeaveWorkspace = () => {
   });
 };
 
-export const useInviteMember = () => {
+// Switch current workspace (client-side operation)
+export const useSwitchWorkspace = () => {
+  const { setCurrentWorkspace } = useAuthStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: InviteMemberRequest) => workspaceApi.inviteMember(data),
-    onSuccess: () => {
-      // Since we don't have workspaceId in the response, we'll invalidate all member queries
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.all,
-      });
-
-      toast.success("Member invited successfully");
-    },
-    onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to invite member"));
-    },
-  });
-};
-
-export const useUpdateMemberRole = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       workspaceId,
-      userId,
-      data,
+      workspaces,
     }: {
       workspaceId: string;
-      userId: string;
-      data: UpdateMemberRoleRequest;
-    }) => workspaceApi.updateMemberRole(workspaceId, userId, data),
-    onSuccess: (_, { workspaceId }) => {
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.members(workspaceId),
+      workspaces: Record<string, unknown>[];
+    }) => {
+      // Find the workspace in the user's workspaces list (already transformed)
+      const userWorkspace = workspaces.find(
+        (w: Record<string, unknown>) => w.id === workspaceId
+      );
+
+      if (!userWorkspace) {
+        throw new Error("Workspace not found in user's workspaces");
+      }
+
+      // For workspace switching, we need full workspace data
+      // Since we don't have an API to get workspace by ID, we'll create a workspace object
+      // with the available data and default config
+      const workspaceData = {
+        id: userWorkspace.id,
+        name: userWorkspace.name,
+        description: userWorkspace.description || "",
+        type: userWorkspace.type as EWorkspaceType,
+        icon: { type: "emoji" as const, value: "🏢" }, // Default icon
+        config: {
+          enableAI: true,
+          enableComments: true,
+          enableVersioning: false,
+          enablePublicSharing: true,
+          enableGuestAccess: false,
+          maxDatabases: 100,
+          maxMembers: 10,
+          storageLimit: 1073741824,
+          allowedIntegrations: [],
+          requireTwoFactor: false,
+          allowedEmailDomains: [],
+          sessionTimeout: 480,
+        },
+        isPublic: false,
+        isArchived: false,
+        ownerId: "", // We don't have this info from UserWorkspace
+        memberCount: userWorkspace.memberCount,
+        databaseCount: userWorkspace.databaseCount,
+        recordCount: 0,
+        storageUsed: 0,
+        createdAt: userWorkspace.createdAt,
+        updatedAt: userWorkspace.updatedAt,
+      };
+
+      return workspaceData;
+    },
+    onSuccess: (workspace) => {
+      // Update the current workspace in the auth store
+      setCurrentWorkspace(workspace);
+
+      // Update the React Query cache for current workspace
+      queryClient.setQueryData(WORKSPACE_KEYS.current(), {
+        data: workspace,
+        success: true,
       });
 
-      toast.success("Member role updated successfully");
+      // Invalidate all workspace-dependent queries to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: ["databases"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["calendar"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["analytics"] });
+      queryClient.invalidateQueries({ queryKey: ["second-brain"] });
+      queryClient.invalidateQueries({ queryKey: ["people-database-view"] });
+      queryClient.invalidateQueries({ queryKey: ["people-views"] });
+      queryClient.invalidateQueries({ queryKey: ["notes-database-view"] });
+      queryClient.invalidateQueries({ queryKey: ["notes-with-view"] });
+      queryClient.invalidateQueries({ queryKey: ["recently-visited"] });
+      queryClient.invalidateQueries({ queryKey: ["files"] });
+      queryClient.invalidateQueries({ queryKey: ["templates"] });
+      queryClient.invalidateQueries({ queryKey: ["system"] });
+
+      toast.success(`Switched to ${workspace.name}`);
     },
     onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to update member role"));
-    },
-  });
-};
-
-export const useRemoveMember = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      workspaceId,
-      userId,
-    }: {
-      workspaceId: string;
-      userId: string;
-    }) => workspaceApi.removeMember(workspaceId, userId),
-    onSuccess: (_, { workspaceId }) => {
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.members(workspaceId),
-      });
-
-      toast.success("Member removed successfully");
-    },
-    onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to remove member"));
-    },
-  });
-};
-
-export const useTransferOwnership = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      workspaceId,
-      data,
-    }: {
-      workspaceId: string;
-      data: TransferOwnershipRequest;
-    }) => workspaceApi.transferOwnership(workspaceId, data),
-    onSuccess: (_, { workspaceId }) => {
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.detail(workspaceId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.members(workspaceId),
-      });
-      queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.lists() });
-
-      toast.success("Ownership transferred successfully");
-    },
-    onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to transfer ownership"));
-    },
-  });
-};
-
-export const useBulkMemberOperation = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      workspaceId,
-      data,
-    }: {
-      workspaceId: string;
-      data: BulkMemberOperationRequest;
-    }) => workspaceApi.bulkMemberOperation(workspaceId, data),
-    onSuccess: (_, { workspaceId }) => {
-      // Invalidate members list
-      queryClient.invalidateQueries({
-        queryKey: WORKSPACE_KEYS.members(workspaceId),
-      });
-
-      toast.success("Bulk operation completed successfully");
-    },
-    onError: (error: unknown) => {
-      toast.error(getErrorMessage(error, "Failed to complete bulk operation"));
+      toast.error(getErrorMessage(error, "Failed to switch workspace"));
     },
   });
 };

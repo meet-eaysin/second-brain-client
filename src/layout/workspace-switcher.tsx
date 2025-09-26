@@ -16,21 +16,30 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/modules/auth/store/authStore";
-import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
+import {
+  useCreateWorkspace,
+  useSwitchWorkspace,
+  useUserWorkspaces,
+} from "@/modules/workspaces/services/workspace-queries";
 import { WorkspaceForm } from "@/modules/workspaces/components/workspace-form";
 import type { CreateWorkspaceRequest } from "@/types/workspace.types";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
-  const { currentWorkspace, workspaces, isAuthenticated, addWorkspace } =
+  const { currentWorkspace, addWorkspace, setCurrentWorkspace } =
     useAuthStore();
+
   const [isCreateWorkspaceOpen, setIsCreateWorkspaceOpen] =
     React.useState(false);
 
   const createWorkspaceMutation = useCreateWorkspace();
+  const switchWorkspaceMutation = useSwitchWorkspace();
+  const { data: userWorkspacesResponse, isLoading: isLoadingWorkspaces } =
+    useUserWorkspaces();
 
+  // Use transformed workspaces from React Query (with id field)
+  const workspaces = userWorkspacesResponse?.data || [];
   const hasWorkspaces = workspaces.length > 0;
-  const isLoadingWorkspaces = !isAuthenticated;
 
   const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
     try {
@@ -47,8 +56,11 @@ export function TeamSwitcher() {
         createdAt: createdWorkspace.createdAt,
         updatedAt: createdWorkspace.updatedAt,
       };
+
+      // Add to workspace list and set as current in one operation
       addWorkspace(userWorkspace);
-      // Note: currentWorkspace will be set by the API response or persisted state
+      // Set the newly created workspace as current
+      setCurrentWorkspace(createdWorkspace);
       setIsCreateWorkspaceOpen(false);
     } catch (error) {
       console.error("Failed to create workspace:", error);
@@ -119,11 +131,12 @@ export function TeamSwitcher() {
                   {workspaces.map((workspace, index) => (
                     <DropdownMenuItem
                       key={workspace.id}
-                      onClick={() => {
-                        // TODO: Fetch full workspace data and set as current
-                        // For now, just navigate or show a message
-                        console.log("Switch to workspace:", workspace.name);
-                      }}
+                      onClick={() =>
+                        switchWorkspaceMutation.mutate({
+                          workspaceId: workspace.id,
+                          workspaces,
+                        })
+                      }
                       className="gap-2 p-2"
                     >
                       <div

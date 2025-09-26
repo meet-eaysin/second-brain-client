@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { settingsApi } from "@/modules/settings/services/settingsApi";
+import { settingsApi } from "@/modules/settings/services/settings-api.ts";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
 
 type Theme = "dark" | "light" | "system";

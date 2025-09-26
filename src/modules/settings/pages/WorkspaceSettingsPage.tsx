@@ -4,7 +4,7 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Building2 } from "lucide-react";
-import { WorkspaceSettings } from "../components/WorkspaceSettings";
+import { WorkspaceSettings } from "../components/workspace-settings.tsx";
 
 export const WorkspaceSettingsPage: React.FC = () => {
   return (

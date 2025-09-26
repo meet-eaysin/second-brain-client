@@ -51,16 +51,16 @@ export const ProfileSettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/ProfileSettingsPage")
 );
 export const AccountSettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/AccountSettingsPage")
+  () => import("@/modules/settings/pages/account-page")
 );
 export const SecuritySettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/SecuritySettingsPage")
 );
 export const BillingSettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/BillingSettingsPage")
+  () => import("@/modules/settings/pages/billing-page")
 );
 export const AppearanceSettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/AppearanceSettingsPage")
+  () => import("@/modules/settings/pages/appearance-page")
 );
 export const DisplaySettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/DisplaySettingsPage")

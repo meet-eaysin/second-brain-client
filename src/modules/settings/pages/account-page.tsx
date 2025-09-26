@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Shield, Github, Chrome } from "lucide-react";
 
-export const AccountSettingsPage: React.FC = () => {
+export const AccountPage: React.FC = () => {
   return (
     <>
       <EnhancedHeader
@@ -125,4 +125,4 @@ export const AccountSettingsPage: React.FC = () => {
   );
 };
 
-export default AccountSettingsPage;
+export default AccountPage;
