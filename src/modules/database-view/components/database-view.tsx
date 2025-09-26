@@ -10,6 +10,7 @@ import {
   TableSkeleton,
   TabsSkeleton,
   ToolbarSkeleton,
+  DatabaseInitializationLoader,
 } from "@/modules/database-view/components/skeleton";
 import {
   DatabaseViewProvider,
@@ -27,11 +28,20 @@ function DocumentViewInternal({ className }: DocumentViewProps) {
     database,
     views,
     currentView,
+    isInitializing,
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,
     isCurrentViewLoading,
   } = useDatabaseView();
+
+  if (isInitializing) {
+    return (
+      <div className={`flex flex-col ${className || ""}`}>
+        <DatabaseInitializationLoader />
+      </div>
+    );
+  }
 
   return (
     <div className={`flex flex-col ${className || ""}`}>

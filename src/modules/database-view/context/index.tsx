@@ -72,6 +72,7 @@ interface DatabaseViewContextValue {
   currentProperty: TProperty | null;
 
   isDatabaseIdLoading: boolean;
+  isInitializing: boolean;
   isDatabaseLoading: boolean;
   isViewsLoading: boolean;
   isPropertiesLoading: boolean;
@@ -206,11 +207,15 @@ export function DatabaseViewProvider({
       databaseId: resolvedDatabaseId,
       isLoading:
         isDatabasesByTypeLoading || initializeModulesMutation.isPending,
+      isInitializing: initializeModulesMutation.isPending,
     };
   };
 
-  const { databaseId: currentDatabaseId, isLoading: isDatabaseIdLoading } =
-    useDatabaseWithInitialization(moduleType, databaseId);
+  const {
+    databaseId: currentDatabaseId,
+    isLoading: isDatabaseIdLoading,
+    isInitializing,
+  } = useDatabaseWithInitialization(moduleType, databaseId);
 
   const { data: database, isLoading: isDatabaseLoading } = useDatabase(
     currentDatabaseId || ""
@@ -454,6 +459,7 @@ export function DatabaseViewProvider({
     currentProperty,
 
     isDatabaseIdLoading,
+    isInitializing,
     isDatabaseLoading,
     isViewsLoading,
     isPropertiesLoading,

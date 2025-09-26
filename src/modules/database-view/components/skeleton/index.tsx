@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import {Spinner} from "@/components/ui/kibo-ui/spinner";
 
 export const HeaderSkeleton = () => (
   <div className="flex-shrink-0 mb-4 flex flex-wrap items-center justify-between space-y-2 gap-x-4">
@@ -116,5 +117,17 @@ export const ListSkeleton = () => (
         </div>
       </div>
     ))}
+  </div>
+);
+
+export const DatabaseInitializationLoader = () => (
+  <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
+    <Spinner/>
+    <div className="text-center space-y-2">
+      <h3 className="text-lg font-medium">Initializing Database</h3>
+      <p className="text-sm text-muted-foreground">
+        Setting up your database structure. This may take a few moments...
+      </p>
+    </div>
   </div>
 );
