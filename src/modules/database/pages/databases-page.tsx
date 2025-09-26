@@ -46,12 +46,14 @@ import {
   useDuplicateDatabase,
 } from "@/modules/database-view/services/database-queries";
 import { EDatabaseType, TDatabase } from "@/modules/database-view/types";
+import { CreateDatabaseDialog } from "@/modules/database/components/create-database-dialog";
 import { toast } from "sonner";
 
 export function DatabasesPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedDatabase, setSelectedDatabase] = useState<TDatabase | null>(
     null
   );
@@ -68,7 +70,7 @@ export function DatabasesPage() {
   const databases = databasesResponse?.data || [];
 
   const handleCreateDatabase = () => {
-    navigate("/app/databases/new");
+    setCreateDialogOpen(true);
   };
 
   const handleViewDatabase = (databaseId: string) => {
@@ -167,18 +169,16 @@ export function DatabasesPage() {
 
       {/* Databases Table */}
       {databases.length === 0 ? (
-        <div className="text-center py-12">
-          <Database className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            No custom databases yet
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            Create your first custom database to start organizing your data.
-          </p>
-          <Button onClick={handleCreateDatabase}>
-            <Plus className="h-4 w-4 mr-2" />
-            Create Your First Database
-          </Button>
+        <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="text-center space-y-4 max-w-md">
+            <Database className="mx-auto h-12 w-12 text-muted-foreground" />
+            <div className="space-y-2">
+              <h3 className="text-lg font-medium">No databases yet</h3>
+              <p className="text-sm text-muted-foreground">
+                Create your first custom database to start organizing your data.
+              </p>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="border rounded-md">
@@ -305,6 +305,12 @@ export function DatabasesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Create Database Dialog */}
+      <CreateDatabaseDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </div>
   );
 }

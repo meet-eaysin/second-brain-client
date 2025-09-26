@@ -201,7 +201,7 @@ export function CreateDatabaseForm({
           <div>
             <DialogTitle className="text-xl flex items-center gap-2">
               <Database className="h-5 w-5" />
-              Create Custom Database
+              Create Database
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
               {isCurrentWorkspaceLoading
@@ -543,7 +543,7 @@ export function CreateDatabaseForm({
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Create Custom Database
+                      Create Database
                     </>
                   )}
                 </Button>
