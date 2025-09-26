@@ -1,11 +1,20 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocation, Link } from "react-router-dom";
@@ -39,83 +48,81 @@ const NavBadge = ({ children }: { children: React.ReactNode }) => {
 
 const NavItem = ({ item, level = 0 }: { item: NavItem; level?: number }) => {
   const location = useLocation();
-  const [isOpen, setIsOpen] = React.useState(false);
+  const href = location.pathname;
+  const isActive =
+    item.items?.some((subItem: NavItem) => subItem.url === href) ||
+    item.url === href;
 
-  const isActive = item.url ? location.pathname === item.url : false;
   const hasChildren = item.items && item.items.length > 0;
 
   if (hasChildren) {
-    const triggerContent = (
-      <Button
-        variant="ghost"
-        className={cn(
-          "w-full justify-start gap-2 h-8 px-2 min-w-0",
-          level > 0 && "ml-4"
-        )}
-      >
-        {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-        <span className="flex-1 text-left truncate">{item.title}</span>
-        {item.badge && <NavBadge>{item.badge}</NavBadge>}
-        <ChevronRight
-          className={cn(
-            "h-4 w-4 shrink-0 transition-transform",
-            isOpen && "rotate-90"
-          )}
-        />
-      </Button>
-    );
-
     return (
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          {item.tooltip ? (
-            <TooltipWrapper content={item.tooltip} side="right">
-              {triggerContent}
-            </TooltipWrapper>
-          ) : (
-            triggerContent
-          )}
-        </CollapsibleTrigger>
-        <CollapsibleContent className="space-y-1">
-          {item.items?.map((subItem, index) => (
-            <NavItem key={index} item={subItem} level={level + 1} />
-          ))}
-        </CollapsibleContent>
+      <Collapsible defaultOpen={isActive} className="group/collapsible">
+        <SidebarMenuItem>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton
+              tooltip={item.title}
+              className={cn(
+                "w-full justify-start gap-2 h-8 px-2 min-w-0",
+                level > 0 && "ml-4"
+              )}
+            >
+              {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+              <span className="flex-1 text-left truncate">{item.title}</span>
+              {item.badge && <NavBadge>{item.badge}</NavBadge>}
+              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="CollapsibleContent">
+            <SidebarMenuSub>
+              {item.items?.map((subItem, index) => (
+                <NavItem key={index} item={subItem} level={level + 1} />
+              ))}
+            </SidebarMenuSub>
+          </CollapsibleContent>
+        </SidebarMenuItem>
       </Collapsible>
     );
   }
 
-  const buttonContent = (
-    <Button
-      variant={isActive ? "secondary" : "ghost"}
-      className={cn(
-        "w-full justify-start gap-2 h-8 px-2 min-w-0",
-        level > 0 && "ml-4"
-      )}
-      asChild
-    >
-      <Link to={item.url || "#"} className="flex items-center gap-2 min-w-0">
-        {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
-        <span className="flex-1 text-left truncate">{item.title}</span>
-        {item.badge && <NavBadge>{item.badge}</NavBadge>}
-      </Link>
-    </Button>
-  );
+  if (level > 0) {
+    // Sub-item
+    return (
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={isActive}>
+          <Link to={item.url || "#"}>
+            {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+            <span>{item.title}</span>
+            {item.badge && <NavBadge>{item.badge}</NavBadge>}
+          </Link>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+    );
+  }
 
-  return buttonContent;
+  // Top-level item
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+        <Link to={item.url || "#"}>
+          {item.icon && <item.icon className="h-4 w-4 shrink-0" />}
+          <span>{item.title}</span>
+          {item.badge && <NavBadge>{item.badge}</NavBadge>}
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
 };
 
 export const NavGroup = ({ title, items }: NavGroupProps) => {
   return (
-    <div className="space-y-1">
-      <h4 className="text-sm font-medium text-muted-foreground px-2 py-1">
-        {title}
-      </h4>
-      <div className="space-y-1">
+    <SidebarGroup>
+      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      <SidebarMenu>
         {items.map((item, index) => (
           <NavItem key={index} item={item} />
         ))}
-      </div>
-    </div>
+      </SidebarMenu>
+    </SidebarGroup>
   );
 };
