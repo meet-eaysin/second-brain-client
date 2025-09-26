@@ -750,7 +750,8 @@ export const databaseApi = {
   ) => {
     const response = await apiClient.post(
       API_ENDPOINTS.MODULES.INITIALIZE_SPECIFIC,
-      { modules, createSampleData }
+      { modules, createSampleData },
+      { timeout: 60000 }
     );
     return response.data;
   },
