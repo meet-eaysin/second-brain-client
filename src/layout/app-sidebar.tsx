@@ -13,12 +13,16 @@ import { DynamicNavGroup } from "@/layout/dynamic-nav-group.tsx";
 import { NavUser } from "@/layout/nav-user.tsx";
 import { CreateCategoryDialog } from "@/modules/database/components/create-category-dialog";
 import { CreateDatabaseDialog } from "@/modules/database/components/create-database-dialog";
+import { useAuthStore } from "@/modules/auth/store/authStore";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [createCategoryDialogOpen, setCreateCategoryDialogOpen] =
     useState(false);
   const [createDatabaseDialogOpen, setCreateDatabaseDialogOpen] =
     useState(false);
+
+  const { user } = useAuthStore();
+  const isSuperAdmin = user?.role === "super_admin";
 
   const handleCreateCategory = () => {
     setCreateCategoryDialogOpen(true);
@@ -28,6 +32,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     setCreateDatabaseDialogOpen(true);
   };
 
+  // Filter nav groups based on user role
+  const filteredNavGroups = sidebarData.navGroups.filter((group) => {
+    if (group.title === "Administration" && !isSuperAdmin) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <>
       <Sidebar collapsible="icon" variant="floating" {...props}>
@@ -35,7 +47,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <TeamSwitcher />
         </SidebarHeader>
         <SidebarContent>
-          {sidebarData.navGroups.map((props) => {
+          {filteredNavGroups.map((props) => {
             // Use DynamicNavGroup for groups that have dynamic items
             if (
               props.items.some((item) => "isDynamic" in item && item.isDynamic)

@@ -34,12 +34,19 @@ import NotesPage from "@/modules/notes/pages/notes-page";
 import { SecondBrainRoutes } from "@/modules/second-brain/routes/second-brain-routes";
 import { DatabaseRoutes } from "@/modules/database/routes/database-routes";
 import HelpCenterPage from "@/modules/help-center";
+import AdminDashboardPage from "@/modules/admin/pages/admin-dashboard-page";
+import AdminUsersPage from "@/modules/admin/pages/admin-users-page";
+import SetupPage from "@/modules/admin/pages/setup-page";
 
 const UnauthorizedPage = lazy(
   () => import("@/modules/auth/pages/unauthorized-page")
 );
 
 const router = createBrowserRouter([
+  {
+    path: "/setup",
+    element: <SetupPage />,
+  },
   {
     path: getAuthParentLink(),
     element: <PublicRoute />,
@@ -148,6 +155,20 @@ const router = createBrowserRouter([
           {
             path: "workspace",
             element: <WorkspaceSettingsPage />,
+          },
+        ],
+      },
+      {
+        path: "admin",
+        element: <ProtectedRoute requiredRole="super_admin" />,
+        children: [
+          {
+            index: true,
+            element: <AdminDashboardPage />,
+          },
+          {
+            path: "users",
+            element: <AdminUsersPage />,
           },
         ],
       },

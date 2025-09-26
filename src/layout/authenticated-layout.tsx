@@ -8,6 +8,7 @@ import { PageVisitTracker } from "@/modules/home/components/page-visit-tracker";
 import { WorkspaceSetupWizard } from "@/modules/workspaces/components/workspace-setup-wizard";
 import { useAuthStore } from "@/modules/auth/store/authStore";
 import { useGetOrCreateDefaultWorkspace } from "@/modules/workspaces/services/workspace-queries";
+import { SetupWrapper } from "@/modules/admin/components/setup-wrapper";
 import React from "react";
 
 interface Props {
@@ -73,13 +74,14 @@ function AuthenticatedLayout({ children }: Props) {
             "has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh"
           )}
         >
-          {children ? children : <Outlet />}
+          <SetupWrapper>{children ? children : <Outlet />}</SetupWrapper>
         </div>
 
         <WorkspaceSetupWizard
           open={showWorkspaceSetupWizard}
           onComplete={handleWorkspaceComplete}
           onSkip={handleWorkspaceSkip}
+          size="xl"
         />
       </SidebarProvider>
     </SearchProvider>

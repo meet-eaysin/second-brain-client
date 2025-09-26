@@ -1,25 +1,32 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/modules/auth/hooks/useAuth";
 import React from "react";
-import {getSignInLink} from "@/app/router/router-link.ts";
-import {LoadingSpinner} from "@/components/loading-spinner.tsx";
+import { getSignInLink } from "@/app/router/router-link.ts";
+import { LoadingSpinner } from "@/components/loading-spinner.tsx";
+import { useAuthStore } from "@/modules/auth/store/authStore";
 
 interface ProtectedRouteProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
+  requiredRole?: string;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-    const { isAuthenticated, isLoading, hasToken, isInitialized } = useAuth();
-    const location = useLocation();
+const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+  const { isAuthenticated, isLoading, hasToken, isInitialized } = useAuth();
+  const { user } = useAuthStore();
+  const location = useLocation();
 
-    if (!isInitialized || (isLoading && hasToken)) return <LoadingSpinner />
+  if (!isInitialized || (isLoading && hasToken)) return <LoadingSpinner />;
 
-    if (!isAuthenticated) {
-        localStorage.setItem('intendedPath', location.pathname);
-        return <Navigate to={getSignInLink()} replace />;
-    }
+  if (!isAuthenticated) {
+    localStorage.setItem("intendedPath", location.pathname);
+    return <Navigate to={getSignInLink()} replace />;
+  }
 
-    return <>{children}</>;
+  if (requiredRole && user?.role !== requiredRole) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

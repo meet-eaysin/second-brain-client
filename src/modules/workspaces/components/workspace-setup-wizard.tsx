@@ -52,6 +52,7 @@ interface WorkspaceSetupWizardProps {
   open: boolean;
   onComplete: (workspace: { id: string; name: string }) => void;
   onSkip?: () => void;
+  size?: "sm" | "md" | "lg" | "xl" | "xxl";
 }
 
 const WORKSPACE_ICONS = [
@@ -124,6 +125,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
   open,
   onComplete,
   onSkip,
+  size = "xl",
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const createWorkspaceMutation = useCreateWorkspace();
@@ -389,7 +391,11 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-xl" showCloseButton={false}>
+      <DialogContent
+        size={size}
+        showCloseButton={false}
+        className="max-h-[90vh] overflow-hidden"
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <currentStepData.icon className="w-5 h-5" />
@@ -397,7 +403,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
           {/* Progress indicator */}
           <div className="flex items-center justify-center space-x-2">
             {SETUP_STEPS.map((step, index) => (
@@ -411,7 +417,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
           </div>
 
           {/* Step content */}
-          <div className="min-h-[320px] flex items-center justify-center">
+          <div className="min-h-[280px] flex items-start justify-center">
             {currentStep === 0 && renderWelcomeStep()}
             {currentStep === 1 && renderWorkspaceStep()}
             {currentStep === 2 && renderCompleteStep()}
@@ -419,7 +425,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
 
           {/* Navigation */}
           {currentStep < SETUP_STEPS.length - 1 && (
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-4 border-t">
               <div className="flex space-x-2">
                 {currentStep === 0 && onSkip && (
                   <Button variant="ghost" onClick={onSkip}>
