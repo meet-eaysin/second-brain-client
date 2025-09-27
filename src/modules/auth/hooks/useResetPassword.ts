@@ -6,7 +6,7 @@ import { useResetPasswordMutation } from "../services/auth-queries.ts";
 
 const resetPasswordSchema = z
   .object({
-    accessToken: z.string().min(1, "Reset token is required"),
+    resetToken: z.string().min(1, "Reset token is required"),
     newPassword: z
       .string()
       .min(8, "New password must be at least 8 characters")
@@ -27,7 +27,7 @@ export const useResetPassword = () => {
   const form = useForm<ResetPasswordCredentials & { confirmPassword: string }>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: {
-      accessToken: "",
+      resetToken: "",
       newPassword: "",
       confirmPassword: "",
     },
@@ -36,6 +36,7 @@ export const useResetPassword = () => {
   const handleResetPassword = (
     data: ResetPasswordCredentials & { confirmPassword: string }
   ) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { confirmPassword, ...credentials } = data;
     resetPasswordMutation.mutate(credentials);
   };

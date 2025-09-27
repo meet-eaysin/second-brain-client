@@ -22,6 +22,23 @@ import {
 } from "@/components/ui/kibo-ui/gantt";
 import { useTodayEvents } from "@/modules/calendar/services/calendar-queries";
 import { useUpdateEvent } from "@/modules/calendar/services/calendar-queries";
+import  {
+  type CalendarEvent,
+  EEventType,
+} from "@/modules/calendar/types/calendar.types.ts";
+import type { IRecentlyVisitedItem } from "@/modules/home/types";
+
+interface DisplayFeature {
+  id: string;
+  name: string;
+  startAt: Date;
+  endAt: Date;
+  status: {
+    id: EEventType;
+    name: EEventType;
+    color: string;
+  };
+}
 
 export function HomePage() {
   const { currentWorkspace } = useWorkspace();
@@ -67,14 +84,17 @@ export function HomePage() {
     }
   };
 
-  const displayFeatures = useMemo(() => {
+  const displayFeatures = useMemo<DisplayFeature[]>(() => {
     try {
-      if (!todayEvents?.events || !Array.isArray(todayEvents.events)) {
+      if (
+        !todayEvents?.data?.events ||
+        !Array.isArray(todayEvents.data.events)
+      ) {
         return [];
       }
 
-      return todayEvents.events
-        .filter((event) => {
+      return todayEvents.data.events
+        .filter((event: CalendarEvent) => {
           try {
             const today = new Date();
             const eventDate = new Date(event.startTime);
@@ -87,7 +107,7 @@ export function HomePage() {
             return false;
           }
         })
-        .map((event) => {
+        .map((event: CalendarEvent) => {
           try {
             // Ensure dates are Date objects
             const startAt = new Date(event.startTime);
@@ -97,15 +117,14 @@ export function HomePage() {
 
             if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) return null;
 
-
             return {
               id: event.id || `event-${Date.now()}`,
               name: event.title || "Untitled Event",
               startAt,
               endAt,
               status: {
-                id: event.type || "event",
-                name: event.type || "Event",
+                id: event.type || EEventType.EVENT,
+                name: event.type || EEventType.EVENT,
                 color: getEventColor(event.type),
               },
             };
@@ -113,7 +132,10 @@ export function HomePage() {
             return null;
           }
         })
-        .filter((feature) => feature !== null);
+        .filter(
+          (feature: DisplayFeature | null): feature is DisplayFeature =>
+            feature !== null
+        );
     } catch {
       return [];
     }
@@ -128,7 +150,7 @@ export function HomePage() {
     try {
       if (!endAt || !id) return;
 
-      const event = displayFeatures.find((f) => f.id === id);
+      const event = displayFeatures.find((f: DisplayFeature) => f.id === id);
       if (!event) return;
 
       // Validate dates
@@ -183,9 +205,9 @@ export function HomePage() {
   const getReengagementPrompt = () => {
     try {
       if (
-        !data?.recentlyVisited ||
-        !Array.isArray(data.recentlyVisited) ||
-        data.recentlyVisited.length === 0
+        !data?.data?.recentlyVisited ||
+        !Array.isArray(data.data.recentlyVisited) ||
+        data.data.recentlyVisited.length === 0
       )
         return null;
 
@@ -193,15 +215,17 @@ export function HomePage() {
       const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
       // Find items not visited in the last week
-      const oldItems = data.recentlyVisited.filter((item) => {
-        try {
-          return (
-            item?.lastVisitedAt && new Date(item.lastVisitedAt) < oneWeekAgo
-          );
-        } catch {
-          return false;
+      const oldItems = data.data.recentlyVisited.filter(
+        (item: IRecentlyVisitedItem) => {
+          try {
+            return (
+              item?.lastVisitedAt && new Date(item.lastVisitedAt) < oneWeekAgo
+            );
+          } catch {
+            return false;
+          }
         }
-      });
+      );
 
       if (oldItems.length === 0) return null;
 
@@ -407,7 +431,7 @@ export function HomePage() {
                   <GanttProvider range="monthly" zoom={80}>
                     <GanttSidebar>
                       <GanttSidebarGroup name="Today's Events">
-                        {displayFeatures.map((feature) => (
+                        {displayFeatures.map((feature: DisplayFeature) => (
                           <GanttSidebarItem
                             key={feature?.id}
                             feature={feature || null}
@@ -435,7 +459,7 @@ export function HomePage() {
                       <GanttHeader />
                       <GanttFeatureList>
                         <GanttFeatureListGroup>
-                          {displayFeatures?.map((feature) => (
+                          {displayFeatures?.map((feature: DisplayFeature) => (
                             <div className="flex" key={feature?.id}>
                               <GanttFeatureItem
                                 onMove={handleMoveFeature}
@@ -537,12 +561,12 @@ export function HomePage() {
             <h2 className="text-xl font-semibold">Recently Visited</h2>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-            {data?.recentlyVisited &&
-            Array.isArray(data.recentlyVisited) &&
-            data.recentlyVisited.length > 0 ? (
-              data.recentlyVisited
+            {data?.data?.recentlyVisited &&
+            Array.isArray(data.data.recentlyVisited) &&
+            data.data.recentlyVisited.length > 0 ? (
+              data.data.recentlyVisited
                 .slice(0, 6)
-                .map((item) => {
+                .map((item: IRecentlyVisitedItem) => {
                   try {
                     return (
                       <Card

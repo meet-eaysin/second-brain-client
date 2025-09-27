@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatabaseViewProvider } from "@/modules/database-view/context";
+import { EDatabaseType } from "@/modules/database-view/types";
 import { DatabaseForm } from "@/modules/database-view/components/dialog-forms/database-form";
 import { useWorkspace } from "@/modules/workspaces/context";
 import {
@@ -266,7 +267,10 @@ export function DatabaseFormPage() {
 
       {/* Database Form */}
       <div className="container mx-auto px-4 py-8">
-        <DatabaseViewProvider moduleType="custom" databaseId={undefined}>
+        <DatabaseViewProvider
+          moduleType={EDatabaseType.CUSTOM}
+          databaseId={undefined}
+        >
           <DatabaseForm />
         </DatabaseViewProvider>
       </div>

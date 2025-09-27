@@ -37,7 +37,7 @@ export const CALENDAR_KEYS = {
 export const useCalendars = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.lists(),
-    queryFn: () => calendarApi.getCalendars().then((res) => res.data),
+    queryFn: () => calendarApi.getCalendars(),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -45,8 +45,7 @@ export const useCalendars = () => {
 export const useCalendar = (calendarId: string) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.detail(calendarId),
-    queryFn: () =>
-      calendarApi.getCalendarById(calendarId).then((res) => res.data),
+    queryFn: () => calendarApi.getCalendarById(calendarId),
     enabled: !!calendarId,
     staleTime: 5 * 60 * 1000,
   });
@@ -56,7 +55,7 @@ export const useCalendar = (calendarId: string) => {
 export const useEvents = (query: CalendarEventsQuery) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.eventsList(query),
-    queryFn: () => calendarApi.getEvents(query).then((res) => res.data),
+    queryFn: () => calendarApi.getEvents(query),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };

@@ -45,7 +45,7 @@ import ShadcnBigCalendarComponent from "@/modules/calendar/components/schedule-x
 import EventForm from "@/modules/calendar/components/event-form";
 import type {
   CalendarTypes,
-  CreateEventRequest,
+  CreateEventRequest, UpdateEventRequest,
 } from "@/modules/calendar/types/calendar.types";
 import { toast } from "sonner";
 import { CalendarSkeleton } from "@/modules/calendar/components/calendar-skeleton";
@@ -62,10 +62,16 @@ export default function CalendarPage() {
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const { data: calendars = [], isLoading: calendarsLoading } = useCalendars();
-  const { data: stats } = useCalendarStats();
-  const { data: preferences } = useCalendarPreferences();
-  const { data: connectionStats } = useCalendarConnectionStats();
+  const { data: calendarsResponse, isLoading: calendarsLoading } =
+    useCalendars();
+  const { data: statsResponse } = useCalendarStats();
+  const { data: preferencesResponse } = useCalendarPreferences();
+  const { data: connectionStatsResponse } = useCalendarConnectionStats();
+
+  const calendars = calendarsResponse?.data || [];
+  const stats = statsResponse?.data;
+  const preferences = preferencesResponse?.data;
+  const connectionStats = connectionStatsResponse?.data;
   const createEventMutation = useCreateEvent();
   const updatePreferencesMutation = useUpdateCalendarPreferences();
   const deleteCalendarMutation = useDeleteCalendar();
@@ -84,9 +90,12 @@ export default function CalendarPage() {
     setShowCreateEvent(true);
   };
 
-  const handleEventSubmit = async (data: CreateEventRequest) => {
+  const handleEventSubmit = async (
+    data: CreateEventRequest | UpdateEventRequest
+  ) => {
     try {
-      await createEventMutation.mutateAsync(data);
+      // Since this is only used for creating events in this dialog
+      await createEventMutation.mutateAsync(data as CreateEventRequest);
       setShowCreateEvent(false);
       setEventStartTime(undefined);
       setEventEndTime(undefined);
@@ -309,7 +318,6 @@ export default function CalendarPage() {
                     selectedCalendars={selectedCalendars}
                     showCreateEvent={showCreateEvent}
                     onCreateEventClose={() => setShowCreateEvent(false)}
-                    onCreateEvent={handleCreateEvent}
                   />
                 </div>
               </div>
@@ -330,7 +338,7 @@ export default function CalendarPage() {
                       Total Events
                     </p>
                     <p className="text-2xl font-bold">
-                      {(stats as any)?.totalEvents || 0}
+                      {stats?.totalEvents || 0}
                     </p>
                   </div>
                   <CalendarIcon className="h-5 w-5 text-muted-foreground" />

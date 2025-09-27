@@ -3,10 +3,7 @@ import { useDatabases } from "@/modules/database-view/services/database-queries"
 import { EDatabaseType } from "@/modules/database-view/types";
 import { getDatabasesLink, getDatabaseLink } from "@/app/router/router-link";
 
-export function useDatabaseSidebar(
-  onCreateCategory?: () => void,
-  onCreateDatabase?: () => void
-) {
+export function useDatabaseSidebar(onCreateDatabase?: () => void) {
   const { data: databasesResponse } = useDatabases({
     type: EDatabaseType.CUSTOM,
   });
@@ -27,7 +24,7 @@ export function useDatabaseSidebar(
       ...databases.slice(0, 5).map((database) => ({
         title: database.name,
         url: getDatabaseLink(database.id),
-        icon: DatabaseIcon, // Use common database icon for all databases
+        icon: DatabaseIcon,
       })),
       {
         title: "Create Database",

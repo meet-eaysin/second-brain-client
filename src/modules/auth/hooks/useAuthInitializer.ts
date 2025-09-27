@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { AxiosError } from "axios";
 import { useAuthStore } from "../store/auth-store.ts";
 import { useCurrentUser } from "../services/auth-queries";
 import { hasToken, removeTokens } from "../utils/tokenUtils";
@@ -15,7 +16,7 @@ export const useAuthInitializer = () => {
       setLoading(false);
       setInitialized(true);
     } else if (userQuery.error && userQuery.isError) {
-      const error = userQuery.error;
+      const error = userQuery.error as AxiosError;
       if (error?.response?.status === 401) {
         removeTokens();
         clearUser();

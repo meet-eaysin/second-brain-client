@@ -461,20 +461,6 @@ export type TUpdateView = {
   order?: number;
 };
 
-export enum EBlockType {
-  PARAGRAPH = "paragraph",
-  HEADING_1 = "heading_1",
-  HEADING_2 = "heading_2",
-  HEADING_3 = "heading_3",
-  BULLETED_LIST_ITEM = "bulleted_list_item",
-  NUMBERED_LIST_ITEM = "numbered_list_item",
-  TO_DO = "to_do",
-  QUOTE = "quote",
-  CODE = "code",
-  IMAGE = "image",
-  DIVIDER = "divider",
-}
-
 export type TSelectOption = {
   id: string;
   name: string;
@@ -487,7 +473,7 @@ export type TCreateDatabase = {
   description?: string;
   icon?: TDatabaseIcon;
   cover?: TDatabaseCover;
-  type: EDatabaseType.CUSTOM ;
+  type: EDatabaseType.CUSTOM;
   workspaceId?: string;
   allowDuplicates: boolean;
   isPublic?: boolean;

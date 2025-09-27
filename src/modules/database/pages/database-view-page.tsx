@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatabaseView } from "@/modules/database-view";
+import { EDatabaseType } from "@/modules/database-view/types";
 
 export function DatabaseViewPage() {
   const { databaseId } = useParams<{ databaseId: string }>();
@@ -40,7 +41,7 @@ export function DatabaseViewPage() {
       {/* Database View */}
       <div className="container mx-auto px-4 py-6">
         <DatabaseView
-          // moduleType={EDatabaseType.CUSTOM}
+          moduleType={EDatabaseType.CUSTOM}
           databaseId={databaseId}
           className="max-w-none"
         />

@@ -1,4 +1,4 @@
-import {EFinanceType, type EPriority, EStatus} from "@/modules/core/types/common.types.ts";
+import {EFinanceType, type EPriority, EStatus} from "@/types/api.types";
 
 export interface IDashboardOverview {
   quickStats: IQuickStats;

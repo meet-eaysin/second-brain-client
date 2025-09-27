@@ -1,6 +1,5 @@
 import { apiClient } from "@/services/api-client.ts";
 import type {
-  ApiResponse,
   AuthResponse,
   RegisterCredentials,
   User,
@@ -10,9 +9,19 @@ import type {
   RefreshTokenResponse,
 } from "@/modules/auth/types/auth.types.ts";
 import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
+import type { ApiResponse } from "@/types/api.types.ts";
 
 export const authApi = {
-  login: async (email: string, password: string) => {
+  login: async (
+    email: string,
+    password: string
+  ): Promise<
+    ApiResponse<{
+      user: User;
+      accessToken: string;
+      refreshToken: string;
+    }>
+  > => {
     const response = await apiClient.post<
       ApiResponse<{
         user: User;
@@ -20,23 +29,27 @@ export const authApi = {
         refreshToken: string;
       }>
     >(API_ENDPOINTS.AUTH.SIGN_IN, { email, password });
-    return response.data.data;
+    return response.data;
   },
 
-  register: async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+  register: async (
+    credentials: RegisterCredentials
+  ): Promise<ApiResponse<AuthResponse>> => {
     const response = await apiClient.post<ApiResponse<AuthResponse>>(
       API_ENDPOINTS.AUTH.SIGN_UP,
       credentials
     );
-    return response.data.data;
+    return response.data;
   },
 
-  refreshToken: async (refreshToken: string): Promise<RefreshTokenResponse> => {
+  refreshToken: async (
+    refreshToken: string
+  ): Promise<ApiResponse<RefreshTokenResponse>> => {
     const response = await apiClient.post<ApiResponse<RefreshTokenResponse>>(
       API_ENDPOINTS.AUTH.REFRESH_TOKEN,
       { refreshToken }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getCurrentUser: (() => {
@@ -48,6 +61,9 @@ export const authApi = {
       currentRequest = apiClient
         .get<ApiResponse<User>>(API_ENDPOINTS.AUTH.ME)
         .then((response) => {
+          if (!response.data.success || !response.data.data) {
+            throw new Error("Failed to get current user");
+          }
           return response.data.data;
         })
         .finally(() => {
@@ -97,6 +113,10 @@ export const authApi = {
       `${API_ENDPOINTS.AUTH.GOOGLE_AUTH}?response_type=json`
     );
 
+    if (!response.data.success || !response.data.data) {
+      throw new Error("Failed to get Google OAuth URL");
+    }
+
     const url = response.data.data.url;
     if (!url || !url.includes("accounts.google.com"))
       throw new Error(`Invalid Google OAuth URL: ${url}`);
@@ -112,6 +132,10 @@ export const authApi = {
       const response = await apiClient.get<ApiResponse<{ url: string }>>(
         `${API_ENDPOINTS.AUTH.GOOGLE_AUTH}?popup=true&response_type=json`
       );
+
+      if (!response.data.success || !response.data.data) {
+        throw new Error("Failed to get Google OAuth URL for popup");
+      }
 
       const googleOAuthUrl = response.data.data.url;
 
@@ -180,7 +204,7 @@ export const authApi = {
           popupCheckCount++;
           if (popupCheckCount === 2 && !coopDetected) {
             try {
-              popup.closed();
+              void popup.closed;
             } catch {
               coopDetected = true;
             }
@@ -222,6 +246,9 @@ export const authApi = {
       API_ENDPOINTS.AUTH.GOOGLE_AUTH_CALLBACK,
       { code }
     );
+    if (!response.data.success || !response.data.data) {
+      throw new Error("Failed to handle Google callback");
+    }
     return response.data.data;
   },
 
@@ -263,6 +290,9 @@ export const authApi = {
       const response = await apiClient.get<ApiResponse<{ url: string }>>(
         API_ENDPOINTS.AUTH.GOOGLE_GENERATE_URL
       );
+      if (!response.data.success || !response.data.data) {
+        throw new Error("Failed to get Google OAuth URL");
+      }
       return response.data.data;
     } catch (error) {
       console.error("Failed to get Google OAuth URL:", error);

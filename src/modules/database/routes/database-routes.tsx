@@ -1,4 +1,3 @@
-import React from "react";
 import { Routes, Route } from "react-router-dom";
 import { DatabasesPage } from "../pages/databases-page";
 import { DatabaseViewPage } from "../pages/database-view-page";

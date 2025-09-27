@@ -15,7 +15,6 @@ export interface PageHeaderConfig {
 }
 
 export function usePageHeader() {
-  // Common action builders for consistency
   const createAction = (
     icon: ReactNode,
     label: string,
@@ -74,7 +73,6 @@ export function usePageHeader() {
   };
 }
 
-// Pre-configured header configs for common page types
 export const headerConfigs = {
   dashboard: {
     showSearch: false,
