@@ -89,7 +89,7 @@ export function List({ className = "" }: { className?: string }) {
 
   const renderPropertyValue = (
     property: (typeof properties)[0],
-    value: TPropertyValue
+    value: TPropertyValue | undefined
   ) => {
     if (value === null || value === undefined || value === "") return null;
 
@@ -197,6 +197,13 @@ export function List({ className = "" }: { className?: string }) {
 
       case EPropertyType.NUMBER:
         return <span className="text-xs font-medium">{String(value)}</span>;
+
+      case EPropertyType.RICH_TEXT:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            {String(value) || "-"}
+          </span>
+        );
 
       default:
         return (
@@ -393,7 +400,18 @@ export function List({ className = "" }: { className?: string }) {
                               } else if (
                                 property.type === EPropertyType.RICH_TEXT
                               ) {
-                                value = feature.record.content;
+                                // Extract plain text from content blocks
+                                value = feature.record.content
+                                  ? feature.record.content
+                                      .map((block) =>
+                                        block.content
+                                          .map(
+                                            (richText) => richText.plain_text
+                                          )
+                                          .join("")
+                                      )
+                                      .join("\n")
+                                  : "";
                               } else {
                                 // Properties are stored by name, not ID
                                 value =

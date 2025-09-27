@@ -22,13 +22,17 @@ export const DASHBOARD_KEYS = {
     [...DASHBOARD_KEYS.all, "finance-summary", params] as const,
   upcomingEvents: (params?: { limit?: number }) =>
     [...DASHBOARD_KEYS.all, "upcoming-events", params] as const,
+  systemAll: ["system"] as const,
+  systemActivity: () => [...SYSTEM_KEYS.all, "activity"] as const,
+  feed: (workspaceId: string, limit: number) =>
+    [...DASHBOARD_KEYS.systemActivity(), "feed", workspaceId, limit] as const,
 };
 
 export const SYSTEM_KEYS = {
   all: ["system"] as const,
   activities: (params?: IActivityQueryOptions) =>
     [...SYSTEM_KEYS.all, "activities", params] as const,
-  activityFeed: (params?: { limit?: number }) =>
+  activityFeed: (params?: { limit?: number, workspaceId?: string }) =>
     [...SYSTEM_KEYS.all, "activity-feed", params] as const,
   activitySummary: () => [...SYSTEM_KEYS.all, "activity-summary"] as const,
   activityAnalytics: (params?: IActivityQueryOptions) =>
@@ -120,24 +124,6 @@ export const useRecentNotes = (params?: { limit?: number }) => {
   });
 };
 
-// Get goal progress
-export const useGoalProgress = () => {
-  return useQuery({
-    queryKey: DASHBOARD_KEYS.goalProgress(),
-    queryFn: () => dashboardApi.getGoalProgress(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-// Get habit streaks
-export const useHabitStreaks = () => {
-  return useQuery({
-    queryKey: DASHBOARD_KEYS.habitStreaks(),
-    queryFn: () => dashboardApi.getHabitStreaks(),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
 // Get finance summary
 export const useFinanceSummary = (params?: { period?: string }) => {
   return useQuery({
@@ -168,11 +154,22 @@ export const useActivities = (params?: IActivityQueryOptions) => {
 export const useRecentActivityFeed = (workspaceId: string, limit = 10) => {
   return useQuery({
     queryKey: SYSTEM_KEYS.activityFeed({ workspaceId, limit }),
-    queryFn: () => systemApi.getRecentActivityFeed({ workspaceId, limit }),
+    queryFn: () => systemApi.getRecentActivityFeed({ limit: Number(limit)}),
     enabled: !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
+
+// System Queries
+export const useSystemActivityFeed = (workspaceId: string, limit = 10) => {
+  return useQuery({
+    queryKey: DASHBOARD_KEYS.feed(workspaceId, limit),
+    queryFn: () => systemApi.getRecentActivityFeed({ limit: Number(limit)}),
+    enabled: !!workspaceId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+};
+
 
 export const useUserActivitySummary = () => {
   return useQuery({
@@ -303,7 +300,6 @@ export const useRecordPageVisit = () => {
     mutationFn: ({ page, workspaceId }) =>
       systemApi.recordPageVisit(page, workspaceId),
     onSuccess: () => {
-      // Invalidate recently visited query to refresh data
       queryClient.invalidateQueries({
         queryKey: [...SYSTEM_KEYS.all, "recently-visited"],
       });

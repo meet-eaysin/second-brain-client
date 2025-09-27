@@ -13,7 +13,6 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -22,7 +21,6 @@ import {
 import { Input } from "@/components/ui/input.tsx";
 import { Textarea } from "@/components/ui/textarea.tsx";
 import { Button } from "@/components/ui/button.tsx";
-import { Checkbox } from "@/components/ui/checkbox.tsx";
 import { Badge } from "@/components/ui/badge.tsx";
 import {
   DropdownMenu,
@@ -163,6 +161,7 @@ const PROPERTY_SUGGESTIONS = {
   rich_text: ["Content", "Description", "Notes", "Details", "Summary"],
   number: ["Price", "Quantity", "Score", "Rating", "Count", "Amount"],
   date: ["Due Date", "Created Date", "Start Date", "End Date", "Deadline"],
+  date_range: ["Date Range", "Period", "Duration", "Time Span"],
   checkbox: ["Completed", "Active", "Published", "Verified", "Approved"],
   url: ["Website", "Link", "Reference", "Source", "Documentation"],
   email: ["Email", "Contact Email", "Work Email", "Personal Email"],
@@ -292,7 +291,7 @@ export function PropertyForm() {
         config: processedSelectOptions
           ? { options: processedSelectOptions }
           : undefined,
-        viewId: currentViewId,
+        viewId: currentViewId || "",
       };
 
       if (mode === "create") {
@@ -508,26 +507,28 @@ export function PropertyForm() {
                   <FormControl>
                     <div className="space-y-3">
                       <Input placeholder="Enter property name..." {...field} />
-                      {selectedType && PROPERTY_SUGGESTIONS[selectedType] && (
-                        <div className="flex flex-wrap gap-2">
-                          {PROPERTY_SUGGESTIONS[selectedType].map(
-                            (suggestion) => (
-                              <Button
-                                key={suggestion}
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() => {
-                                  field.onChange(suggestion);
-                                }}
-                              >
-                                {suggestion}
-                              </Button>
-                            )
-                          )}
-                        </div>
-                      )}
+                      {selectedType &&
+                        selectedType in PROPERTY_SUGGESTIONS &&
+                        PROPERTY_SUGGESTIONS[selectedType] && (
+                          <div className="flex flex-wrap gap-2">
+                            {PROPERTY_SUGGESTIONS[selectedType].map(
+                              (suggestion) => (
+                                <Button
+                                  key={suggestion}
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 text-xs"
+                                  onClick={() => {
+                                    field.onChange(suggestion);
+                                  }}
+                                >
+                                  {suggestion}
+                                </Button>
+                              )
+                            )}
+                          </div>
+                        )}
                     </div>
                   </FormControl>
                   <FormMessage />

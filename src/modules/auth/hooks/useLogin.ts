@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useLoginMutation } from "../services/auth-queries";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../store/auth-store.ts";
 import type { LoginCredentials } from "@/modules/auth/types/auth.types.ts";
 import { useNavigate } from "react-router-dom";
 import { getDashboardLink } from "@/app/router/router-link.ts";

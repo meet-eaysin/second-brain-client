@@ -44,10 +44,11 @@ import {
   useCreateDatabase,
   useUpdateDatabase,
 } from "@/modules/database-view/services/database-queries";
-import type {
-  TCreateDatabase,
-  TUpdateDatabase,
-  TDatabase,
+import {
+  type TCreateDatabase,
+  type TUpdateDatabase,
+  type TDatabase,
+  EDatabaseType,
 } from "@/modules/database-view/types";
 import {
   createDatabaseSchema,
@@ -85,15 +86,14 @@ export function CreateDatabaseForm({
 
   const form = useForm<CreateDatabaseFormData>({
     resolver: zodResolver(createDatabaseSchema),
-    mode: "onChange",
     defaultValues: {
       name: database?.name || "",
       description: database?.description || "",
-      isPublic: database?.isPublic || false,
+      isPublic: database?.isPublic ?? false,
       icon: database?.icon?.value || "",
       cover: database?.cover?.value || "",
       defaultViewType:
-        database?.views?.find((v) => v.isDefault)?.type || "TABLE",
+        database?.views?.find((v) => v.isDefault)?.type ?? "TABLE",
     },
   });
 
@@ -111,11 +111,11 @@ export function CreateDatabaseForm({
       form.reset({
         name: database?.name || "",
         description: database?.description || "",
-        isPublic: database?.isPublic || false,
+        isPublic: database?.isPublic ?? false,
         icon: database?.icon?.value || "",
         cover: database?.cover?.value || "",
         defaultViewType:
-          database?.views?.find((v) => v.isDefault)?.type || "TABLE",
+          database?.views?.find((v) => v.isDefault)?.type ?? "TABLE",
       });
 
       setAdvancedSettings({
@@ -151,7 +151,7 @@ export function CreateDatabaseForm({
         const updateData: TUpdateDatabase = {
           name: data.name,
           description: data.description || undefined,
-          isPublic: data.isPublic,
+          isPublic: data.isPublic ?? database?.isPublic,
         };
 
         // Only include icon if it has a value
@@ -176,15 +176,10 @@ export function CreateDatabaseForm({
           workspaceId: currentWorkspace.id,
           name: data.name,
           description: data.description || undefined,
-          type: "custom",
-          isPublic: data.isPublic,
-          allowComments: advancedSettings.allowComments,
+          type: EDatabaseType.CUSTOM,
+          isPublic: data.isPublic ?? false,
           allowDuplicates: advancedSettings.allowDuplicates,
-          enableVersioning: advancedSettings.enableVersioning,
-          enableAuditLog: advancedSettings.enableAuditLog,
-          enableAutoTagging: advancedSettings.enableAutoTagging,
-          enableSmartSuggestions: advancedSettings.enableSmartSuggestions,
-          defaultViewType: data.defaultViewType,
+          defaultViewType: data.defaultViewType ?? "TABLE",
         };
 
         // Only include icon if it has a value
@@ -331,7 +326,7 @@ export function CreateDatabaseForm({
                             },
                             {
                               value: "CALENDAR",
-                              label: "Calendar",
+                              label: "CalendarTypes",
                               icon: <Calendar className="h-3 w-3" />,
                             },
                             {

@@ -110,15 +110,6 @@ export interface ISearchable {
   searchText?: string; // Computed field for full-text search
 }
 
-// Validation schemas
-export const StatusSchema = z.enum(EStatus);
-export const PrioritySchema = z.enum(EPriority);
-export const FrequencySchema = z.enum(EFrequency);
-export const ContentTypeSchema = z.enum(EContentType);
-export const MoodScaleSchema = z.enum(EMoodScale);
-export const FinanceTypeSchema = z.enum(EFinanceType);
-export const FinanceCategorySchema = z.enum(EFinanceCategory);
-
 export const BaseEntitySchema = z.object({
   id: z.string(),
   createdAt: z.date(),

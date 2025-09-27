@@ -264,7 +264,16 @@ export function Gallery({ className = "" }: { className?: string }) {
                     ) {
                       value = record.lastEditedAt || record.updatedAt;
                     } else if (property.type === EPropertyType.RICH_TEXT) {
-                      value = record.content;
+                      // Extract plain text from content blocks
+                      value = record.content
+                        ? record.content
+                            .map((block) =>
+                              block.content
+                                .map((richText) => richText.plain_text)
+                                .join("")
+                            )
+                            .join("\n")
+                        : "";
                     } else {
                       // Properties are stored by name, not ID
                       value = record.properties[property.name];

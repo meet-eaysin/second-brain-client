@@ -42,7 +42,6 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 
-// Freeze form validation schema
 const freezeFormSchema = z.object({
   reason: z.string().max(500, "Reason cannot exceed 500 characters").optional(),
 });
@@ -79,7 +78,7 @@ export function DatabasePrimaryButtons() {
         });
 
         toast.success("Database unfrozen successfully");
-      } catch (error) {
+      } catch {
         toast.error("Failed to unfreeze database");
       }
     }
@@ -100,7 +99,7 @@ export function DatabasePrimaryButtons() {
       toast.success("Database frozen successfully");
       setFreezeDialogOpen(false);
       form.reset();
-    } catch (error) {
+    } catch {
       toast.error("Failed to freeze database");
     }
   };

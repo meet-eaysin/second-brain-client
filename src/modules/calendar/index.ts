@@ -1,8 +1,8 @@
-// Calendar module exports
+// CalendarTypes module exports
 export { default as CalendarPage } from "./pages/calendar-page";
 
 // Services
-export { calendarApi } from "./services/calendarApi";
+export { calendarApi } from "./services/calendar-api.ts";
 
 // Queries and Mutations
 export {
@@ -42,4 +42,4 @@ export { CalendarConnections } from "./components/calendar-connections";
 export { ConnectCalendarForm } from "./components/connect-calendar-form";
 
 // Types
-export type * from "@/types/calendar";
+export type * from "@/modules/calendar/types/calendar.types.ts";

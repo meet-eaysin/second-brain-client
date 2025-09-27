@@ -8,7 +8,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import {
-  EDatabaseType,
+  EDatabaseType, ESortDirection, EViewType,
   type TDatabase,
   type TFilterCondition,
   type TProperty,
@@ -26,7 +26,7 @@ import {
 } from "../services/database-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { DATABASE_KEYS } from "../services/database-queries";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import {
   useDatabase,
   useProperties,
@@ -35,7 +35,7 @@ import {
   useViews,
   useDatabaseByModuleType,
 } from "@/modules/database-view/services/database-queries";
-import type { Workspace } from "@/types/workspace.types.ts";
+import type {Workspace} from "@/modules/workspaces/types/workspaces.types.ts";
 
 export type DatabaseDialogType =
   | "create-database"
@@ -241,7 +241,7 @@ export function DatabaseViewProvider({
   }, [viewsResponse?.data, currentViewId]);
 
   const { data: currentViewResponse, isLoading: isCurrentViewLoading } =
-    useView(currentDatabaseId, effectiveViewId);
+    useView(currentDatabaseId || "", effectiveViewId);
 
   // Derive filters from current view settings
   const filters = useMemo(() => {
@@ -253,17 +253,15 @@ export function DatabaseViewProvider({
     return currentViewResponse?.data?.settings?.filters || [];
   }, [currentViewResponse?.data?.settings?.filters]);
 
-  const tempSorts = useMemo(() => {
+  const tempSorts: TSortConfig[] = useMemo(() => {
     return (
-      currentViewResponse?.data?.settings?.sorts?.map((sort) => ({
-        propertyId: sort.property,
-        direction:
-          sort.direction === "ascending"
-            ? "asc"
-            : sort.direction === "descending"
-            ? "desc"
-            : "asc",
-      })) || []
+      currentViewResponse?.data?.settings?.sorts?.map((sort) => {
+        const dir = sort.direction === ESortDirection.ASC ? ESortDirection.ASC : ESortDirection.DESC;
+        return {
+          propertyId: sort.propertyId,
+          direction: dir,
+        };
+      }) || []
     );
   }, [currentViewResponse?.data?.settings?.sorts]);
 
@@ -272,20 +270,18 @@ export function DatabaseViewProvider({
     includeHidden: false,
   };
   const { data: propertiesResponse, isLoading: isPropertiesLoading } =
-    useProperties(currentDatabaseId, propertiesQueryParams);
+    useProperties(currentDatabaseId || "", propertiesQueryParams);
 
-  // Query for all properties (not filtered by view) for column visibility menu
   const allPropertiesQueryParams: TPropertyQueryParams = {
+    viewId: effectiveViewId,
     includeHidden: true,
   };
   const { data: allPropertiesResponse, isLoading: isAllPropertiesLoading } =
-    useProperties(currentDatabaseId, allPropertiesQueryParams);
+    useProperties(currentDatabaseId || "", allPropertiesQueryParams);
 
   // Records query with offset/limit for Load More pagination
   // Use higher limit for board/kanban views that need to show all records
-  const isBoardView =
-    currentViewResponse?.data?.type === "board" ||
-    currentViewResponse?.data?.type === "kanban";
+  const isBoardView = currentViewResponse?.data?.type === EViewType.BOARD
   const recordLimit = isBoardView ? 1000 : 10;
 
   const recordQueryParams = {
@@ -298,7 +294,7 @@ export function DatabaseViewProvider({
   };
 
   const { data: recordsResponse, isLoading: isRecordsLoading } = useRecords(
-    currentDatabaseId,
+    currentDatabaseId || "",
     recordQueryParams
   );
 
@@ -312,7 +308,7 @@ export function DatabaseViewProvider({
     setIsLoadingMore(false);
     // Invalidate records query to ensure fresh data on navigation
     queryClient.invalidateQueries({
-      queryKey: DATABASE_KEYS.records(currentDatabaseId),
+      queryKey: DATABASE_KEYS.records(currentDatabaseId || ""),
     });
   }, [currentDatabaseId, effectiveViewId, queryClient]);
 
@@ -323,13 +319,12 @@ export function DatabaseViewProvider({
         // First load or reset
         setAccumulatedRecords(recordsResponse.data);
       } else {
-        // Append for Load More
-        setAccumulatedRecords((prev) => [...prev, ...recordsResponse.data]);
+        const recordsResponseData = recordsResponse?.data;
+        setAccumulatedRecords((prev) => [...prev, ...recordsResponseData]);
       }
     }
   }, [recordsResponse?.data, currentOffset]);
 
-  // Derive hasMoreRecords from current query response
   const hasMoreRecords = useMemo(() => {
     return recordsResponse?.data
       ? recordsResponse.data.length === recordLimit
@@ -476,9 +471,9 @@ export function DatabaseViewProvider({
     searchQuery,
     filters,
     tempFilters,
-    setTempFilters: () => {}, // Placeholder - not used in current implementation
+    setTempFilters: () => {},
     tempSorts,
-    setTempSorts: () => {}, // Placeholder - not used in current implementation
+    setTempSorts: () => {},
     sorts,
 
     onDialogOpen,

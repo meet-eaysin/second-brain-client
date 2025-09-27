@@ -3,7 +3,7 @@ import {
   useCurrentWorkspace,
   useUserWorkspaces,
 } from "../services/workspace-queries";
-import type { Workspace } from "@/types/workspace.types";
+import type { Workspace } from "@/modules/workspaces/types/workspaces.types";
 
 interface WorkspaceContextValue {
   // Current workspace

@@ -8,10 +8,9 @@ import type {
   IFinanceAnalytics,
   IContentAnalytics,
   IAnalyticsQueryParams,
-} from "../../home/types/system.types";
+} from "@/modules/home/types/system.types";
 
 export const secondBrainAnalyticsApi = {
-  // Productivity Analytics
   getProductivityAnalytics: async (
     params?: IAnalyticsQueryParams
   ): Promise<IProductivityAnalytics> => {
@@ -19,10 +18,9 @@ export const secondBrainAnalyticsApi = {
       "/system/analytics/productivity",
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
-  // Task Analytics
   getTaskAnalytics: async (
     params?: IAnalyticsQueryParams
   ): Promise<ITaskAnalytics> => {
@@ -30,10 +28,9 @@ export const secondBrainAnalyticsApi = {
       "/system/analytics/tasks",
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
-  // Time Tracking Analytics
   getTimeTrackingAnalytics: async (
     params?: IAnalyticsQueryParams
   ): Promise<ITimeTrackingAnalytics> => {
@@ -41,10 +38,9 @@ export const secondBrainAnalyticsApi = {
       "/system/analytics/time-tracking",
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
-  // Goal Analytics
   getGoalAnalytics: async (
     params?: IAnalyticsQueryParams
   ): Promise<IGoalAnalytics> => {
@@ -52,10 +48,9 @@ export const secondBrainAnalyticsApi = {
       "/system/analytics/goals",
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
-  // Finance Analytics
   getFinanceAnalytics: async (
     params?: IAnalyticsQueryParams
   ): Promise<IFinanceAnalytics> => {
@@ -63,10 +58,9 @@ export const secondBrainAnalyticsApi = {
       "/system/analytics/finance",
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
-  // Content Analytics
   getContentAnalytics: async (
     params?: IAnalyticsQueryParams
   ): Promise<IContentAnalytics> => {
@@ -74,6 +68,6 @@ export const secondBrainAnalyticsApi = {
       "/system/analytics/content",
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 };

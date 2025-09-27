@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../store/auth-store.ts";
 import { useCurrentUser } from "../services/auth-queries";
 import { hasToken, removeTokens } from "../utils/tokenUtils";
 

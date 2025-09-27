@@ -54,7 +54,7 @@ import {
   type TRelationConnection,
   type TCreateRelationConnection,
   type TContentBlock,
-  EDatabaseType,
+  EDatabaseType, ESortDirection,
 } from "@/modules/database-view/types";
 
 export const DATABASE_KEYS = {
@@ -684,7 +684,7 @@ export const useUpdateViewSorts = () => {
     {
       databaseId: string;
       viewId: string;
-      sorts: Array<{ propertyId: string; direction: "asc" | "desc" }>;
+      sorts: Array<{ propertyId: string; direction: ESortDirection }>;
     }
   >({
     mutationFn: ({ databaseId, viewId, sorts }) =>

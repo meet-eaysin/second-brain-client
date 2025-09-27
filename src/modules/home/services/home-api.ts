@@ -7,12 +7,9 @@ import type {
   IActivityFeedItem,
   IUpcomingTask,
   IRecentNote,
-  IGoalProgress,
-  IHabitStreak,
   IFinanceSummary,
-  IQuickStats,
+  IQuickStats, ILearnContent, IRecentlyVisitedItem,
 } from "../types";
-import type { ICalendarEvent } from "@/modules/calendar/types/calendar.types";
 import type {
   IActivity,
   IActivityQueryOptions,
@@ -34,323 +31,319 @@ import type {
   IWorkspaceAnalytics,
   IAnalyticsQueryParams,
 } from "../types/system.types";
+import type {CalendarEvent} from "@/modules/calendar";
 
 export const dashboardApi = {
-  // Get dashboard overview
   getDashboardOverview: async (
     params?: IDashboardQueryParams
-  ): Promise<IDashboardOverview> => {
+  ): Promise<ApiResponse<IDashboardOverview>> => {
     const response = await apiClient.get<ApiResponse<IDashboardOverview>>(
       "/dashboard",
       { params }
     );
-    return response.data.data;
+    return response.data!;
   },
 
-  // Get dashboard statistics (detailed)
   getDashboardStats: async (
     params?: IDashboardQueryParams
-  ): Promise<IDashboardStats> => {
+  ): Promise<ApiResponse<IDashboardStats>> => {
     const response = await apiClient.get<ApiResponse<IDashboardStats>>(
       "/dashboard/stats",
       { params }
     );
-    return response.data.data;
+    return response.data!;
   },
 
-  // Get recent activity feed
   getRecentActivity: async (params?: {
     limit?: number;
-  }): Promise<IActivityFeedItem[]> => {
+  }): Promise<ApiResponse<IActivityFeedItem[]>> => {
     const response = await apiClient.get<ApiResponse<IActivityFeedItem[]>>(
       "/dashboard/activity",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get quick statistics
-  getQuickStats: async (): Promise<IQuickStats> => {
+  getQuickStats: async (): Promise<ApiResponse<IQuickStats>> => {
     const response = await apiClient.get<ApiResponse<IQuickStats>>(
       "/dashboard/quick-stats"
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Get upcoming tasks
   getUpcomingTasks: async (params?: {
     limit?: number;
-  }): Promise<IUpcomingTask[]> => {
+  }): Promise<ApiResponse<IUpcomingTask[]>> => {
     const response = await apiClient.get<ApiResponse<IUpcomingTask[]>>(
       "/dashboard/upcoming-tasks",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Get recent notes
   getRecentNotes: async (params?: {
     limit?: number;
-  }): Promise<IRecentNote[]> => {
+  }): Promise<ApiResponse<IRecentNote[]>> => {
     const response = await apiClient.get<ApiResponse<IRecentNote[]>>(
       "/dashboard/recent-notes",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get goal progress
-  getGoalProgress: async (): Promise<IGoalProgress[]> => {
-    const response = await apiClient.get<ApiResponse<IGoalProgress[]>>(
-      "/dashboard/goal-progress"
-    );
-    return response.data.data;
-  },
-
-  // Get habit streaks
-  getHabitStreaks: async (): Promise<IHabitStreak[]> => {
-    const response = await apiClient.get<ApiResponse<IHabitStreak[]>>(
-      "/dashboard/habit-streaks"
-    );
-    return response.data.data;
-  },
-
-  // Get finance summary
   getFinanceSummary: async (params?: {
     period?: string;
-  }): Promise<IFinanceSummary> => {
+  }): Promise<ApiResponse<IFinanceSummary>> => {
     const response = await apiClient.get<ApiResponse<IFinanceSummary>>(
       "/dashboard/finance-summary",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Get upcoming events
   getUpcomingEvents: async (params?: {
     limit?: number;
-  }): Promise<ICalendarEvent[]> => {
-    const response = await apiClient.get<ApiResponse<ICalendarEvent[]>>(
+  }): Promise<ApiResponse<CalendarEvent[]>> => {
+    const response = await apiClient.get<ApiResponse<CalendarEvent[]>>(
       "/calendar/events/upcoming",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get learn content with upcoming badges
-  getLearnContent: async (): Promise<ILearnContent[]> => {
+  getLearnContent: async (): Promise<ApiResponse<ILearnContent[]>> => {
     const response = await apiClient.get<ApiResponse<ILearnContent[]>>(
       "/dashboard/learn-content"
     );
-    return response.data.data;
+    return response.data;
   },
 };
 
 export const systemApi = {
-  // Activity APIs
   getActivities: async (
     params?: IActivityQueryOptions
-  ): Promise<IActivity[]> => {
+  ): Promise<ApiResponse<IActivity[]>> => {
     const response = await apiClient.get<ApiResponse<IActivity[]>>(
       "/system/activity",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getRecentActivityFeed: async (params?: {
     limit?: number;
-  }): Promise<IActivity[]> => {
+  }): Promise<ApiResponse<IActivity[]>> => {
     const response = await apiClient.get<ApiResponse<IActivity[]>>(
       "/system/activity/feed",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  getUserActivitySummary: async (): Promise<IActivitySummary> => {
+  getUserActivitySummary: async (): Promise<ApiResponse<IActivitySummary>> => {
     const response = await apiClient.get<ApiResponse<IActivitySummary>>(
       "/system/activity/summary"
     );
-    return response.data.data;
+    return response.data;
   },
 
   getActivityAnalytics: async (
     params?: IActivityQueryOptions
-  ): Promise<IActivityAnalytics> => {
+  ): Promise<ApiResponse<IActivityAnalytics>> => {
     const response = await apiClient.get<ApiResponse<IActivityAnalytics>>(
       "/system/activity/analytics",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  getActivityById: async (id: string): Promise<IActivity> => {
+  getActivityById: async (id: string): Promise<ApiResponse<IActivity>> => {
     const response = await apiClient.get<ApiResponse<IActivity>>(
       `/system/activity/${id}`
     );
-    return response.data.data;
+    return response.data;
   },
 
-  getWorkspaceActivityOverview: async (): Promise<any> => {
-    const response = await apiClient.get<ApiResponse<any>>(
+  getWorkspaceActivityOverview: async (): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.get<ApiResponse<unknown>>(
       "/system/activity/workspace/overview"
     );
-    return response.data.data;
+    return response.data;
   },
 
-  generateAuditTrail: async (params?: any): Promise<IAuditTrail> => {
+  generateAuditTrail: async (params?: unknown): Promise<ApiResponse<IAuditTrail>> => {
     const response = await apiClient.get<ApiResponse<IAuditTrail>>(
       "/system/activity/audit",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  getSecurityEvents: async (params?: any): Promise<ISecurityEvent[]> => {
+  getSecurityEvents: async (params?: unknown): Promise<ApiResponse<ISecurityEvent[]>> => {
     const response = await apiClient.get<ApiResponse<ISecurityEvent[]>>(
       "/system/activity/security",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getComplianceReport: async (params?: {
     period?: string;
-  }): Promise<IComplianceReport> => {
+  }): Promise<ApiResponse<IComplianceReport>> => {
     const response = await apiClient.get<ApiResponse<IComplianceReport>>(
       "/system/activity/compliance",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  exportAuditData: async (params?: any): Promise<any> => {
-    const response = await apiClient.get<ApiResponse<any>>(
+  exportAuditData: async (params?: unknown): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.get<ApiResponse<unknown>>(
       "/system/activity/export",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getActivityHeatmap: async (params?: {
     period?: string;
-  }): Promise<IActivityHeatmap> => {
+  }): Promise<ApiResponse<IActivityHeatmap>> => {
     const response = await apiClient.get<ApiResponse<IActivityHeatmap>>(
       "/system/activity/heatmap",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   // Analytics APIs
   getAnalyticsDashboard: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IAnalyticsDashboard> => {
+  ): Promise<ApiResponse<IAnalyticsDashboard>> => {
     const response = await apiClient.get<ApiResponse<IAnalyticsDashboard>>(
       "/system/analytics/dashboard",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getAnalyticsSummary: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IAnalyticsSummary> => {
+  ): Promise<ApiResponse<IAnalyticsSummary>> => {
     const response = await apiClient.get<ApiResponse<IAnalyticsSummary>>(
       "/system/analytics/summary",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getAnalyticsInsights: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IAnalyticsInsights> => {
+  ): Promise<ApiResponse<IAnalyticsInsights>> => {
     const response = await apiClient.get<ApiResponse<IAnalyticsInsights>>(
       "/system/analytics/insights",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getProductivityAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IProductivityAnalytics> => {
+  ): Promise<ApiResponse<IProductivityAnalytics>> => {
     const response = await apiClient.get<ApiResponse<IProductivityAnalytics>>(
       "/system/analytics/productivity",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getTaskAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<ITaskAnalytics> => {
+  ): Promise<ApiResponse<ITaskAnalytics>> => {
     const response = await apiClient.get<ApiResponse<ITaskAnalytics>>(
       "/system/analytics/tasks",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getTimeTrackingAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<ITimeTrackingAnalytics> => {
+  ): Promise<ApiResponse<ITimeTrackingAnalytics>> => {
     const response = await apiClient.get<ApiResponse<ITimeTrackingAnalytics>>(
       "/system/analytics/time-tracking",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getGoalAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IGoalAnalytics> => {
+  ): Promise<ApiResponse<IGoalAnalytics>> => {
     const response = await apiClient.get<ApiResponse<IGoalAnalytics>>(
       "/system/analytics/goals",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getFinanceAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IFinanceAnalytics> => {
+  ): Promise<ApiResponse<IFinanceAnalytics>> => {
     const response = await apiClient.get<ApiResponse<IFinanceAnalytics>>(
       "/system/analytics/finance",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getContentAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IContentAnalytics> => {
+  ): Promise<ApiResponse<IContentAnalytics>> => {
     const response = await apiClient.get<ApiResponse<IContentAnalytics>>(
       "/system/analytics/content",
       { params }
     );
-    return response.data.data;
+    return response.data;
   },
 
   getWorkspaceAnalytics: async (
     params?: IAnalyticsQueryParams
-  ): Promise<IWorkspaceAnalytics> => {
+  ): Promise<ApiResponse<IWorkspaceAnalytics>> => {
     const response = await apiClient.get<ApiResponse<IWorkspaceAnalytics>>(
       "/system/analytics/workspace",
+      { params }
+    );
+    return response.data;
+  },
+
+  exportAnalytics: async (
+    params?: IAnalyticsQueryParams & { format?: string }
+  ): Promise<unknown> => {
+    const response = await apiClient.get<ApiResponse<unknown>>(
+      "/system/analytics/export",
       { params }
     );
     return response.data.data;
   },
 
-  exportAnalytics: async (
-    params?: IAnalyticsQueryParams & { format?: string }
-  ): Promise<any> => {
-    const response = await apiClient.get<ApiResponse<any>>(
-      "/system/analytics/export",
-      { params }
+
+  recordPageVisit: async (page: string, workspaceId: string): Promise<void> => {
+    await apiClient.post<ApiResponse<void>>("/system/activity/page-visit", {
+      page,
+      workspaceId,
+    });
+  },
+
+  getRecentlyVisited: async (limit = 15): Promise<IRecentlyVisitedItem[]> => {
+    const response = await apiClient.get<ApiResponse<IRecentlyVisitedItem[]>>(
+      "/system/activity/recently-visited",
+      {
+        params: { limit },
+      }
     );
-    return response.data.data;
+    return response.data.data || [];
   },
 };

@@ -1,21 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { calendarApi } from "./calendarApi";
+import { calendarApi } from "./calendar-api.ts";
 import type {
-  Calendar,
-  CalendarEvent,
   CalendarConnection,
-  CalendarStats,
   CreateCalendarRequest,
   UpdateCalendarRequest,
   CreateEventRequest,
   UpdateEventRequest,
   CalendarEventsQuery,
   ConnectCalendarRequest,
-  CalendarProvider,
-  ConnectionTestResponse,
-  ConnectionLogsResponse,
-  CalendarConnectionStats,
-} from "@/types/calendar";
+} from "@/modules/calendar/types/calendar.types.ts";
 
 // Query Keys
 export const CALENDAR_KEYS = {
@@ -40,11 +33,11 @@ export const CALENDAR_KEYS = {
   providers: () => [...CALENDAR_KEYS.connections(), "providers"] as const,
 };
 
-// Calendar Queries
+// CalendarTypes Queries
 export const useCalendars = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.lists(),
-    queryFn: () => calendarApi.getCalendars(),
+    queryFn: () => calendarApi.getCalendars().then((res) => res.data),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
@@ -52,7 +45,8 @@ export const useCalendars = () => {
 export const useCalendar = (calendarId: string) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.detail(calendarId),
-    queryFn: () => calendarApi.getCalendarById(calendarId),
+    queryFn: () =>
+      calendarApi.getCalendarById(calendarId).then((res) => res.data),
     enabled: !!calendarId,
     staleTime: 5 * 60 * 1000,
   });
@@ -62,7 +56,7 @@ export const useCalendar = (calendarId: string) => {
 export const useEvents = (query: CalendarEventsQuery) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.eventsList(query),
-    queryFn: () => calendarApi.getEvents(query),
+    queryFn: () => calendarApi.getEvents(query).then((res) => res.data),
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
@@ -92,7 +86,7 @@ export const useTodayEvents = () => {
   });
 };
 
-// Calendar Stats
+// CalendarTypes Stats
 export const useCalendarStats = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.stats(),
@@ -101,7 +95,7 @@ export const useCalendarStats = () => {
   });
 };
 
-// Calendar Config
+// CalendarTypes Config
 export const useCalendarConfig = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.config(),
@@ -110,7 +104,7 @@ export const useCalendarConfig = () => {
   });
 };
 
-// Calendar Preferences
+// CalendarTypes Preferences
 export const useCalendarPreferences = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.preferences(),
@@ -119,7 +113,7 @@ export const useCalendarPreferences = () => {
   });
 };
 
-// Calendar Connections
+// CalendarTypes Connections
 export const useCalendarConnections = (activeOnly = true) => {
   return useQuery({
     queryKey: [...CALENDAR_KEYS.connections(), { activeOnly }],
@@ -153,7 +147,7 @@ export const useCalendarConnectionStats = () => {
   });
 };
 
-// Calendar Mutations
+// CalendarTypes Mutations
 export const useCreateCalendar = () => {
   const queryClient = useQueryClient();
 

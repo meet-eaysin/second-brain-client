@@ -1,7 +1,6 @@
-import React from "react";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import { NotificationsPanel } from "../components/NotificationsPanel";
+import { NotificationsPanel } from "@/modules/notifications/components/notifications-panel.tsx";
 
 export default function NotificationsPage() {
   return (

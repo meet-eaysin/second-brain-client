@@ -9,7 +9,7 @@ import {
   useUpdateEvent,
   useDeleteEvent,
 } from "../services/calendar-queries";
-import type { CreateEventRequest, UpdateEventRequest } from "@/types/calendar";
+import type { CreateEventRequest, UpdateEventRequest } from "@/modules/calendar/types/calendar.types.ts";
 import {
   Dialog,
   DialogContent,

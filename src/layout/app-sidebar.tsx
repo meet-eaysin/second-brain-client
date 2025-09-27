@@ -13,7 +13,7 @@ import { DynamicNavGroup } from "@/layout/dynamic-nav-group.tsx";
 import { NavUser } from "@/layout/nav-user.tsx";
 import { CreateCategoryDialog } from "@/modules/database/components/create-category-dialog";
 import { CreateDatabaseDialog } from "@/modules/database/components/create-database-dialog";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [createCategoryDialogOpen, setCreateCategoryDialogOpen] =

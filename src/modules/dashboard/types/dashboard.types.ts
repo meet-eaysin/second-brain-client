@@ -1,6 +1,5 @@
-import type { EStatus, EPriority, EFinanceType } from "@/types/common.types";
+import {EFinanceType, type EPriority, EStatus} from "@/modules/core/types/common.types.ts";
 
-// Dashboard overview interface
 export interface IDashboardOverview {
   quickStats: IQuickStats;
   recentActivity: IActivityFeedItem[];

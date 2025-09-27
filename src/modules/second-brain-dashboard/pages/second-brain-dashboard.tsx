@@ -1,4 +1,9 @@
 import { useState } from "react";
+import type {
+  IActivityFeedItem,
+  IUpcomingTask,
+  IRecentNote,
+} from "@/modules/dashboard/types/dashboard.types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,21 +73,32 @@ export function SecondBrainDashboard() {
     );
   }
 
-  const dashboardOverview = dashboardData || {};
+  const dashboardOverview = dashboardData || {
+    quickStats: undefined,
+    recentActivity: [],
+    upcomingTasks: [],
+    recentNotes: [],
+    goalProgress: [],
+    habitStreaks: [],
+    financeSummary: undefined,
+    workspaceStats: undefined,
+  };
 
   const {
     quickStats,
     recentActivity = [],
     upcomingTasks = [],
     recentNotes = [],
-    recentlyVisited = [],
+    goalProgress = [],
   } = dashboardOverview;
 
   // Filter activities based on selected filter
-  const filteredActivities = recentActivity.filter((activity) => {
-    if (activityFilter === "all") return true;
-    return activity.type === activityFilter;
-  });
+  const filteredActivities = recentActivity.filter(
+    (activity: IActivityFeedItem) => {
+      if (activityFilter === "all") return true;
+      return activity.type === activityFilter;
+    }
+  );
 
   return (
     <>
@@ -191,7 +207,7 @@ export function SecondBrainDashboard() {
                   No upcoming tasks
                 </p>
               ) : (
-                upcomingTasks.slice(0, 5).map((task) => (
+                upcomingTasks.slice(0, 5).map((task: IUpcomingTask) => (
                   <div
                     key={task.id}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
@@ -230,25 +246,26 @@ export function SecondBrainDashboard() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-2">
-              {recentlyVisited.length === 0 ? (
+              {goalProgress.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No recent activity
                 </p>
               ) : (
-                recentlyVisited.slice(0, 3).map((item) => (
+                goalProgress.slice(0, 3).map((goal) => (
                   <div
-                    key={item.id}
+                    key={goal.id}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
                   >
                     <Target className="h-4 w-4 text-muted-foreground" />
                     <div className="flex-1">
-                      <span className="text-sm font-medium">{item.name}</span>
+                      <span className="text-sm font-medium">{goal.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {item.type}
+                        {goal.status}
                       </span>
-                      {item.progress !== undefined && (
-                        <Progress value={item.progress} className="mt-1 h-1" />
-                      )}
+                      <Progress
+                        value={goal.progressPercentage}
+                        className="mt-1 h-1"
+                      />
                     </div>
                   </div>
                 ))
@@ -271,7 +288,7 @@ export function SecondBrainDashboard() {
               {recentNotes.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No recent notes</p>
               ) : (
-                recentNotes.slice(0, 5).map((note) => (
+                recentNotes.slice(0, 5).map((note: IRecentNote) => (
                   <div
                     key={note.id}
                     className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50"
@@ -280,8 +297,9 @@ export function SecondBrainDashboard() {
                     <div className="flex-1">
                       <span className="text-sm font-medium">{note.title}</span>
                       <span className="text-xs text-muted-foreground block">
-                        {note.updatedAt && isValid(new Date(note.updatedAt))
-                          ? formatDistanceToNow(note.updatedAt, {
+                        {note.lastEditedAt &&
+                        isValid(new Date(note.lastEditedAt))
+                          ? formatDistanceToNow(note.lastEditedAt, {
                               addSuffix: true,
                             })
                           : "Recently"}
@@ -331,25 +349,27 @@ export function SecondBrainDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {filteredActivities.slice(0, 10).map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
-                  >
-                    <Activity className="h-4 w-4 text-muted-foreground mt-1" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{activity.title}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {activity.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {formatDistanceToNow(activity.timestamp, {
-                          addSuffix: true,
-                        })}
-                      </p>
+                {filteredActivities
+                  .slice(0, 10)
+                  .map((activity: IActivityFeedItem) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 p-3 hover:bg-muted/50 rounded-lg"
+                    >
+                      <Activity className="h-4 w-4 text-muted-foreground mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm">{activity.title}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(activity.timestamp, {
+                            addSuffix: true,
+                          })}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             )}
           </CardContent>

@@ -1,4 +1,3 @@
-import React from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,15 +24,15 @@ import {
   useCalendars,
   useUpdateCalendar,
   useDeleteCalendar,
-} from "../services/calendar-queries";
-import type { Calendar } from "@/types/calendar";
+} from "@/modules/calendar/services/calendar-queries";
+import type { CalendarTypes } from "@/modules/calendar/types/calendar.types.ts";
 import { toast } from "sonner";
 
 interface CalendarListProps {
   selectedCalendars: string[];
   onCalendarSelectionChange: (calendarIds: string[]) => void;
   onCreateCalendar: () => void;
-  onEditCalendar: (calendar: Calendar) => void;
+  onEditCalendar: (calendar: CalendarTypes) => void;
   onCalendarSettings: () => void;
 }
 
@@ -58,7 +57,7 @@ export function CalendarList({
     }
   };
 
-  const handleVisibilityToggle = async (calendar: Calendar) => {
+  const handleVisibilityToggle = async (calendar: CalendarTypes) => {
     try {
       await updateCalendarMutation.mutateAsync({
         calendarId: calendar.id,
@@ -70,7 +69,7 @@ export function CalendarList({
     }
   };
 
-  const handleSetAsDefault = async (calendar: Calendar) => {
+  const handleSetAsDefault = async (calendar: CalendarTypes) => {
     try {
       await updateCalendarMutation.mutateAsync({
         calendarId: calendar.id,
@@ -82,7 +81,7 @@ export function CalendarList({
     }
   };
 
-  const handleDeleteCalendar = async (calendar: Calendar) => {
+  const handleDeleteCalendar = async (calendar: CalendarTypes) => {
     if (
       !confirm(
         `Are you sure you want to delete "${calendar.name}"? This will also delete all events in this calendar.`
@@ -93,7 +92,7 @@ export function CalendarList({
 
     try {
       await deleteCalendarMutation.mutateAsync(calendar.id);
-      toast.success("Calendar deleted successfully");
+      toast.success("CalendarTypes deleted successfully");
     } catch {
       toast.error("Failed to delete calendar");
     }

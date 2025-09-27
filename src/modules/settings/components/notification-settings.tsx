@@ -35,22 +35,26 @@ export const NotificationSettings: React.FC = () => {
   const [databaseShares, setDatabaseShares] = useState(true);
   const [mentions, setMentions] = useState(true);
   const [weeklyDigest, setWeeklyDigest] = useState(false);
-  const [notificationFrequency, setNotificationFrequency] =
-    useState("immediate");
+  const [notificationFrequency, setNotificationFrequency] = useState<
+    "immediate" | "hourly" | "daily" | "weekly"
+  >("immediate");
   const [isSaving, setIsSaving] = useState(false);
 
   // Load settings from backend
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const settings = await settingsApi.getNotifications();
-        setEmailNotifications(settings.emailNotifications);
-        setPushNotifications(settings.pushNotifications);
-        setWorkspaceInvites(settings.workspaceInvites);
-        setDatabaseShares(settings.databaseShares);
-        setMentions(settings.mentions);
-        setWeeklyDigest(settings.weeklyDigest);
-        setNotificationFrequency(settings.notificationFrequency);
+        const response = await settingsApi.getNotifications();
+        const settings = response.data;
+        if (settings) {
+          setEmailNotifications(settings.emailNotifications);
+          setPushNotifications(settings.pushNotifications);
+          setWorkspaceInvites(settings.workspaceInvites);
+          setDatabaseShares(settings.databaseShares);
+          setMentions(settings.mentions);
+          setWeeklyDigest(settings.weeklyDigest);
+          setNotificationFrequency(settings.notificationFrequency);
+        }
       } catch (error) {
         console.error("Failed to load notification settings:", error);
         toast.error("Failed to load notification settings");
@@ -131,7 +135,11 @@ export const NotificationSettings: React.FC = () => {
             <Label className="text-sm font-medium">Frequency</Label>
             <Select
               value={notificationFrequency}
-              onValueChange={setNotificationFrequency}
+              onValueChange={(value) =>
+                setNotificationFrequency(
+                  value as "immediate" | "hourly" | "daily" | "weekly"
+                )
+              }
             >
               <SelectTrigger>
                 <SelectValue />

@@ -2,7 +2,7 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { DatabaseView, EDatabaseType } from "@/modules/database-view";
 
-export function NotesPage() {
+export const NotesPage = () => {
   return (
     <>
       <EnhancedHeader />
@@ -13,5 +13,3 @@ export function NotesPage() {
     </>
   );
 }
-
-export default NotesPage;

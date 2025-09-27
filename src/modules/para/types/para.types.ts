@@ -127,7 +127,7 @@ export interface IParaArchive extends IParaItem {
 export interface IParaStats {
   totalItems: number;
   byCategory: Record<EParaCategory, number>;
-  byStatus: Record<EParaStatus, number>;
+  byStatus: Record<EParaStatus, Record<EParaCategory, number>>;
   byPriority: Record<EParaPriority, number>;
   areas: {
     total: number;
@@ -280,6 +280,35 @@ export interface IParaQueryParams {
   sortOrder?: "asc" | "desc";
   page?: number;
   limit?: number;
+}
+
+// Missing interfaces that are referenced in API and queries
+export interface IMoveToArchiveRequest {
+  itemIds: string[];
+  archiveReason:
+    | "completed"
+    | "no_longer_relevant"
+    | "superseded"
+    | "failed"
+    | "other";
+  archiveNotes?: string;
+  retentionPolicy?: "permanent" | "temporary";
+  deleteAfterDate?: Date;
+}
+
+export interface IRestoreFromArchiveRequest {
+  itemIds: string[];
+  targetCategory: EParaCategory;
+  restoreNotes?: string;
+}
+
+export interface IParaCategorizeRequest {
+  itemType: "project" | "resource" | "task" | "note" | "goal";
+  itemId: string;
+  targetCategory: EParaCategory;
+  paraItemId?: string; // Link to existing PARA item
+  createNew?: boolean; // Create new PARA item
+  newParaItem?: ICreateParaItemRequest;
 }
 
 // Legacy type aliases for backward compatibility

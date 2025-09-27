@@ -30,7 +30,7 @@ export function Board({ className = "" }: { className?: string }) {
     // First check if view has a configured grouping property
     if (currentView?.settings?.groupBy) {
       const configuredProperty = properties.find(
-        (p) => p.name === currentView.settings.groupBy
+        (p) => p.name === currentView?.settings?.groupBy?.propertyId
       );
       if (configuredProperty) {
         return configuredProperty;
@@ -198,6 +198,13 @@ export function Board({ className = "" }: { className?: string }) {
           </span>
         );
 
+      case EPropertyType.RICH_TEXT:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+            {String(value) || "-"}
+          </span>
+        );
+
       default:
         return (
           <span className="text-xs text-muted-foreground truncate max-w-[120px]">
@@ -348,7 +355,18 @@ export function Board({ className = "" }: { className?: string }) {
                               } else if (
                                 property.type === EPropertyType.RICH_TEXT
                               ) {
-                                value = item.record.content;
+                                // Extract plain text from content blocks
+                                value = item.record.content
+                                  ? item.record.content
+                                      .map((block) =>
+                                        block.content
+                                          .map(
+                                            (richText) => richText.plain_text
+                                          )
+                                          .join("")
+                                      )
+                                      .join("\n")
+                                  : "";
                               } else {
                                 // Properties are stored by name, not ID
                                 value = item.record.properties[property.name];

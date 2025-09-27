@@ -258,6 +258,13 @@ const renderCellValue = (property: TProperty, value: unknown) => {
         </div>
       );
 
+    case "rich_text":
+      return (
+        <span className="truncate max-w-xs" title={String(value)}>
+          {String(value) || "-"}
+        </span>
+      );
+
     default:
       return (
         <span className="truncate max-w-xs" title={String(value)}>
@@ -325,23 +332,31 @@ export const generateDocumentColumns = (
         } else if (property.type === "last_edited_time") {
           value = row.original.lastEditedAt || row.original.updatedAt;
         } else if (property.type === "rich_text") {
-          value = row.original.content;
+          // Extract plain text from content blocks
+          value = row.original.content
+            ? row.original.content
+                .map((block) =>
+                  block.content.map((richText) => richText.plain_text).join("")
+                )
+                .join("\n")
+            : "";
         } else {
           value = row.original.properties[property.name];
         }
 
-        if (onUpdateRecord) {
-          return (
-            <EditableCell
-              key={`${row.original.id}-${property.id}`}
-              property={property}
-              value={value}
-              record={row.original}
-            />
-          );
+        // Rich text is not editable in table view
+        if (property.type === "rich_text" || !onUpdateRecord) {
+          return renderCellValue(property, value);
         }
 
-        return renderCellValue(property, value);
+        return (
+          <EditableCell
+            key={`${row.original.id}-${property.id}`}
+            property={property}
+            value={value}
+            record={row.original}
+          />
+        );
       },
       enableSorting: true,
       enableHiding: true,

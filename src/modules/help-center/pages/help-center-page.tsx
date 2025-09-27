@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -90,7 +89,7 @@ export default function HelpCenterPage() {
     {
       question: "How do I set up calendar integrations?",
       answer:
-        "Go to Calendar > Settings > Connections and select your calendar provider.",
+        "Go to CalendarTypes > Settings > Connections and select your calendar provider.",
     },
     {
       question: "How do I create a task?",

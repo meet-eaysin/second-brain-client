@@ -8,13 +8,13 @@ import {
   XCircle,
   AlertCircle,
   Clock,
-  WifiOff,
+  WifiOff, RefreshCw, Trash2,
 } from "lucide-react";
 import {
   useCalendarConnections,
   useCalendarProviders,
-} from "../services/calendar-queries";
-import type { CalendarConnection } from "@/types/calendar";
+} from "@/modules/calendar/services/calendar-queries";
+import type { CalendarConnection } from "@/modules/calendar/types/calendar.types.ts";
 
 export function CalendarConnections() {
   const { data: connections = [], isLoading: connectionsLoading } =

@@ -251,7 +251,7 @@ export type TRecordQueryOptions = {
   viewId?: string;
   search?: string;
   filters?: TViewFilter[];
-  sorts?: TViewSort[];
+  sorts?: TSortConfig[];
   isTemplate?: boolean;
   isFavorite?: boolean;
   isArchived?: boolean;
@@ -344,9 +344,15 @@ export type TFilterCondition = {
   operator?: "and" | "or";
 };
 
+export enum ESortDirection {
+  ASC = "asc",
+  DESC = "desc",
+  MANUAL = "manual",
+}
+
 export type TSortConfig = {
   propertyId: string;
-  direction: "asc" | "desc";
+  direction: ESortDirection;
 };
 
 export type TViewFilter = {
@@ -357,20 +363,15 @@ export type TViewFilter = {
   operator?: "and" | "or";
 };
 
-export type TViewSort = {
-  propertyId: string;
-  direction: "asc" | "desc";
-};
-
 export type TViewGroup = {
   propertyId: string;
   hideEmpty?: boolean;
-  sortGroups?: "asc" | "desc" | "manual";
+  sortGroups?: ESortDirection;
 };
 
 export type TViewSettings = {
   filters: TViewFilter[];
-  sorts: TViewSort[];
+  sorts: TSortConfig[];
   groupBy?: TViewGroup;
   visibleProperties: string[];
   hiddenProperties?: string[];
@@ -433,7 +434,7 @@ export type TView = TBaseEntity & {
   isDefault: boolean;
   isPublic: boolean;
   config: TViewConfig;
-  sorts: TViewSort[];
+  sorts: TSortConfig[];
   filters: TViewFilter[];
   order: number;
   description?: string;
@@ -455,7 +456,7 @@ export type TUpdateView = {
   isDefault?: boolean;
   isPublic?: boolean;
   settings?: Partial<TViewSettings>;
-  sorts?: TViewSort[];
+  sorts?: TSortConfig[];
   filters?: TViewFilter[];
   order?: number;
 };
@@ -484,9 +485,11 @@ export type TSelectOption = {
 export type TCreateDatabase = {
   name: string;
   description?: string;
-  icon?: string;
-  cover?: string;
+  icon?: TDatabaseIcon;
+  cover?: TDatabaseCover;
+  type: EDatabaseType.CUSTOM ;
   workspaceId?: string;
+  allowDuplicates: boolean;
   isPublic?: boolean;
   isFrozen?: boolean;
   frozenReason?: string;

@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { SearchBar } from "./search-bar";
 import { FilterManager } from "./filter-manager";
 import { SortManager } from "./sort-manager";
@@ -11,7 +10,7 @@ import { ColumnVisibilityMenu } from "./column-visibility-menu";
 import { useDatabaseView } from "@/modules/database-view/context";
 
 export function TableToolbar() {
-  const { currentView, records, moduleType } = useDatabaseView();
+  const { currentView, moduleType } = useDatabaseView();
 
   const activeFiltersCount = currentView?.filters?.length || 0;
   const activeSortsCount = currentView?.sorts?.length || 0;

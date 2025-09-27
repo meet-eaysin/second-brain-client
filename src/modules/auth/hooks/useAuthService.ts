@@ -9,7 +9,7 @@ import {
   useGoogleTokenMutation,
   useCurrentUser,
 } from "../services/auth-queries.ts";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../store/auth-store.ts";
 import { hasToken, removeTokens } from "../utils/tokenUtils";
 import { getSignInLink } from "@/app/router/router-link";
 import type {

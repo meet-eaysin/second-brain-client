@@ -9,9 +9,9 @@ import type {
   CreateWorkspaceRequest,
   EWorkspaceType,
   Workspace,
-} from "@/types/workspace.types";
+} from "@/modules/workspaces/types/workspaces.types";
 import { toast } from "sonner";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import { EDatabaseType } from "@/modules/database-view";
 import type { TModuleInitializeRequest } from "@/modules/workspaces/types/workspaces.types.ts";
 
@@ -260,10 +260,8 @@ export const useSearchWorkspaces = (params: SearchWorkspacesQuery) => {
 export const useCreateWorkspace = () => {
   return useMutation({
     mutationFn: async (data: CreateWorkspaceRequest) => {
-      // Use fetch with longer timeout for workspace creation (30 seconds)
-      // since it involves module initialization
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
 
       try {
         const response = await fetch(
@@ -401,7 +399,6 @@ export const useSwitchWorkspace = () => {
       workspaceId: string;
       workspaces: Record<string, unknown>[];
     }) => {
-      // Find the workspace in the user's workspaces list (already transformed)
       const userWorkspace = workspaces.find(
         (w: Record<string, unknown>) => w.id === workspaceId
       );
@@ -410,15 +407,13 @@ export const useSwitchWorkspace = () => {
         throw new Error("Workspace not found in user's workspaces");
       }
 
-      // For workspace switching, we need full workspace data
-      // Since we don't have an API to get workspace by ID, we'll create a workspace object
-      // with the available data and default config
       const workspaceData: Workspace = {
-        id: userWorkspace.id as string,
+        id: userWorkspace._id as string,
+        _id: userWorkspace._id as string,
         name: userWorkspace.name as string,
         description: (userWorkspace.description as string) || "",
         type: userWorkspace.type as EWorkspaceType,
-        icon: { type: "emoji" as const, value: "🏢" }, // Default icon
+        icon: { type: "emoji" as const, value: "🏢" },
         config: {
           enableAI: true,
           enableComments: true,

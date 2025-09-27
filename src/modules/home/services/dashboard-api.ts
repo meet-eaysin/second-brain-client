@@ -11,95 +11,94 @@ export const dashboardApi = {
   // Get dashboard overview
   getDashboardOverview: async (
     params?: IDashboardQueryParams
-  ): Promise<IDashboardOverview> => {
+  ): Promise<ApiResponse<IDashboardOverview>> => {
     const response = await apiClient.get<ApiResponse<IDashboardOverview>>(
       "/dashboard",
       {
         params,
       }
     );
-    return response.data.data!;
+    return response.data!;
   },
 
   // Get dashboard statistics (with trends and insights)
   getDashboardStats: async (
     params?: IDashboardQueryParams
-  ): Promise<IDashboardStats> => {
+  ): Promise<ApiResponse<IDashboardStats>> => {
     const response = await apiClient.get<ApiResponse<IDashboardStats>>(
       "/dashboard/stats",
       {
         params,
       }
     );
-    return response.data.data!;
+    return response.data!;
   },
 
-  // Get recent activity feed
-  getRecentActivity: async (limit = 20): Promise<any[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>(
+  getRecentActivity: async (limit = 20): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.get<ApiResponse<unknown[]>>(
       "/dashboard/activity",
       {
         params: { limit },
       }
     );
-    return response.data.data || [];
+    return response.data || [];
   },
 
   // Get quick statistics
-  getQuickStats: async (): Promise<any> => {
-    const response = await apiClient.get<ApiResponse<any>>(
+  getQuickStats: async (): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.get<ApiResponse<unknown>>(
       "/dashboard/quick-stats"
     );
-    return response.data.data!;
+    return response.data!;
   },
 
   // Get upcoming tasks
-  getUpcomingTasks: async (limit = 10): Promise<any[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>(
+  getUpcomingTasks: async (limit = 10): Promise<ApiResponse<unknown[]>> => {
+    const response = await apiClient.get<ApiResponse<unknown[]>>(
       "/dashboard/upcoming-tasks",
       {
         params: { limit },
       }
     );
-    return response.data.data || [];
+    return response.data!;
   },
 
   // Get recent notes
-  getRecentNotes: async (limit = 10): Promise<any[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>(
+  getRecentNotes: async (limit = 10): Promise<ApiResponse<unknown[]>> => {
+    const response = await apiClient.get<ApiResponse<unknown[]>>(
       "/dashboard/recent-notes",
       {
         params: { limit },
       }
     );
-    return response.data.data || [];
+    return response.data!;
   },
 
   // Get goal progress
-  getGoalProgress: async (): Promise<any[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>(
+  getGoalProgress: async (): Promise<ApiResponse<unknown[]>> => {
+    const response = await apiClient.get<ApiResponse<unknown[]>>(
       "/dashboard/goal-progress"
     );
-    return response.data.data || [];
+    return response.data!;
   },
 
   // Get habit streaks
-  getHabitStreaks: async (): Promise<any[]> => {
-    const response = await apiClient.get<ApiResponse<any[]>>(
+  getHabitStreaks: async (): Promise<ApiResponse<unknown[]>> => {
+    const response = await apiClient.get<ApiResponse<unknown[]>>(
       "/dashboard/habit-streaks"
     );
-    return response.data.data || [];
+    return response.data!;
   },
 
   // Get finance summary
-  getFinanceSummary: async (period = "month"): Promise<any> => {
-    const response = await apiClient.get<ApiResponse<any>>(
+  getFinanceSummary: async (period = "month"): Promise<ApiResponse<unknown>> => {
+    const response = await apiClient.get<ApiResponse<unknown>>(
       "/dashboard/finance-summary",
       {
         params: { period },
       }
     );
-    return response.data.data!;
+    return response.data!;
   },
 
   // Get recently visited items

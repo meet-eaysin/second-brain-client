@@ -1,12 +1,9 @@
 import { apiClient } from "@/services/api-client";
 import { API_ENDPOINTS } from "@/constants/api-endpoints";
 import type { ApiResponse } from "@/types/api.types";
-
-// Import backend types
 import type { IDashboardOverview } from "@/modules/dashboard/types/dashboard.types";
 
 export const dashboardApi = {
-  // Get dashboard overview
   getDashboardOverview: async (params?: {
     workspaceId?: string;
     includeActivity?: boolean;
@@ -19,6 +16,6 @@ export const dashboardApi = {
       API_ENDPOINTS.DASHBOARD.BASE,
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 };

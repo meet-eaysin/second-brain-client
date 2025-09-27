@@ -35,10 +35,10 @@ import {
   useCalendarConfig,
   useEvent,
 } from "../services/calendar-queries";
-import type { CreateEventRequest, UpdateEventRequest } from "@/types/calendar";
+import type { CreateEventRequest, UpdateEventRequest } from "@/modules/calendar/types/calendar.types.ts";
 
 const eventFormSchema = z.object({
-  calendarId: z.string().min(1, "Calendar is required"),
+  calendarId: z.string().min(1, "CalendarTypes is required"),
   title: z.string().min(1, "Title is required").max(200),
   description: z.string().max(2000).optional(),
   location: z.string().max(200).optional(),

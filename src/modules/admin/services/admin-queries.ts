@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { adminApi } from "./admin-api";
 import type { CreateSuperAdminRequest } from "./admin-api";
+import type {EUserRole} from "@/modules/users/types/users.types.ts";
 
 // Query keys
 export const adminQueryKeys = {
@@ -49,7 +50,7 @@ export const useAdminUserStats = () => {
 export const useAdminUsers = (params?: {
   page?: number;
   limit?: number;
-  role?: "user" | "moderator" | "admin" | "super_admin";
+  role?: EUserRole
   isActive?: boolean;
   search?: string;
 }) => {
@@ -70,7 +71,7 @@ export const useUpdateUserRole = () => {
       role,
     }: {
       userId: string;
-      role: "user" | "moderator" | "admin" | "super_admin";
+      role: EUserRole;
     }) => adminApi.updateUserRole(userId, role),
     onSuccess: () => {
       // Invalidate user-related queries

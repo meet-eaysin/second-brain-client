@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -33,8 +33,8 @@ import {
   useUpdateCalendar,
   useCalendarConfig,
 } from "../services/calendar-queries";
-import type { Calendar } from "@/types/calendar";
-import { ECalendarType } from "@/types/calendar";
+import type { CalendarTypes } from "@/modules/calendar/types/calendar.types.ts";
+import { ECalendarType } from "@/modules/calendar/types/calendar.types.ts";
 import { toast } from "sonner";
 
 const calendarFormSchema = z.object({
@@ -52,7 +52,7 @@ type CalendarFormData = z.infer<typeof calendarFormSchema>;
 interface CalendarFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  calendar?: Calendar | null;
+  calendar?: CalendarTypes | null;
   onSuccess?: () => void;
 }
 
@@ -77,7 +77,7 @@ export function CalendarForm({
   const isEditing = !!calendar;
   const createCalendarMutation = useCreateCalendar();
   const updateCalendarMutation = useUpdateCalendar();
-  const { data: config, isLoading: configLoading } = useCalendarConfig();
+  const { data: config } = useCalendarConfig();
 
   const form = useForm<CalendarFormData>({
     resolver: zodResolver(calendarFormSchema),
@@ -123,10 +123,10 @@ export function CalendarForm({
           calendarId: calendar.id,
           data,
         });
-        toast.success("Calendar updated successfully");
+        toast.success("CalendarTypes updated successfully");
       } else {
         await createCalendarMutation.mutateAsync(data);
-        toast.success("Calendar created successfully");
+        toast.success("CalendarTypes created successfully");
       }
 
       onOpenChange(false);
@@ -145,7 +145,7 @@ export function CalendarForm({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Calendar" : "Create New Calendar"}
+            {isEditing ? "Edit CalendarTypes" : "Create New CalendarTypes"}
           </DialogTitle>
         </DialogHeader>
 
@@ -158,7 +158,7 @@ export function CalendarForm({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="My Calendar" {...field} />
+                    <Input placeholder="My CalendarTypes" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -173,7 +173,7 @@ export function CalendarForm({
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Calendar description..."
+                      placeholder="CalendarTypes description..."
                       className="resize-none"
                       {...field}
                     />
@@ -329,8 +329,8 @@ export function CalendarForm({
                 updateCalendarMutation.isPending
                   ? "Saving..."
                   : isEditing
-                  ? "Update Calendar"
-                  : "Create Calendar"}
+                  ? "Update CalendarTypes"
+                  : "Create CalendarTypes"}
               </Button>
             </DialogFooter>
           </form>

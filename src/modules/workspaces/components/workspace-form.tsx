@@ -24,12 +24,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, Settings } from "lucide-react";
-import type {
-  Workspace,
-  CreateWorkspaceRequest,
-  UpdateWorkspaceRequest,
-} from "@/types/workspace.types";
-import { EWorkspaceType } from "@/types/workspace.types";
+import  {
+  type Workspace,
+  type CreateWorkspaceRequest,
+  type UpdateWorkspaceRequest,
+  EWorkspaceType
+} from "@/modules/workspaces/types/workspaces.types";
 
 const workspaceFormSchema = z.object({
   name: z

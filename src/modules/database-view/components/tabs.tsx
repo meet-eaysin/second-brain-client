@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,22 +24,23 @@ import {
   Copy,
   Trash2,
   ChartGanttIcon,
-  Lock,
+  Lock, ChartAreaIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteView, useDuplicateView } from "../services/database-queries";
-import type { TView } from "@/modules/database-view/types";
+import {EViewType, type TView} from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
 
 const VIEW_TYPE_ICONS = {
-  table: Table,
-  board: Kanban,
-  kanban: Kanban,
-  gallery: Grid3X3,
-  list: List,
-  calendar: Calendar,
-  timeline: Clock,
-  gantt: ChartGanttIcon,
+  TABLE: Table,
+  BOARD: Kanban,
+  KANBAN: Kanban,
+  GALLERY: Grid3X3,
+  LIST: List,
+  CALENDAR: Calendar,
+  TIMELINE: Clock,
+  GANTT: ChartGanttIcon,
+  CHART: ChartAreaIcon
 } as const;
 
 export const ViewTabs = () => {
@@ -109,7 +110,7 @@ export const ViewTabs = () => {
             <div className="flex items-center justify-between py-2">
               <TabsList className="h-9">
                 {views?.map((view) => {
-                  const Icon = VIEW_TYPE_ICONS[view.type] || Table;
+                  const Icon = VIEW_TYPE_ICONS[view.type as EViewType] || EViewType.TABLE;
                   return (
                     <TabsTrigger
                       key={view.id}

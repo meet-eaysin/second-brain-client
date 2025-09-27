@@ -24,7 +24,7 @@ import type {
   CreateWorkspaceRequest,
   UpdateWorkspaceRequest,
   Workspace,
-} from "@/types/workspace.types";
+} from "@/modules/workspaces/types/workspaces.types";
 import { cn } from "@/lib/utils";
 
 export const WorkspaceSelector: React.FC = () => {

@@ -1,6 +1,6 @@
 // Services
-export { templatesApi } from "./services/templatesApi";
-export * from "./services/templatesQueries";
+export { templatesApi } from "./services/templates-api.ts";
+export * from "./services/templates-queries.ts";
 
 // Types
-export type * from "./services/templatesApi";
+export type * from "./services/templates-api.ts";

@@ -1,6 +1,7 @@
 import { apiClient } from "@/services/api-client";
+import type {EUserRole, User} from "@/modules/users/types/users.types.ts";
+import type {ApiResponse} from "@/types/api.types.ts";
 
-// Types for API responses
 export interface AdminDashboardStats {
   totalUsers: number;
   activeUsers: number;
@@ -26,31 +27,6 @@ export interface SystemHealthMetrics {
   lastBackup: string;
   responseTime: number;
   errorRate: number;
-}
-
-export interface AdminUser {
-  id: string;
-  email: string;
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  role: "user" | "moderator" | "admin" | "super_admin";
-  isActive: boolean;
-  isEmailVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-  lastLoginAt?: string;
-}
-
-export interface AdminUsersResponse {
-  users: AdminUser[];
-  pagination: {
-    currentPage: number;
-    totalPages: number;
-    totalUsers: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
 }
 
 export interface SetupStatusResponse {
@@ -79,7 +55,6 @@ export interface CreateSuperAdminResponse {
   createdAt: string;
 }
 
-// Admin API functions
 export const adminApi = {
   // Setup related
   checkSetupStatus: async (): Promise<SetupStatusResponse> => {
@@ -114,17 +89,17 @@ export const adminApi = {
   getUsers: async (params?: {
     page?: number;
     limit?: number;
-    role?: "user" | "moderator" | "admin" | "super_admin";
+    role?: EUserRole;
     isActive?: boolean;
     search?: string;
-  }): Promise<AdminUsersResponse> => {
+  }): Promise<ApiResponse<User[]>> => {
     const response = await apiClient.get("/admin/users", { params });
     return response.data.data;
   },
 
   updateUserRole: async (
     userId: string,
-    role: "user" | "moderator" | "admin" | "super_admin"
+    role: EUserRole
   ) => {
     const response = await apiClient.patch(`/admin/users/${userId}/role`, {
       role,

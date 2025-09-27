@@ -1,5 +1,4 @@
-import React from "react";
-import { CreateDatabaseForm } from "./create-database-form";
+import { CreateDatabaseForm } from "@/modules/database/components/create-database-form";
 import type { TDatabase } from "@/modules/database-view/types";
 
 interface CreateDatabaseDialogProps {

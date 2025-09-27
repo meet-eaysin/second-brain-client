@@ -6,10 +6,10 @@ import type {
   IParaQueryParams,
   IMoveToArchiveRequest,
   IRestoreFromArchiveRequest,
-  ICategorizeExistingItemRequest,
+  IParaCategorizeRequest,
   EParaStatus,
   EParaPriority,
-} from "../types/para.types";
+} from "@/modules/para/types/para.types";
 
 // Query Keys
 export const PARA_KEYS = {
@@ -229,7 +229,7 @@ export const useCategorizeExistingItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: ICategorizeExistingItemRequest) =>
+    mutationFn: (data: IParaCategorizeRequest) =>
       paraApi.categorizeExistingItem(data),
     onSuccess: () => {
       // Invalidate all PARA queries

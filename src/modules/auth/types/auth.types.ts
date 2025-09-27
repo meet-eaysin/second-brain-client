@@ -1,15 +1,4 @@
-export interface UserWorkspace {
-  id: string;
-  name: string;
-  description?: string;
-  type: string;
-  role: string;
-  isDefault?: boolean;
-  memberCount: number;
-  databaseCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+import type {Workspace} from "@/modules/workspaces/types/workspaces.types";
 
 export interface User {
   id: string;
@@ -24,7 +13,7 @@ export interface User {
   avatar?: string;
   createdAt: string;
   updatedAt: string;
-  workspaces?: UserWorkspace[];
+  workspaces?: Workspace[];
 }
 
 export interface AuthResponse {

@@ -101,7 +101,7 @@ const viewTypes: {
   },
   {
     value: EViewType.CALENDAR,
-    label: "Calendar",
+    label: "CalendarTypes",
     icon: <Calendar className="h-4 w-4" />,
     description: "Date view",
     isAvailable: true,
@@ -204,7 +204,7 @@ export function ViewForm() {
           databaseId,
           data: viewData,
         });
-        onViewChange(result.data.id);
+        onViewChange(result?.data?.id || "");
       } else if (mode === "edit" && view) {
         const updateData = {
           ...viewData,

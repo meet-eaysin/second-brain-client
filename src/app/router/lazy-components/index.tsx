@@ -30,9 +30,6 @@ export const HomePage = withLazyLoading(homePageImport);
 export const UsersPage = withLazyLoading(
   () => import("@/modules/users/pages/users-page")
 );
-export const TagsPage = withLazyLoading(
-  () => import("@/modules/tags/pages/tags-page")
-);
 export const CalendarPage = withLazyLoading(() =>
   import("@/modules/calendar/pages/calendar-page").then((module) => ({
     default: module.default,
@@ -42,16 +39,16 @@ export const NotificationsPage = withLazyLoading(
   () => import("@/modules/notifications/pages/notifications-page")
 );
 export const SettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/SettingsPage")
+  () => import("@/modules/settings/pages/settings-page.tsx")
 );
 export const ProfileSettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/ProfileSettingsPage")
+  () => import("@/modules/settings/pages/profile-settings-page.tsx")
 );
 export const AccountSettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/account-page")
 );
 export const SecuritySettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/SecuritySettingsPage")
+  () => import("@/modules/settings/pages/security-settings-page.tsx")
 );
 export const BillingSettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/billing-page")
@@ -60,13 +57,13 @@ export const AppearanceSettingsPage = withLazyLoading(
   () => import("@/modules/settings/pages/appearance-page")
 );
 export const DisplaySettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/DisplaySettingsPage")
+  () => import("@/modules/settings/pages/display-settingsPage.tsx")
 );
 export const NotificationSettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/NotificationSettingsPage")
+  () => import("@/modules/settings/pages/notification-settings-page.tsx")
 );
 export const WorkspaceSettingsPage = withLazyLoading(
-  () => import("@/modules/settings/pages/WorkspaceSettingsPage")
+  () => import("@/modules/settings/pages/workspace-settings-page.tsx")
 );
 export const AuthenticatedLayout = withLazyLoading(
   () => import("@/layout/authenticated-layout")

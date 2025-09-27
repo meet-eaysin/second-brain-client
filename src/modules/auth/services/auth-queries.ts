@@ -1,7 +1,7 @@
 import type { ApiError } from "@/types/api.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "./auth-api";
-import { useAuthStore } from "../store/authStore.ts";
+import { useAuthStore } from "../store/auth-store.ts";
 import {
   setToken,
   setRefreshToken,

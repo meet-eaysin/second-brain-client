@@ -18,7 +18,7 @@ interface CalendarProps {
   className?: string;
 }
 
-export function Calendar({ className = "" }: CalendarProps) {
+export const Calendar = ({ className = "" }: CalendarProps) => {
   const { properties, records, isRecordsLoading, isPropertiesLoading } =
     useDatabaseView();
 
@@ -86,7 +86,7 @@ export function Calendar({ className = "" }: CalendarProps) {
                 );
                 return (
                   <span
-                    key={val}
+                    key={String(val)}
                     className="inline-flex items-center gap-1 px-1 py-0.5 rounded text-xs"
                     style={{
                       backgroundColor: option?.color + "20",
@@ -161,6 +161,13 @@ export function Calendar({ className = "" }: CalendarProps) {
       case EPropertyType.NUMBER:
         return <span className="text-xs font-medium">{String(value)}</span>;
 
+      case EPropertyType.RICH_TEXT:
+        return (
+          <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+            {String(value) || "-"}
+          </span>
+        );
+
       default:
         return (
           <span className="text-xs text-muted-foreground truncate max-w-[100px]">
@@ -199,7 +206,7 @@ export function Calendar({ className = "" }: CalendarProps) {
           dateValue = record.properties[dateSource.name] as string;
         } else {
           // Fall back to createdAt timestamp
-          dateValue = record.createdAt || record.created_at;
+          dateValue = String(record.createdAt);
         }
 
         if (dateValue) {
@@ -290,7 +297,7 @@ export function Calendar({ className = "" }: CalendarProps) {
           dateValue = record.properties[dateSource.name] as string;
         } else {
           // Fall back to createdAt timestamp
-          dateValue = record.createdAt || record.created_at;
+          dateValue = String(record.createdAt);
         }
 
         if (dateValue) {
@@ -350,7 +357,7 @@ export function Calendar({ className = "" }: CalendarProps) {
   if (dateProperties.length === 0 && (!records || records.length === 0)) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="Calendar view requires records with creation dates or DATE properties" />
+        <NoDataMessage message="CalendarTypes view requires records with creation dates or DATE properties" />
       </div>
     );
   }
@@ -400,7 +407,16 @@ export function Calendar({ className = "" }: CalendarProps) {
                       ) {
                         value = record.lastEditedAt || record.updatedAt;
                       } else if (property.type === EPropertyType.RICH_TEXT) {
-                        value = record.content;
+                        // Extract plain text from content blocks
+                        value = record.content
+                          ? record.content
+                              .map((block) =>
+                                block.content
+                                  .map((richText) => richText.plain_text)
+                                  .join("")
+                              )
+                              .join("\n")
+                          : "";
                       } else {
                         // Properties are stored by name, not ID
                         value = record.properties[property.name];

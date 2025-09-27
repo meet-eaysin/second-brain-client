@@ -8,122 +8,111 @@ import type {
   IDisplaySettings,
   ISecuritySettings,
   IWorkspaceSettings,
-} from "../../../types/settings.types";
+} from "../types/settings.types.ts";
 
 export const settingsApi = {
-  // Get all user settings
-  getSettings: async (): Promise<ISettings> => {
+  getSettings: async (): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.get<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.BASE
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Update all settings
-  updateSettings: async (settings: Partial<ISettings>): Promise<ISettings> => {
+  updateSettings: async (
+    settings: Partial<ISettings>
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.put<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.BASE,
       settings
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Update appearance settings
   updateAppearance: async (
     appearance: Partial<IAppearanceSettings>
-  ): Promise<ISettings> => {
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.put<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.APPEARANCE,
       appearance
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Update notification settings
   updateNotifications: async (
     notifications: Partial<INotificationSettings>
-  ): Promise<ISettings> => {
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.put<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.NOTIFICATIONS,
       notifications
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Update display settings
   updateDisplay: async (
     display: Partial<IDisplaySettings>
-  ): Promise<ISettings> => {
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.put<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.DISPLAY,
       display
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Update security settings
   updateSecurity: async (
     security: Partial<ISecuritySettings>
-  ): Promise<ISettings> => {
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.put<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.SECURITY,
       security
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Update workspace settings
   updateWorkspace: async (
     workspace: Partial<IWorkspaceSettings>
-  ): Promise<ISettings> => {
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.put<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.WORKSPACE,
       workspace
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get appearance settings only
-  getAppearance: async (): Promise<IAppearanceSettings> => {
+  getAppearance: async (): Promise<ApiResponse<IAppearanceSettings>> => {
     const response = await apiClient.get<ApiResponse<IAppearanceSettings>>(
       API_ENDPOINTS.SETTINGS.APPEARANCE
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get notification settings only
-  getNotifications: async (): Promise<INotificationSettings> => {
+  getNotifications: async (): Promise<ApiResponse<INotificationSettings>> => {
     const response = await apiClient.get<ApiResponse<INotificationSettings>>(
       API_ENDPOINTS.SETTINGS.NOTIFICATIONS
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get display settings only
-  getDisplay: async (): Promise<IDisplaySettings> => {
+  getDisplay: async (): Promise<ApiResponse<IDisplaySettings>> => {
     const response = await apiClient.get<ApiResponse<IDisplaySettings>>(
       API_ENDPOINTS.SETTINGS.DISPLAY
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get security settings only
-  getSecurity: async (): Promise<ISecuritySettings> => {
+  getSecurity: async (): Promise<ApiResponse<ISecuritySettings>> => {
     const response = await apiClient.get<ApiResponse<ISecuritySettings>>(
       API_ENDPOINTS.SETTINGS.SECURITY
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Get workspace settings only
-  getWorkspace: async (): Promise<IWorkspaceSettings> => {
+  getWorkspace: async (): Promise<ApiResponse<IWorkspaceSettings>> => {
     const response = await apiClient.get<ApiResponse<IWorkspaceSettings>>(
       API_ENDPOINTS.SETTINGS.WORKSPACE
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Reset settings
   resetSettings: async (
     category?:
       | "appearance"
@@ -132,15 +121,14 @@ export const settingsApi = {
       | "security"
       | "workspace"
       | "all"
-  ): Promise<ISettings> => {
+  ): Promise<ApiResponse<ISettings>> => {
     const response = await apiClient.post<ApiResponse<ISettings>>(
       API_ENDPOINTS.SETTINGS.RESET,
       { category }
     );
-    return response.data.data;
+    return response.data;
   },
 
-  // Delete settings (for account deletion)
   deleteSettings: async (): Promise<void> => {
     await apiClient.delete(API_ENDPOINTS.SETTINGS.BASE);
   },

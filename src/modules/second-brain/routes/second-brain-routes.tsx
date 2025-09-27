@@ -1,11 +1,10 @@
 import { Routes, Route } from "react-router-dom";
 import { SecondBrainDashboard } from "@/modules/second-brain-dashboard/pages/second-brain-dashboard";
 import { TasksPage } from "@/modules/tasks/pages/tasks-page";
-import NotesPage from "@/modules/notes/pages/notes-page";
+import {NotesPage} from "@/modules/notes/pages/notes-page";
 import { PeoplePage } from "@/modules/people/pages/people-page";
 import { JournalPage } from "@/modules/journal/pages/journal-page";
 import { FinancesPage } from "@/modules/finances/pages/finances-page";
-import SearchPage from "@/modules/search/pages/search-page";
 import { PARAOverviewPage } from "@/modules/para/pages/para-overview-page";
 import { PARAProjectsPage } from "@/modules/para/pages/para-projects-page";
 import { PARAAreasPage } from "@/modules/para/pages/para-areas-page";
@@ -23,7 +22,6 @@ export function SecondBrainRoutes() {
       <Route path="people" element={<PeoplePage />} />
       <Route path="journal" element={<JournalPage />} />
       <Route path="finances" element={<FinancesPage />} />
-      <Route path="search" element={<SearchPage />} />
 
       <Route path="para" element={<PARAOverviewPage />} />
       <Route path="para/projects" element={<PARAProjectsPage />} />

@@ -103,7 +103,7 @@ export function FilterManager() {
           property: firstProperty.id,
           condition: operators[0].value,
           value: "",
-          operator: "and",
+          operator: "and" as const,
         },
       ];
       setLocalFilters(newFilters);

@@ -59,7 +59,7 @@ export function Table({ className = "" }: TableProps) {
     <div className={`space-y-4 ${className}`}>
       <DataTable
         columns={columns}
-        data={records}
+        data={records || []}
         enablePagination={false}
         enableSorting={true}
         enableFiltering={true}

@@ -19,15 +19,15 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Users, UserPlus } from "lucide-react";
-import { UserTable } from "../components/user-table";
+import { UserTable } from "@/modules/users/components/user-table";
 import {
   useUsers,
   useDeleteUser,
   useToggleUserStatus,
   useUpdateUserRole,
-} from "../services/userQueries";
+} from "@/modules/users/services/user-queries";
 import { useAuth } from "@/modules/auth/hooks/useAuth";
-import type { UserQueryParams, UserRole, User } from "@/types/user.types";
+import {type UserQueryParams, type User, EUserRole} from "@/modules/users/types/users.types";
 
 export const UsersPage: React.FC = () => {
   const { user: currentUser } = useAuth();
@@ -39,7 +39,6 @@ export const UsersPage: React.FC = () => {
   });
 
   const { data: usersData, isLoading } = useUsers(queryParams);
-  // const updateUserMutation = useUpdateUser();
   const deleteUserMutation = useDeleteUser();
   const toggleStatusMutation = useToggleUserStatus();
   const updateRoleMutation = useUpdateUserRole();
@@ -52,10 +51,10 @@ export const UsersPage: React.FC = () => {
     }));
   };
 
-  const handleRoleFilter = (role: string) => {
+  const handleRoleFilter = (role: EUserRole) => {
     setQueryParams((prev) => ({
       ...prev,
-      role: role === "all" ? undefined : (role as UserRole),
+      role: role === EUserRole.ALL ? undefined : (role as EUserRole),
       page: 1,
     }));
   };
@@ -86,17 +85,17 @@ export const UsersPage: React.FC = () => {
     toggleStatusMutation.mutate(userId);
   };
 
-  const handleUpdateRole = (userId: string, role: UserRole) => {
+  const handleUpdateRole = (userId: string, role: EUserRole) => {
     updateRoleMutation.mutate({ id: userId, data: { role } });
   };
 
   const stats = usersData?.data
     ? {
-        total: usersData.data.total,
-        active: usersData.data.users.filter((u: User) => u.isActive).length,
-        admins: usersData.data.users.filter((u: User) => u.role === "ADMIN")
+        total: usersData.data.length,
+        active: usersData.data.filter((u: User) => u.isActive).length,
+        admins: usersData.data.filter((u: User) => u.role === "ADMIN")
           .length,
-        moderators: usersData.data.users.filter(
+        moderators: usersData.data.filter(
           (u: User) => u.role === "MODERATOR"
         ).length,
       }
@@ -221,13 +220,13 @@ export const UsersPage: React.FC = () => {
             <CardTitle>Users</CardTitle>
             <CardDescription>
               {usersData?.data
-                ? `Showing ${usersData.data.users.length} of ${usersData.data.total} users`
+                ? `Showing ${usersData.data.length} of ${usersData.data.length} users`
                 : "Loading..."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <UserTable
-              users={usersData?.data?.users || []}
+              users={usersData?.data || []}
               onEditUser={handleEditUser}
               onDeleteUser={handleDeleteUser}
               onToggleStatus={handleToggleStatus}
@@ -237,11 +236,11 @@ export const UsersPage: React.FC = () => {
             />
 
             {/* Pagination */}
-            {usersData?.data && usersData.data.totalPages > 1 && (
+            {usersData?.data && (usersData?.meta?.total || 0) > 1 && (
               <div className="flex items-center justify-between space-x-2 py-4">
                 <div className="text-sm text-muted-foreground">
-                  Page {usersData.data.currentPage} of{" "}
-                  {usersData.data.totalPages}
+                  Page {usersData?.meta?.page} of{" "}
+                  {usersData?.meta?.totalPages}
                 </div>
                 <div className="flex space-x-2">
                   <Button
@@ -256,7 +255,7 @@ export const UsersPage: React.FC = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => handlePageChange(queryParams.page! + 1)}
-                    disabled={queryParams.page === usersData.data.totalPages}
+                    disabled={queryParams.page === usersData?.meta?.totalPages}
                   >
                     Next
                   </Button>

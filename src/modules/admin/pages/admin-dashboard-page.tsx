@@ -41,10 +41,7 @@ export const AdminDashboardPage: React.FC = () => {
 
   return (
     <>
-      <EnhancedHeader
-        title="Admin Dashboard"
-        description="System overview and analytics"
-      />
+      <EnhancedHeader/>
 
       <Main className="space-y-8">
         {/* System Status */}

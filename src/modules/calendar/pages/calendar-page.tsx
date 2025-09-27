@@ -38,21 +38,26 @@ import {
   useCalendarConnectionStats,
   useDeleteCalendar,
 } from "../services/calendar-queries";
-import { CalendarList } from "../components/calendar-list";
-import { CalendarForm } from "../components/calendar-form";
-import { CalendarConnections } from "../components/calendar-connections";
-import ShadcnBigCalendarComponent from "../components/schedule-x-calendar";
-import EventForm from "../components/event-form";
-import type { Calendar, CreateEventRequest } from "@/types/calendar";
+import { CalendarList } from "@/modules/calendar/components/calendar-list";
+import { CalendarForm } from "@/modules/calendar/components/calendar-form";
+import { CalendarConnections } from "@/modules/calendar/components/calendar-connections";
+import ShadcnBigCalendarComponent from "@/modules/calendar/components/schedule-x-calendar";
+import EventForm from "@/modules/calendar/components/event-form";
+import type {
+  CalendarTypes,
+  CreateEventRequest,
+} from "@/modules/calendar/types/calendar.types";
 import { toast } from "sonner";
-import { CalendarSkeleton } from "../components/calendar-skeleton";
+import { CalendarSkeleton } from "@/modules/calendar/components/calendar-skeleton";
 
 export default function CalendarPage() {
   const [selectedCalendars, setSelectedCalendars] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("calendar");
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateCalendar, setShowCreateCalendar] = useState(false);
-  const [editingCalendar, setEditingCalendar] = useState<Calendar | null>(null);
+  const [editingCalendar, setEditingCalendar] = useState<CalendarTypes | null>(
+    null
+  );
   const [eventStartTime, setEventStartTime] = useState<Date | undefined>();
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -66,7 +71,7 @@ export default function CalendarPage() {
   const deleteCalendarMutation = useDeleteCalendar();
 
   React.useEffect(() => {
-    if (calendars.length > 0 && selectedCalendars.length === 0) {
+    if (calendars?.length > 0 && selectedCalendars.length === 0) {
       setSelectedCalendars(
         calendars.filter((c) => c.isVisible).map((c) => c.id)
       );
@@ -96,7 +101,7 @@ export default function CalendarPage() {
     setShowCreateCalendar(true);
   };
 
-  const handleEditCalendar = (calendar: Calendar) => {
+  const handleEditCalendar = (calendar: CalendarTypes) => {
     setEditingCalendar(calendar);
     setShowCreateCalendar(true);
   };
@@ -198,7 +203,7 @@ export default function CalendarPage() {
       <EnhancedHeader contextActions={contextActions} />
 
       <Main className="space-y-8">
-        {/* Calendar Header */}
+        {/* CalendarTypes Header */}
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
@@ -325,7 +330,7 @@ export default function CalendarPage() {
                       Total Events
                     </p>
                     <p className="text-2xl font-bold">
-                      {stats?.totalEvents || 0}
+                      {(stats as any)?.totalEvents || 0}
                     </p>
                   </div>
                   <CalendarIcon className="h-5 w-5 text-muted-foreground" />
@@ -475,7 +480,7 @@ export default function CalendarPage() {
               </Card>
             </div>
 
-            {/* Events by Calendar - Compact */}
+            {/* Events by CalendarTypes - Compact */}
             {stats?.byCalendar && Object.keys(stats.byCalendar).length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
@@ -681,7 +686,7 @@ export default function CalendarPage() {
               </CardContent>
             </Card>
 
-            {/* Calendar Management */}
+            {/* CalendarTypes Management */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

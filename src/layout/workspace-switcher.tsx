@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import { useWorkspace } from "@/modules/workspaces/context";
 import {
   useCreateWorkspace,

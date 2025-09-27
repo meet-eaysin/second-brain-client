@@ -13,7 +13,6 @@ import {
   AuthenticatedLayout,
   CalendarPage,
   UsersPage,
-  TagsPage,
   NotificationsPage,
   SettingsPage,
   ProfileSettingsPage,
@@ -87,10 +86,6 @@ const router = createBrowserRouter([
       {
         path: "calendar",
         element: <CalendarPage />,
-      },
-      {
-        path: "tags",
-        element: <TagsPage />,
       },
       {
         path: "archive",

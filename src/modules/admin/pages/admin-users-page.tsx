@@ -1,25 +1,13 @@
-import React, { useState } from "react";
-import { Main } from "@/layout/main";
-import { EnhancedHeader } from "@/components/enhanced-header";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Search, Users, UserPlus, Shield } from "lucide-react";
-import { UserTable } from "@/modules/users/components/user-table";
+import React, {useState} from "react";
+import {Main} from "@/layout/main";
+import {EnhancedHeader} from "@/components/enhanced-header";
+import {Button} from "@/components/ui/button";
+import {Input} from "@/components/ui/input";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {Card, CardContent, CardDescription, CardHeader, CardTitle,} from "@/components/ui/card";
+import {Badge} from "@/components/ui/badge";
+import {Search, Shield, UserPlus, Users} from "lucide-react";
+import {UserTable} from "@/modules/users/components/user-table";
 import {
   useAdminUsers,
   useAdminUserStats,
@@ -27,20 +15,15 @@ import {
   useToggleUserStatus,
   useUpdateUserRole,
 } from "../services/admin-queries";
-import { useAuth } from "@/modules/auth/hooks/useAuth";
-import type { User } from "@/types/user.types";
+import {useAuth} from "@/modules/auth/hooks/useAuth";
+import {EUserRole} from "@/modules/users/types/users.types";
 
 export const AdminUsersPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    role: undefined as
-      | "user"
-      | "moderator"
-      | "admin"
-      | "super_admin"
-      | undefined,
+    role: EUserRole.ALL as EUserRole,
     isActive: undefined as boolean | undefined,
     search: undefined as string | undefined,
   });
@@ -59,10 +42,10 @@ export const AdminUsersPage: React.FC = () => {
     }));
   };
 
-  const handleRoleFilter = (role: string) => {
+  const handleRoleFilter = (role: EUserRole) => {
     setQueryParams((prev) => ({
       ...prev,
-      role: role === "all" ? undefined : (role as UserRole),
+      role: role === EUserRole.ALL ? EUserRole.ALL : role,
       page: 1,
     }));
   };
@@ -79,8 +62,7 @@ export const AdminUsersPage: React.FC = () => {
     setQueryParams((prev) => ({ ...prev, page }));
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleEditUser = (_user: User) => {
+  const handleEditUser = () => {
     // TODO: Open edit user modal
   };
 
@@ -98,8 +80,8 @@ export const AdminUsersPage: React.FC = () => {
     toggleStatusMutation.mutate(userId);
   };
 
-  const handleUpdateRole = (userId: string, role: UserRole) => {
-    updateRoleMutation.mutate({ id: userId, data: { role } });
+  const handleUpdateRole = (userId: string, role: EUserRole) => {
+    updateRoleMutation.mutate({ userId: userId,  role });
   };
 
   const stats = userStats
@@ -115,8 +97,6 @@ export const AdminUsersPage: React.FC = () => {
   return (
     <>
       <EnhancedHeader
-        title="User Management"
-        description="Admin panel for managing user accounts and permissions"
         contextActions={
           <Button size="sm" className="h-8 gap-2">
             <UserPlus className="h-4 w-4" />
@@ -224,10 +204,10 @@ export const AdminUsersPage: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="moderator">Moderator</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="MODERATOR">Moderator</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                 </SelectContent>
               </Select>
               <Select onValueChange={handleStatusFilter}>
@@ -250,13 +230,13 @@ export const AdminUsersPage: React.FC = () => {
             <CardTitle>User Accounts</CardTitle>
             <CardDescription>
               {usersData
-                ? `Showing ${usersData.users.length} of ${usersData.pagination.totalUsers} users`
+                ? `Showing ${usersData.data?.length} of ${usersData?.meta?.total} users`
                 : "Loading user data..."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <UserTable
-              users={usersData?.users || []}
+              users={usersData?.data || []}
               onEditUser={handleEditUser}
               onDeleteUser={handleDeleteUser}
               onToggleStatus={handleToggleStatus}
@@ -267,19 +247,19 @@ export const AdminUsersPage: React.FC = () => {
 
             {/* Pagination */}
             {usersData &&
-              usersData.pagination &&
-              usersData.pagination.totalPages > 1 && (
+              usersData?.meta &&
+              usersData?.meta.totalPages > 1 && (
                 <div className="flex items-center justify-between space-x-2 py-4">
                   <div className="text-sm text-muted-foreground">
-                    Page {usersData.pagination.currentPage} of{" "}
-                    {usersData.pagination.totalPages}
+                    Page {usersData?.meta.page} of{" "}
+                    {usersData?.meta?.totalPages}
                   </div>
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(queryParams.page - 1)}
-                      disabled={!usersData.pagination.hasPrev}
+                      disabled={!usersData?.meta?.hasPrev}
                     >
                       Previous
                     </Button>
@@ -287,7 +267,7 @@ export const AdminUsersPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handlePageChange(queryParams.page + 1)}
-                      disabled={!usersData.pagination.hasNext}
+                      disabled={!usersData?.meta?.hasNext}
                     >
                       Next
                     </Button>

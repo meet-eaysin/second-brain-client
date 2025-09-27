@@ -6,13 +6,14 @@ import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/layout/app-sidebar.tsx";
 import { PageVisitTracker } from "@/modules/home/components/page-visit-tracker";
 import { WorkspaceSetupWizard } from "@/modules/workspaces/components/workspace-setup-wizard";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import { WORKSPACE_DEPENDENT_QUERIES } from "@/modules/workspaces/services/workspace-queries";
 import { SetupWrapper } from "@/modules/admin/components/setup-wrapper";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import React from "react";
+import type {Workspace} from "@/modules/workspaces/types/workspaces.types.ts";
 
 interface Props {
   children?: React.ReactNode;
@@ -64,24 +65,19 @@ function AuthenticatedLayout({ children }: Props) {
     );
   }
 
-  // Helper function to invalidate workspace-dependent queries
   const invalidateWorkspaceQueries = () => {
     WORKSPACE_DEPENDENT_QUERIES.forEach((queryKey) => {
       queryClient.invalidateQueries({ queryKey });
     });
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleWorkspaceComplete = (response: { data: any }) => {
-    const workspace = response.data; // Extract workspace from response.data
-    // Transform the workspace to match the Workspace interface (id instead of _id)
+  const handleWorkspaceComplete = (workspace: Workspace) => {
     const transformedWorkspace = {
       ...workspace,
       id: workspace._id,
     };
     completeWorkspaceSetup(transformedWorkspace);
 
-    // Add to workspaces list (create UserWorkspace object)
     const userWorkspace = {
       id: workspace._id,
       name: workspace.name,
@@ -96,13 +92,11 @@ function AuthenticatedLayout({ children }: Props) {
     };
     addWorkspace(userWorkspace);
 
-    // Update the React Query cache for current workspace
     queryClient.setQueryData(["workspaces", "current"], {
       data: transformedWorkspace,
       success: true,
     });
 
-    // Update the userWorkspaces query cache to include the new workspace
     queryClient.setQueryData(["workspaces", "user"], (oldData) => {
       if (!oldData || !oldData.data) return oldData;
       return {
@@ -111,10 +105,8 @@ function AuthenticatedLayout({ children }: Props) {
       };
     });
 
-    // Invalidate workspace stats to ensure fresh data
     queryClient.invalidateQueries({ queryKey: ["workspaces", "stats"] });
 
-    // Invalidate workspace-dependent queries to ensure fresh data
     invalidateWorkspaceQueries();
   };
 
@@ -136,7 +128,8 @@ function AuthenticatedLayout({ children }: Props) {
             "has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh"
           )}
         >
-          <SetupWrapper>{children ? children : <Outlet />}</SetupWrapper>
+          {children ? children : <Outlet />}
+          <SetupWrapper/>
         </div>
 
         <WorkspaceSetupWizard

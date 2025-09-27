@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Link } from "react-router-dom";
 import { useLogout } from "@/modules/auth/hooks/useLogout";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 
 export function NavUser() {
   const { isMobile } = useSidebar();

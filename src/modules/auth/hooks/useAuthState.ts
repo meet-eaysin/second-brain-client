@@ -1,4 +1,4 @@
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../store/auth-store.ts";
 import { hasToken } from "../utils/tokenUtils";
 
 export const useAuthState = () => {

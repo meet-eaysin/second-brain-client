@@ -36,7 +36,7 @@ export const sidebarData = {
           isDynamic: true,
         },
         {
-          title: "Calendar",
+          title: "CalendarTypes",
           url: "/app/calendar",
           icon: Calendar,
           tooltip: "Manage your events, meetings, and schedule",

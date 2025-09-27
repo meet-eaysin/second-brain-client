@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import {type ReactNode, useState} from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,38 +17,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
 import {
-  Type,
-  Hash,
-  Mail,
-  Link,
-  Phone,
-  CheckSquare,
-  Calendar,
-  List,
-  Tags,
-  Filter,
-  ArrowUpDown,
-  ArrowUp,
   ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Calendar,
+  CheckSquare,
   Copy,
-  Trash2,
+  Filter,
+  Hash,
+  Link,
+  List,
+  Mail,
+  Phone,
   Settings,
+  Tags,
+  Trash2,
+  Type,
 } from "lucide-react";
-import { toast } from "sonner";
+import {toast} from "sonner";
+import {EFilterOperator, EPropertyType, ESortDirection, type TProperty,} from "@/modules/database-view/types";
+import {useDatabaseView} from "@/modules/database-view/context";
 import {
-  EPropertyType,
-  EFilterOperator,
-  type TProperty,
-} from "@/modules/database-view/types";
-import { useDatabaseView } from "@/modules/database-view/context";
-import {
-  useUpdateProperty,
+  useChangePropertyType,
   useDeleteProperty,
   useDuplicateProperty,
-  useChangePropertyType,
+  useUpdateProperty,
 } from "@/modules/database-view/services/database-queries";
 
 interface PropertyHeaderMenuProps {
@@ -102,7 +98,6 @@ export const PropertyHeaderMenu = ({
     }
 
     if (newType !== property.type) {
-      // Simple conversion validation (can be expanded later)
       const convertibleTypes: Record<EPropertyType, EPropertyType[]> = {
         [EPropertyType.TEXT]: [
           EPropertyType.TEXT,
@@ -111,6 +106,7 @@ export const PropertyHeaderMenu = ({
           EPropertyType.EMAIL,
           EPropertyType.PHONE,
         ],
+        [EPropertyType.DATE_RANGE]: [EPropertyType.DATE_RANGE],
         [EPropertyType.NUMBER]: [EPropertyType.TEXT, EPropertyType.NUMBER],
         [EPropertyType.DATE]: [EPropertyType.TEXT, EPropertyType.DATE],
         [EPropertyType.CHECKBOX]: [EPropertyType.TEXT, EPropertyType.CHECKBOX],
@@ -155,6 +151,7 @@ export const PropertyHeaderMenu = ({
         const typeLabels: Record<EPropertyType, string> = {
           [EPropertyType.TEXT]: "Text",
           [EPropertyType.NUMBER]: "Number",
+          [EPropertyType.DATE_RANGE]: "Date Range",
           [EPropertyType.DATE]: "Date",
           [EPropertyType.CHECKBOX]: "Checkbox",
           [EPropertyType.SELECT]: "Select",
@@ -334,7 +331,7 @@ export const PropertyHeaderMenu = ({
             <DropdownMenuSubContent>
               <DropdownMenuItem
                 onClick={() =>
-                  onSortsChange([{ propertyId: property.id, direction: "asc" }])
+                  onSortsChange([{ propertyId: property.id, direction: ESortDirection.ASC }])
                 }
               >
                 <ArrowUp className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -343,7 +340,7 @@ export const PropertyHeaderMenu = ({
               <DropdownMenuItem
                 onClick={() =>
                   onSortsChange([
-                    { propertyId: property.id, direction: "desc" },
+                    { propertyId: property.id, direction: ESortDirection.DESC },
                   ])
                 }
               >

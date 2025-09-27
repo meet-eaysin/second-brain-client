@@ -27,9 +27,12 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
-import { useAuthStore } from "@/modules/auth/store/authStore";
-import type { CreateWorkspaceRequest } from "@/types/workspace.types";
-import { EWorkspaceType } from "@/types/workspace.types";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
+import {
+  type CreateWorkspaceRequest,
+  EWorkspaceType,
+  type Workspace
+} from "@/modules/workspaces/types/workspaces.types.ts";
 
 const workspaceSetupSchema = z.object({
   name: z
@@ -49,7 +52,7 @@ type WorkspaceSetupFormValues = z.infer<typeof workspaceSetupSchema>;
 
 interface WorkspaceSetupWizardProps {
   open: boolean;
-  onComplete: (workspace: { id: string; name: string }) => void;
+  onComplete: (workspace: Workspace) => void;
   size?: "sm" | "md" | "lg" | "xl" | "xxl";
 }
 
@@ -152,46 +155,36 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
   };
 
   const handleSubmit = async (data: WorkspaceSetupFormValues) => {
-    try {
-      const workspaceData: CreateWorkspaceRequest = {
-        name: data.name,
-        description: data.description || undefined,
-        type: data.type as EWorkspaceType,
-        icon: data.icon ? { type: "emoji", value: data.icon } : undefined,
-        isPublic: data.isPublic,
-      };
+    const workspaceData: CreateWorkspaceRequest = {
+      name: data.name,
+      description: data.description || undefined,
+      type: data.type as EWorkspaceType,
+      icon: data.icon ? { type: "emoji", value: data.icon } : undefined,
+      isPublic: data.isPublic,
+    };
 
-      const workspace = await createWorkspaceMutation.mutateAsync(
-        workspaceData
-      );
+    const workspace = await createWorkspaceMutation.mutateAsync(workspaceData);
 
-      // Complete immediately and close dialog
-      onComplete(workspace);
-    } catch {
-      // Error is handled by the mutation
-    }
+    onComplete(workspace);
+
   };
 
   const handleSkip = async () => {
-    try {
-      const defaultName = user
-        ? `${user.firstName || user.name || "User"}'s Workspace`
-        : "My Workspace";
-      const defaultData: CreateWorkspaceRequest = {
-        name: defaultName,
-        description: "",
-        type: EWorkspaceType.PERSONAL,
-        icon: { type: "emoji", value: WORKSPACE_ICONS[0] },
-        isPublic: false,
-      };
+    const defaultName = user
+      ? `${user.firstName || user.name || "User"}'s Workspace`
+      : "My Workspace";
+    const defaultData: CreateWorkspaceRequest = {
+      name: defaultName,
+      description: "",
+      type: EWorkspaceType.PERSONAL,
+      icon: { type: "emoji", value: WORKSPACE_ICONS[0] },
+      isPublic: false,
+    };
 
-      const workspace = await createWorkspaceMutation.mutateAsync(defaultData);
+    const workspace = await createWorkspaceMutation.mutateAsync(defaultData);
 
-      // Complete immediately and close dialog
-      onComplete({ id: workspace.id, name: workspace.name });
-    } catch {
-      // Error is handled by the mutation
-    }
+    onComplete(workspace);
+
   };
 
   const renderWelcomeStep = () => (

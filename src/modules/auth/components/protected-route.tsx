@@ -3,7 +3,7 @@ import { useAuth } from "@/modules/auth/hooks/useAuth";
 import React from "react";
 import { getSignInLink } from "@/app/router/router-link.ts";
 import { LoadingSpinner } from "@/components/loading-spinner.tsx";
-import { useAuthStore } from "@/modules/auth/store/authStore";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

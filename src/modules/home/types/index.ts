@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type {IActivity} from "@/modules/home/types/system.types.ts";
 
 // Dashboard overview interface
 export interface IDashboardOverview {
@@ -47,15 +48,14 @@ export interface IActivityFeedItem {
   userId: string;
   userName?: string;
   timestamp: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
-// Upcoming task
 export interface IUpcomingTask {
   id: string;
   name: string;
   dueDate: Date;
-  priority: "low" | "medium" | "high";
+  priority: "low" | "medium" | "high" | "urgent";
   status: "pending" | "in_progress" | "completed" | "cancelled";
   projectName?: string;
   projectId?: string;
@@ -162,10 +162,6 @@ export interface IDashboardQueryParams {
   recentNotesLimit?: number;
 }
 
-export interface IDashboardResponse extends IDashboardOverview {}
-
-export interface IDashboardStatsResponse extends IDashboardStats {}
-
 // Validation schemas
 export const QuickStatsSchema = z.object({
   totalTasks: z.number().min(0),
@@ -203,111 +199,6 @@ export const ActivityFeedItemSchema = z.object({
   metadata: z.record(z.string(), z.any()).optional(),
 });
 
-export const UpcomingTaskSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  dueDate: z.date(),
-  priority: z.enum(["low", "medium", "high"]),
-  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  projectName: z.string().optional(),
-  projectId: z.string().optional(),
-  isOverdue: z.boolean(),
-  daysUntilDue: z.number(),
-});
-
-export const RecentNoteSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  preview: z.string(),
-  tags: z.array(z.string()),
-  lastEditedAt: z.date(),
-  wordCount: z.number().min(0),
-});
-
-export const GoalProgressSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  deadline: z.date().optional(),
-  progressPercentage: z.number().min(0).max(100),
-  relatedTasksCount: z.number().min(0),
-  completedTasksCount: z.number().min(0),
-  isOverdue: z.boolean(),
-});
-
-export const HabitStreakSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  currentStreak: z.number().min(0),
-  bestStreak: z.number().min(0),
-  frequency: z.string(),
-  lastCompleted: z.date().optional(),
-  completionRate: z.number().min(0).max(100),
-});
-
-export const FinanceSummarySchema = z.object({
-  thisMonthIncome: z.number(),
-  thisMonthExpenses: z.number(),
-  thisMonthNet: z.number(),
-  lastMonthIncome: z.number(),
-  lastMonthExpenses: z.number(),
-  lastMonthNet: z.number(),
-  incomeChange: z.number(),
-  expenseChange: z.number(),
-  topExpenseCategories: z.array(
-    z.object({
-      category: z.string(),
-      amount: z.number(),
-      percentage: z.number().min(0).max(100),
-    })
-  ),
-  recentTransactions: z.array(
-    z.object({
-      id: z.string(),
-      date: z.date(),
-      amount: z.number(),
-      type: z.enum(["income", "expense"]),
-      category: z.string(),
-      note: z.string().optional(),
-    })
-  ),
-});
-
-export const WorkspaceStatsSchema = z.object({
-  totalDatabases: z.number().min(0),
-  totalRecords: z.number().min(0),
-  totalViews: z.number().min(0),
-  storageUsed: z.number().min(0),
-  storageLimit: z.number().min(0),
-  activeMembers: z.number().min(0),
-  lastActivityAt: z.date(),
-});
-
-export const DashboardOverviewSchema = z.object({
-  quickStats: QuickStatsSchema,
-  recentActivity: z.array(ActivityFeedItemSchema),
-  upcomingTasks: z.array(UpcomingTaskSchema),
-  recentNotes: z.array(RecentNoteSchema),
-  goalProgress: z.array(GoalProgressSchema),
-  habitStreaks: z.array(HabitStreakSchema),
-  financeSummary: FinanceSummarySchema,
-  workspaceStats: WorkspaceStatsSchema,
-  recentlyVisited: z.array(RecentlyVisitedItemSchema),
-});
-
-// Query schema
-export const DashboardQuerySchema = z.object({
-  workspaceId: z.string().optional(),
-  period: z.enum(["day", "week", "month", "year"]).default("week"),
-  includeActivity: z.coerce.boolean().default(true),
-  includeStats: z.coerce.boolean().default(true),
-  includeTrends: z.coerce.boolean().default(false),
-  activityLimit: z.coerce.number().min(1).max(50).default(10),
-  upcomingTasksLimit: z.coerce.number().min(1).max(20).default(5),
-  recentNotesLimit: z.coerce.number().min(1).max(20).default(5),
-});
-
-// Dashboard overview interface - matches server IDashboardOverview
 export interface IDashboardOverview {
   quickStats: IQuickStats;
   recentActivity: IActivityFeedItem[];
@@ -336,7 +227,6 @@ export interface IQuickStats {
   averageMoodThisWeek: number;
 }
 
-// Activity feed item - matches server IActivityFeedItem
 export interface IActivityFeedItem {
   id: string;
   type:
@@ -500,123 +390,6 @@ export interface IDashboardQueryParams {
   recentNotesLimit?: number;
 }
 
-// Validation schemas
-export const QuickStatsSchema = z.object({
-  totalTasks: z.number().min(0),
-  completedTasks: z.number().min(0),
-  overdueTasks: z.number().min(0),
-  totalNotes: z.number().min(0),
-  totalGoals: z.number().min(0),
-  activeHabits: z.number().min(0),
-  totalProjects: z.number().min(0),
-  activeProjects: z.number().min(0),
-  thisWeekExpenses: z.number(),
-  thisWeekIncome: z.number(),
-  journalEntriesThisMonth: z.number().min(0),
-  averageMoodThisWeek: z.number().min(1).max(5),
-});
-
-export const ActivityFeedItemSchema = z.object({
-  id: z.string(),
-  type: z.enum([
-    "task_created",
-    "task_completed",
-    "note_created",
-    "goal_updated",
-    "habit_completed",
-    "journal_entry",
-    "finance_added",
-  ]),
-  title: z.string(),
-  description: z.string(),
-  entityId: z.string(),
-  entityType: z.string(),
-  userId: z.string(),
-  userName: z.string().optional(),
-  timestamp: z.date(),
-  metadata: z.record(z.string(), z.any()).optional(),
-});
-
-export const UpcomingTaskSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  dueDate: z.date(),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  projectName: z.string().optional(),
-  projectId: z.string().optional(),
-  isOverdue: z.boolean(),
-  daysUntilDue: z.number(),
-});
-
-export const RecentNoteSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  preview: z.string(),
-  tags: z.array(z.string()),
-  lastEditedAt: z.date(),
-  wordCount: z.number().min(0),
-});
-
-export const GoalProgressSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  status: z.enum(["pending", "in_progress", "completed", "cancelled"]),
-  deadline: z.date().optional(),
-  progressPercentage: z.number().min(0).max(100),
-  relatedTasksCount: z.number().min(0),
-  completedTasksCount: z.number().min(0),
-  isOverdue: z.boolean(),
-});
-
-export const HabitStreakSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  currentStreak: z.number().min(0),
-  bestStreak: z.number().min(0),
-  frequency: z.string(),
-  lastCompleted: z.date().optional(),
-  completionRate: z.number().min(0).max(100),
-});
-
-export const FinanceSummarySchema = z.object({
-  thisMonthIncome: z.number(),
-  thisMonthExpenses: z.number(),
-  thisMonthNet: z.number(),
-  lastMonthIncome: z.number(),
-  lastMonthExpenses: z.number(),
-  lastMonthNet: z.number(),
-  incomeChange: z.number(),
-  expenseChange: z.number(),
-  topExpenseCategories: z.array(
-    z.object({
-      category: z.string(),
-      amount: z.number(),
-      percentage: z.number().min(0).max(100),
-    })
-  ),
-  recentTransactions: z.array(
-    z.object({
-      id: z.string(),
-      date: z.date(),
-      amount: z.number(),
-      type: z.enum(["income", "expense"]),
-      category: z.string(),
-      note: z.string().optional(),
-    })
-  ),
-});
-
-export const WorkspaceStatsSchema = z.object({
-  totalDatabases: z.number().min(0),
-  totalRecords: z.number().min(0),
-  totalViews: z.number().min(0),
-  storageUsed: z.number().min(0),
-  storageLimit: z.number().min(0),
-  activeMembers: z.number().min(0),
-  lastActivityAt: z.date(),
-});
-
 export const RecentlyVisitedItemSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -629,42 +402,6 @@ export const RecentlyVisitedItemSchema = z.object({
   moduleType: z.string(),
 });
 
-export const DashboardOverviewSchema = z.object({
-  quickStats: QuickStatsSchema,
-  recentActivity: z.array(ActivityFeedItemSchema),
-  upcomingTasks: z.array(UpcomingTaskSchema),
-  recentNotes: z.array(RecentNoteSchema),
-  goalProgress: z.array(GoalProgressSchema),
-  habitStreaks: z.array(HabitStreakSchema),
-  financeSummary: FinanceSummarySchema,
-  workspaceStats: WorkspaceStatsSchema,
-  recentlyVisited: z.array(RecentlyVisitedItemSchema),
-});
-
-// Query schema
-export const DashboardQuerySchema = z.object({
-  workspaceId: z.string().optional(),
-  period: z.enum(["day", "week", "month", "year"]).default("week"),
-  includeActivity: z.coerce.boolean().default(true),
-  includeStats: z.coerce.boolean().default(true),
-  includeTrends: z.coerce.boolean().default(false),
-  activityLimit: z.coerce.number().min(1).max(50).default(10),
-  upcomingTasksLimit: z.coerce.number().min(1).max(20).default(5),
-  recentNotesLimit: z.coerce.number().min(1).max(20).default(5),
-});
-
-// Activity Types
-export interface IActivity {
-  id: string;
-  userId: string;
-  workspaceId: string;
-  action: string;
-  entityType: string;
-  entityId: string;
-  timestamp: string;
-  details?: Record<string, any>;
-  metadata?: Record<string, any>;
-}
 
 export interface IActivityQueryOptions {
   workspaceId?: string;
@@ -709,39 +446,6 @@ export interface IAuditTrail {
   activities: IActivity[];
   total: number;
   hasMore: boolean;
-}
-
-export interface ISecurityEvent {
-  id: string;
-  type: string;
-  severity: "low" | "medium" | "high" | "critical";
-  message: string;
-  timestamp: string;
-  userId?: string;
-  ipAddress?: string;
-  userAgent?: string;
-  details?: Record<string, any>;
-}
-
-export interface IComplianceReport {
-  period: string;
-  totalActivities: number;
-  complianceScore: number;
-  violations: Array<{
-    type: string;
-    count: number;
-    severity: string;
-  }>;
-  recommendations: string[];
-}
-
-export interface IActivityHeatmap {
-  period: string;
-  data: Array<{
-    date: string;
-    hour: number;
-    count: number;
-  }>;
 }
 
 // Analytics Types
@@ -793,37 +497,6 @@ export interface IAnalyticsSummary {
   };
 }
 
-export interface IAnalyticsInsights {
-  insights: Array<{
-    type: "trend" | "anomaly" | "recommendation";
-    title: string;
-    description: string;
-    impact: "low" | "medium" | "high";
-    data?: any;
-  }>;
-  generatedAt: string;
-}
-
-export interface IProductivityAnalytics {
-  timeTracking: {
-    totalHours: number;
-    productiveHours: number;
-    averageDailyHours: number;
-    mostProductiveDay: string;
-  };
-  taskCompletion: {
-    completedTasks: number;
-    averageCompletionTime: number;
-    completionRate: number;
-    overdueTasks: number;
-  };
-  focusMetrics: {
-    averageSessionLength: number;
-    sessionsPerDay: number;
-    distractionRate: number;
-  };
-}
-
 export interface ITaskAnalytics {
   overview: {
     totalTasks: number;
@@ -858,19 +531,6 @@ export interface ITimeTrackingAnalytics {
   productivityScore: number;
 }
 
-export interface IGoalAnalytics {
-  totalGoals: number;
-  completedGoals: number;
-  activeGoals: number;
-  completionRate: number;
-  goalsByCategory: Record<string, number>;
-  progressTrends: Array<{
-    date: string;
-    completedGoals: number;
-    totalGoals: number;
-  }>;
-  averageCompletionTime: number;
-}
 
 export interface IFinanceAnalytics {
   totalIncome: number;
@@ -914,4 +574,16 @@ export interface IWorkspaceAnalytics {
     activities: number;
   }>;
   recentActivity: IActivity[];
+}
+
+export interface IRecentlyVisitedItem {
+  id: string;
+  name: string;
+  type: "page";
+  preview?: string;
+  route: string;
+  lastVisitedAt: Date;
+  icon?: string;
+  color?: string;
+  moduleType: string;
 }

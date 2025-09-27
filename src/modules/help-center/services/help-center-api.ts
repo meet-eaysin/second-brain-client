@@ -4,10 +4,9 @@ import type {
   IGuide,
   IContactRequest,
   IHelpSearchResult,
-} from "@/types/help-center";
+} from "@/modules/help-center/types/help-center.ts";
 
 export const helpCenterApi = {
-  // Get all FAQs
   getFAQs: async (category?: string): Promise<IFAQ[]> => {
     const response = await apiClient.get(`/help/faqs`, {
       params: category ? { category } : undefined,
@@ -15,13 +14,11 @@ export const helpCenterApi = {
     return response.data.data;
   },
 
-  // Get a specific FAQ
   getFAQById: async (id: string): Promise<IFAQ> => {
     const response = await apiClient.get(`/help/faqs/${id}`);
     return response.data.data;
   },
 
-  // Get all guides
   getGuides: async (category?: string): Promise<IGuide[]> => {
     const response = await apiClient.get(`/help/guides`, {
       params: category ? { category } : undefined,
@@ -29,13 +26,11 @@ export const helpCenterApi = {
     return response.data.data;
   },
 
-  // Get a specific guide
   getGuideById: async (id: string): Promise<IGuide> => {
     const response = await apiClient.get(`/help/guides/${id}`);
     return response.data.data;
   },
 
-  // Search help content
   searchHelp: async (
     query: string,
     category?: string
@@ -46,7 +41,6 @@ export const helpCenterApi = {
     return response.data.data;
   },
 
-  // Submit contact request
   submitContactRequest: async (
     request: IContactRequest
   ): Promise<{ success: boolean; ticketId?: string }> => {
@@ -54,7 +48,6 @@ export const helpCenterApi = {
     return response.data.data;
   },
 
-  // Get help categories
   getHelpCategories: async (): Promise<
     Array<{ id: string; name: string; count: number }>
   > => {

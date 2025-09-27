@@ -1,19 +1,20 @@
 import { apiClient } from "@/services/api-client.ts";
 import type { ApiResponse } from "@/types/api.types";
-import type {
-  IParaItem,
-  IParaStats,
-  ICreateParaItemRequest,
-  IUpdateParaItemRequest,
-  IParaQueryParams,
-  IMoveToArchiveRequest,
-  IRestoreFromArchiveRequest,
-  ICategorizeExistingItemRequest,
-} from "../types/para.types";
-import { EParaCategory, EParaStatus, EParaPriority } from "../types/para.types";
+import {
+  type IParaItem,
+  type IParaArea,
+  type IParaArchive,
+  type IParaStats,
+  type ICreateParaItemRequest,
+  type IUpdateParaItemRequest,
+  type IParaQueryParams,
+  type IMoveToArchiveRequest,
+  type IRestoreFromArchiveRequest,
+  type IParaCategorizeRequest, EParaReviewFrequency,
+} from "@/modules/para/types/para.types";
+import { EParaCategory, EParaStatus, EParaPriority } from "@/modules/para/types/para.types";
 
-// Mock data for development fallback
-const mockParaItems: IParaItem[] = [
+const mockParaItems: (IParaItem | IParaArea)[] = [
   {
     id: "1",
     databaseId: "db1",
@@ -28,7 +29,7 @@ const mockParaItems: IParaItem[] = [
     linkedNoteIds: [],
     linkedGoalIds: [],
     linkedPeopleIds: [],
-    reviewFrequency: "monthly" as any,
+    reviewFrequency: EParaReviewFrequency.WEEKLY,
     tags: ["web", "design"],
     childAreaIds: [],
     completionPercentage: 65,
@@ -60,8 +61,9 @@ const mockParaItems: IParaItem[] = [
     linkedNoteIds: [],
     linkedGoalIds: [],
     linkedPeopleIds: [],
-    reviewFrequency: "quarterly" as any,
+    reviewFrequency: "quarterly",
     tags: ["career", "learning"],
+    parentAreaId: undefined,
     childAreaIds: [],
     completionPercentage: 0,
     timeSpentMinutes: 0,
@@ -88,7 +90,7 @@ const mockParaItems: IParaItem[] = [
     isResponsibilityArea: true,
     stakeholders: [],
     maintenanceActions: [],
-  },
+  } as IParaArea,
 ];
 
 const mockParaStats: IParaStats = {
@@ -130,7 +132,7 @@ const mockParaStats: IParaStats = {
       [EParaCategory.RESOURCES]: 0,
       [EParaCategory.ARCHIVE]: 1,
     },
-  } as any,
+  },
   byPriority: {
     [EParaPriority.LOW]: 5,
     [EParaPriority.MEDIUM]: 12,
@@ -224,7 +226,9 @@ export const paraApi = {
   // ===== PARA ITEM CRUD OPERATIONS =====
 
   // Create a new PARA item
-  createParaItem: async (data: ICreateParaItemRequest): Promise<IParaItem> => {
+  createParaItem: async (
+    data: ICreateParaItemRequest
+  ): Promise<IParaItem | IParaArea | IParaArchive> => {
     return apiCallWithFallback(
       () =>
         apiClient
@@ -242,7 +246,9 @@ export const paraApi = {
   },
 
   // Get PARA items with optional filtering
-  getParaItems: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
+  getParaItems: async (
+    params?: IParaQueryParams
+  ): Promise<(IParaItem | IParaArea | IParaArchive)[]> => {
     return apiCallWithFallback(
       () =>
         apiClient
@@ -253,7 +259,9 @@ export const paraApi = {
   },
 
   // Get a single PARA item by ID
-  getParaItemById: async (id: string): Promise<IParaItem> => {
+  getParaItemById: async (
+    id: string
+  ): Promise<IParaItem | IParaArea | IParaArchive> => {
     return apiCallWithFallback(
       () =>
         apiClient
@@ -267,7 +275,7 @@ export const paraApi = {
   updateParaItem: async (
     id: string,
     data: IUpdateParaItemRequest
-  ): Promise<IParaItem> => {
+  ): Promise<IParaItem | IParaArea | IParaArchive> => {
     return apiCallWithFallback(
       () =>
         apiClient
@@ -475,8 +483,11 @@ export const paraApi = {
 
   // Categorize existing items
   categorizeExistingItem: async (
-    data: ICategorizeExistingItemRequest
-  ): Promise<{ message: string; paraItemId: string }> => {
+    data: IParaCategorizeRequest
+  ): Promise<
+    | { message: string; paraItemId: string }
+    | { message: string; paraItem: IParaItem | IParaArea | IParaArchive }
+  > => {
     return apiCallWithFallback(
       () =>
         apiClient
@@ -493,7 +504,10 @@ export const paraApi = {
   },
 
   // Mark item as reviewed
-  markReviewed: async (id: string, notes?: string): Promise<IParaItem> => {
+  markReviewed: async (
+    id: string,
+    notes?: string
+  ): Promise<IParaItem | IParaArea | IParaArchive> => {
     return apiCallWithFallback(
       () =>
         apiClient

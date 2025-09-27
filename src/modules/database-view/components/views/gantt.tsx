@@ -24,7 +24,7 @@ import {
 import { useDatabaseView } from "@/modules/database-view/context";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import type { TRecord } from "@/modules/database-view/types";
+import type {TPropertyValue, TRecord} from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 import {
   useCreateRecord,
@@ -144,7 +144,7 @@ export function Gantt({ className = "" }: { className?: string }) {
 
           // If date value is empty/null, fall back to createdAt timestamp
           if (!startDate || !endDate) {
-            const createdAt = record.createdAt || record.created_at;
+            const createdAt = record.createdAt || record.createdAt;
             if (createdAt) {
               startDate = new Date(createdAt);
               endDate = new Date(createdAt);
@@ -152,7 +152,7 @@ export function Gantt({ className = "" }: { className?: string }) {
           }
         } else {
           // Fall back to createdAt timestamp
-          const createdAt = record.createdAt || record.created_at;
+          const createdAt = record.createdAt || record.createdBy;
           if (createdAt) {
             startDate = new Date(createdAt);
             endDate = new Date(createdAt);
@@ -311,7 +311,7 @@ export function Gantt({ className = "" }: { className?: string }) {
     const dateProperty = properties.find((p) => p.name === datePropertyName);
     if (!dateProperty) return;
 
-    const payload: Record<string, unknown> = {};
+    const payload: Record<string, TPropertyValue> = {};
 
     if (dateProperty.type === EPropertyType.DATE_RANGE) {
       // For DATE_RANGE, update both start and end dates
@@ -344,7 +344,7 @@ export function Gantt({ className = "" }: { className?: string }) {
     }
 
     // Prepare the record data
-    const recordData: Record<string, unknown> = {};
+    const recordData: Record<string, TPropertyValue> = {};
 
     // Find the first available date property to set the timeline
     const dateProperty = dateProperties[0];

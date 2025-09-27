@@ -19,7 +19,6 @@ import {
   GanttFeatureListGroup,
   GanttFeatureItem,
   GanttToday,
-  type GanttFeature,
 } from "@/components/ui/kibo-ui/gantt";
 import { useTodayEvents } from "@/modules/calendar/services/calendar-queries";
 import { useUpdateEvent } from "@/modules/calendar/services/calendar-queries";
@@ -28,14 +27,9 @@ export function HomePage() {
   const { currentWorkspace } = useWorkspace();
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useDashboardOverview();
-
-  // Get today's calendar events for time-blocking preview
   const { data: todayEvents } = useTodayEvents();
-
-  // Update event mutation for drag-to-reschedule
   const { mutateAsync: updateEventMutation } = useUpdateEvent();
 
-  // Helper function to get color based on event type
   const getEventColor = (eventType?: string): string => {
     try {
       switch (eventType) {
@@ -73,8 +67,7 @@ export function HomePage() {
     }
   };
 
-  // Convert calendar events to Gantt features for time-blocking preview
-  const displayFeatures: GanttFeature[] = useMemo(() => {
+  const displayFeatures = useMemo(() => {
     try {
       if (!todayEvents?.events || !Array.isArray(todayEvents.events)) {
         return [];
@@ -83,7 +76,6 @@ export function HomePage() {
       return todayEvents.events
         .filter((event) => {
           try {
-            // Only show events that are scheduled for today
             const today = new Date();
             const eventDate = new Date(event.startTime);
             return (
@@ -103,10 +95,8 @@ export function HomePage() {
               ? new Date(event.endTime)
               : addHours(startAt, 1);
 
-            // Validate dates
-            if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) {
-              return null;
-            }
+            if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) return null;
+
 
             return {
               id: event.id || `event-${Date.now()}`,
@@ -123,7 +113,7 @@ export function HomePage() {
             return null;
           }
         })
-        .filter((feature): feature is GanttFeature => feature !== null);
+        .filter((feature) => feature !== null);
     } catch {
       return [];
     }
@@ -273,7 +263,7 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Time-blocking Calendar Preview Skeleton */}
+          {/* Time-blocking CalendarTypes Preview Skeleton */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="h-6 w-40 bg-muted animate-pulse rounded flex items-center gap-2">
@@ -395,7 +385,7 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Time-blocking Calendar Preview */}
+        {/* Time-blocking CalendarTypes Preview */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -419,8 +409,8 @@ export function HomePage() {
                       <GanttSidebarGroup name="Today's Events">
                         {displayFeatures.map((feature) => (
                           <GanttSidebarItem
-                            key={feature.id}
-                            feature={feature}
+                            key={feature?.id}
+                            feature={feature || null}
                             onSelectItem={(id) => {
                               // Scroll to the feature in the timeline
                               const ganttElement = document.querySelector(
@@ -445,8 +435,8 @@ export function HomePage() {
                       <GanttHeader />
                       <GanttFeatureList>
                         <GanttFeatureListGroup>
-                          {displayFeatures.map((feature) => (
-                            <div className="flex" key={feature.id}>
+                          {displayFeatures?.map((feature) => (
+                            <div className="flex" key={feature?.id}>
                               <GanttFeatureItem
                                 onMove={handleMoveFeature}
                                 {...feature}

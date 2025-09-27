@@ -1,5 +1,5 @@
-import { apiClient } from "@/services/api-client.ts";
-import type { ApiResponse } from "@/types/api.types.ts";
+import { apiClient } from "@/services/api-client";
+import type { ApiResponse } from "@/types/api.types";
 import type {
   Workspace,
   CreateWorkspaceRequest,
@@ -7,22 +7,20 @@ import type {
   WorkspaceStatsResponse,
   GetWorkspacesQuery,
   SearchWorkspacesQuery,
-} from "@/types/workspace.types";
-import { API_ENDPOINTS } from "@/constants/api-endpoints.ts";
+} from "@/modules/workspaces/types/workspaces.types";
+import { API_ENDPOINTS } from "@/constants/api-endpoints";
 import { EDatabaseType } from "@/modules/database-view";
 import type {
   IWorkspaceInitResponse,
   TModuleInitializeRequest,
-} from "@/modules/workspaces/types/workspaces.types.ts";
+} from "@/modules/workspaces/types/workspaces.types";
 
 export const workspaceApi = {
-  // Get user's workspaces
   getUserWorkspaces: async (): Promise<ApiResponse<Workspace[]>> => {
     const response = await apiClient.get(API_ENDPOINTS.WORKSPACES.BASE);
     return response.data;
   },
 
-  // Create workspace
   createWorkspace: async (data: CreateWorkspaceRequest): Promise<Workspace> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.BASE,
@@ -31,7 +29,6 @@ export const workspaceApi = {
     return response.data.data!;
   },
 
-  // Get workspace by ID (current workspace)
   getCurrentWorkspace: async (): Promise<ApiResponse<Workspace>> => {
     const response = await apiClient.get<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.CURRENT
@@ -39,7 +36,6 @@ export const workspaceApi = {
     return response.data;
   },
 
-  // Update current workspace
   updateCurrentWorkspace: async (
     data: UpdateWorkspaceRequest
   ): Promise<Workspace> => {
@@ -50,12 +46,10 @@ export const workspaceApi = {
     return response.data.data!;
   },
 
-  // Delete current workspace
   deleteCurrentWorkspace: async (): Promise<void> => {
     await apiClient.delete(API_ENDPOINTS.WORKSPACES.CURRENT);
   },
 
-  // Get workspace statistics
   getCurrentWorkspaceStats: async (): Promise<WorkspaceStatsResponse> => {
     const response = await apiClient.get<ApiResponse<WorkspaceStatsResponse>>(
       API_ENDPOINTS.WORKSPACES.CURRENT_STATS
@@ -63,7 +57,6 @@ export const workspaceApi = {
     return response.data.data!;
   },
 
-  // Check workspace access
   checkCurrentWorkspaceAccess: async (): Promise<{
     hasAccess: boolean;
     canManage: boolean;
@@ -79,7 +72,6 @@ export const workspaceApi = {
     return response.data.data!;
   },
 
-  // Get primary workspace
   getPrimaryWorkspace: async (): Promise<Workspace> => {
     const response = await apiClient.get<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.PRIMARY
@@ -87,7 +79,6 @@ export const workspaceApi = {
     return response.data.data!;
   },
 
-  // Get or create default workspace
   getOrCreateDefaultWorkspace: async (
     userInfo?: Record<string, unknown>
   ): Promise<Workspace> => {
@@ -98,7 +89,6 @@ export const workspaceApi = {
     return response.data.data!;
   },
 
-  // Module initialization
   getModuleDatabaseId: async (
     moduleType: EDatabaseType
   ): Promise<ApiResponse<{ databaseId: string }>> => {
@@ -122,16 +112,15 @@ export const workspaceApi = {
     return response.data;
   },
 
-  // Update workspace by ID
   updateWorkspace: async (
     id: string,
     data: UpdateWorkspaceRequest
-  ): Promise<Workspace> => {
+  ): Promise<ApiResponse<Workspace>> => {
     const response = await apiClient.put<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.BY_ID(id),
       data
     );
-    return response.data.data!;
+    return response.data!;
   },
 
   // Delete workspace by ID
@@ -143,12 +132,12 @@ export const workspaceApi = {
   duplicateWorkspace: async (
     _id: string,
     name?: string
-  ): Promise<Workspace> => {
+  ): Promise<ApiResponse<Workspace>> => {
     const response = await apiClient.post<ApiResponse<Workspace>>(
       API_ENDPOINTS.WORKSPACES.DUPLICATE,
       { name }
     );
-    return response.data.data!;
+    return response.data!;
   },
 
   // Leave workspace

@@ -15,7 +15,7 @@ export const createDatabaseSchema = z.object({
     .max(500, "Description must be less than 500 characters")
     .optional(),
 
-  isPublic: z.boolean().default(false),
+  isPublic: z.boolean().optional(),
 
   icon: z.string().max(100, "Icon must be less than 100 characters").optional(),
 
@@ -35,7 +35,7 @@ export const createDatabaseSchema = z.object({
       "GANTT",
       "CHART",
     ])
-    .default("TABLE"),
+    .optional(),
 });
 
 export const updateDatabaseSchema = createDatabaseSchema.partial();

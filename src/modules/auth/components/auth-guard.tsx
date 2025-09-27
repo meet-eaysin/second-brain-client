@@ -1,7 +1,7 @@
 import { type ReactNode, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/modules/auth/hooks/useAuth.ts";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../store/auth-store.ts";
 import { getSignInLink } from "@/app/router/router-link.ts";
 import {LoadingSpinner} from "@/components/loading-spinner.tsx";
 

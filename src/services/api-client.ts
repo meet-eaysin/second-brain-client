@@ -10,7 +10,7 @@ import {
   setRefreshToken,
   getRefreshToken,
 } from "@/modules/auth/utils/tokenUtils.ts";
-import { useAuthStore } from "@/modules/auth/store/authStore.ts";
+import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 

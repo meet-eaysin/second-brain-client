@@ -98,7 +98,6 @@ export function ColumnVisibilityMenu() {
         <Button
           variant="outline"
           size="sm"
-          // disabled={disabled || isLoading}
           className="h-8"
         >
           <Eye className="h-4 w-4" />

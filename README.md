@@ -29,7 +29,7 @@ The Second Brain Client is a modern, responsive React application that serves as
 - **Database Management**: Notion-like database system with custom properties and views
 - **Task Management**: Complete task tracking with priorities, assignees, and time management
 - **Rich Text Editing**: Advanced note-taking with TipTap editor and rich formatting
-- **Calendar Integration**: Full calendar functionality with external service integration
+- **CalendarTypes Integration**: Full calendar functionality with external service integration
 - **Advanced Search**: Global search across all content with fuzzy matching
 - **AI Assistant**: Integrated AI features for content generation and assistance
 - **Real-time Updates**: WebSocket-based real-time notifications and updates
@@ -120,7 +120,7 @@ yarn build:analyze       # Build and analyze bundle
 - **UI Components**: Radix UI primitives with custom components
 - **Forms**: React Hook Form with Zod validation
 - **Charts**: Recharts for data visualization
-- **Calendar**: React Big Calendar for calendar functionality
+- **CalendarTypes**: React Big CalendarTypes for calendar functionality
 - **Rich Text**: TipTap editor with extensions
 - **Icons**: Lucide React and Tabler Icons
 - **Testing**: Vitest with React Testing Library
@@ -183,7 +183,7 @@ src/
 │   ├── ai-assistant/    # AI assistant functionality
 │   ├── auth/           # Authentication system
 │   ├── books/          # Book management
-│   ├── calendar/       # Calendar integration
+│   ├── calendar/       # CalendarTypes integration
 │   ├── categories/     # Content categorization
 │   ├── core/           # Core types and utilities
 │   ├── dashboard/      # Dashboard views
@@ -255,7 +255,7 @@ The application follows a modular component architecture:
 - Image and file embedding
 - Collaborative editing capabilities
 
-### Calendar Integration
+### CalendarTypes Integration
 - Full calendar functionality
 - External calendar service integration
 - Event management and scheduling

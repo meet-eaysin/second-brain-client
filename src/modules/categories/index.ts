@@ -1,6 +1,6 @@
 // Services
-export { categoriesApi } from './services/categoriesApi';
-export * from './services/categoriesQueries';
+export { categoriesApi } from './services/categories-api.ts';
+export * from './services/categories-queries.ts';
 
 // Types
-export type * from './services/categoriesApi';
+export type * from './services/categories-api.ts';

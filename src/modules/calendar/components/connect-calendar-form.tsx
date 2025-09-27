@@ -29,7 +29,7 @@ import { Info, ExternalLink } from "lucide-react";
 import type {
   CalendarProvider,
   ConnectCalendarRequest,
-} from "@/types/calendar";
+} from "@/modules/calendar/types/calendar.types.ts";
 
 const connectCalendarSchema = z.object({
   provider: z.string().min(1, "Provider is required"),

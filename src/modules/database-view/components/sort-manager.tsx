@@ -44,48 +44,47 @@ import {
   Search,
   Files,
 } from "lucide-react";
-import type { TSortConfig } from "@/modules/database-view/types";
+import {EPropertyType, ESortDirection, type TSortConfig} from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateViewSorts } from "@/modules/database-view/services/database-queries.ts";
 
 const PROPERTY_TYPE_ICONS = {
-  text: Type,
-  rich_text: FileText,
-  number: Hash,
-  date: Calendar,
-  checkbox: CheckSquare,
-  url: Link,
-  email: Mail,
-  phone: Phone,
-  currency: DollarSign,
-  percent: Percent,
-  select: List,
-  multi_select: Tags,
-  status: Circle,
-  priority: AlertTriangle,
-  file: File,
-  relation: Link,
-  rollup: Calculator,
-  formula: Calculator,
-  created_time: Clock,
-  last_edited_time: Clock,
-  created_by: User,
-  last_edited_by: User,
-  mood_scale: Smile,
-  frequency: Repeat,
-  content_type: FileText,
-  finance_type: DollarSign,
-  finance_category: Tags,
-  FILES: Files,
-  LOOKUP: Search,
+  [EPropertyType.TEXT]: Type,
+  [EPropertyType.RICH_TEXT]: FileText,
+  [EPropertyType.NUMBER]: Hash,
+  [EPropertyType.DATE]: Calendar,
+  [EPropertyType.DATE_RANGE]: Calendar, // ✅ Added
+  [EPropertyType.CHECKBOX]: CheckSquare,
+  [EPropertyType.URL]: Link,
+  [EPropertyType.EMAIL]: Mail,
+  [EPropertyType.PHONE]: Phone,
+  [EPropertyType.CURRENCY]: DollarSign,
+  [EPropertyType.PERCENT]: Percent,
+  [EPropertyType.SELECT]: List,
+  [EPropertyType.MULTI_SELECT]: Tags,
+  [EPropertyType.STATUS]: Circle,
+  [EPropertyType.PRIORITY]: AlertTriangle,
+  [EPropertyType.FILE]: File,
+  [EPropertyType.RELATION]: Link,
+  [EPropertyType.ROLLUP]: Calculator,
+  [EPropertyType.FORMULA]: Calculator,
+  [EPropertyType.CREATED_TIME]: Clock,
+  [EPropertyType.LAST_EDITED_TIME]: Clock,
+  [EPropertyType.CREATED_BY]: User,
+  [EPropertyType.LAST_EDITED_BY]: User,
+  [EPropertyType.MOOD_SCALE]: Smile,
+  [EPropertyType.FREQUENCY]: Repeat,
+  [EPropertyType.CONTENT_TYPE]: FileText,
+  [EPropertyType.FINANCE_TYPE]: DollarSign,
+  [EPropertyType.FINANCE_CATEGORY]: Tags,
+  [EPropertyType.FILES]: Files,
+  [EPropertyType.LOOKUP]: Search,
 } as const;
 
 export function SortManager() {
   const { database, properties, currentView, tempSorts, setTempSorts } =
     useDatabaseView();
   const [open, setOpen] = useState(false);
-  const databaseId = database?.id || "";
-  const viewId = currentView?.id || "";
 
   const [localSorts, setLocalSorts] = useState<TSortConfig[]>([]);
 
@@ -105,7 +104,7 @@ export function SortManager() {
     if (available.length > 0) {
       const newSorts = [
         ...localSorts,
-        { propertyId: available[0].id, direction: "asc" },
+        { propertyId: available[0].id, direction: ESortDirection.ASC },
       ];
       setLocalSorts(newSorts);
       setTempSorts(newSorts);
@@ -140,10 +139,10 @@ export function SortManager() {
 
     try {
       // Convert local sorts to backend format
-      const sorts = localSorts
+      const sorts: TSortConfig[] = localSorts
         .filter((sort) => sort.propertyId)
         .map((sort) => ({
-          property: sort.propertyId,
+          propertyId: sort.propertyId,
           direction: sort.direction,
         }));
 
