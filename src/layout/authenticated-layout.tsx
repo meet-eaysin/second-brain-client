@@ -13,7 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import React from "react";
-import type {Workspace} from "@/modules/workspaces/types/workspaces.types.ts";
+import type { Workspace } from "@/modules/workspaces/types/workspaces.types.ts";
 
 interface Props {
   children?: React.ReactNode;
@@ -78,15 +78,34 @@ function AuthenticatedLayout({ children }: Props) {
     };
     completeWorkspaceSetup(transformedWorkspace);
 
-    const userWorkspace = {
+    const userWorkspace: Workspace = {
       id: workspace._id,
+      _id: workspace._id,
       name: workspace.name,
       description: workspace.description,
       type: workspace.type,
-      role: "owner" as const,
-      isDefault: true,
+      icon: { type: "emoji", value: "🏢" },
+      config: {
+        enableAI: true,
+        enableComments: true,
+        enableVersioning: false,
+        enablePublicSharing: true,
+        enableGuestAccess: false,
+        maxDatabases: 100,
+        maxMembers: 10,
+        storageLimit: 1073741824,
+        allowedIntegrations: [],
+        requireTwoFactor: false,
+        allowedEmailDomains: [],
+        sessionTimeout: 480,
+      },
+      isPublic: false,
+      isArchived: false,
+      ownerId: "",
       memberCount: workspace.memberCount,
       databaseCount: workspace.databaseCount,
+      recordCount: 0,
+      storageUsed: 0,
       createdAt: workspace.createdAt,
       updatedAt: workspace.updatedAt,
     };
@@ -98,10 +117,11 @@ function AuthenticatedLayout({ children }: Props) {
     });
 
     queryClient.setQueryData(["workspaces", "user"], (oldData) => {
-      if (!oldData || !oldData.data) return oldData;
+      if (!oldData) return oldData;
+      const currentData = (oldData as { data?: Workspace[] }).data || [];
       return {
         ...oldData,
-        data: [...oldData.data, userWorkspace],
+        data: [...currentData, userWorkspace],
       };
     });
 
@@ -129,7 +149,7 @@ function AuthenticatedLayout({ children }: Props) {
           )}
         >
           {children ? children : <Outlet />}
-          <SetupWrapper/>
+          <SetupWrapper />
         </div>
 
         <WorkspaceSetupWizard

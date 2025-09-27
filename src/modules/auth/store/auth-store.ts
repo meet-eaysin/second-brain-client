@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/modules/auth/types/auth.types.ts";
-import type { Workspace } from "@/types/workspace.types";
+import type { Workspace } from "@/modules/workspaces/types/workspaces.types";
 
 interface AuthState {
   user: User | null;
@@ -65,7 +65,8 @@ export const useAuthStore = create<AuthState>()(
           const hasNoWorkspaces = totalWorkspaces === 0;
 
           let shouldShowWizard = false;
-          if (state.showWorkspaceSetupWizard && hasNoWorkspaces) shouldShowWizard = true;
+          if (state.showWorkspaceSetupWizard && hasNoWorkspaces)
+            shouldShowWizard = true;
 
           return {
             user,

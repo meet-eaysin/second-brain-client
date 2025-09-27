@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { authApi } from "../services/auth-api";
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react";
 import { getSignInLink } from "@/app/router/router-link";
+import type { AxiosError } from "axios";
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -50,8 +51,9 @@ export const ForgotPasswordPage: React.FC = () => {
       setEmailSent(true);
       toast.success("Password reset email sent successfully");
     } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
       toast.error(
-        error.response?.data?.message || "Failed to send reset email"
+        axiosError.response?.data?.message || "Failed to send reset email"
       );
     } finally {
       setIsLoading(false);

@@ -24,11 +24,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Save, Settings } from "lucide-react";
-import  {
+import {
   type Workspace,
   type CreateWorkspaceRequest,
   type UpdateWorkspaceRequest,
-  EWorkspaceType
+  EWorkspaceType,
 } from "@/modules/workspaces/types/workspaces.types";
 
 const workspaceFormSchema = z.object({
@@ -56,9 +56,8 @@ interface WorkspaceFormProps {
   workspace?: Workspace | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (
-    data: CreateWorkspaceRequest | UpdateWorkspaceRequest
-  ) => Promise<void>;
+  onCreate?: (data: CreateWorkspaceRequest) => Promise<void>;
+  onUpdate?: (data: UpdateWorkspaceRequest) => Promise<void>;
   mode?: "create" | "edit";
   isLoading?: boolean;
 }
@@ -82,7 +81,8 @@ export function WorkspaceForm({
   workspace,
   open,
   onOpenChange,
-  onSubmit,
+  onCreate,
+  onUpdate,
   mode = "create",
   isLoading = false,
 }: WorkspaceFormProps) {
@@ -145,7 +145,11 @@ export function WorkspaceForm({
               isPublic: data.isPublic,
             };
 
-      await onSubmit(transformedData);
+      if (mode === "create" && onCreate) {
+        await onCreate(transformedData as CreateWorkspaceRequest);
+      } else if (mode === "edit" && onUpdate) {
+        await onUpdate(transformedData as UpdateWorkspaceRequest);
+      }
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to submit workspace:", error);

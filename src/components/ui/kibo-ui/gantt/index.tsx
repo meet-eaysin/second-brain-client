@@ -92,6 +92,8 @@ export type GanttData = {
   }[];
 }[];
 
+export type TimelineData = GanttData;
+
 export type GanttContextProps = {
   zoom: number;
   range: Range;

@@ -7,7 +7,6 @@ import type {
   GetWorkspacesQuery,
   SearchWorkspacesQuery,
   CreateWorkspaceRequest,
-  EWorkspaceType,
   Workspace,
 } from "@/modules/workspaces/types/workspaces.types";
 import { toast } from "sonner";
@@ -397,46 +396,16 @@ export const useSwitchWorkspace = () => {
       workspaces,
     }: {
       workspaceId: string;
-      workspaces: Record<string, unknown>[];
+      workspaces: Workspace[];
     }) => {
-      const userWorkspace = workspaces.find(
-        (w: Record<string, unknown>) => w.id === workspaceId
-      );
+      const userWorkspace = workspaces.find((w) => w.id === workspaceId);
 
       if (!userWorkspace) {
         throw new Error("Workspace not found in user's workspaces");
       }
 
       const workspaceData: Workspace = {
-        id: userWorkspace._id as string,
-        _id: userWorkspace._id as string,
-        name: userWorkspace.name as string,
-        description: (userWorkspace.description as string) || "",
-        type: userWorkspace.type as EWorkspaceType,
-        icon: { type: "emoji" as const, value: "🏢" },
-        config: {
-          enableAI: true,
-          enableComments: true,
-          enableVersioning: false,
-          enablePublicSharing: true,
-          enableGuestAccess: false,
-          maxDatabases: 100,
-          maxMembers: 10,
-          storageLimit: 1073741824,
-          allowedIntegrations: [],
-          requireTwoFactor: false,
-          allowedEmailDomains: [],
-          sessionTimeout: 480,
-        },
-        isPublic: false,
-        isArchived: false,
-        ownerId: "", // We don't have this info from UserWorkspace
-        memberCount: userWorkspace.memberCount as number,
-        databaseCount: userWorkspace.databaseCount as number,
-        recordCount: 0,
-        storageUsed: 0,
-        createdAt: userWorkspace.createdAt as string,
-        updatedAt: userWorkspace.updatedAt as string,
+        ...userWorkspace,
       };
 
       return workspaceData;

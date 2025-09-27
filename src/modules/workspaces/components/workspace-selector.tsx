@@ -22,7 +22,6 @@ import { useCreateWorkspace } from "../services/workspace-queries";
 import { WorkspaceForm } from "./workspace-form";
 import type {
   CreateWorkspaceRequest,
-  UpdateWorkspaceRequest,
   Workspace,
 } from "@/modules/workspaces/types/workspaces.types";
 import { cn } from "@/lib/utils";
@@ -44,10 +43,8 @@ export const WorkspaceSelector: React.FC = () => {
     setOpen(false);
   };
 
-  const handleCreateWorkspace = async (
-    data: CreateWorkspaceRequest | UpdateWorkspaceRequest
-  ) => {
-    await createWorkspaceMutation.mutateAsync(data as CreateWorkspaceRequest);
+  const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
+    await createWorkspaceMutation.mutateAsync(data);
     setShowCreateForm(false);
   };
 
@@ -194,7 +191,7 @@ export const WorkspaceSelector: React.FC = () => {
       <WorkspaceForm
         open={showCreateForm}
         onOpenChange={setShowCreateForm}
-        onSubmit={handleCreateWorkspace}
+        onCreate={handleCreateWorkspace}
         mode="create"
       />
     </>

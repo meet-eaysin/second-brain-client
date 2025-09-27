@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -25,7 +24,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info, ExternalLink } from "lucide-react";
+import { Info } from "lucide-react";
 import type {
   CalendarProvider,
   ConnectCalendarRequest,
@@ -36,18 +35,14 @@ const connectCalendarSchema = z.object({
   accountEmail: z.string().email("Valid email required"),
   accessToken: z.string().optional(),
   refreshToken: z.string().optional(),
-  syncSettings: z
-    .object({
-      importEvents: z.boolean().default(true),
-      exportEvents: z.boolean().default(false),
-      bidirectionalSync: z.boolean().default(false),
-      syncPastDays: z.number().min(0).max(365).default(30),
-      syncFutureDays: z.number().min(1).max(1095).default(365),
-      conflictResolution: z
-        .enum(["local", "remote", "manual"])
-        .default("remote"),
-    })
-    .optional(),
+  syncSettings: z.object({
+    importEvents: z.boolean(),
+    exportEvents: z.boolean(),
+    bidirectionalSync: z.boolean(),
+    syncPastDays: z.number().min(0).max(365),
+    syncFutureDays: z.number().min(1).max(1095),
+    conflictResolution: z.enum(["local", "remote", "manual"]),
+  }),
 });
 
 type ConnectCalendarFormData = z.infer<typeof connectCalendarSchema>;

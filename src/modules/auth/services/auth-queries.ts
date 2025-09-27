@@ -12,7 +12,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { useEffect } from "react";
-import type { AuthResponse } from "@/modules/auth/types/auth.types.ts";
+import type {
+  AuthResponse,
+  RegisterCredentials,
+} from "@/modules/auth/types/auth.types.ts";
 import {
   getDashboardLink,
   getSignInLink,
@@ -87,8 +90,17 @@ export const useLoginMutation = (options?: LoginMutationOptions) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ email, password }: { email: string; password: string }) =>
-      authApi.login(email, password),
+    mutationFn: async ({
+      email,
+      password,
+    }: {
+      email: string;
+      password: string;
+    }) => {
+      const response = await authApi.login(email, password);
+      if (!response.data) throw new Error("Login failed");
+      return response.data;
+    },
     onMutate: () => {
       setLoading(true);
     },
@@ -114,15 +126,7 @@ export const useLoginMutation = (options?: LoginMutationOptions) => {
           "Too many login attempts. Please wait a few minutes before trying again."
         );
       } else if (error.response?.status === 422) {
-        const validationErrors = error.response.data?.errors;
-        if (validationErrors) {
-          const firstError = Object.values(validationErrors)[0];
-          toast.error(
-            Array.isArray(firstError) ? firstError[0] : "Validation error"
-          );
-        } else {
-          toast.error("Please check your input and try again.");
-        }
+        toast.error("Please check your input and try again.");
       } else if (!error.response) {
         toast.error(
           "Network error. Please check your connection and try again."
@@ -144,7 +148,11 @@ export const useRegisterMutation = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: authApi.register,
+    mutationFn: async (credentials: RegisterCredentials) => {
+      const response = await authApi.register(credentials);
+      if (!response.data) throw new Error("Registration failed");
+      return response.data;
+    },
     onMutate: () => {
       setLoading(true);
     },
@@ -170,20 +178,7 @@ export const useRegisterMutation = () => {
           "An account with this email already exists. Please sign in instead."
         );
       } else if (error.response?.status === 422) {
-        const validationErrors = error.response.data?.errors;
-        if (validationErrors) {
-          const errorMessages = Object.entries(validationErrors).map(
-            ([field, messages]) => {
-              const messageArray = Array.isArray(messages)
-                ? messages
-                : [messages];
-              return `${field}: ${messageArray[0]}`;
-            }
-          );
-          toast.error(errorMessages[0]);
-        } else {
-          toast.error("Please check your input and try again.");
-        }
+        toast.error("Please check your input and try again.");
       } else if (error.response?.status === 429) {
         toast.error(
           "Too many registration attempts. Please wait a few minutes before trying again."
@@ -313,10 +308,7 @@ export const useLogoutMutation = () => {
         window.location.href = getSignInLink();
       }, 100);
 
-      const message =
-        error.response?.data?.error?.message ||
-        error.response?.data?.message ||
-        "Logout failed";
+      const message = error.response?.data?.message || "Logout failed";
       toast.error(message);
       window.location.href = getSignInLink();
     },

@@ -9,7 +9,10 @@ import {
   useUpdateEvent,
   useDeleteEvent,
 } from "../services/calendar-queries";
-import type { CreateEventRequest, UpdateEventRequest } from "@/modules/calendar/types/calendar.types.ts";
+import type {
+  CreateEventRequest,
+  UpdateEventRequest,
+} from "@/modules/calendar/types/calendar.types.ts";
 import {
   Dialog,
   DialogContent,
@@ -25,13 +28,15 @@ import {
   CheckCircle,
   AlertCircle,
   XCircle,
+  Target,
+  Coffee,
 } from "lucide-react";
 import EventForm from "./event-form";
 
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import "./shadcn-big-calendar.css";
 
-const DnDCalendar = withDragAndDrop(Calendar);
+const DnDCalendar = withDragAndDrop(Calendar<CalendarEvent>);
 const localizer = momentLocalizer(moment);
 
 interface CalendarEvent {
@@ -43,19 +48,20 @@ interface CalendarEvent {
     calendarId: string;
     description?: string;
     location?: string;
+    type?: string;
   };
 }
 
 interface EventDropArgs {
   event: CalendarEvent;
-  start: Date;
-  end: Date;
+  start: string | Date;
+  end: string | Date;
 }
 
 interface EventResizeArgs {
   event: CalendarEvent;
-  start: Date;
-  end: Date;
+  start: string | Date;
+  end: string | Date;
 }
 
 // Custom event component for better UI
@@ -146,7 +152,7 @@ export default function ShadcnBigCalendarComponent({
   const deleteEventMutation = useDeleteEvent();
 
   // Transform events to react-big-calendar format
-  const calendarEvents = (eventsResponse?.events || []).map((event) => ({
+  const calendarEvents = (eventsResponse?.data || []).map((event) => ({
     id: event.id,
     title: event.title,
     start: new Date(event.startTime),
@@ -181,15 +187,15 @@ export default function ShadcnBigCalendarComponent({
     data: CreateEventRequest | UpdateEventRequest
   ) => {
     try {
-      if (selectedEvent) {
+      if ("calendarId" in data) {
+        // Create new event
+        await createEventMutation.mutateAsync(data);
+      } else {
         // Update existing event
         await updateEventMutation.mutateAsync({
-          eventId: selectedEvent.id,
-          data: data as UpdateEventRequest,
+          eventId: selectedEvent!.id,
+          data,
         });
-      } else {
-        // Create new event
-        await createEventMutation.mutateAsync(data as CreateEventRequest);
       }
       setSelectedSlot(null);
       setSelectedEvent(null);
@@ -202,8 +208,8 @@ export default function ShadcnBigCalendarComponent({
     updateEventMutation.mutate({
       eventId: args.event.id,
       data: {
-        startTime: args.start,
-        endTime: args.end,
+        startTime: new Date(args.start),
+        endTime: new Date(args.end),
       },
     });
   };
@@ -212,8 +218,8 @@ export default function ShadcnBigCalendarComponent({
     updateEventMutation.mutate({
       eventId: args.event.id,
       data: {
-        startTime: args.start,
-        endTime: args.end,
+        startTime: new Date(args.start),
+        endTime: new Date(args.end),
       },
     });
   };

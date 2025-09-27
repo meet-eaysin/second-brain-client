@@ -77,7 +77,8 @@ export function CalendarForm({
   const isEditing = !!calendar;
   const createCalendarMutation = useCreateCalendar();
   const updateCalendarMutation = useUpdateCalendar();
-  const { data: config } = useCalendarConfig();
+  const { data: configResponse } = useCalendarConfig();
+  const config = configResponse?.data;
 
   const form = useForm<CalendarFormData>({
     resolver: zodResolver(calendarFormSchema),

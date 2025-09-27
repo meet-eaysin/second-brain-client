@@ -8,7 +8,9 @@ import {
   XCircle,
   AlertCircle,
   Clock,
-  WifiOff, RefreshCw, Trash2,
+  WifiOff,
+  RefreshCw,
+  Trash2,
 } from "lucide-react";
 import {
   useCalendarConnections,
@@ -17,9 +19,12 @@ import {
 import type { CalendarConnection } from "@/modules/calendar/types/calendar.types.ts";
 
 export function CalendarConnections() {
-  const { data: connections = [], isLoading: connectionsLoading } =
+  const { data: connectionsResponse, isLoading: connectionsLoading } =
     useCalendarConnections();
-  const { data: providers = [] } = useCalendarProviders();
+  const { data: providersResponse } = useCalendarProviders();
+
+  const connections = connectionsResponse?.data || [];
+  const providers = providersResponse?.data || [];
 
   const getStatusIcon = (connection: CalendarConnection) => {
     if (!connection.isActive)

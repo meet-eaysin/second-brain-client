@@ -29,16 +29,12 @@ interface DynamicNavGroupProps extends NavGroup {
 export function DynamicNavGroup({
   title,
   items,
-  onCreateCategory,
   onCreateDatabase,
 }: DynamicNavGroupProps) {
   const { state, isMobile } = useSidebar();
   const location = useLocation();
   const href = location.pathname;
-  const { databaseNavItems } = useDatabaseSidebar(
-    onCreateCategory,
-    onCreateDatabase
-  );
+  const { databaseNavItems } = useDatabaseSidebar(onCreateDatabase);
 
   // Replace the databases item with dynamic content
   const processedItems = items.map((item) => {

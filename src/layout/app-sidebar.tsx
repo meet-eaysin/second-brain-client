@@ -24,10 +24,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuthStore();
   const isSuperAdmin = user?.role === "super_admin";
 
-  const handleCreateCategory = () => {
-    setCreateCategoryDialogOpen(true);
-  };
-
   const handleCreateDatabase = () => {
     setCreateDatabaseDialogOpen(true);
   };
@@ -56,7 +52,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DynamicNavGroup
                   key={props.title}
                   {...props}
-                  onCreateCategory={handleCreateCategory}
                   onCreateDatabase={handleCreateDatabase}
                 />
               );

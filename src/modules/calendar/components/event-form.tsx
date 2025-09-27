@@ -1,7 +1,4 @@
 import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, Clock, MapPin, Users, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -30,69 +27,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { useCalendars, useCalendarConfig } from "../services/calendar-queries";
 import {
-  useCalendars,
-  useCalendarConfig,
-  useEvent,
-} from "../services/calendar-queries";
-import type { CreateEventRequest, UpdateEventRequest } from "@/modules/calendar/types/calendar.types.ts";
-
-const eventFormSchema = z.object({
-  calendarId: z.string().min(1, "CalendarTypes is required"),
-  title: z.string().min(1, "Title is required").max(200),
-  description: z.string().max(2000).optional(),
-  location: z.string().max(200).optional(),
-  startTime: z.date({ required_error: "Start time is required" }),
-  endTime: z.date({ required_error: "End time is required" }),
-  isAllDay: z.boolean().default(false),
-  timeZone: z.string().min(1, "Time zone is required"),
-  type: z
-    .enum([
-      "event",
-      "task",
-      "meeting",
-      "reminder",
-      "deadline",
-      "milestone",
-      "habit",
-      "goal_review",
-      "break",
-      "focus_time",
-      "travel",
-      "appointment",
-    ])
-    .default("event"),
-  status: z
-    .enum([
-      "confirmed",
-      "tentative",
-      "cancelled",
-      "needs_action",
-      "completed",
-      "in_progress",
-    ])
-    .default("confirmed"),
-  visibility: z.enum(["public", "private", "confidential"]).default("public"),
-  reminders: z
-    .array(
-      z.object({
-        method: z.enum(["email", "popup", "sms", "push"]),
-        minutes: z.number().min(0),
-      })
-    )
-    .optional(),
-  attendees: z
-    .array(
-      z.object({
-        email: z.string().email(),
-        name: z.string().optional(),
-        role: z.enum(["required", "optional", "resource"]).default("required"),
-      })
-    )
-    .optional(),
-});
-
-type EventFormData = z.infer<typeof eventFormSchema>;
+  type CreateEventRequest,
+  type UpdateEventRequest,
+  EEventStatus,
+  EEventVisibility,
+} from "@/modules/calendar/types/calendar.types.ts";
+import { useEventForm } from "../hooks/useEventForm";
 
 interface EventFormProps {
   eventId?: string;
@@ -117,140 +59,33 @@ export default function EventForm({
   onDelete,
   submitLabel,
 }: EventFormProps) {
-  const { data: calendars = [] } = useCalendars();
+  const { data: calendarsResponse } = useCalendars();
+  const calendars = calendarsResponse?.data || [];
   const { data: config } = useCalendarConfig();
-  const { data: existingEvent } = useEvent(eventId || "");
   const [showAdvanced, setShowAdvanced] = React.useState(false);
 
   const isEditing = !!eventId;
   const finalSubmitLabel =
     submitLabel || (isEditing ? "Update Event" : "Create Event");
 
-  const form = useForm<EventFormData>({
-    resolver: zodResolver(eventFormSchema),
-    defaultValues: {
-      calendarId: existingEvent?.calendarId || calendarId || "",
-      title: existingEvent?.title || "",
-      description: existingEvent?.description || "",
-      location: existingEvent?.location || "",
-      startTime: existingEvent
-        ? new Date(existingEvent.startTime)
-        : initialStart || new Date(),
-      endTime: existingEvent
-        ? new Date(existingEvent.endTime)
-        : initialEnd || new Date(Date.now() + 60 * 60 * 1000),
-      isAllDay: existingEvent?.isAllDay || false,
-      timeZone:
-        existingEvent?.timeZone ||
-        Intl.DateTimeFormat().resolvedOptions().timeZone,
-      type: existingEvent?.type || "event",
-      status: existingEvent?.status || "confirmed",
-      visibility: existingEvent?.visibility || "public",
-      reminders: existingEvent?.reminders || [],
-      attendees:
-        existingEvent?.attendees?.map((attendee) => ({
-          email: attendee.email,
-          name: attendee.name || "",
-          role: attendee.role,
-        })) || [],
-    },
+  const {
+    form,
+    watchedIsAllDay,
+    handleSubmit,
+    addReminder,
+    removeReminder,
+    addAttendee,
+    removeAttendee,
+  } = useEventForm({
+    eventId,
+    initialStart,
+    initialEnd,
+    calendarId,
   });
-
-  const watchedIsAllDay = form.watch("isAllDay");
-  const watchedStartTime = form.watch("startTime");
-
-  // Auto-adjust end time when start time changes
-  React.useEffect(() => {
-    if (watchedStartTime && !form.getValues("endTime")) {
-      const endTime = new Date(watchedStartTime.getTime() + 60 * 60 * 1000); // 1 hour later
-      form.setValue("endTime", endTime);
-    }
-  }, [watchedStartTime, form]);
-
-  const handleSubmit = (data: EventFormData) => {
-    if (isEditing) {
-      // Update existing event
-      const updateData: UpdateEventRequest = {
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        isAllDay: data.isAllDay,
-        timeZone: data.timeZone,
-        type: data.type,
-        status: data.status,
-        visibility: data.visibility,
-        reminders: data.reminders,
-        attendees: data.attendees?.map((attendee) => ({
-          email: attendee.email,
-          name: attendee.name,
-          status: "needs_action",
-          role: attendee.role,
-        })),
-      };
-      onSubmit(updateData);
-    } else {
-      // Create new event
-      const createData: CreateEventRequest = {
-        calendarId: data.calendarId,
-        title: data.title,
-        description: data.description,
-        location: data.location,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        isAllDay: data.isAllDay,
-        timeZone: data.timeZone,
-        type: data.type,
-        status: data.status,
-        visibility: data.visibility,
-        reminders: data.reminders,
-        attendees: data.attendees?.map((attendee) => ({
-          email: attendee.email,
-          name: attendee.name,
-          status: "needs_action",
-          role: attendee.role,
-        })),
-      };
-      onSubmit(createData);
-    }
-  };
-
-  const addReminder = () => {
-    const currentReminders = form.getValues("reminders") || [];
-    form.setValue("reminders", [
-      ...currentReminders,
-      { method: "popup", minutes: 15 },
-    ]);
-  };
-
-  const removeReminder = (index: number) => {
-    const currentReminders = form.getValues("reminders") || [];
-    form.setValue(
-      "reminders",
-      currentReminders.filter((_, i) => i !== index)
-    );
-  };
-
-  const addAttendee = () => {
-    const currentAttendees = form.getValues("attendees") || [];
-    form.setValue("attendees", [
-      ...currentAttendees,
-      { email: "", name: "", role: "required" },
-    ]);
-  };
-
-  const removeAttendee = (index: number) => {
-    const currentAttendees = form.getValues("attendees") || [];
-    form.setValue(
-      "attendees",
-      currentAttendees.filter((_, i) => i !== index)
-    );
-  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Basic Info */}
         <div className="space-y-4">
           <FormField
@@ -317,7 +152,7 @@ export default function EventForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {config?.eventTypes?.map((type) => (
+                    {config?.data?.eventTypes?.map((type) => (
                       <SelectItem key={type.value} value={type.value}>
                         <div className="flex items-center gap-2">
                           <span>{type.icon}</span>
@@ -595,7 +430,7 @@ export default function EventForm({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {config?.timeZones?.map((tz) => (
+                    {config?.data?.timeZones?.map((tz) => (
                       <SelectItem key={tz} value={tz}>
                         {tz}
                       </SelectItem>
@@ -680,9 +515,15 @@ export default function EventForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="confirmed">Confirmed</SelectItem>
-                          <SelectItem value="tentative">Tentative</SelectItem>
-                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                          <SelectItem value={EEventStatus.CONFIRMED}>
+                            Confirmed
+                          </SelectItem>
+                          <SelectItem value={EEventStatus.TENTATIVE}>
+                            Tentative
+                          </SelectItem>
+                          <SelectItem value={EEventStatus.CANCELLED}>
+                            Cancelled
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -706,9 +547,13 @@ export default function EventForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="public">Public</SelectItem>
-                          <SelectItem value="private">Private</SelectItem>
-                          <SelectItem value="confidential">
+                          <SelectItem value={EEventVisibility.PUBLIC}>
+                            Public
+                          </SelectItem>
+                          <SelectItem value={EEventVisibility.PRIVATE}>
+                            Private
+                          </SelectItem>
+                          <SelectItem value={EEventVisibility.CONFIDENTIAL}>
                             Confidential
                           </SelectItem>
                         </SelectContent>

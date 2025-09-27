@@ -3,7 +3,9 @@ import { useDatabases } from "@/modules/database-view/services/database-queries"
 import { EDatabaseType } from "@/modules/database-view/types";
 import { getDatabasesLink, getDatabaseLink } from "@/app/router/router-link";
 
-export function useDatabaseSidebar(onCreateDatabase?: () => void) {
+export function useDatabaseSidebar(
+  onCreateDatabase?: () => void
+) {
   const { data: databasesResponse } = useDatabases({
     type: EDatabaseType.CUSTOM,
   });
@@ -26,18 +28,22 @@ export function useDatabaseSidebar(onCreateDatabase?: () => void) {
         url: getDatabaseLink(database.id),
         icon: DatabaseIcon,
       })),
+      // ...(onCreateCategory
+      //   ? [
+      //       {
+      //         title: "Create Category",
+      //         url: "#",
+      //         icon: Plus,
+      //         onClick: onCreateCategory,
+      //       },
+      //     ]
+      //   : []),
       {
         title: "Create Database",
         url: "#",
         icon: Plus,
         onClick: onCreateDatabase,
       },
-      // {
-      //   title: "Create Category",
-      //   url: "#",
-      //   icon: Plus,
-      //   onClick: onCreateCategory, // Add click handler
-      // },
       // Add individual database items (limit to first 5 to avoid clutter)
     ],
   };

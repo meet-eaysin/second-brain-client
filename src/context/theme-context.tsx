@@ -70,11 +70,14 @@ export function ThemeProvider({
 
     const loadAppearanceSettings = async () => {
       try {
-        const settings = await settingsApi.getAppearance();
-        _setAppearance(settings);
-        // Also update theme if it's different
-        if (settings.theme !== theme) {
-          _setTheme(settings.theme);
+        const response = await settingsApi.getAppearance();
+        const settings = response.data;
+        if (settings) {
+          _setAppearance(settings);
+          // Also update theme if it's different
+          if (settings.theme !== theme) {
+            _setTheme(settings.theme);
+          }
         }
       } catch (error) {
         console.error("Failed to load appearance settings:", error);

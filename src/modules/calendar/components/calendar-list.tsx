@@ -43,7 +43,8 @@ export function CalendarList({
   onEditCalendar,
   onCalendarSettings,
 }: CalendarListProps) {
-  const { data: calendars = [], isLoading } = useCalendars();
+  const { data: calendarsResponse, isLoading } = useCalendars();
+  const calendars = calendarsResponse?.data || [];
   const updateCalendarMutation = useUpdateCalendar();
   const deleteCalendarMutation = useDeleteCalendar();
 

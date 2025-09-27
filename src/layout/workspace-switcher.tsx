@@ -24,7 +24,10 @@ import {
 } from "@/modules/workspaces/services/workspace-queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { WorkspaceForm } from "@/modules/workspaces/components/workspace-form";
-import type { CreateWorkspaceRequest } from "@/types/workspace.types";
+import type {
+  CreateWorkspaceRequest,
+  Workspace,
+} from "@/modules/workspaces/types/workspaces.types";
 
 export function TeamSwitcher() {
   const { isMobile } = useSidebar();
@@ -45,15 +48,34 @@ export function TeamSwitcher() {
     try {
       const response = await createWorkspaceMutation.mutateAsync(data);
       const createdWorkspace = response.data; // Extract the actual workspace from response.data
-      const userWorkspace = {
-        id: createdWorkspace._id, // API returns _id
+      const userWorkspace: Workspace = {
+        id: createdWorkspace._id,
+        _id: createdWorkspace._id,
         name: createdWorkspace.name,
         description: createdWorkspace.description,
         type: createdWorkspace.type,
-        role: "owner" as const,
-        isDefault: userWorkspaces.length === 0,
+        icon: { type: "emoji", value: "🏢" },
+        config: {
+          enableAI: true,
+          enableComments: true,
+          enableVersioning: false,
+          enablePublicSharing: true,
+          enableGuestAccess: false,
+          maxDatabases: 100,
+          maxMembers: 10,
+          storageLimit: 1073741824,
+          allowedIntegrations: [],
+          requireTwoFactor: false,
+          allowedEmailDomains: [],
+          sessionTimeout: 480,
+        },
+        isPublic: false,
+        isArchived: false,
+        ownerId: "", // Will be set by backend
         memberCount: createdWorkspace.memberCount,
         databaseCount: createdWorkspace.databaseCount,
+        recordCount: 0,
+        storageUsed: 0,
         createdAt: createdWorkspace.createdAt,
         updatedAt: createdWorkspace.updatedAt,
       };
@@ -77,10 +99,11 @@ export function TeamSwitcher() {
 
       // Update the userWorkspaces query cache to include the new workspace
       queryClient.setQueryData(WORKSPACE_KEYS.userWorkspaces(), (oldData) => {
-        if (!oldData || !oldData.data) return oldData;
+        if (!oldData) return oldData;
+        const currentData = (oldData as { data?: Workspace[] }).data || [];
         return {
           ...oldData,
-          data: [...oldData.data, userWorkspace],
+          data: [...currentData, userWorkspace],
         };
       });
 
@@ -223,7 +246,7 @@ export function TeamSwitcher() {
       <WorkspaceForm
         open={isCreateWorkspaceOpen}
         onOpenChange={setIsCreateWorkspaceOpen}
-        onSubmit={handleCreateWorkspace}
+        onCreate={handleCreateWorkspace}
         mode="create"
         isLoading={createWorkspaceMutation.isPending}
       />

@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import { authApi } from "../services/auth-api";
 import { ArrowLeft, Shield } from "lucide-react";
 import { getDashboardLink } from "@/app/router/router-link";
+import type { AxiosError } from "axios";
 
 const changePasswordSchema = z
   .object({
@@ -67,7 +68,10 @@ export const ChangePasswordPage: React.FC = () => {
       toast.success("Password changed successfully");
       navigate(getDashboardLink());
     } catch (error: unknown) {
-      toast.error(error.response?.data?.message || "Failed to change password");
+      const axiosError = error as AxiosError<{ message: string }>;
+      toast.error(
+        axiosError.response?.data?.message || "Failed to change password"
+      );
     } finally {
       setIsLoading(false);
     }

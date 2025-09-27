@@ -5,7 +5,6 @@ import { lazy } from "react";
 import {
   getAuthParentLink,
   getAppLink,
-  getDataTablesLink,
   getUsersLink,
   getNotificationsLink,
 } from "@/app/router/router-link.ts";
@@ -28,7 +27,7 @@ import {
   PublicRoute,
   ProtectedRoute,
 } from "@/app/router/lazy-components";
-import NotesPage from "@/modules/notes/pages/notes-page";
+import { NotesPage } from "@/modules/notes/pages/notes-page";
 import { SecondBrainRoutes } from "@/modules/second-brain/routes/second-brain-routes";
 import { DatabaseRoutes } from "@/modules/database/routes/database-routes";
 import HelpCenterPage from "@/modules/help-center";
