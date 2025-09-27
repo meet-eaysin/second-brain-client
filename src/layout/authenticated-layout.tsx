@@ -6,20 +6,16 @@ import { Outlet } from "react-router-dom";
 import { AppSidebar } from "@/layout/app-sidebar.tsx";
 import { PageVisitTracker } from "@/modules/home/components/page-visit-tracker";
 import { WorkspaceSetupWizard } from "@/modules/workspaces/components/workspace-setup-wizard";
+import { SetupWrapper } from "@/modules/admin/components/setup-wrapper";
 import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import { WORKSPACE_DEPENDENT_QUERIES } from "@/modules/workspaces/services/workspace-queries";
-import { SetupWrapper } from "@/modules/admin/components/setup-wrapper";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { LoadingSpinner } from "@/components/loading-spinner";
 import React from "react";
 import type { Workspace } from "@/modules/workspaces/types/workspaces.types.ts";
 
-interface Props {
-  children?: React.ReactNode;
-}
-
-function AuthenticatedLayout({ children }: Props) {
+function AuthenticatedLayout() {
   const defaultOpen = true; // Always default to open
   const {
     showWorkspaceSetupWizard,
@@ -131,34 +127,35 @@ function AuthenticatedLayout({ children }: Props) {
   };
 
   return (
-    <SearchProvider>
-      <SidebarProvider defaultOpen={defaultOpen}>
-        <SkipToMain />
-        <PageVisitTracker />
-        <AppSidebar />
-        <div
-          id="content"
-          className={cn(
-            "ml-auto w-full max-w-full overflow-x-hidden",
-            "peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]",
-            "peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))]",
-            "sm:transition-[width] sm:duration-200 sm:ease-linear",
-            "flex h-svh flex-col",
-            "group-data-[scroll-locked=1]/body:h-full",
-            "has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh"
-          )}
-        >
-          {children ? children : <Outlet />}
-          <SetupWrapper />
-        </div>
+    <SetupWrapper>
+      <SearchProvider>
+        <SidebarProvider defaultOpen={defaultOpen}>
+          <SkipToMain />
+          <PageVisitTracker />
+          <AppSidebar />
+          <div
+            id="content"
+            className={cn(
+              "ml-auto w-full max-w-full overflow-x-hidden",
+              "peer-data-[state=collapsed]:w-[calc(100%-var(--sidebar-width-icon)-1rem)]",
+              "peer-data-[state=expanded]:w-[calc(100%-var(--sidebar-width))]",
+              "sm:transition-[width] sm:duration-200 sm:ease-linear",
+              "flex h-svh flex-col",
+              "group-data-[scroll-locked=1]/body:h-full",
+              "has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh"
+            )}
+          >
+             <Outlet />
+          </div>
 
-        <WorkspaceSetupWizard
-          open={shouldShowWizard || showWorkspaceSetupWizard}
-          onComplete={handleWorkspaceComplete}
-          size="xl"
-        />
-      </SidebarProvider>
-    </SearchProvider>
+          <WorkspaceSetupWizard
+            open={shouldShowWizard || showWorkspaceSetupWizard}
+            onComplete={handleWorkspaceComplete}
+            size="xl"
+          />
+        </SidebarProvider>
+      </SearchProvider>
+    </SetupWrapper>
   );
 }
 

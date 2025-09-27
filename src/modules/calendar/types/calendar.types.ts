@@ -1,4 +1,3 @@
-
 export enum ECalendarProvider {
   INTERNAL = "internal",
   GOOGLE = "google",

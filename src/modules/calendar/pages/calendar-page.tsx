@@ -44,8 +44,9 @@ import { CalendarConnections } from "@/modules/calendar/components/calendar-conn
 import ShadcnBigCalendarComponent from "@/modules/calendar/components/schedule-x-calendar";
 import EventForm from "@/modules/calendar/components/event-form";
 import type {
-  CalendarTypes,
-  CreateEventRequest, UpdateEventRequest,
+  Calendar,
+  CreateEventRequest,
+  UpdateEventRequest,
 } from "@/modules/calendar/types/calendar.types";
 import { toast } from "sonner";
 import { CalendarSkeleton } from "@/modules/calendar/components/calendar-skeleton";
@@ -55,9 +56,7 @@ export default function CalendarPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateCalendar, setShowCreateCalendar] = useState(false);
-  const [editingCalendar, setEditingCalendar] = useState<CalendarTypes | null>(
-    null
-  );
+  const [editingCalendar, setEditingCalendar] = useState<Calendar | null>(null);
   const [eventStartTime, setEventStartTime] = useState<Date | undefined>();
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -110,7 +109,7 @@ export default function CalendarPage() {
     setShowCreateCalendar(true);
   };
 
-  const handleEditCalendar = (calendar: CalendarTypes) => {
+  const handleEditCalendar = (calendar: Calendar) => {
     setEditingCalendar(calendar);
     setShowCreateCalendar(true);
   };
@@ -212,7 +211,6 @@ export default function CalendarPage() {
       <EnhancedHeader contextActions={contextActions} />
 
       <Main className="space-y-8">
-        {/* CalendarTypes Header */}
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
@@ -234,7 +232,6 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Button
             onClick={() => setActiveTab("calendar")}
@@ -488,7 +485,6 @@ export default function CalendarPage() {
               </Card>
             </div>
 
-            {/* Events by CalendarTypes - Compact */}
             {stats?.byCalendar && Object.keys(stats.byCalendar).length > 0 && (
               <Card>
                 <CardHeader className="pb-3">
@@ -694,7 +690,6 @@ export default function CalendarPage() {
               </CardContent>
             </Card>
 
-            {/* CalendarTypes Management */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

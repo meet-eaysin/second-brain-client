@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/kibo-ui/gantt";
 import { useTodayEvents } from "@/modules/calendar/services/calendar-queries";
 import { useUpdateEvent } from "@/modules/calendar/services/calendar-queries";
-import  {
+import {
   type CalendarEvent,
   EEventType,
 } from "@/modules/calendar/types/calendar.types.ts";
@@ -287,7 +287,6 @@ export function HomePage() {
             </div>
           </div>
 
-          {/* Time-blocking CalendarTypes Preview Skeleton */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="h-6 w-40 bg-muted animate-pulse rounded flex items-center gap-2">
@@ -409,7 +408,6 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* Time-blocking CalendarTypes Preview */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold flex items-center gap-2">

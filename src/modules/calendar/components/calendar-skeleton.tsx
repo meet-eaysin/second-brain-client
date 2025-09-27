@@ -44,9 +44,7 @@ export function CalendarSkeleton() {
             ))}
           </div>
 
-          {/* CalendarTypes Layout */}
           <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            {/* CalendarTypes List - Sidebar */}
             <div className="xl:col-span-3">
               <Card>
                 <CardHeader>
@@ -64,7 +62,6 @@ export function CalendarSkeleton() {
               </Card>
             </div>
 
-            {/* Main CalendarTypes */}
             <div className="xl:col-span-9">
               <Card>
                 <CardContent className="p-6">

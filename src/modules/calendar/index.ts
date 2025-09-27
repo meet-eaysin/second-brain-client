@@ -1,10 +1,7 @@
-// CalendarTypes module exports
 export { default as CalendarPage } from "./pages/calendar-page";
 
-// Services
 export { calendarApi } from "./services/calendar-api.ts";
 
-// Queries and Mutations
 export {
   CALENDAR_KEYS,
   useCalendars,
@@ -33,7 +30,6 @@ export {
   useSyncTimeRelatedModules,
 } from "./services/calendar-queries";
 
-// Components
 export { default as EventForm } from "./components/event-form";
 export { default as ShadcnBigCalendarComponent } from "./components/schedule-x-calendar";
 export { CalendarList } from "./components/calendar-list";
@@ -41,5 +37,4 @@ export { CalendarForm } from "./components/calendar-form";
 export { CalendarConnections } from "./components/calendar-connections";
 export { ConnectCalendarForm } from "./components/connect-calendar-form";
 
-// Types
 export type * from "@/modules/calendar/types/calendar.types.ts";

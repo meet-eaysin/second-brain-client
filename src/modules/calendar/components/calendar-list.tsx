@@ -25,14 +25,14 @@ import {
   useUpdateCalendar,
   useDeleteCalendar,
 } from "@/modules/calendar/services/calendar-queries";
-import type { CalendarTypes } from "@/modules/calendar/types/calendar.types.ts";
+import type { Calendar } from "@/modules/calendar/types/calendar.types.ts";
 import { toast } from "sonner";
 
 interface CalendarListProps {
   selectedCalendars: string[];
   onCalendarSelectionChange: (calendarIds: string[]) => void;
   onCreateCalendar: () => void;
-  onEditCalendar: (calendar: CalendarTypes) => void;
+  onEditCalendar: (calendar: Calendar) => void;
   onCalendarSettings: () => void;
 }
 
@@ -58,7 +58,7 @@ export function CalendarList({
     }
   };
 
-  const handleVisibilityToggle = async (calendar: CalendarTypes) => {
+  const handleVisibilityToggle = async (calendar: Calendar) => {
     try {
       await updateCalendarMutation.mutateAsync({
         calendarId: calendar.id,
@@ -70,7 +70,7 @@ export function CalendarList({
     }
   };
 
-  const handleSetAsDefault = async (calendar: CalendarTypes) => {
+  const handleSetAsDefault = async (calendar: Calendar) => {
     try {
       await updateCalendarMutation.mutateAsync({
         calendarId: calendar.id,
@@ -82,7 +82,7 @@ export function CalendarList({
     }
   };
 
-  const handleDeleteCalendar = async (calendar: CalendarTypes) => {
+  const handleDeleteCalendar = async (calendar: Calendar) => {
     if (
       !confirm(
         `Are you sure you want to delete "${calendar.name}"? This will also delete all events in this calendar.`
@@ -93,7 +93,7 @@ export function CalendarList({
 
     try {
       await deleteCalendarMutation.mutateAsync(calendar.id);
-      toast.success("CalendarTypes deleted successfully");
+      toast.success("Calendar deleted successfully");
     } catch {
       toast.error("Failed to delete calendar");
     }

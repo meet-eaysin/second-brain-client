@@ -24,7 +24,9 @@ import type {
 import type { ApiResponse } from "@/types/api.types";
 
 export const calendarApi = {
-  getCalendars: async (includeHidden = false): Promise<ApiResponse<CalendarTypes[]>> => {
+  getCalendars: async (
+    includeHidden = false
+  ): Promise<ApiResponse<CalendarTypes[]>> => {
     const response = await apiClient.get<ApiResponse<CalendarTypes[]>>(
       API_ENDPOINTS.CALENDAR.LIST,
       { params: { includeHidden } }
@@ -32,7 +34,9 @@ export const calendarApi = {
     return response.data;
   },
 
-  createCalendar: async (data: CreateCalendarRequest): Promise<ApiResponse<CalendarTypes>> => {
+  createCalendar: async (
+    data: CreateCalendarRequest
+  ): Promise<ApiResponse<CalendarTypes>> => {
     const response = await apiClient.post<ApiResponse<CalendarTypes>>(
       API_ENDPOINTS.CALENDAR.CREATE,
       data
@@ -63,7 +67,9 @@ export const calendarApi = {
   },
 
   // Event operations
-  getEvents: async (query?: CalendarEventsQuery): Promise<ApiResponse<CalendarEvent[]>> => {
+  getEvents: async (
+    query?: CalendarEventsQuery
+  ): Promise<ApiResponse<CalendarEvent[]>> => {
     const response = await apiClient.get<ApiResponse<CalendarEvent[]>>(
       API_ENDPOINTS.CALENDAR.EVENTS,
       { params: query }
@@ -71,7 +77,9 @@ export const calendarApi = {
     return response.data;
   },
 
-  createEvent: async (data: CreateEventRequest): Promise<ApiResponse<CalendarEvent>> => {
+  createEvent: async (
+    data: CreateEventRequest
+  ): Promise<ApiResponse<CalendarEvent>> => {
     const response = await apiClient.post<ApiResponse<CalendarEvent>>(
       API_ENDPOINTS.CALENDAR.EVENTS,
       data
@@ -119,7 +127,10 @@ export const calendarApi = {
     return response.data;
   },
 
-  searchEvents: async (query: string, limit = 50): Promise<ApiResponse<CalendarEvent[]>> => {
+  searchEvents: async (
+    query: string,
+    limit = 50
+  ): Promise<ApiResponse<CalendarEvent[]>> => {
     const response = await apiClient.get<ApiResponse<CalendarEvent[]>>(
       API_ENDPOINTS.CALENDAR.EVENTS_SEARCH,
       { params: { q: query, limit } }
@@ -137,7 +148,6 @@ export const calendarApi = {
     return response.data;
   },
 
-  // CalendarTypes views and stats
   getCalendarView: async (
     view: CalendarView
   ): Promise<ApiResponse<CalendarViewResponse>> => {
@@ -173,12 +183,14 @@ export const calendarApi = {
     return response.data;
   },
 
-  getCalendarConfig: async (): Promise<ApiResponse<{
-    timeZones: string[];
-    presetColors: string[];
-    eventTypes: { value: string; label: string; icon: string }[];
-    calendarTypes: { value: string; label: string }[];
-  }>> => {
+  getCalendarConfig: async (): Promise<
+    ApiResponse<{
+      timeZones: string[];
+      presetColors: string[];
+      eventTypes: { value: string; label: string; icon: string }[];
+      calendarTypes: { value: string; label: string }[];
+    }>
+  > => {
     const response = await apiClient.get<
       ApiResponse<{
         timeZones: string[];
@@ -190,30 +202,32 @@ export const calendarApi = {
     return response.data;
   },
 
-  getCalendarPreferences: async (): Promise<ApiResponse<{
-    userId: string;
-    defaultCalendarId?: string;
-    timeZone: string;
-    displayPreferences: {
-      showWeekends: boolean;
-      showDeclinedEvents: boolean;
-      use24HourFormat: boolean;
-    };
-    syncSettings: {
-      autoSyncEnabled: boolean;
-      syncFrequency: number;
-      conflictResolution: "local" | "remote" | "manual";
-    };
-    notificationSettings: {
-      emailNotifications: boolean;
-      pushNotifications: boolean;
-      smsNotifications: boolean;
-      defaultEmailReminder: number;
-      defaultPopupReminder: number;
-    };
-    createdAt: string;
-    updatedAt: string;
-  }>> => {
+  getCalendarPreferences: async (): Promise<
+    ApiResponse<{
+      userId: string;
+      defaultCalendarId?: string;
+      timeZone: string;
+      displayPreferences: {
+        showWeekends: boolean;
+        showDeclinedEvents: boolean;
+        use24HourFormat: boolean;
+      };
+      syncSettings: {
+        autoSyncEnabled: boolean;
+        syncFrequency: number;
+        conflictResolution: "local" | "remote" | "manual";
+      };
+      notificationSettings: {
+        emailNotifications: boolean;
+        pushNotifications: boolean;
+        smsNotifications: boolean;
+        defaultEmailReminder: number;
+        defaultPopupReminder: number;
+      };
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > => {
     const response = await apiClient.get<
       ApiResponse<{
         userId: string;
@@ -263,30 +277,32 @@ export const calendarApi = {
       defaultEmailReminder?: number;
       defaultPopupReminder?: number;
     };
-  }): Promise<ApiResponse<{
-    userId: string;
-    defaultCalendarId?: string;
-    timeZone: string;
-    displayPreferences: {
-      showWeekends: boolean;
-      showDeclinedEvents: boolean;
-      use24HourFormat: boolean;
-    };
-    syncSettings: {
-      autoSyncEnabled: boolean;
-      syncFrequency: number;
-      conflictResolution: "local" | "remote" | "manual";
-    };
-    notificationSettings: {
-      emailNotifications: boolean;
-      pushNotifications: boolean;
-      smsNotifications: boolean;
-      defaultEmailReminder: number;
-      defaultPopupReminder: number;
-    };
-    createdAt: string;
-    updatedAt: string;
-  }>> => {
+  }): Promise<
+    ApiResponse<{
+      userId: string;
+      defaultCalendarId?: string;
+      timeZone: string;
+      displayPreferences: {
+        showWeekends: boolean;
+        showDeclinedEvents: boolean;
+        use24HourFormat: boolean;
+      };
+      syncSettings: {
+        autoSyncEnabled: boolean;
+        syncFrequency: number;
+        conflictResolution: "local" | "remote" | "manual";
+      };
+      notificationSettings: {
+        emailNotifications: boolean;
+        pushNotifications: boolean;
+        smsNotifications: boolean;
+        defaultEmailReminder: number;
+        defaultPopupReminder: number;
+      };
+      createdAt: string;
+      updatedAt: string;
+    }>
+  > => {
     const response = await apiClient.put<
       ApiResponse<{
         userId: string;
@@ -409,7 +425,9 @@ export const calendarApi = {
     return response.data;
   },
 
-  getCalendarConnectionsStats: async (): Promise<ApiResponse<CalendarConnectionStats>> => {
+  getCalendarConnectionsStats: async (): Promise<
+    ApiResponse<CalendarConnectionStats>
+  > => {
     const response = await apiClient.get<ApiResponse<CalendarConnectionStats>>(
       API_ENDPOINTS.CALENDAR.CONNECTIONS_STATS
     );

@@ -402,7 +402,6 @@ export const API_ENDPOINTS = {
     RESET: "/settings/reset",
   },
   CALENDAR: {
-    // CalendarTypes CRUD
     LIST: "/calendar",
     CREATE: "/calendar",
     BY_ID: (id: string) => `/calendar/${id}`,

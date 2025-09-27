@@ -33,7 +33,7 @@ import {
   useUpdateCalendar,
   useCalendarConfig,
 } from "../services/calendar-queries";
-import type { CalendarTypes } from "@/modules/calendar/types/calendar.types.ts";
+import type { Calendar } from "@/modules/calendar/types/calendar.types.ts";
 import { ECalendarType } from "@/modules/calendar/types/calendar.types.ts";
 import { toast } from "sonner";
 
@@ -52,7 +52,7 @@ type CalendarFormData = z.infer<typeof calendarFormSchema>;
 interface CalendarFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  calendar?: CalendarTypes | null;
+  calendar?: Calendar | null;
   onSuccess?: () => void;
 }
 
@@ -124,10 +124,10 @@ export function CalendarForm({
           calendarId: calendar.id,
           data,
         });
-        toast.success("CalendarTypes updated successfully");
+        toast.success("Calendar updated successfully");
       } else {
         await createCalendarMutation.mutateAsync(data);
-        toast.success("CalendarTypes created successfully");
+        toast.success("Calendar created successfully");
       }
 
       onOpenChange(false);
@@ -146,7 +146,7 @@ export function CalendarForm({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit CalendarTypes" : "Create New CalendarTypes"}
+            {isEditing ? "Edit Calendar" : "Create New Calendar"}
           </DialogTitle>
         </DialogHeader>
 
@@ -159,7 +159,7 @@ export function CalendarForm({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="My CalendarTypes" {...field} />
+                    <Input placeholder="My Calendar" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,7 +174,7 @@ export function CalendarForm({
                   <FormLabel>Description (Optional)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="CalendarTypes description..."
+                      placeholder="Calendar description..."
                       className="resize-none"
                       {...field}
                     />
@@ -330,8 +330,8 @@ export function CalendarForm({
                 updateCalendarMutation.isPending
                   ? "Saving..."
                   : isEditing
-                  ? "Update CalendarTypes"
-                  : "Create CalendarTypes"}
+                  ? "Update Calendar"
+                  : "Create Calendar"}
               </Button>
             </DialogFooter>
           </form>

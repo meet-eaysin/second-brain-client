@@ -29,7 +29,7 @@ The Second Brain Client is a modern, responsive React application that serves as
 - **Database Management**: Notion-like database system with custom properties and views
 - **Task Management**: Complete task tracking with priorities, assignees, and time management
 - **Rich Text Editing**: Advanced note-taking with TipTap editor and rich formatting
-- **CalendarTypes Integration**: Full calendar functionality with external service integration
+- **Calendar Integration**: Full calendar functionality with external service integration
 - **Advanced Search**: Global search across all content with fuzzy matching
 - **AI Assistant**: Integrated AI features for content generation and assistance
 - **Real-time Updates**: WebSocket-based real-time notifications and updates
@@ -120,7 +120,7 @@ yarn build:analyze       # Build and analyze bundle
 - **UI Components**: Radix UI primitives with custom components
 - **Forms**: React Hook Form with Zod validation
 - **Charts**: Recharts for data visualization
-- **CalendarTypes**: React Big CalendarTypes for calendar functionality
+- **Calendar**: React Big Calendar for calendar functionality
 - **Rich Text**: TipTap editor with extensions
 - **Icons**: Lucide React and Tabler Icons
 - **Testing**: Vitest with React Testing Library
@@ -183,7 +183,7 @@ src/
 │   ├── ai-assistant/    # AI assistant functionality
 │   ├── auth/           # Authentication system
 │   ├── books/          # Book management
-│   ├── calendar/       # CalendarTypes integration
+│   ├── calendar/       # Calendar integration
 │   ├── categories/     # Content categorization
 │   ├── core/           # Core types and utilities
 │   ├── dashboard/      # Dashboard views
@@ -227,6 +227,7 @@ The application follows a modular component architecture:
 ## Key Features & Modules
 
 ### Authentication System
+
 - Email/password authentication
 - Google OAuth integration
 - JWT token management
@@ -234,6 +235,7 @@ The application follows a modular component architecture:
 - User registration and login flows
 
 ### Database Management
+
 - Notion-like database creation and management
 - Custom property types (text, number, select, date, etc.)
 - Multiple view types (table, board, list, calendar, gallery)
@@ -241,6 +243,7 @@ The application follows a modular component architecture:
 - Real-time collaboration
 
 ### Task Management
+
 - Comprehensive task tracking
 - Priority levels and status management
 - Time tracking and estimation
@@ -249,25 +252,29 @@ The application follows a modular component architecture:
 - Project integration
 
 ### Rich Text Editor
+
 - TipTap-based rich text editing
 - Code syntax highlighting
 - Table support
 - Image and file embedding
 - Collaborative editing capabilities
 
-### CalendarTypes Integration
+### Calendar Integration
+
 - Full calendar functionality
 - External calendar service integration
 - Event management and scheduling
 - Time blocking and reminders
 
 ### Search & Discovery
+
 - Global search across all content
 - Fuzzy matching and filters
 - Recent searches and suggestions
 - Advanced query capabilities
 
 ### AI Assistant
+
 - Content generation and suggestions
 - Smart categorization and tagging
 - Writing assistance and proofreading
@@ -276,11 +283,11 @@ The application follows a modular component architecture:
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable            | Description          | Default                        |
+| ------------------- | -------------------- | ------------------------------ |
 | `VITE_API_BASE_URL` | Backend API base URL | `http://localhost:5000/api/v1` |
-| `VITE_APP_NAME` | Application name | `Second Brain` |
-| `VITE_APP_VERSION` | Application version | `1.0.0` |
+| `VITE_APP_NAME`     | Application name     | `Second Brain`                 |
+| `VITE_APP_VERSION`  | Application version  | `1.0.0`                        |
 
 ### Build Configuration
 
@@ -407,7 +414,7 @@ This project is licensed under the ISC License. See the [LICENSE](LICENSE) file 
 
 Built with ❤️ by [Eaysin Arafat](https://github.com/meet-eaysin)
 
-*"Transforming how we capture, organize, and leverage personal knowledge"*
+_"Transforming how we capture, organize, and leverage personal knowledge"_
 
 ---
 

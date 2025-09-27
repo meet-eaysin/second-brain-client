@@ -33,7 +33,6 @@ export const CALENDAR_KEYS = {
   providers: () => [...CALENDAR_KEYS.connections(), "providers"] as const,
 };
 
-// CalendarTypes Queries
 export const useCalendars = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.lists(),
@@ -85,7 +84,6 @@ export const useTodayEvents = () => {
   });
 };
 
-// CalendarTypes Stats
 export const useCalendarStats = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.stats(),
@@ -94,7 +92,6 @@ export const useCalendarStats = () => {
   });
 };
 
-// CalendarTypes Config
 export const useCalendarConfig = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.config(),
@@ -103,7 +100,6 @@ export const useCalendarConfig = () => {
   });
 };
 
-// CalendarTypes Preferences
 export const useCalendarPreferences = () => {
   return useQuery({
     queryKey: CALENDAR_KEYS.preferences(),
@@ -112,7 +108,6 @@ export const useCalendarPreferences = () => {
   });
 };
 
-// CalendarTypes Connections
 export const useCalendarConnections = (activeOnly = true) => {
   return useQuery({
     queryKey: [...CALENDAR_KEYS.connections(), { activeOnly }],
@@ -146,7 +141,6 @@ export const useCalendarConnectionStats = () => {
   });
 };
 
-// CalendarTypes Mutations
 export const useCreateCalendar = () => {
   const queryClient = useQueryClient();
 
