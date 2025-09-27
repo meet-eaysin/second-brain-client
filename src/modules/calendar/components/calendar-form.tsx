@@ -33,7 +33,7 @@ import {
   useUpdateCalendar,
   useCalendarConfig,
 } from "../services/calendar-queries";
-import type { Calendar } from "@/modules/calendar/types/calendar.types.ts";
+import type { CalendarTypes } from "@/modules/calendar/types/calendar.types";
 import { ECalendarType } from "@/modules/calendar/types/calendar.types.ts";
 import { toast } from "sonner";
 
@@ -52,7 +52,7 @@ type CalendarFormData = z.infer<typeof calendarFormSchema>;
 interface CalendarFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  calendar?: Calendar | null;
+  calendar?: CalendarTypes | null;
   onSuccess?: () => void;
 }
 

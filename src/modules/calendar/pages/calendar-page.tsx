@@ -44,7 +44,7 @@ import { CalendarConnections } from "@/modules/calendar/components/calendar-conn
 import ShadcnBigCalendarComponent from "@/modules/calendar/components/schedule-x-calendar";
 import EventForm from "@/modules/calendar/components/event-form";
 import type {
-  Calendar,
+  CalendarTypes,
   CreateEventRequest,
   UpdateEventRequest,
 } from "@/modules/calendar/types/calendar.types";
@@ -56,7 +56,9 @@ export default function CalendarPage() {
   const [activeTab, setActiveTab] = useState("calendar");
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [showCreateCalendar, setShowCreateCalendar] = useState(false);
-  const [editingCalendar, setEditingCalendar] = useState<Calendar | null>(null);
+  const [editingCalendar, setEditingCalendar] = useState<CalendarTypes | null>(
+    null
+  );
   const [eventStartTime, setEventStartTime] = useState<Date | undefined>();
   const [eventEndTime, setEventEndTime] = useState<Date | undefined>();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -109,7 +111,7 @@ export default function CalendarPage() {
     setShowCreateCalendar(true);
   };
 
-  const handleEditCalendar = (calendar: Calendar) => {
+  const handleEditCalendar = (calendar: CalendarTypes) => {
     setEditingCalendar(calendar);
     setShowCreateCalendar(true);
   };
@@ -293,9 +295,7 @@ export default function CalendarPage() {
         {/* Content based on active tab */}
         {activeTab === "calendar" && (
           <div className="space-y-8">
-            {/* Calendar Layout */}
             <div className="grid grid-cols-1 xl:grid-cols-12">
-              {/* Calendar List - Compact Sidebar */}
               <div className="xl:col-span-3">
                 <div className="sticky top-6 h-full">
                   <CalendarList
@@ -308,7 +308,6 @@ export default function CalendarPage() {
                 </div>
               </div>
 
-              {/* Main Calendar - Full Width */}
               <div className="xl:col-span-9">
                 <div className="bg-card rounded-lg border overflow-hidden">
                   <ShadcnBigCalendarComponent
