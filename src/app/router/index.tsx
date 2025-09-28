@@ -34,12 +34,17 @@ import HelpCenterPage from "@/modules/help-center";
 import AdminDashboardPage from "@/modules/admin/pages/admin-dashboard-page";
 import AdminUsersPage from "@/modules/admin/pages/admin-users-page";
 import SetupPage from "@/modules/admin/pages/setup-page";
+import { RootRedirect } from "./root-redirect";
 
 const UnauthorizedPage = lazy(
   () => import("@/modules/auth/pages/unauthorized-page")
 );
 
 const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <RootRedirect />,
+  },
   {
     path: "/setup",
     element: <SetupPage />,
