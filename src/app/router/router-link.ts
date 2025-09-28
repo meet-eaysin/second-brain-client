@@ -46,5 +46,21 @@ export const getAdminLink = () => "/app/admin";
 export const getAdminUsersLink = () => "/app/admin/users";
 export const getAdminStatsLink = () => "/app/admin/stats";
 
+// Second Brain routes
+export const getSecondBrainLink = () => "/app/second-brain";
+export const getSecondBrainDashboardLink = () => "/app/second-brain/dashboard";
+export const getTasksLink = () => "/app/second-brain/tasks";
+export const getNotesLink = () => "/app/second-brain/notes";
+export const getPeopleLink = () => "/app/second-brain/people";
+export const getFinancesLink = () => "/app/second-brain/finances";
+export const getJournalLink = () => "/app/second-brain/journal";
+
+// PARA routes
+export const getPARALink = () => "/app/second-brain/para";
+export const getPARAProjectsLink = () => "/app/second-brain/para/projects";
+export const getPARAAreasLink = () => "/app/second-brain/para/areas";
+export const getPARAResourcesLink = () => "/app/second-brain/para/resources";
+export const getPARAArchiveLink = () => "/app/second-brain/para/archive";
+
 // Social routes
 export const getSocialLink = () => "/social";

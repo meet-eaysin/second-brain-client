@@ -183,7 +183,6 @@ export function TeamSwitcher() {
                       onClick={() =>
                         switchWorkspaceMutation.mutate({
                           workspaceId: workspace.id,
-                          workspaces: userWorkspaces,
                         })
                       }
                       className="gap-2 p-2"

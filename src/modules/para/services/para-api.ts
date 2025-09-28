@@ -1,4 +1,5 @@
 import { apiClient } from "@/services/api-client.ts";
+import { API_ENDPOINTS } from "@/constants/api-endpoints";
 import type { ApiResponse } from "@/types/api.types";
 import {
   type IParaItem,
@@ -10,9 +11,14 @@ import {
   type IParaQueryParams,
   type IMoveToArchiveRequest,
   type IRestoreFromArchiveRequest,
-  type IParaCategorizeRequest, EParaReviewFrequency,
+  type IParaCategorizeRequest,
+  EParaReviewFrequency,
 } from "@/modules/para/types/para.types";
-import { EParaCategory, EParaStatus, EParaPriority } from "@/modules/para/types/para.types";
+import {
+  EParaCategory,
+  EParaStatus,
+  EParaPriority,
+} from "@/modules/para/types/para.types";
 
 const mockParaItems: (IParaItem | IParaArea)[] = [
   {
@@ -93,134 +99,6 @@ const mockParaItems: (IParaItem | IParaArea)[] = [
   } as IParaArea,
 ];
 
-const mockParaStats: IParaStats = {
-  totalItems: 24,
-  byCategory: {
-    [EParaCategory.PROJECTS]: 8,
-    [EParaCategory.AREAS]: 6,
-    [EParaCategory.RESOURCES]: 7,
-    [EParaCategory.ARCHIVE]: 3,
-  },
-  byStatus: {
-    [EParaStatus.ACTIVE]: {
-      [EParaCategory.PROJECTS]: 6,
-      [EParaCategory.AREAS]: 5,
-      [EParaCategory.RESOURCES]: 5,
-      [EParaCategory.ARCHIVE]: 0,
-    },
-    [EParaStatus.INACTIVE]: {
-      [EParaCategory.PROJECTS]: 1,
-      [EParaCategory.AREAS]: 1,
-      [EParaCategory.RESOURCES]: 0,
-      [EParaCategory.ARCHIVE]: 0,
-    },
-    [EParaStatus.COMPLETED]: {
-      [EParaCategory.PROJECTS]: 1,
-      [EParaCategory.AREAS]: 0,
-      [EParaCategory.RESOURCES]: 1,
-      [EParaCategory.ARCHIVE]: 0,
-    },
-    [EParaStatus.ON_HOLD]: {
-      [EParaCategory.PROJECTS]: 0,
-      [EParaCategory.AREAS]: 0,
-      [EParaCategory.RESOURCES]: 1,
-      [EParaCategory.ARCHIVE]: 0,
-    },
-    [EParaStatus.ARCHIVED]: {
-      [EParaCategory.PROJECTS]: 0,
-      [EParaCategory.AREAS]: 0,
-      [EParaCategory.RESOURCES]: 0,
-      [EParaCategory.ARCHIVE]: 1,
-    },
-  },
-  byPriority: {
-    [EParaPriority.LOW]: 5,
-    [EParaPriority.MEDIUM]: 12,
-    [EParaPriority.HIGH]: 6,
-    [EParaPriority.CRITICAL]: 1,
-  },
-  areas: {
-    total: 6,
-    byType: {
-      professional: 3,
-      personal: 2,
-      health: 1,
-    },
-    maintenanceOverdue: 2,
-    reviewsOverdue: 1,
-  },
-  archives: {
-    total: 3,
-    byOriginalCategory: {
-      [EParaCategory.PROJECTS]: 1,
-      [EParaCategory.AREAS]: 1,
-      [EParaCategory.RESOURCES]: 1,
-      [EParaCategory.ARCHIVE]: 0,
-    },
-    byArchiveReason: {
-      completed: 2,
-      no_longer_relevant: 1,
-    },
-    recentlyArchived: 1,
-  },
-  linkedItems: {
-    projects: 12,
-    resources: 8,
-    tasks: 15,
-    notes: 6,
-    goals: 4,
-    people: 3,
-  },
-  reviewsOverdue: 3,
-  reviewsDueThisWeek: 5,
-  completionRates: {
-    projects: 75,
-    areas: 60,
-  },
-  recentlyCreated: [
-    {
-      id: "recent1",
-      title: "Mobile App Development",
-      category: EParaCategory.PROJECTS,
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    },
-    {
-      id: "recent2",
-      title: "Health & Fitness Tracking",
-      category: EParaCategory.AREAS,
-      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    },
-  ],
-  recentlyArchived: [
-    {
-      id: "archived1",
-      title: "Old Marketing Campaign",
-      originalCategory: EParaCategory.PROJECTS,
-      archivedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    },
-  ],
-};
-
-// Helper function to handle API calls with fallback to mock data
-const apiCallWithFallback = async (
-  apiCall: () => Promise<any>,
-  fallbackData: any
-) => {
-  try {
-    const response = await apiCall();
-    return response;
-  } catch (error) {
-    if (import.meta.env.DEV) {
-      console.warn("🔄 PARA API call failed, using mock data:", error);
-      console.warn(
-        "📍 This suggests the server endpoint may not be implemented yet"
-      );
-      return fallbackData;
-    }
-    throw error;
-  }
-};
-
 // PARA API Service
 export const paraApi = {
   // ===== PARA ITEM CRUD OPERATIONS =====
@@ -229,33 +107,21 @@ export const paraApi = {
   createParaItem: async (
     data: ICreateParaItemRequest
   ): Promise<IParaItem | IParaArea | IParaArchive> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .post<ApiResponse<IParaItem>>("/second-brain/para", data)
-          .then((res) => res.data.data),
-      {
-        ...data,
-        id: Date.now().toString(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy: "user1",
-        updatedBy: "user1",
-      }
+    const response = await apiClient.post<ApiResponse<IParaItem>>(
+      "/para",
+      data
     );
+    return response.data.data;
   },
 
   // Get PARA items with optional filtering
   getParaItems: async (
     params?: IParaQueryParams
   ): Promise<(IParaItem | IParaArea | IParaArchive)[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/second-brain/para", { params })
-          .then((res) => res.data.data),
-      mockParaItems
-    );
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>("/para", {
+      params,
+    });
+    return response.data.data;
   },
 
   // Get a single PARA item by ID
@@ -265,7 +131,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem>>(`/second-brain/para/${id}`)
+          .get<ApiResponse<IParaItem>>(`/para/${id}`)
           .then((res) => res.data.data),
       mockParaItems.find((item) => item.id === id) || mockParaItems[0]
     );
@@ -279,7 +145,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .put<ApiResponse<IParaItem>>(`/second-brain/para/${id}`, data)
+          .put<ApiResponse<IParaItem>>(`/para/${id}`, data)
           .then((res) => res.data.data),
       {
         ...mockParaItems.find((item) => item.id === id),
@@ -295,7 +161,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .delete<ApiResponse<void>>(`/second-brain/para/${id}`)
+          .delete<ApiResponse<void>>(`/para/${id}`)
           .then((res) => res.data.data),
       undefined
     );
@@ -303,13 +169,11 @@ export const paraApi = {
 
   // Get PARA statistics
   getParaStats: async (params?: IParaQueryParams): Promise<IParaStats> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaStats>>("/second-brain/para/stats", { params })
-          .then((res) => res.data.data),
-      mockParaStats
+    const response = await apiClient.get<ApiResponse<IParaStats>>(
+      API_ENDPOINTS.PARA.STATS,
+      { params }
     );
+    return response.data.data;
   },
 
   // Search PARA items
@@ -320,7 +184,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>("/second-brain/para/search", {
+          .get<ApiResponse<IParaItem[]>>("/para/search", {
             params: { ...params, query },
           })
           .then((res) => res.data.data),
@@ -339,10 +203,9 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>(
-            "/second-brain/para/categories/projects",
-            { params }
-          )
+          .get<ApiResponse<IParaItem[]>>("/para/categories/projects", {
+            params,
+          })
           .then((res) => res.data.data),
       mockParaItems.filter((item) => item.category === EParaCategory.PROJECTS)
     );
@@ -353,10 +216,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>(
-            "/second-brain/para/categories/areas",
-            { params }
-          )
+          .get<ApiResponse<IParaItem[]>>("/para/categories/areas", { params })
           .then((res) => res.data.data),
       mockParaItems.filter((item) => item.category === EParaCategory.AREAS)
     );
@@ -367,10 +227,9 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>(
-            "/second-brain/para/categories/resources",
-            { params }
-          )
+          .get<ApiResponse<IParaItem[]>>("/para/categories/resources", {
+            params,
+          })
           .then((res) => res.data.data),
       mockParaItems.filter((item) => item.category === EParaCategory.RESOURCES)
     );
@@ -381,10 +240,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>(
-            "/second-brain/para/categories/archive",
-            { params }
-          )
+          .get<ApiResponse<IParaItem[]>>("/para/categories/archive", { params })
           .then((res) => res.data.data),
       mockParaItems.filter((item) => item.category === EParaCategory.ARCHIVE)
     );
@@ -400,10 +256,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>(
-            `/second-brain/para/status/${status}`,
-            { params }
-          )
+          .get<ApiResponse<IParaItem[]>>(`/para/status/${status}`, { params })
           .then((res) => res.data.data),
       mockParaItems.filter((item) => item.status === status)
     );
@@ -417,10 +270,9 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>(
-            `/second-brain/para/priority/${priority}`,
-            { params }
-          )
+          .get<ApiResponse<IParaItem[]>>(`/para/priority/${priority}`, {
+            params,
+          })
           .then((res) => res.data.data),
       mockParaItems.filter((item) => item.priority === priority)
     );
@@ -433,7 +285,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .get<ApiResponse<IParaItem[]>>("/second-brain/para/reviews/overdue", {
+          .get<ApiResponse<IParaItem[]>>("/para/reviews/overdue", {
             params,
           })
           .then((res) => res.data.data),
@@ -451,7 +303,7 @@ export const paraApi = {
       () =>
         apiClient
           .post<ApiResponse<{ message: string; archivedCount: number }>>(
-            "/second-brain/para/archive",
+            "/para/archive",
             data
           )
           .then((res) => res.data.data),
@@ -470,7 +322,7 @@ export const paraApi = {
       () =>
         apiClient
           .post<ApiResponse<{ message: string; restoredCount: number }>>(
-            "/second-brain/para/restore",
+            "/para/restore",
             data
           )
           .then((res) => res.data.data),
@@ -492,7 +344,7 @@ export const paraApi = {
       () =>
         apiClient
           .post<ApiResponse<{ message: string; paraItemId: string }>>(
-            "/second-brain/para/categorize",
+            "/para/categorize",
             data
           )
           .then((res) => res.data.data),
@@ -511,7 +363,7 @@ export const paraApi = {
     return apiCallWithFallback(
       () =>
         apiClient
-          .post<ApiResponse<IParaItem>>(`/second-brain/para/${id}/review`, {
+          .post<ApiResponse<IParaItem>>(`/para/${id}/review`, {
             notes,
           })
           .then((res) => res.data.data),

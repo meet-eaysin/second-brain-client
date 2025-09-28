@@ -136,7 +136,7 @@ export function CreateDatabaseForm({
       return;
     }
 
-    if (!currentWorkspace?.id) {
+    if (!currentWorkspace?._id) {
       // Workspace should always be available through useWorkspace hook
       console.error("No workspace available - this should not happen");
       toast.error(
@@ -173,7 +173,7 @@ export function CreateDatabaseForm({
       } else {
         // Create mode
         const createData: TCreateDatabase = {
-          workspaceId: currentWorkspace.id,
+          workspaceId: currentWorkspace._id,
           name: data.name,
           description: data.description || undefined,
           type: EDatabaseType.CUSTOM,
@@ -224,7 +224,8 @@ export function CreateDatabaseForm({
   };
 
   const isLoading = createDatabaseMutation.isPending;
-  const isWorkspaceReady = !isCurrentWorkspaceLoading && !!currentWorkspace?.id;
+  const isWorkspaceReady =
+    !isCurrentWorkspaceLoading && !!currentWorkspace?._id;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -238,7 +239,7 @@ export function CreateDatabaseForm({
             <DialogDescription className="text-muted-foreground">
               {isCurrentWorkspaceLoading
                 ? "Loading workspace information..."
-                : !currentWorkspace?.id
+                : !currentWorkspace?._id
                 ? "No workspace available. Please ensure you're logged in and have access to a workspace."
                 : "Create a custom database to organize your data with advanced features and customization options."}
             </DialogDescription>

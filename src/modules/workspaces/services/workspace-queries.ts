@@ -385,7 +385,7 @@ export const useLeaveWorkspace = () => {
   });
 };
 
-// Switch current workspace (client-side operation)
+// Switch current workspace
 export const useSwitchWorkspace = () => {
   const { setCurrentWorkspace } = useAuthStore();
   const queryClient = useQueryClient();
@@ -393,22 +393,13 @@ export const useSwitchWorkspace = () => {
   return useMutation({
     mutationFn: async ({
       workspaceId,
-      workspaces,
     }: {
       workspaceId: string;
-      workspaces: Workspace[];
+      workspaces?: Workspace[];
     }) => {
-      const userWorkspace = workspaces.find((w) => w.id === workspaceId);
-
-      if (!userWorkspace) {
-        throw new Error("Workspace not found in user's workspaces");
-      }
-
-      const workspaceData: Workspace = {
-        ...userWorkspace,
-      };
-
-      return workspaceData;
+      // Call the API to switch workspace on server
+      const response = await workspaceApi.switchCurrentWorkspace(workspaceId);
+      return response.data;
     },
     onSuccess: (workspace) => {
       // Update the current workspace in the auth store

@@ -41,7 +41,7 @@ export function SecondBrainDashboard() {
     isLoading,
     error,
   } = useDashboardOverview({
-    workspaceId: currentWorkspace?.id,
+    workspaceId: currentWorkspace?._id,
     includeActivity: true,
     activityLimit: 10,
     upcomingTasksLimit: 5,

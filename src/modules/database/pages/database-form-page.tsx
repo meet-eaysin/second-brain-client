@@ -54,7 +54,7 @@ export function DatabaseFormPage() {
   }
 
   const handleApplyTemplate = async (template: Template) => {
-    if (!currentWorkspace?.id) {
+    if (!currentWorkspace?._id) {
       // Workspace should always be available through useWorkspace hook
       console.error("No workspace available - this should not happen");
       toast.error(
@@ -67,7 +67,7 @@ export function DatabaseFormPage() {
       await applyTemplateMutation.mutateAsync({
         templateId: template.id,
         data: {
-          workspaceId: currentWorkspace.id,
+          workspaceId: currentWorkspace._id,
           overrides: {
             name: `${template.name} (from template)`,
           },

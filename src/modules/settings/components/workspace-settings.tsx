@@ -83,7 +83,7 @@ export const WorkspaceSettings: React.FC = () => {
 
   const handleDuplicateWorkspace = async () => {
     await duplicateWorkspaceMutation.mutateAsync({
-      id: currentWorkspace.id,
+      id: currentWorkspace._id,
       name: `${currentWorkspace.name} (Copy)`,
     });
   };

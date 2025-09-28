@@ -139,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
             w.id === id ? workspace : w
           ),
           currentWorkspace:
-            state.currentWorkspace?.id === id
+            state.currentWorkspace?._id === id
               ? workspace
               : state.currentWorkspace,
         })),
@@ -150,7 +150,7 @@ export const useAuthStore = create<AuthState>()(
             (w) => w.id !== id
           );
           const newCurrentWorkspace =
-            state.currentWorkspace?.id === id
+            state.currentWorkspace?._id === id
               ? filteredWorkspaces.length > 0
                 ? filteredWorkspaces[0]
                 : null

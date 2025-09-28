@@ -436,4 +436,35 @@ export const API_ENDPOINTS = {
     CONNECTION_LOGS: (id: string) => `/calendar/connections/${id}/logs`,
     CONNECTIONS_STATS: "/calendar/connections/stats",
   },
+  PARA: {
+    // CRUD operations
+    LIST: "/para",
+    CREATE: "/para",
+    BY_ID: (id: string) => `/para/${id}`,
+    UPDATE: (id: string) => `/para/${id}`,
+    DELETE: (id: string) => `/para/${id}`,
+
+    // Statistics and analytics
+    STATS: "/para/stats",
+
+    // Category endpoints
+    CATEGORIES: {
+      PROJECTS: "/para/categories/projects",
+      AREAS: "/para/categories/areas",
+      RESOURCES: "/para/categories/resources",
+      ARCHIVE: "/para/categories/archive",
+    },
+
+    // Analytics endpoints
+    STATUS: (status: string) => `/para/status/${status}`,
+    PRIORITY: (priority: string) => `/para/priority/${priority}`,
+    REVIEWS_OVERDUE: "/para/reviews/overdue",
+    SEARCH: "/para/search",
+
+    // Actions
+    ARCHIVE: "/para/archive",
+    RESTORE: "/para/restore",
+    CATEGORIZE: "/para/categorize",
+    REVIEW: (id: string) => `/para/${id}/review`,
+  },
 } as const;

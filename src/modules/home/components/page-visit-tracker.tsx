@@ -10,15 +10,18 @@ export function PageVisitTracker() {
   const lastPathnameRef = useRef<string>(null);
 
   useEffect(() => {
-    if (currentWorkspace?.id && location.pathname !== lastPathnameRef.current) {
+    if (
+      currentWorkspace?._id &&
+      location.pathname !== lastPathnameRef.current
+    ) {
       lastPathnameRef.current = location.pathname;
 
       recordPageVisit.mutate({
         page: location.pathname,
-        workspaceId: currentWorkspace.id,
+        workspaceId: currentWorkspace._id,
       });
     }
-  }, [currentWorkspace?.id, location.pathname]);
+  }, [currentWorkspace?._id, location.pathname]);
 
   return null;
 }

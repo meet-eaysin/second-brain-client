@@ -150,7 +150,7 @@ export const WorkspaceSelector: React.FC = () => {
                             </div>
                           </TooltipWrapper>
                         )}
-                        {currentWorkspace?.id === workspace.id && (
+                        {currentWorkspace?._id === workspace.id && (
                           <Check className="h-4 w-4" />
                         )}
                       </div>

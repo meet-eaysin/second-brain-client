@@ -36,6 +36,16 @@ export const workspaceApi = {
     return response.data;
   },
 
+  switchCurrentWorkspace: async (
+    workspaceId: string
+  ): Promise<ApiResponse<Workspace>> => {
+    const response = await apiClient.put<ApiResponse<Workspace>>(
+      `${API_ENDPOINTS.WORKSPACES.CURRENT}/switch`,
+      { workspaceId }
+    );
+    return response.data;
+  },
+
   updateCurrentWorkspace: async (
     data: UpdateWorkspaceRequest
   ): Promise<Workspace> => {
