@@ -1,5 +1,5 @@
 import { type HTMLAttributes } from "react";
-import { Chrome, AlertCircle } from "lucide-react";
+import { Chrome } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { PasswordStrength } from "../password-strength";
 import { authApi } from "../../services/auth-api";
 import { useRegister } from "../../hooks/useRegister.ts";
 import { toast } from "sonner";
@@ -23,7 +21,7 @@ import { useAuthService } from "../../hooks/useAuthService.ts";
 type SignUpFormProps = HTMLAttributes<HTMLFormElement>;
 
 export function SignUpForm({ className, ...props }: SignUpFormProps) {
-  const { form, handleRegister, isLoading, error } = useRegister();
+  const { form, handleRegister, isLoading } = useRegister();
   const [googleLoading, setGoogleLoading] = useState(false);
   const { handleGoogleTokens } = useAuthService();
 
@@ -34,7 +32,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
       const isAvailable = await authApi.checkGoogleOAuthAvailability();
       if (!isAvailable) {
         toast.error(
-          "Google OAuth is not configured on the backend. Please use the registration form or contact your administrator."
+          "Google OAuth is not available at this moment. Please use the registration form or contact your administrator."
         );
         return;
       }
@@ -56,139 +54,129 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
   };
 
   const isFormLoading = isLoading || googleLoading;
-  const passwordValue = form.watch("password");
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleRegister)}
-        className={cn("grid gap-4", className)}
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit(handleRegister)(e);
+        }}
+        className={cn("space-y-6", className)}
+        noValidate
         {...props}
         aria-label="Sign up form"
       >
-        {error && (
-          <Alert variant="destructive" className="text-sm">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error instanceof Error
-                ? error.message
-                : "An error occurred during registration"}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <FormField
-          control={form.control}
-          name="username"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Username</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Choose a unique username"
-                  autoComplete="username"
-                  {...field}
-                  disabled={isLoading}
-                  aria-describedby="username-error"
-                />
-              </FormControl>
-              <FormMessage id="username-error" />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email address</FormLabel>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="name@example.com"
-                  autoComplete="email"
-                  {...field}
-                  disabled={isLoading}
-                  aria-describedby="email-error"
-                />
-              </FormControl>
-              <FormMessage id="email-error" />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-4">
           <FormField
             control={form.control}
-            name="firstName"
+            name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>First Name</FormLabel>
+                <FormLabel className="text-sm font-medium">Username</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="John"
-                    autoComplete="given-name"
+                    placeholder="Choose a unique username (letters, numbers, hyphens)"
+                    autoComplete="username"
                     {...field}
                     disabled={isLoading}
-                    aria-describedby="firstName-error"
+                    className="h-11"
                   />
                 </FormControl>
-                <FormMessage id="firstName-error" />
+                <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
-            name="lastName"
+            name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Last Name</FormLabel>
+                <FormLabel className="text-sm font-medium">Email</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Doe"
-                    autoComplete="family-name"
+                    type="email"
+                    placeholder="name@example.com"
+                    autoComplete="email"
                     {...field}
                     disabled={isLoading}
-                    aria-describedby="lastName-error"
+                    className="h-11"
                   />
                 </FormControl>
-                <FormMessage id="lastName-error" />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="firstName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">
+                    First Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="John"
+                      autoComplete="given-name"
+                      {...field}
+                      disabled={isLoading}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="lastName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-medium">
+                    Last Name
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Doe"
+                      autoComplete="family-name"
+                      {...field}
+                      disabled={isLoading}
+                      className="h-11"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-medium">Password</FormLabel>
+                <FormControl>
+                  <PasswordInput
+                    placeholder="Create a password (min. 8 characters)"
+                    autoComplete="new-password"
+                    {...field}
+                    disabled={isLoading}
+                    className="h-11"
+                  />
+                </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <PasswordInput
-                  placeholder="Create a strong password"
-                  autoComplete="new-password"
-                  {...field}
-                  disabled={isLoading}
-                  aria-describedby="password-error"
-                />
-              </FormControl>
-              <FormMessage id="password-error" />
-              {passwordValue && (
-                <PasswordStrength password={passwordValue} className="mt-2" />
-              )}
-            </FormItem>
-          )}
-        />
-
-        <Button
-          type="submit"
-          className="w-full mt-2"
-          disabled={isFormLoading}
-          aria-describedby={error ? "form-error" : undefined}
-        >
-          {isLoading ? "Creating account..." : "Create your account"}
+        <Button type="submit" className="w-full h-11" disabled={isFormLoading}>
+          {isLoading ? "Creating account..." : "Sign Up"}
         </Button>
 
         <div className="relative">
@@ -196,7 +184,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background text-muted-foreground px-2">
+            <span className="bg-background px-2 text-muted-foreground">
               Or continue with
             </span>
           </div>
@@ -207,8 +195,7 @@ export function SignUpForm({ className, ...props }: SignUpFormProps) {
           type="button"
           disabled={isFormLoading}
           onClick={handleGoogleSignUp}
-          className="w-full"
-          aria-label="Continue with Google"
+          className="w-full h-11"
         >
           <Chrome className="h-4 w-4 mr-2" />
           {googleLoading ? "Authenticating..." : "Continue with Google"}

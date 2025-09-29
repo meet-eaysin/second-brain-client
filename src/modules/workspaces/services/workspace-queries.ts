@@ -283,7 +283,8 @@ export const useCreateWorkspace = () => {
           throw new Error(errorData.message || "Failed to create workspace");
         }
 
-        return response.json();
+        const result = await response.json();
+        return result.data; // Return just the workspace data, not the full response
       } catch (error) {
         clearTimeout(timeoutId);
         throw error;
@@ -402,21 +403,18 @@ export const useSwitchWorkspace = () => {
       return response.data;
     },
     onSuccess: (workspace) => {
-      // Update the current workspace in the auth store
-      setCurrentWorkspace(workspace);
+      setCurrentWorkspace(workspace || null);
 
-      // Update the React Query cache for current workspace
       queryClient.setQueryData(WORKSPACE_KEYS.current(), {
         data: workspace,
         success: true,
       });
 
-      // Invalidate all workspace-dependent queries to ensure fresh data
       WORKSPACE_DEPENDENT_QUERIES.forEach((queryKey) => {
         queryClient.invalidateQueries({ queryKey });
       });
 
-      toast.success(`Switched to ${workspace.name}`);
+      toast.success(`Switched to ${workspace?.name}`);
     },
     onError: (error: unknown) => {
       toast.error(getErrorMessage(error, "Failed to switch workspace"));

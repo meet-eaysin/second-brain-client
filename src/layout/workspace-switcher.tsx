@@ -47,7 +47,7 @@ export function TeamSwitcher() {
   const handleCreateWorkspace = async (data: CreateWorkspaceRequest) => {
     try {
       const response = await createWorkspaceMutation.mutateAsync(data);
-      const createdWorkspace = response.data; // Extract the actual workspace from response.data
+      const createdWorkspace = response.data;
       const userWorkspace: Workspace = {
         id: createdWorkspace._id,
         _id: createdWorkspace._id,
@@ -71,7 +71,7 @@ export function TeamSwitcher() {
         },
         isPublic: false,
         isArchived: false,
-        ownerId: "", // Will be set by backend
+        ownerId: "",
         memberCount: createdWorkspace.memberCount,
         databaseCount: createdWorkspace.databaseCount,
         recordCount: 0,
@@ -80,24 +80,19 @@ export function TeamSwitcher() {
         updatedAt: createdWorkspace.updatedAt,
       };
 
-      // Transform the workspace to match the Workspace interface (id instead of _id)
       const transformedWorkspace = {
         ...createdWorkspace,
         id: createdWorkspace._id,
       };
 
-      // Add to workspace list and set as current in one operation
       addWorkspace(userWorkspace);
-      // Set the newly created workspace as current
       setCurrentWorkspace(transformedWorkspace);
 
-      // Update the React Query cache for current workspace
       queryClient.setQueryData(WORKSPACE_KEYS.current(), {
         data: transformedWorkspace,
         success: true,
       });
 
-      // Update the userWorkspaces query cache to include the new workspace
       queryClient.setQueryData(WORKSPACE_KEYS.userWorkspaces(), (oldData) => {
         if (!oldData) return oldData;
         const currentData = (oldData as { data?: Workspace[] }).data || [];
@@ -107,7 +102,6 @@ export function TeamSwitcher() {
         };
       });
 
-      // Invalidate queries that depend on workspace data
       queryClient.invalidateQueries({ queryKey: WORKSPACE_KEYS.stats() });
 
       setIsCreateWorkspaceOpen(false);

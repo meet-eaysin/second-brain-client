@@ -10,17 +10,11 @@ const registerSchema = z.object({
     .min(3, "Username must be at least 3 characters")
     .max(30, "Username cannot exceed 30 characters")
     .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores"
+      /^[a-zA-Z0-9_-]+$/,
+      "Username can only contain letters, numbers, underscores, and hyphens"
     ),
   email: z.string().email("Invalid email address"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-    ),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   firstName: z
     .string()
     .max(50, "First name cannot exceed 50 characters")
@@ -46,7 +40,12 @@ export const useRegister = () => {
   });
 
   const handleRegister = (data: RegisterCredentials) => {
-    registerMutation.mutate(data);
+    try {
+      registerMutation.mutate(data);
+    } catch (error) {
+      console.error("Error in handleRegister:", error);
+      throw error;
+    }
   };
 
   return {

@@ -30,18 +30,12 @@ apiClient.interceptors.request.use(
     }
 
     try {
-      const authStorage = localStorage.getItem("auth-storage");
-
-      if (authStorage) {
-        const parsed = JSON.parse(authStorage);
-        const currentWorkspace = parsed.state?.currentWorkspace;
-        if (currentWorkspace?._id) {
-          config.headers["workspace-id"] = currentWorkspace._id;
-        }
+      const currentWorkspace = useAuthStore.getState().currentWorkspace;
+      if (currentWorkspace?._id) {
+        config.headers["workspace-id"] = currentWorkspace._id;
       }
     } catch (error) {
-      // Ignore localStorage errors
-      console.warn("Failed to read workspace from localStorage:", error);
+      console.warn("Failed to read workspace from store:", error);
     }
 
     return config;

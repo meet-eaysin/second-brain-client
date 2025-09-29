@@ -26,12 +26,15 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { useCreateWorkspace } from "@/modules/workspaces/services/workspace-queries";
+import {
+  useCreateWorkspace,
+  useSwitchWorkspace,
+} from "@/modules/workspaces/services/workspace-queries";
 import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import {
   type CreateWorkspaceRequest,
   EWorkspaceType,
-  type Workspace
+  type Workspace,
 } from "@/modules/workspaces/types/workspaces.types.ts";
 
 const workspaceSetupSchema = z.object({
@@ -130,6 +133,7 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
   const [currentStep, setCurrentStep] = useState(0);
   const { user } = useAuthStore();
   const createWorkspaceMutation = useCreateWorkspace();
+  const switchWorkspaceMutation = useSwitchWorkspace();
 
   const form = useForm<WorkspaceSetupFormValues>({
     resolver: zodResolver(workspaceSetupSchema),
@@ -164,11 +168,12 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
     };
 
     const workspace = await createWorkspaceMutation.mutateAsync(workspaceData);
+    await switchWorkspaceMutation.mutateAsync({
+      workspaceId: workspace?._id,
+    });
 
     onComplete(workspace);
-
   };
-
   const handleSkip = async () => {
     const defaultName = user
       ? `${user.firstName || user.name || "User"}'s Workspace`
@@ -182,11 +187,12 @@ export const WorkspaceSetupWizard: React.FC<WorkspaceSetupWizardProps> = ({
     };
 
     const workspace = await createWorkspaceMutation.mutateAsync(defaultData);
+    await switchWorkspaceMutation.mutateAsync({
+      workspaceId: workspace?._id,
+    });
 
     onComplete(workspace);
-
   };
-
   const renderWelcomeStep = () => (
     <div className="text-center space-y-6">
       <div className="space-y-3">

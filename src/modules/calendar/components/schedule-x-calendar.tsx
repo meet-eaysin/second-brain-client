@@ -152,7 +152,7 @@ export default function ShadcnBigCalendarComponent({
   const deleteEventMutation = useDeleteEvent();
 
   // Transform events to react-big-calendar format
-  const calendarEvents = (eventsResponse?.data || []).map((event) => ({
+  const calendarEvents = (eventsResponse?.data?.events || []).map((event) => ({
     id: event.id,
     title: event.title,
     start: new Date(event.startTime),
