@@ -264,8 +264,8 @@ export function FilterManager() {
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[500px] flex flex-col gap-3 p-4"
-        align="start"
+        className="w-full max-w-[500px] flex flex-col gap-3 p-4"
+        align="end"
         side="bottom"
       >
         <p className="text-xs font-medium text-muted-foreground">

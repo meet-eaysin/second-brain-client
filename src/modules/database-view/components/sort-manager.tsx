@@ -44,7 +44,11 @@ import {
   Search,
   Files,
 } from "lucide-react";
-import {EPropertyType, ESortDirection, type TSortConfig} from "@/modules/database-view/types";
+import {
+  EPropertyType,
+  ESortDirection,
+  type TSortConfig,
+} from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateViewSorts } from "@/modules/database-view/services/database-queries.ts";
 
@@ -187,8 +191,9 @@ export function SortManager() {
       </PopoverTrigger>
 
       <PopoverContent
-        align="start"
-        className="w-[420px] flex flex-col gap-2 p-3 text-sm"
+        align="end"
+        side="bottom"
+        className="w-full max-w-[420px] flex flex-col gap-2 p-3 text-sm"
       >
         <h4 className="font-medium text-sm">
           {isFrozen
