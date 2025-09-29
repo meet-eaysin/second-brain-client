@@ -268,7 +268,7 @@ export function DatabaseViewProvider({
             ? ESortDirection.ASC
             : ESortDirection.DESC;
         return {
-          propertyId: sort.propertyId,
+          property: sort.property,
           direction: dir,
         };
       }) || []

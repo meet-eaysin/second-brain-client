@@ -36,7 +36,8 @@ import {
   type TCreateDatabaseFilterPreset,
   type TUpdateDatabaseFilterPreset,
   type TProperty,
-  type TRecord, ESortDirection,
+  type TRecord,
+  ESortDirection,
 } from "@/modules/database-view/types";
 import type { ApiResponse } from "@/types/api.types.ts";
 
@@ -402,7 +403,7 @@ export const databaseApi = {
   updateViewSorts: async (
     databaseId: string,
     viewId: string,
-    sorts: Array<{ propertyId: string; direction: ESortDirection }>
+    sorts: Array<{ property: string; direction: ESortDirection }>
   ) => {
     const response = await apiClient.patch(
       API_ENDPOINTS.VIEW.UPDATE_SORTS(databaseId, viewId),

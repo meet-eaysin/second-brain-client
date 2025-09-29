@@ -651,7 +651,7 @@ export const useUpdateViewSorts = () => {
     {
       databaseId: string;
       viewId: string;
-      sorts: Array<{ propertyId: string; direction: ESortDirection }>;
+      sorts: Array<{ property: string; direction: ESortDirection }>;
     }
   >({
     mutationFn: ({ databaseId, viewId, sorts }) =>

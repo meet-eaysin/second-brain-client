@@ -22,12 +22,10 @@ export enum EDatabaseType {
   TASKS = "tasks",
   HABITS = "habits",
   PEOPLE = "people",
-  RESOURCES = "resources",
   PARA_PROJECTS = "para_projects",
   PARA_AREAS = "para_areas",
   PARA_RESOURCES = "para_resources",
   PARA_ARCHIVE = "para_archive",
-  PROJECTS = "projects",
   QUICK_TASKS = "quick_tasks",
   QUICK_NOTES = "quick_notes",
   CONTENT = "content",
@@ -351,7 +349,7 @@ export enum ESortDirection {
 }
 
 export type TSortConfig = {
-  propertyId: string;
+  property: string;
   direction: ESortDirection;
 };
 

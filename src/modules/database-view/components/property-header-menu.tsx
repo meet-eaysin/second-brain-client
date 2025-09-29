@@ -1,4 +1,4 @@
-import {type ReactNode, useState} from "react";
+import { type ReactNode, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {Button} from "@/components/ui/button";
-import {Badge} from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   ArrowDown,
   ArrowUp,
@@ -37,9 +37,14 @@ import {
   Trash2,
   Type,
 } from "lucide-react";
-import {toast} from "sonner";
-import {EFilterOperator, EPropertyType, ESortDirection, type TProperty,} from "@/modules/database-view/types";
-import {useDatabaseView} from "@/modules/database-view/context";
+import { toast } from "sonner";
+import {
+  EFilterOperator,
+  EPropertyType,
+  ESortDirection,
+  type TProperty,
+} from "@/modules/database-view/types";
+import { useDatabaseView } from "@/modules/database-view/context";
 import {
   useChangePropertyType,
   useDeleteProperty,
@@ -68,7 +73,13 @@ export const PropertyHeaderMenu = ({
   children,
   property,
 }: PropertyHeaderMenuProps) => {
-  const { database, onFiltersChange, onSortsChange, onDialogOpen, onPropertyChange } = useDatabaseView();
+  const {
+    database,
+    onFiltersChange,
+    onSortsChange,
+    onDialogOpen,
+    onPropertyChange,
+  } = useDatabaseView();
 
   // API hooks
   const updatePropertyMutation = useUpdateProperty();
@@ -85,11 +96,9 @@ export const PropertyHeaderMenu = ({
     duplicatePropertyMutation.isPending ||
     changePropertyTypeMutation.isPending;
 
-
   // For now, assume no frozen properties - can be enhanced later
   const canEdit = true;
   const canDelete = true;
-
 
   const handleChangeType = async (newType: EPropertyType) => {
     if (!database?.id) {
@@ -331,7 +340,9 @@ export const PropertyHeaderMenu = ({
             <DropdownMenuSubContent>
               <DropdownMenuItem
                 onClick={() =>
-                  onSortsChange([{ propertyId: property.id, direction: ESortDirection.ASC }])
+                  onSortsChange([
+                    { property: property.id, direction: ESortDirection.ASC },
+                  ])
                 }
               >
                 <ArrowUp className="mr-2 h-4 w-4 flex-shrink-0" />
@@ -340,7 +351,7 @@ export const PropertyHeaderMenu = ({
               <DropdownMenuItem
                 onClick={() =>
                   onSortsChange([
-                    { propertyId: property.id, direction: ESortDirection.DESC },
+                    { property: property.id, direction: ESortDirection.DESC },
                   ])
                 }
               >
@@ -375,7 +386,6 @@ export const PropertyHeaderMenu = ({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
 
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">

@@ -139,20 +139,20 @@ export function PARAOverviewPage() {
 
   const paraAreas = [
     {
-      id: EParaCategory.PROJECTS,
+      id: EParaCategory.PARA_PROJECTS,
       title: "Projects",
       icon: Target,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       stats: {
         active:
-          paraStats?.byStatus[EParaStatus.ACTIVE]?.[EParaCategory.PROJECTS] ||
+          paraStats?.byStatus[EParaStatus.ACTIVE]?.[EParaCategory.PARA_PROJECTS] ||
           0,
         completed:
           paraStats?.byStatus[EParaStatus.COMPLETED]?.[
-            EParaCategory.PROJECTS
+            EParaCategory.PARA_PROJECTS
           ] || 0,
-        total: paraStats?.byCategory[EParaCategory.PROJECTS] || 0,
+        total: paraStats?.byCategory[EParaCategory.PARA_PROJECTS] || 0,
         completionRate: paraStats?.completionRates?.projects || 0,
       },
     },
@@ -303,7 +303,7 @@ export function PARAOverviewPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Progress Bar for completion */}
-                    {(area.id === EParaCategory.PROJECTS ||
+                    {(area.id === EParaCategory.PARA_PROJECTS ||
                       area.id === EParaCategory.AREAS) &&
                       area.stats.completionRate > 0 && (
                         <div className="space-y-2">
@@ -324,7 +324,7 @@ export function PARAOverviewPage() {
 
                     {/* Detailed Stats */}
                     <div className="space-y-3">
-                      {area.id === EParaCategory.PROJECTS && (
+                      {area.id === EParaCategory.PARA_PROJECTS && (
                         <>
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-muted-foreground">

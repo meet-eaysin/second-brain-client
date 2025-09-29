@@ -57,7 +57,7 @@ const PROPERTY_TYPE_ICONS = {
   [EPropertyType.RICH_TEXT]: FileText,
   [EPropertyType.NUMBER]: Hash,
   [EPropertyType.DATE]: Calendar,
-  [EPropertyType.DATE_RANGE]: Calendar, // ✅ Added
+  [EPropertyType.DATE_RANGE]: Calendar,
   [EPropertyType.CHECKBOX]: CheckSquare,
   [EPropertyType.URL]: Link,
   [EPropertyType.EMAIL]: Mail,
@@ -103,12 +103,12 @@ export function SortManager() {
 
   const addSort = () => {
     const available = properties.filter(
-      (prop) => !localSorts.some((s) => s.propertyId === prop.id)
+      (prop) => !localSorts.some((s) => s.property === prop.id)
     );
     if (available.length > 0) {
       const newSorts = [
         ...localSorts,
-        { propertyId: available[0].id, direction: ESortDirection.ASC },
+        { property: available[0].id, direction: ESortDirection.ASC },
       ];
       setLocalSorts(newSorts);
       setTempSorts(newSorts);
@@ -144,9 +144,9 @@ export function SortManager() {
     try {
       // Convert local sorts to backend format
       const sorts: TSortConfig[] = localSorts
-        .filter((sort) => sort.propertyId)
+        .filter((sort) => sort.property)
         .map((sort) => ({
-          propertyId: sort.propertyId,
+          property: sort.property,
           direction: sort.direction,
         }));
 
@@ -212,8 +212,8 @@ export function SortManager() {
                     <GripVertical className="h-3.5 w-3.5 text-muted-foreground cursor-grab shrink-0" />
 
                     <Select
-                      value={sort.propertyId}
-                      onValueChange={(v) => updateSort(i, "propertyId", v)}
+                      value={sort.property}
+                      onValueChange={(v) => updateSort(i, "property", v)}
                       disabled={isFrozen}
                     >
                       <SelectTrigger className="flex-1 h-7 min-h-7 px-2 text-sm">
