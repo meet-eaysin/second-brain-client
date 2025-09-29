@@ -12,7 +12,6 @@ export function useDatabaseSidebar(
 
   const databases = databasesResponse?.data || [];
 
-  // Create database navigation items
   const databaseNavItems = {
     title: "Databases",
     url: getDatabasesLink(),
@@ -44,7 +43,6 @@ export function useDatabaseSidebar(
         icon: Plus,
         onClick: onCreateDatabase,
       },
-      // Add individual database items (limit to first 5 to avoid clutter)
     ],
   };
 

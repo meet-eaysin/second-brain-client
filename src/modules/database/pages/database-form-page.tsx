@@ -55,8 +55,6 @@ export function DatabaseFormPage() {
 
   const handleApplyTemplate = async (template: Template) => {
     if (!currentWorkspace?._id) {
-      // Workspace should always be available through useWorkspace hook
-      console.error("No workspace available - this should not happen");
       toast.error(
         "Unable to create database from template. Please refresh the page and try again."
       );

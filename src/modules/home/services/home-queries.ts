@@ -32,7 +32,7 @@ export const SYSTEM_KEYS = {
   all: ["system"] as const,
   activities: (params?: IActivityQueryOptions) =>
     [...SYSTEM_KEYS.all, "activities", params] as const,
-  activityFeed: (params?: { limit?: number, workspaceId?: string }) =>
+  activityFeed: (params?: { limit?: number; workspaceId?: string }) =>
     [...SYSTEM_KEYS.all, "activity-feed", params] as const,
   activitySummary: () => [...SYSTEM_KEYS.all, "activity-summary"] as const,
   activityAnalytics: (params?: IActivityQueryOptions) =>
@@ -154,7 +154,7 @@ export const useActivities = (params?: IActivityQueryOptions) => {
 export const useRecentActivityFeed = (workspaceId: string, limit = 10) => {
   return useQuery({
     queryKey: SYSTEM_KEYS.activityFeed({ workspaceId, limit }),
-    queryFn: () => systemApi.getRecentActivityFeed({ limit: Number(limit)}),
+    queryFn: () => systemApi.getRecentActivityFeed({ limit: Number(limit) }),
     enabled: !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -164,12 +164,11 @@ export const useRecentActivityFeed = (workspaceId: string, limit = 10) => {
 export const useSystemActivityFeed = (workspaceId: string, limit = 10) => {
   return useQuery({
     queryKey: DASHBOARD_KEYS.feed(workspaceId, limit),
-    queryFn: () => systemApi.getRecentActivityFeed({ limit: Number(limit)}),
+    queryFn: () => systemApi.getRecentActivityFeed({ limit: Number(limit) }),
     enabled: !!workspaceId,
     staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
-
 
 export const useUserActivitySummary = () => {
   return useQuery({

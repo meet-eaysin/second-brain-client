@@ -16,7 +16,7 @@ import React from "react";
 import type { Workspace } from "@/modules/workspaces/types/workspaces.types.ts";
 
 function AuthenticatedLayout() {
-  const defaultOpen = true; // Always default to open
+  const defaultOpen = true;
   const {
     showWorkspaceSetupWizard,
     completeWorkspaceSetup,
@@ -32,7 +32,6 @@ function AuthenticatedLayout() {
     isUserWorkspacesLoading,
   } = useWorkspace();
 
-  // Sync workspace data to store when loaded
   React.useEffect(() => {
     if (!isUserWorkspacesLoading && contextUserWorkspaces.length > 0) {
       setWorkspaces(contextUserWorkspaces);
@@ -48,11 +47,9 @@ function AuthenticatedLayout() {
     setCurrentWorkspace,
   ]);
 
-  // Determine if wizard should be shown
   const shouldShowWizard =
     !isUserWorkspacesLoading && contextUserWorkspaces.length === 0;
 
-  // Show loading spinner while fetching workspace data
   if (isUserWorkspacesLoading || isCurrentWorkspaceLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

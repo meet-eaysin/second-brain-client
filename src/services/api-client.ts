@@ -29,14 +29,11 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Get current workspace from localStorage (where it's persisted by zustand)
     try {
       const authStorage = localStorage.getItem("auth-storage");
 
       if (authStorage) {
         const parsed = JSON.parse(authStorage);
-        console.log("## parsed", parsed);
-
         const currentWorkspace = parsed.state?.currentWorkspace;
         if (currentWorkspace?._id) {
           config.headers["workspace-id"] = currentWorkspace._id;
