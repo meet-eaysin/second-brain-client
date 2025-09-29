@@ -546,7 +546,6 @@ export default function CalendarPage() {
                     <Select
                       value={preferences?.defaultCalendarId || ""}
                       onValueChange={(value) => {
-                        console.log("Default calendar changed to:", value);
                         updatePreferencesMutation.mutate({
                           defaultCalendarId: value,
                         });

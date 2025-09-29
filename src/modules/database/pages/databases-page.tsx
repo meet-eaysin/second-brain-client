@@ -86,8 +86,6 @@ export function DatabasesPage() {
   };
 
   const handleDuplicateDatabase = async (database: TDatabase) => {
-    console.log("## Database", database);
-
     try {
       await duplicateDatabaseMutation.mutateAsync({
         id: database.id,

@@ -420,7 +420,6 @@ export function PARAOverviewPage() {
                         className="flex-1 text-xs sm:text-sm"
                         onClick={() => {
                           // TODO: Open create modal for this category
-                          console.log(`Create new ${area.title.toLowerCase()}`);
                         }}
                       >
                         <Plus className="h-3 w-3 mr-1" />
@@ -472,7 +471,6 @@ export function PARAOverviewPage() {
                 className="gap-2 h-12 text-sm sm:text-base"
                 onClick={() => {
                   // TODO: Open create project modal
-                  console.log("Create new project");
                 }}
               >
                 <Target className="h-4 w-4" />
@@ -484,7 +482,6 @@ export function PARAOverviewPage() {
                 className="gap-2 h-12 text-sm sm:text-base"
                 onClick={() => {
                   // TODO: Open create area modal
-                  console.log("Create new area");
                 }}
               >
                 <Layers className="h-4 w-4" />
@@ -496,7 +493,6 @@ export function PARAOverviewPage() {
                 className="gap-2 h-12 text-sm sm:text-base"
                 onClick={() => {
                   // TODO: Open create resource modal
-                  console.log("Create new resource");
                 }}
               >
                 <BookOpen className="h-4 w-4" />

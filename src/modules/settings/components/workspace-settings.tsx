@@ -46,8 +46,6 @@ export const WorkspaceSettings: React.FC = () => {
   const deleteWorkspaceMutation = useDeleteCurrentWorkspace();
   const duplicateWorkspaceMutation = useDuplicateWorkspace();
 
-  console.log("Workspace settings currentWorkspaceData", currentWorkspace);
-
   const [isEditing, setIsEditing] = useState(false);
   const [workspaceName, setWorkspaceName] = useState(
     currentWorkspace?.name || ""

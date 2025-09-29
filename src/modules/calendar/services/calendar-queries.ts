@@ -353,11 +353,9 @@ export const useUpdateCalendarPreferences = () => {
         defaultPopupReminder?: number;
       };
     }) => {
-      console.log("Updating calendar preferences:", data);
       return calendarApi.updateCalendarPreferences(data);
     },
     onSuccess: () => {
-      console.log("Preferences updated successfully");
       queryClient.invalidateQueries({ queryKey: CALENDAR_KEYS.preferences() });
     },
     onError: (error) => {
