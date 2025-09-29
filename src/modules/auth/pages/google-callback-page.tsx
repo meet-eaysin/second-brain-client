@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useGoogleAuth } from "../hooks/useGoogleAuth";
-import { useAuthService } from "../hooks/useAuthService";
 import { authApi } from "../services/auth-api";
 import { getSignInLink } from "@/app/router/router-link";
 import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/loading-spinner.tsx";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle, CheckCircle } from "lucide-react";
+import {useAuthService} from "@/modules/auth";
 
 const GoogleCallbackPage: React.FC = () => {
   const [searchParams] = useSearchParams();

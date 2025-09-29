@@ -279,16 +279,13 @@ export function ViewForm() {
           </DialogDescription>
         </DialogHeader>
 
-        {/* Scrollable Form Content */}
         <div className="flex-1 overflow-y-auto px-6">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
               className="py-4 space-y-5"
             >
-              {/* Basic Info Section */}
               <div className="space-y-4">
-                {/* View Name & Description in 2 columns on larger screens */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <FormField
                     control={form.control}
@@ -322,7 +319,6 @@ export function ViewForm() {
                   />
                 </div>
 
-                {/* View Type - Compact Grid */}
                 <FormField
                   control={form.control}
                   name="type"
@@ -336,7 +332,7 @@ export function ViewForm() {
                             return (
                               <Card
                                 key={viewType.value}
-                                className={`cursor-pointer transition-all duration-200 p-0 hover:scale-105 ${
+                                className={`cursor-pointer p-0 ${
                                   isSelected
                                     ? "border-primary bg-primary/10 shadow-sm"
                                     : "hover:border-muted-foreground/50"
@@ -387,7 +383,6 @@ export function ViewForm() {
                   )}
                 />
 
-                {/* Visible Properties - Compact */}
                 <FormField
                   control={form.control}
                   name="visibleProperties"
@@ -492,7 +487,6 @@ export function ViewForm() {
                   )}
                 />
 
-                {/* Options - Compact */}
                 <div className="space-y-3">
                   <FormField
                     control={form.control}
@@ -523,7 +517,6 @@ export function ViewForm() {
           </Form>
         </div>
 
-        {/* Fixed Footer */}
         <DialogFooter className="flex-shrink-0 px-6 py-4 border-t bg-muted/20">
           <div className="flex gap-2 w-full">
             <Button

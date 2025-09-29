@@ -1,36 +1,18 @@
-import { useState } from "react";
-import type {
-  IActivityFeedItem,
-  IUpcomingTask,
-  IRecentNote,
-} from "@/modules/dashboard/types/dashboard.types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  CheckSquare,
-  Target,
-  BookOpen,
-  Clock,
-  Zap,
-  ArrowRight,
-  Activity,
-  Filter,
-} from "lucide-react";
-import { formatDistanceToNow, isValid } from "date-fns";
-import { useDashboardOverview } from "../services/dashboard-queries";
-import { Main } from "@/layout/main";
-import { EnhancedHeader } from "@/components/enhanced-header";
-import { useWorkspace } from "@/modules/workspaces/context";
-import { DashboardSkeleton } from "../components/dashboard-skeleton";
+import {useState} from "react";
+import type {IActivityFeedItem, IRecentNote, IUpcomingTask,} from "@/modules/dashboard/types/dashboard.types";
+import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
+import {Progress} from "@/components/ui/progress";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {Activity, ArrowRight, BookOpen, CheckSquare, Clock, Filter, Target, Zap,} from "lucide-react";
+import {formatDistanceToNow, isValid} from "date-fns";
+import {useDashboardOverview} from "../services/dashboard-queries";
+import {Main} from "@/layout/main";
+import {EnhancedHeader} from "@/components/enhanced-header";
+import {useWorkspace} from "@/modules/workspaces/context";
+import {DashboardSkeleton} from "../components/dashboard-skeleton";
+// import {DatabaseView, EDatabaseType} from "@/modules/database-view";
 
 export function SecondBrainDashboard() {
   const { currentWorkspace } = useWorkspace();
@@ -105,6 +87,7 @@ export function SecondBrainDashboard() {
       <EnhancedHeader />
 
       <Main className="space-y-6">
+        {/*<DatabaseView moduleType={EDatabaseType.DASHBOARD} />*/}
         {/* Clean Header */}
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
