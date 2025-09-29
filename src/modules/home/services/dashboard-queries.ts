@@ -1,23 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "./dashboard-api";
+import { DASHBOARD_KEYS } from "@/constants/query-keys.ts";
 import type { IDashboardQueryParams } from "../types";
-
-// Query Keys
-export const DASHBOARD_KEYS = {
-  all: ["dashboard"] as const,
-  overview: () => [...DASHBOARD_KEYS.all, "overview"] as const,
-  stats: () => [...DASHBOARD_KEYS.all, "stats"] as const,
-  activity: () => [...DASHBOARD_KEYS.all, "activity"] as const,
-  quickStats: () => [...DASHBOARD_KEYS.all, "quick-stats"] as const,
-  upcomingTasks: () => [...DASHBOARD_KEYS.all, "upcoming-tasks"] as const,
-  recentNotes: () => [...DASHBOARD_KEYS.all, "recent-notes"] as const,
-  goalProgress: () => [...DASHBOARD_KEYS.all, "goal-progress"] as const,
-  habitStreaks: () => [...DASHBOARD_KEYS.all, "habit-streaks"] as const,
-  financeSummary: (period: string) =>
-    [...DASHBOARD_KEYS.all, "finance-summary", period] as const,
-  recentlyVisited: (limit: number) =>
-    [...DASHBOARD_KEYS.all, "recently-visited", limit] as const,
-};
 
 // Dashboard Queries
 export const useDashboardOverview = (params?: IDashboardQueryParams) => {

@@ -47,7 +47,7 @@ export function UserAuthForm({ className, ...props }: UserAuthFormProps) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleLogin)}
+        onSubmit={form.handleSubmit((data) => handleLogin(data, rememberMe))}
         className={cn("grid gap-4", className)}
         {...props}
         aria-label="Sign in form"

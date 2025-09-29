@@ -1,22 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { secondBrainAnalyticsApi } from "./second-brain-analytics-api";
+import { SECOND_BRAIN_ANALYTICS_KEYS } from "@/constants/query-keys.ts";
 import type { IAnalyticsQueryParams } from "../../home/types/system.types";
-
-export const SECOND_BRAIN_ANALYTICS_KEYS = {
-  all: ["second-brain-analytics"] as const,
-  productivity: (params?: IAnalyticsQueryParams) =>
-    [...SECOND_BRAIN_ANALYTICS_KEYS.all, "productivity", params] as const,
-  tasks: (params?: IAnalyticsQueryParams) =>
-    [...SECOND_BRAIN_ANALYTICS_KEYS.all, "tasks", params] as const,
-  timeTracking: (params?: IAnalyticsQueryParams) =>
-    [...SECOND_BRAIN_ANALYTICS_KEYS.all, "time-tracking", params] as const,
-  goals: (params?: IAnalyticsQueryParams) =>
-    [...SECOND_BRAIN_ANALYTICS_KEYS.all, "goals", params] as const,
-  finance: (params?: IAnalyticsQueryParams) =>
-    [...SECOND_BRAIN_ANALYTICS_KEYS.all, "finance", params] as const,
-  content: (params?: IAnalyticsQueryParams) =>
-    [...SECOND_BRAIN_ANALYTICS_KEYS.all, "content", params] as const,
-};
 
 // Productivity Analytics
 export const useProductivityAnalytics = (params?: IAnalyticsQueryParams) => {

@@ -36,8 +36,8 @@ export const useLogin = () => {
     },
   });
 
-  const handleLogin = (data: LoginCredentials) => {
-    loginMutation.mutate(data);
+  const handleLogin = (data: LoginCredentials, rememberMe: boolean = true) => {
+    loginMutation.mutate({ ...data, rememberMe });
   };
 
   return {

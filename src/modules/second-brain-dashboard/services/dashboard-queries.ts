@@ -1,13 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "./dashboard-api";
+import { DASHBOARD_KEYS } from "@/constants/query-keys.ts";
 import type { AxiosError } from "axios";
 import type { IDashboardOverview } from "@/modules/dashboard/types/dashboard.types";
-
-export const DASHBOARD_KEYS = {
-  all: ["dashboard"] as const,
-  overview: (params?: Record<string, unknown>) =>
-    [...DASHBOARD_KEYS.all, "overview", params] as const,
-};
 
 export const useDashboardOverview = (params?: {
   workspaceId?: string;

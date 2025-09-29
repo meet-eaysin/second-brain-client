@@ -1,67 +1,43 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { templatesApi } from "./templates-api.ts";
+import { TEMPLATE_KEYS } from "@/constants/query-keys.ts";
 import type {
   CreateTemplateRequest,
   TemplateSearchParams,
 } from "./templates-api.ts";
 
-// Query keys
-export const templateKeys = {
-  all: ["templates"] as const,
-  lists: () => [...templateKeys.all, "list"] as const,
-  list: (params: TemplateSearchParams) =>
-    [...templateKeys.lists(), params] as const,
-  featured: () => [...templateKeys.all, "featured"] as const,
-  official: () => [...templateKeys.all, "official"] as const,
-  popular: () => [...templateKeys.all, "popular"] as const,
-  categories: () => [...templateKeys.all, "categories"] as const,
-  types: () => [...templateKeys.all, "types"] as const,
-  gallery: () => [...templateKeys.all, "gallery"] as const,
-  byCategory: (category: string) =>
-    [...templateKeys.all, "category", category] as const,
-  byModule: (moduleType: string) =>
-    [...templateKeys.all, "module", moduleType] as const,
-  details: () => [...templateKeys.all, "detail"] as const,
-  detail: (id: string) => [...templateKeys.details(), id] as const,
-  userTemplates: () => [...templateKeys.all, "user"] as const,
-  userHistory: () => [...templateKeys.all, "user", "history"] as const,
-  suggestions: (databaseId: string) =>
-    [...templateKeys.all, "suggestions", databaseId] as const,
-  analytics: (id: string) => [...templateKeys.all, "analytics", id] as const,
-};
-
 // Queries
 export const useTemplates = (params?: TemplateSearchParams) => {
   return useQuery({
-    queryKey: templateKeys.list(params || {}),
+    queryKey: TEMPLATE_KEYS.list(params || {}),
     queryFn: () => templatesApi.getTemplates(params),
   });
 };
 
 export const useFeaturedTemplates = () => {
   return useQuery({
-    queryKey: templateKeys.featured(),
+    queryKey: TEMPLATE_KEYS.featured(),
     queryFn: () => templatesApi.getFeaturedTemplates(),
   });
 };
 
 export const useOfficialTemplates = () => {
   return useQuery({
-    queryKey: templateKeys.official(),
+    queryKey: TEMPLATE_KEYS.official(),
     queryFn: () => templatesApi.getOfficialTemplates(),
   });
 };
 
 export const usePopularTemplates = () => {
   return useQuery({
-    queryKey: templateKeys.popular(),
+    queryKey: TEMPLATE_KEYS.popular(),
     queryFn: () => templatesApi.getPopularTemplates(),
   });
 };
 
 export const useTemplatesByCategory = (category: string) => {
   return useQuery({
-    queryKey: templateKeys.byCategory(category),
+    queryKey: TEMPLATE_KEYS.byCategory(category),
     queryFn: () => templatesApi.getTemplatesByCategory(category),
     enabled: !!category,
   });
@@ -69,7 +45,7 @@ export const useTemplatesByCategory = (category: string) => {
 
 export const useTemplatesByModule = (moduleType: string) => {
   return useQuery({
-    queryKey: templateKeys.byModule(moduleType),
+    queryKey: TEMPLATE_KEYS.byModule(moduleType),
     queryFn: () => templatesApi.getTemplatesByModule(moduleType),
     enabled: !!moduleType,
   });
@@ -77,7 +53,7 @@ export const useTemplatesByModule = (moduleType: string) => {
 
 export const useTemplate = (templateId: string) => {
   return useQuery({
-    queryKey: templateKeys.detail(templateId),
+    queryKey: TEMPLATE_KEYS.detail(templateId),
     queryFn: () => templatesApi.getTemplate(templateId),
     enabled: !!templateId,
   });
@@ -85,42 +61,42 @@ export const useTemplate = (templateId: string) => {
 
 export const useTemplateCategories = () => {
   return useQuery({
-    queryKey: templateKeys.categories(),
+    queryKey: TEMPLATE_KEYS.categories(),
     queryFn: () => templatesApi.getTemplateCategories(),
   });
 };
 
 export const useTemplateTypes = () => {
   return useQuery({
-    queryKey: templateKeys.types(),
+    queryKey: TEMPLATE_KEYS.types(),
     queryFn: () => templatesApi.getTemplateTypes(),
   });
 };
 
 export const useTemplateGallery = () => {
   return useQuery({
-    queryKey: templateKeys.gallery(),
+    queryKey: TEMPLATE_KEYS.gallery(),
     queryFn: () => templatesApi.getTemplateGallery(),
   });
 };
 
 export const useUserTemplates = () => {
   return useQuery({
-    queryKey: templateKeys.userTemplates(),
+    queryKey: TEMPLATE_KEYS.userTemplates(),
     queryFn: () => templatesApi.getUserTemplates(),
   });
 };
 
 export const useUserTemplateHistory = (limit?: number) => {
   return useQuery({
-    queryKey: templateKeys.userHistory(),
+    queryKey: TEMPLATE_KEYS.userHistory(),
     queryFn: () => templatesApi.getUserTemplateHistory(limit),
   });
 };
 
 export const useTemplateSuggestions = (databaseId: string) => {
   return useQuery({
-    queryKey: templateKeys.suggestions(databaseId),
+    queryKey: TEMPLATE_KEYS.suggestions(databaseId),
     queryFn: () => templatesApi.getTemplateSuggestions(databaseId),
     enabled: !!databaseId,
   });
@@ -128,7 +104,7 @@ export const useTemplateSuggestions = (databaseId: string) => {
 
 export const useTemplateAnalytics = (templateId: string) => {
   return useQuery({
-    queryKey: templateKeys.analytics(templateId),
+    queryKey: TEMPLATE_KEYS.analytics(templateId),
     queryFn: () => templatesApi.getTemplateAnalytics(templateId),
     enabled: !!templateId,
   });
@@ -142,7 +118,7 @@ export const useCreateTemplate = () => {
     mutationFn: (data: CreateTemplateRequest) =>
       templatesApi.createTemplate(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: templateKeys.all });
+      queryClient.invalidateQueries({ queryKey: TEMPLATE_KEYS.all });
     },
   });
 };
@@ -160,9 +136,11 @@ export const useUpdateTemplate = () => {
     }) => templatesApi.updateTemplate(templateId, data),
     onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
-        queryKey: templateKeys.detail(templateId),
+        queryKey: TEMPLATE_KEYS.detail(templateId),
       });
-      queryClient.invalidateQueries({ queryKey: templateKeys.userTemplates() });
+      queryClient.invalidateQueries({
+        queryKey: TEMPLATE_KEYS.userTemplates(),
+      });
     },
   });
 };
@@ -173,7 +151,7 @@ export const useDeleteTemplate = () => {
   return useMutation({
     mutationFn: (templateId: string) => templatesApi.deleteTemplate(templateId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: templateKeys.all });
+      queryClient.invalidateQueries({ queryKey: TEMPLATE_KEYS.all });
     },
   });
 };
@@ -212,10 +190,10 @@ export const useRateTemplate = () => {
     }) => templatesApi.rateTemplate(templateId, rating),
     onSuccess: (_, { templateId }) => {
       queryClient.invalidateQueries({
-        queryKey: templateKeys.detail(templateId),
+        queryKey: TEMPLATE_KEYS.detail(templateId),
       });
       queryClient.invalidateQueries({
-        queryKey: templateKeys.analytics(templateId),
+        queryKey: TEMPLATE_KEYS.analytics(templateId),
       });
     },
   });
@@ -233,7 +211,7 @@ export const useDuplicateTemplate = () => {
       data?: { name?: string; description?: string };
     }) => templatesApi.duplicateTemplate(templateId, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: templateKeys.all });
+      queryClient.invalidateQueries({ queryKey: TEMPLATE_KEYS.all });
     },
   });
 };

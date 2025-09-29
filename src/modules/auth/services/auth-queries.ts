@@ -1,6 +1,7 @@
 import type { ApiError } from "@/types/api.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authApi } from "./auth-api";
+import { AUTH_KEYS } from "@/constants/query-keys.ts";
 import { useAuthStore } from "../store/auth-store.ts";
 import {
   setToken,
@@ -21,13 +22,6 @@ import {
   getSignInLink,
   getSignOutLink,
 } from "@/app/router/router-link.ts";
-
-export const AUTH_KEYS = {
-  user: ["auth", "user"] as const,
-  login: ["auth", "login"] as const,
-  register: ["auth", "register"] as const,
-  googleLogin: ["auth", "google"] as const,
-};
 
 interface LoginMutationOptions {
   onSuccess?: (data: AuthResponse) => void;
@@ -93,28 +87,31 @@ export const useLoginMutation = (options?: LoginMutationOptions) => {
     mutationFn: async ({
       email,
       password,
+      rememberMe = true,
     }: {
       email: string;
       password: string;
+      rememberMe?: boolean;
     }) => {
       const response = await authApi.login(email, password);
       if (!response.data) throw new Error("Login failed");
-      return response.data;
+      return { ...response.data, rememberMe };
     },
     onMutate: () => {
       setLoading(true);
     },
-    onSuccess: (data: AuthResponse) => {
-      setToken(data.accessToken);
-      setRefreshToken(data.refreshToken);
+    onSuccess: (data: AuthResponse & { rememberMe: boolean }) => {
+      const { rememberMe, ...authData } = data;
+      setToken(authData.accessToken, rememberMe);
+      setRefreshToken(authData.refreshToken, rememberMe);
 
-      setUser(data.user);
-      queryClient.setQueryData(AUTH_KEYS.user, data.user);
+      setUser(authData.user);
+      queryClient.setQueryData(AUTH_KEYS.user, authData.user);
 
       setLoading(false);
       toast.success("Login successful! Welcome back.");
 
-      if (options?.onSuccess) options.onSuccess(data);
+      if (options?.onSuccess) options.onSuccess(authData);
     },
     onError: (error: AxiosError<ApiError>) => {
       setLoading(false);
@@ -157,8 +154,9 @@ export const useRegisterMutation = () => {
       setLoading(true);
     },
     onSuccess: (data: AuthResponse) => {
-      setToken(data.accessToken);
-      setRefreshToken(data.refreshToken);
+      // Registration always remembers the user (they just created an account)
+      setToken(data.accessToken, true);
+      setRefreshToken(data.refreshToken, true);
 
       setUser(data.user);
       queryClient.setQueryData(AUTH_KEYS.user, data.user);
@@ -208,8 +206,9 @@ export const useGoogleLoginMutation = () => {
       setLoading(true);
     },
     onSuccess: (data: AuthResponse) => {
-      setToken(data.accessToken);
-      setRefreshToken(data.refreshToken);
+      // Google login always remembers the user (OAuth flow)
+      setToken(data.accessToken, true);
+      setRefreshToken(data.refreshToken, true);
 
       setUser(data.user);
 
@@ -244,8 +243,9 @@ export const useGoogleTokenMutation = () => {
       accessToken: string;
       refreshToken: string;
     }) => {
-      setToken(accessToken);
-      setRefreshToken(refreshToken);
+      // Google token login always remembers the user
+      setToken(accessToken, true);
+      setRefreshToken(refreshToken, true);
 
       return await authApi.getCurrentUser();
     },

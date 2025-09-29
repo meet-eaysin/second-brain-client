@@ -27,7 +27,7 @@ import {
   useInitializeSpecificModules,
 } from "../services/database-queries";
 import { useQueryClient } from "@tanstack/react-query";
-import { DATABASE_KEYS } from "../services/database-queries";
+import { DATABASE_KEYS } from "@/constants/query-keys.ts";
 import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
 import {
   useDatabase,

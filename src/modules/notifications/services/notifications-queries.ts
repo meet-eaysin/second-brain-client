@@ -1,6 +1,7 @@
 import { type ApiResponse } from "@/types/api.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { notificationsApi } from "./notifications-api.ts";
+import { NOTIFICATION_KEYS } from "@/constants/query-keys.ts";
 import type {
   Notification,
   NotificationQueryParams,
@@ -8,22 +9,6 @@ import type {
   DeviceTokenData,
 } from "@/modules/notifications/types/notifications.types";
 import { toast } from "sonner";
-
-export const NOTIFICATION_KEYS = {
-  all: ["notifications"] as const,
-  lists: () => [...NOTIFICATION_KEYS.all, "list"] as const,
-  list: (params?: NotificationQueryParams) =>
-    [...NOTIFICATION_KEYS.lists(), params] as const,
-  details: () => [...NOTIFICATION_KEYS.all, "detail"] as const,
-  detail: (id: string) => [...NOTIFICATION_KEYS.details(), id] as const,
-  unread: () => [...NOTIFICATION_KEYS.all, "unread"] as const,
-  unreadCount: () => [...NOTIFICATION_KEYS.all, "unread-count"] as const,
-  byType: (type: ENotificationType) =>
-    [...NOTIFICATION_KEYS.all, "type", type] as const,
-  recent: () => [...NOTIFICATION_KEYS.all, "recent"] as const,
-  stats: () => [...NOTIFICATION_KEYS.all, "stats"] as const,
-  devices: () => [...NOTIFICATION_KEYS.all, "devices"] as const,
-};
 
 // Query hooks
 export const useGetNotifications = (params?: NotificationQueryParams) => {
@@ -120,17 +105,19 @@ export const useMarkNotificationAsRead = () => {
 
           return {
             ...oldData,
-            notifications: oldData?.data?.map(
-              (notification: Notification) =>
-                notification.id === id
-                  ? {
-                      ...notification,
-                      isRead: true,
-                      readAt: updatedNotification?.data?.readAt,
-                    }
-                  : notification
+            notifications: oldData?.data?.map((notification: Notification) =>
+              notification.id === id
+                ? {
+                    ...notification,
+                    isRead: true,
+                    readAt: updatedNotification?.data?.readAt,
+                  }
+                : notification
             ),
-            unreadCount: Math.max(0, oldData?.data?.map(n => n.isRead).length || 0 - 1),
+            unreadCount: Math.max(
+              0,
+              oldData?.data?.map((n) => n.isRead).length || 0 - 1
+            ),
           };
         }
       );
@@ -162,13 +149,11 @@ export const useMarkAllNotificationsAsRead = () => {
 
           return {
             ...oldData,
-            notifications: oldData?.data?.map(
-              (notification: Notification) => ({
-                ...notification,
-                isRead: true,
-                readAt: new Date(),
-              })
-            ),
+            notifications: oldData?.data?.map((notification: Notification) => ({
+              ...notification,
+              isRead: true,
+              readAt: new Date(),
+            })),
             unreadCount: 0,
           };
         }
@@ -215,8 +200,8 @@ export const useDeleteNotification = () => {
             ),
             total: oldData?.data?.length || 0 - 1,
             unreadCount: wasUnread
-              ? Math.max(0, oldData?.data?.map(n => n.isRead).length || 0 - 1)
-              : oldData.data?.map(n => n.isRead).length,
+              ? Math.max(0, oldData?.data?.map((n) => n.isRead).length || 0 - 1)
+              : oldData.data?.map((n) => n.isRead).length,
           };
         }
       );
@@ -254,9 +239,8 @@ export const useUpdateNotification = () => {
 
           return {
             ...oldData,
-            notifications: oldData?.data?.map(
-              (notification: Notification) =>
-                notification.id === id ? updatedNotification : notification
+            notifications: oldData?.data?.map((notification: Notification) =>
+              notification.id === id ? updatedNotification : notification
             ),
           };
         }

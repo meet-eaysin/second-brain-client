@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { databaseApi } from "./database-api";
+import { DATABASE_KEYS } from "@/constants/query-keys.ts";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import type { ApiError, ApiResponse } from "@/types/api.types.ts";
@@ -54,43 +55,9 @@ import {
   type TRelationConnection,
   type TCreateRelationConnection,
   type TContentBlock,
-  EDatabaseType, ESortDirection,
+  EDatabaseType,
+  ESortDirection,
 } from "@/modules/database-view/types";
-
-export const DATABASE_KEYS = {
-  all: ["databases"] as const,
-  lists: () => [...DATABASE_KEYS.all, "list"] as const,
-  list: (filters: TDatabaseQueryParams) =>
-    [...DATABASE_KEYS.lists(), filters] as const,
-  details: () => [...DATABASE_KEYS.all, "detail"] as const,
-  detail: (id: string) => [...DATABASE_KEYS.details(), id] as const,
-  stats: (id: string) => [...DATABASE_KEYS.detail(id), "stats"] as const,
-
-  properties: (databaseId: string) =>
-    [...DATABASE_KEYS.detail(databaseId), "properties"] as const,
-  property: (databaseId: string, propertyId: string) =>
-    [...DATABASE_KEYS.properties(databaseId), propertyId] as const,
-
-  records: (databaseId: string) =>
-    [...DATABASE_KEYS.detail(databaseId), "records"] as const,
-  record: (databaseId: string, recordId: string) =>
-    [...DATABASE_KEYS.records(databaseId), recordId] as const,
-
-  views: (databaseId: string) =>
-    [...DATABASE_KEYS.detail(databaseId), "views"] as const,
-  view: (databaseId: string, viewId: string) =>
-    [...DATABASE_KEYS.views(databaseId), viewId] as const,
-
-  relations: ["relations"] as const,
-  relation: (id: string) => [...DATABASE_KEYS.relations, id] as const,
-  relationConnections: (relationId: string) =>
-    [...DATABASE_KEYS.relation(relationId), "connections"] as const,
-
-  blocks: (databaseId: string, recordId: string) =>
-    [...DATABASE_KEYS.record(databaseId, recordId), "blocks"] as const,
-  block: (databaseId: string, recordId: string, blockId: string) =>
-    [...DATABASE_KEYS.blocks(databaseId, recordId), blockId] as const,
-};
 
 export const useDatabases = (params?: TDatabaseQueryParams) => {
   return useQuery<ApiResponse<TDatabase[]>, AxiosError>({

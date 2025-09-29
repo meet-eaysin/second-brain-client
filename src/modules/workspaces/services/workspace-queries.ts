@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { workspaceApi } from "./workspace-api";
+import {
+  WORKSPACE_KEYS,
+  WORKSPACE_DEPENDENT_QUERIES,
+} from "@/constants/query-keys.ts";
 import type { ApiResponse } from "@/types/api.types";
 import type {
   UpdateWorkspaceRequest,
@@ -21,47 +25,6 @@ const getErrorMessage = (error: unknown, defaultMessage: string): string => {
     return axiosError.response?.data?.message || defaultMessage;
   }
   return defaultMessage;
-};
-
-// Query keys that should be invalidated when switching workspaces
-export const WORKSPACE_DEPENDENT_QUERIES = [
-  ["databases"],
-  ["tasks"],
-  ["notes"],
-  ["projects"],
-  ["calendar"],
-  ["dashboard"],
-  ["analytics"],
-  ["second-brain"],
-  ["people-database-view"],
-  ["people-views"],
-  ["notes-database-view"],
-  ["notes-with-view"],
-  ["recently-visited"],
-  ["files"],
-  ["templates"],
-  ["system"],
-] as const;
-
-export const WORKSPACE_KEYS = {
-  all: ["workspaces"] as const,
-  userWorkspaces: () => [...WORKSPACE_KEYS.all, "user"] as const,
-  current: () => [...WORKSPACE_KEYS.all, "current"] as const,
-  primary: () => [...WORKSPACE_KEYS.all, "primary"] as const,
-  stats: () => [...WORKSPACE_KEYS.all, "stats"] as const,
-  access: () => [...WORKSPACE_KEYS.all, "access"] as const,
-  modules: () => [...WORKSPACE_KEYS.all, "modules"] as const,
-  lists: () => [...WORKSPACE_KEYS.all, "lists"] as const,
-  detail: (id: string) => [...WORKSPACE_KEYS.all, "detail", id] as const,
-  public: () => [...WORKSPACE_KEYS.all, "public"] as const,
-  search: (params: SearchWorkspacesQuery) =>
-    [...WORKSPACE_KEYS.all, "search", params] as const,
-  members: (workspaceId: string) =>
-    [...WORKSPACE_KEYS.all, "members", workspaceId] as const,
-  permissions: (workspaceId: string) =>
-    [...WORKSPACE_KEYS.all, "permissions", workspaceId] as const,
-  activity: (workspaceId: string) =>
-    [...WORKSPACE_KEYS.all, "activity", workspaceId] as const,
 };
 
 // Get user's workspaces
@@ -410,7 +373,12 @@ export const useSwitchWorkspace = () => {
         success: true,
       });
 
+      console.log(
+        "Invalidating workspace-dependent queries:",
+        WORKSPACE_DEPENDENT_QUERIES
+      );
       WORKSPACE_DEPENDENT_QUERIES.forEach((queryKey) => {
+        console.log("Invalidating query key:", queryKey);
         queryClient.invalidateQueries({ queryKey });
       });
 

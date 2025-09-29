@@ -5,13 +5,7 @@ import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import type { ApiError } from "@/types/api.types";
 import type { User } from "@/modules/auth/types/auth.types";
-import type {UpdateProfile} from "@/modules/users/types/users.types.ts";
-
-export const PROFILE_KEYS = {
-  all: ["profile"] as const,
-  update: () => [...PROFILE_KEYS.all, "update"] as const,
-  avatar: () => [...PROFILE_KEYS.all, "avatar"] as const,
-};
+import type { UpdateProfile } from "@/modules/users/types/users.types.ts";
 
 // Update user profile mutation
 export const useUpdateProfile = () => {

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { calendarApi } from "./calendar-api.ts";
+import { CALENDAR_KEYS } from "@/constants/query-keys.ts";
 import type {
   CalendarConnection,
   CreateCalendarRequest,
@@ -9,29 +10,6 @@ import type {
   CalendarEventsQuery,
   ConnectCalendarRequest,
 } from "@/modules/calendar/types/calendar.types.ts";
-
-// Query Keys
-export const CALENDAR_KEYS = {
-  all: ["calendars"] as const,
-  lists: () => [...CALENDAR_KEYS.all, "list"] as const,
-  list: (filters: Record<string, unknown>) =>
-    [...CALENDAR_KEYS.lists(), filters] as const,
-  details: () => [...CALENDAR_KEYS.all, "detail"] as const,
-  detail: (id: string) => [...CALENDAR_KEYS.details(), id] as const,
-  events: () => [...CALENDAR_KEYS.all, "events"] as const,
-  eventsList: (filters: CalendarEventsQuery) =>
-    [...CALENDAR_KEYS.events(), filters] as const,
-  eventDetail: (id: string) => [...CALENDAR_KEYS.events(), id] as const,
-  upcoming: () => [...CALENDAR_KEYS.events(), "upcoming"] as const,
-  today: () => [...CALENDAR_KEYS.events(), "today"] as const,
-  stats: () => [...CALENDAR_KEYS.all, "stats"] as const,
-  config: () => [...CALENDAR_KEYS.all, "config"] as const,
-  preferences: () => [...CALENDAR_KEYS.all, "preferences"] as const,
-  connections: () => [...CALENDAR_KEYS.all, "connections"] as const,
-  connectionDetail: (id: string) =>
-    [...CALENDAR_KEYS.connections(), id] as const,
-  providers: () => [...CALENDAR_KEYS.connections(), "providers"] as const,
-};
 
 export const useCalendars = () => {
   return useQuery({

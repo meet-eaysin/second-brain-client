@@ -1,74 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { dashboardApi, systemApi } from "./home-api";
+import { DASHBOARD_KEYS, SYSTEM_KEYS } from "@/constants/query-keys.ts";
 import type { IDashboardQueryParams } from "../types";
 import type { IActivityQueryOptions, IAnalyticsQueryParams } from "../types";
-
-export const DASHBOARD_KEYS = {
-  all: ["dashboard"] as const,
-  overview: (params?: IDashboardQueryParams) =>
-    [...DASHBOARD_KEYS.all, "overview", params] as const,
-  stats: (params?: IDashboardQueryParams) =>
-    [...DASHBOARD_KEYS.all, "stats", params] as const,
-  activity: (params?: { limit?: number }) =>
-    [...DASHBOARD_KEYS.all, "activity", params] as const,
-  quickStats: () => [...DASHBOARD_KEYS.all, "quick-stats"] as const,
-  upcomingTasks: (params?: { limit?: number }) =>
-    [...DASHBOARD_KEYS.all, "upcoming-tasks", params] as const,
-  recentNotes: (params?: { limit?: number }) =>
-    [...DASHBOARD_KEYS.all, "recent-notes", params] as const,
-  goalProgress: () => [...DASHBOARD_KEYS.all, "goal-progress"] as const,
-  habitStreaks: () => [...DASHBOARD_KEYS.all, "habit-streaks"] as const,
-  financeSummary: (params?: { period?: string }) =>
-    [...DASHBOARD_KEYS.all, "finance-summary", params] as const,
-  upcomingEvents: (params?: { limit?: number }) =>
-    [...DASHBOARD_KEYS.all, "upcoming-events", params] as const,
-  systemAll: ["system"] as const,
-  systemActivity: () => [...SYSTEM_KEYS.all, "activity"] as const,
-  feed: (workspaceId: string, limit: number) =>
-    [...DASHBOARD_KEYS.systemActivity(), "feed", workspaceId, limit] as const,
-};
-
-export const SYSTEM_KEYS = {
-  all: ["system"] as const,
-  activities: (params?: IActivityQueryOptions) =>
-    [...SYSTEM_KEYS.all, "activities", params] as const,
-  activityFeed: (params?: { limit?: number; workspaceId?: string }) =>
-    [...SYSTEM_KEYS.all, "activity-feed", params] as const,
-  activitySummary: () => [...SYSTEM_KEYS.all, "activity-summary"] as const,
-  activityAnalytics: (params?: IActivityQueryOptions) =>
-    [...SYSTEM_KEYS.all, "activity-analytics", params] as const,
-  activityById: (id: string) => [...SYSTEM_KEYS.all, "activity", id] as const,
-  workspaceActivityOverview: () =>
-    [...SYSTEM_KEYS.all, "workspace-activity-overview"] as const,
-  auditTrail: (params?: Record<string, unknown>) =>
-    [...SYSTEM_KEYS.all, "audit-trail", params] as const,
-  securityEvents: (params?: Record<string, unknown>) =>
-    [...SYSTEM_KEYS.all, "security-events", params] as const,
-  complianceReport: (params?: { period?: string }) =>
-    [...SYSTEM_KEYS.all, "compliance-report", params] as const,
-  activityHeatmap: (params?: { period?: string }) =>
-    [...SYSTEM_KEYS.all, "activity-heatmap", params] as const,
-  analyticsDashboard: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "analytics-dashboard", params] as const,
-  analyticsSummary: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "analytics-summary", params] as const,
-  analyticsInsights: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "analytics-insights", params] as const,
-  productivityAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "productivity-analytics", params] as const,
-  taskAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "task-analytics", params] as const,
-  timeTrackingAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "time-tracking-analytics", params] as const,
-  goalAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "goal-analytics", params] as const,
-  financeAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "finance-analytics", params] as const,
-  contentAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "content-analytics", params] as const,
-  workspaceAnalytics: (params?: IAnalyticsQueryParams) =>
-    [...SYSTEM_KEYS.all, "workspace-analytics", params] as const,
-};
 
 // Get dashboard overview
 export const useDashboardOverview = (params?: IDashboardQueryParams) => {

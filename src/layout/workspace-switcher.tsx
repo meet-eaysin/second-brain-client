@@ -20,8 +20,8 @@ import { useWorkspace } from "@/modules/workspaces/context";
 import {
   useCreateWorkspace,
   useSwitchWorkspace,
-  WORKSPACE_KEYS,
 } from "@/modules/workspaces/services/workspace-queries";
+import { WORKSPACE_KEYS } from "@/constants/query-keys.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { WorkspaceForm } from "@/modules/workspaces/components/workspace-form";
 import type {

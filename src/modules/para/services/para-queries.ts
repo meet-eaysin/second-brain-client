@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { paraApi } from "./para-api";
+import { PARA_KEYS } from "@/constants/query-keys.ts";
 import type {
   ICreateParaItemRequest,
   IUpdateParaItemRequest,
@@ -10,36 +11,6 @@ import type {
   EParaStatus,
   EParaPriority,
 } from "@/modules/para/types/para.types";
-
-// Query Keys
-export const PARA_KEYS = {
-  all: ["para"] as const,
-  items: (params?: IParaQueryParams) =>
-    [...PARA_KEYS.all, "items", params] as const,
-  item: (id: string) => [...PARA_KEYS.all, "item", id] as const,
-  stats: (params?: IParaQueryParams) =>
-    [...PARA_KEYS.all, "stats", params] as const,
-  search: (query: string, params?: IParaQueryParams) =>
-    [...PARA_KEYS.all, "search", query, params] as const,
-  categories: {
-    projects: (params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "categories", "projects", params] as const,
-    areas: (params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "categories", "areas", params] as const,
-    resources: (params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "categories", "resources", params] as const,
-    archive: (params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "categories", "archive", params] as const,
-  },
-  analytics: {
-    byStatus: (status: EParaStatus, params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "analytics", "status", status, params] as const,
-    byPriority: (priority: EParaPriority, params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "analytics", "priority", priority, params] as const,
-    reviewsOverdue: (params?: IParaQueryParams) =>
-      [...PARA_KEYS.all, "analytics", "reviews-overdue", params] as const,
-  },
-};
 
 // ===== QUERIES =====
 

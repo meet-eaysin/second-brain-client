@@ -3,7 +3,6 @@ export { default as CalendarPage } from "./pages/calendar-page";
 export { calendarApi } from "./services/calendar-api.ts";
 
 export {
-  CALENDAR_KEYS,
   useCalendars,
   useCalendar,
   useEvents,
@@ -29,6 +28,8 @@ export {
   useResetCalendarConnectionErrors,
   useSyncTimeRelatedModules,
 } from "./services/calendar-queries";
+
+export { CALENDAR_KEYS } from "@/constants/query-keys.ts";
 
 export { default as EventForm } from "./components/event-form";
 export { default as ShadcnBigCalendarComponent } from "./components/schedule-x-calendar";

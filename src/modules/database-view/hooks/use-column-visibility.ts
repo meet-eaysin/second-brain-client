@@ -3,7 +3,7 @@ import { useDatabaseView } from "@/modules/database-view/context";
 import type { TProperty } from "@/modules/database-view/types";
 import { databaseApi } from "@/modules/database-view/services/database-api";
 import { useUpdateView } from "@/modules/database-view/services/database-queries.ts";
-import { DATABASE_KEYS } from "@/modules/database-view/services/database-queries.ts";
+import { DATABASE_KEYS } from "@/constants/query-keys.ts";
 
 export function useColumnVisibility() {
   const { moduleType, currentView, allProperties, database } =

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userApi } from "./user-api.ts";
+import { USER_KEYS } from "@/constants/query-keys.ts";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import type { ApiResponse } from "@/types/api.types";
@@ -9,19 +10,8 @@ import type {
   UpdateUserByAdmin,
   UpdateUserRole,
   UserQueryParams,
-  UserStatsQueryParams
+  UserStatsQueryParams,
 } from "@/modules/users/types/users.types.ts";
-
-export const USER_KEYS = {
-  all: ["users"] as const,
-  lists: () => [...USER_KEYS.all, "list"] as const,
-  list: (params?: UserQueryParams) => [...USER_KEYS.lists(), params] as const,
-  details: () => [...USER_KEYS.all, "detail"] as const,
-  detail: (id: string) => [...USER_KEYS.details(), id] as const,
-  profile: () => [...USER_KEYS.all, "profile"] as const,
-  stats: (params?: UserStatsQueryParams) =>
-    [...USER_KEYS.all, "stats", params] as const,
-};
 
 // Get all users
 export const useUsers = (params?: UserQueryParams) => {
@@ -68,7 +58,8 @@ export const useUpdateProfile = () => {
       toast.success("Profile updated successfully");
     },
     onError: (error: AxiosError<ApiResponse<unknown>>) => {
-      const message = error.response?.data?.message || "Failed to update profile";
+      const message =
+        error.response?.data?.message || "Failed to update profile";
       toast.error(message);
     },
   });
@@ -96,13 +87,8 @@ export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: UpdateUserByAdmin;
-    }) => userApi.updateUserById(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateUserByAdmin }) =>
+      userApi.updateUserById(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: USER_KEYS.detail(id) });
       queryClient.invalidateQueries({ queryKey: USER_KEYS.lists() });

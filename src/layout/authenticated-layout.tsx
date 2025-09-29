@@ -8,7 +8,7 @@ import { PageVisitTracker } from "@/modules/home/components/page-visit-tracker";
 import { WorkspaceSetupWizard } from "@/modules/workspaces/components/workspace-setup-wizard";
 import { SetupWrapper } from "@/modules/admin/components/setup-wrapper";
 import { useAuthStore } from "@/modules/auth/store/auth-store.ts";
-import { WORKSPACE_DEPENDENT_QUERIES } from "@/modules/workspaces/services/workspace-queries";
+import { WORKSPACE_DEPENDENT_QUERIES } from "@/constants/query-keys.ts";
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/modules/workspaces/context";
 import { LoadingSpinner } from "@/components/loading-spinner";
@@ -142,7 +142,7 @@ function AuthenticatedLayout() {
               "has-[main.fixed-main]:group-data-[scroll-locked=1]/body:h-svh"
             )}
           >
-             <Outlet />
+            <Outlet />
           </div>
 
           <WorkspaceSetupWizard
