@@ -3,12 +3,12 @@ import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import type { SlotInfo, View } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import moment from "moment";
-import { useEvents } from "../services/calendar-queries";
 import {
   useCreateEvent,
   useUpdateEvent,
   useDeleteEvent,
-} from "../services/calendar-queries";
+  useEvents
+} from "@/modules/calendar/services/calendar-queries";
 import type {
   CreateEventRequest,
   UpdateEventRequest,
@@ -64,7 +64,6 @@ interface EventResizeArgs {
   end: string | Date;
 }
 
-// Custom event component for better UI
 const CustomEvent = ({ event }: { event: CalendarEvent }) => {
   const getEventTypeIcon = (type?: string) => {
     switch (type) {
@@ -134,7 +133,6 @@ export default function ShadcnBigCalendarComponent({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
 
-  // Memoize query parameters to prevent infinite re-renders
   const queryParams = useMemo(
     () => ({
       startDate: new Date(date.getFullYear(), date.getMonth() - 1, 1),
@@ -144,15 +142,13 @@ export default function ShadcnBigCalendarComponent({
     [date, selectedCalendars]
   );
 
-  // Fetch events for current view
   const { data: eventsResponse } = useEvents(queryParams);
 
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
   const deleteEventMutation = useDeleteEvent();
 
-  // Transform events to react-big-calendar format
-  const calendarEvents = (eventsResponse?.data || []).map((event) => ({
+  const calendarEvents = (eventsResponse?.data || [])?.map((event) => ({
     id: event.id,
     title: event.title,
     start: new Date(event.startTime),
@@ -188,10 +184,8 @@ export default function ShadcnBigCalendarComponent({
   ) => {
     try {
       if ("calendarId" in data) {
-        // Create new event
         await createEventMutation.mutateAsync(data);
       } else {
-        // Update existing event
         await updateEventMutation.mutateAsync({
           eventId: selectedEvent!.id,
           data,
@@ -277,18 +271,6 @@ export default function ShadcnBigCalendarComponent({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Event Confirmation Dialog */}
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        onOpenChange={setShowDeleteConfirm}
-        title="Delete Event"
-        desc="Are you sure you want to delete this event? This action cannot be undone."
-        confirmText="Delete Event"
-        destructive
-        handleConfirm={handleConfirmDeleteEvent}
-        isLoading={deleteEventMutation.isPending}
-      />
-
       <DnDCalendar
         localizer={localizer}
         style={{ height: 600, width: "100%" }}
@@ -309,6 +291,17 @@ export default function ShadcnBigCalendarComponent({
         components={{
           event: CustomEvent,
         }}
+      />
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete Event"
+        desc="Are you sure you want to delete this event? This action cannot be undone."
+        confirmText="Delete Event"
+        destructive
+        handleConfirm={handleConfirmDeleteEvent}
+        isLoading={deleteEventMutation.isPending}
       />
     </div>
   );
