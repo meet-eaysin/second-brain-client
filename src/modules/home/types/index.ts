@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type {IActivity} from "@/modules/home/types/system.types.ts";
+import type { IActivity } from "@/modules/home/types/system.types.ts";
 
 // Dashboard overview interface
 export interface IDashboardOverview {
@@ -148,18 +148,6 @@ export interface IDashboardStats {
     longestHabitStreak: IHabitStreak;
     biggestExpenseCategory: string;
   };
-}
-
-// Request/Response types
-export interface IDashboardQueryParams {
-  workspaceId?: string;
-  period?: "day" | "week" | "month" | "year";
-  includeActivity?: boolean;
-  includeStats?: boolean;
-  includeTrends?: boolean;
-  activityLimit?: number;
-  upcomingTasksLimit?: number;
-  recentNotesLimit?: number;
 }
 
 // Validation schemas
@@ -381,7 +369,7 @@ export interface IDashboardStats {
 // Request/Response types
 export interface IDashboardQueryParams {
   workspaceId?: string;
-  period?: "day" | "week" | "month" | "year";
+  period?: string;
   includeActivity?: boolean;
   includeStats?: boolean;
   includeTrends?: boolean;
@@ -401,7 +389,6 @@ export const RecentlyVisitedItemSchema = z.object({
   color: z.string().optional(),
   moduleType: z.string(),
 });
-
 
 export interface IActivityQueryOptions {
   workspaceId?: string;
@@ -530,7 +517,6 @@ export interface ITimeTrackingAnalytics {
   }>;
   productivityScore: number;
 }
-
 
 export interface IFinanceAnalytics {
   totalIncome: number;

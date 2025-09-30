@@ -12,92 +12,8 @@ import {
   type IMoveToArchiveRequest,
   type IRestoreFromArchiveRequest,
   type IParaCategorizeRequest,
-  EParaReviewFrequency,
 } from "@/modules/para/types/para.types";
-import {
-  EParaCategory,
-  EParaStatus,
-  EParaPriority,
-} from "@/modules/para/types/para.types";
-
-const mockParaItems: (IParaItem | IParaArea)[] = [
-  {
-    id: "1",
-    databaseId: "db1",
-    category: EParaCategory.PROJECTS,
-    title: "Website Redesign",
-    description: "Complete redesign of company website",
-    status: EParaStatus.ACTIVE,
-    priority: EParaPriority.HIGH,
-    linkedProjectIds: [],
-    linkedResourceIds: [],
-    linkedTaskIds: [],
-    linkedNoteIds: [],
-    linkedGoalIds: [],
-    linkedPeopleIds: [],
-    reviewFrequency: EParaReviewFrequency.WEEKLY,
-    tags: ["web", "design"],
-    childAreaIds: [],
-    completionPercentage: 65,
-    timeSpentMinutes: 1200,
-    isTemplate: false,
-    isPublic: false,
-    notificationSettings: {
-      reviewReminders: true,
-      statusUpdates: true,
-      completionAlerts: true,
-    },
-    customFields: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: "user1",
-    updatedBy: "user1",
-  },
-  {
-    id: "2",
-    databaseId: "db1",
-    category: EParaCategory.AREAS,
-    title: "Professional Development",
-    description: "Ongoing professional growth and learning",
-    status: EParaStatus.ACTIVE,
-    priority: EParaPriority.MEDIUM,
-    linkedProjectIds: [],
-    linkedResourceIds: [],
-    linkedTaskIds: [],
-    linkedNoteIds: [],
-    linkedGoalIds: [],
-    linkedPeopleIds: [],
-    reviewFrequency: "quarterly",
-    tags: ["career", "learning"],
-    parentAreaId: undefined,
-    childAreaIds: [],
-    completionPercentage: 0,
-    timeSpentMinutes: 0,
-    isTemplate: false,
-    isPublic: false,
-    notificationSettings: {
-      reviewReminders: true,
-      statusUpdates: true,
-      completionAlerts: true,
-    },
-    customFields: {},
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    createdBy: "user1",
-    updatedBy: "user1",
-    areaType: "professional",
-    maintenanceLevel: "medium",
-    standardsOfExcellence: [
-      "Stay updated with industry trends",
-      "Complete 2 courses per quarter",
-    ],
-    currentChallenges: [],
-    keyMetrics: [],
-    isResponsibilityArea: true,
-    stakeholders: [],
-    maintenanceActions: [],
-  } as IParaArea,
-];
+import { EParaStatus, EParaPriority } from "@/modules/para/types/para.types";
 
 // PARA API Service
 export const paraApi = {
@@ -111,7 +27,7 @@ export const paraApi = {
       "/para",
       data
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
   // Get PARA items with optional filtering
@@ -121,20 +37,15 @@ export const paraApi = {
     const response = await apiClient.get<ApiResponse<IParaItem[]>>("/para", {
       params,
     });
-    return response.data.data;
+    return response.data.data!;
   },
 
   // Get a single PARA item by ID
   getParaItemById: async (
     id: string
   ): Promise<IParaItem | IParaArea | IParaArchive> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem>>(`/para/${id}`)
-          .then((res) => res.data.data),
-      mockParaItems.find((item) => item.id === id) || mockParaItems[0]
-    );
+    const response = await apiClient.get<ApiResponse<IParaItem>>(`/para/${id}`);
+    return response.data.data!;
   },
 
   // Update a PARA item
@@ -142,29 +53,16 @@ export const paraApi = {
     id: string,
     data: IUpdateParaItemRequest
   ): Promise<IParaItem | IParaArea | IParaArchive> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .put<ApiResponse<IParaItem>>(`/para/${id}`, data)
-          .then((res) => res.data.data),
-      {
-        ...mockParaItems.find((item) => item.id === id),
-        ...data,
-        updatedAt: new Date(),
-        updatedBy: "user1",
-      }
+    const response = await apiClient.put<ApiResponse<IParaItem>>(
+      `/para/${id}`,
+      data
     );
+    return response.data.data!;
   },
 
   // Delete a PARA item
   deleteParaItem: async (id: string): Promise<void> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .delete<ApiResponse<void>>(`/para/${id}`)
-          .then((res) => res.data.data),
-      undefined
-    );
+    await apiClient.delete(`/para/${id}`);
   },
 
   // Get PARA statistics
@@ -173,7 +71,7 @@ export const paraApi = {
       API_ENDPOINTS.PARA.STATS,
       { params }
     );
-    return response.data.data;
+    return response.data.data!;
   },
 
   // Search PARA items
@@ -181,69 +79,55 @@ export const paraApi = {
     query: string,
     params?: IParaQueryParams
   ): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/para/search", {
-            params: { ...params, query },
-          })
-          .then((res) => res.data.data),
-      mockParaItems.filter(
-        (item) =>
-          item.title.toLowerCase().includes(query.toLowerCase()) ||
-          item.description?.toLowerCase().includes(query.toLowerCase())
-      )
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      "/para/search",
+      {
+        params: { ...params, query },
+      }
     );
+    return response.data.data!;
   },
 
   // ===== PARA CATEGORIES =====
 
   // Get projects
   getProjects: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/para/categories/projects", {
-            params,
-          })
-          .then((res) => res.data.data),
-      mockParaItems.filter((item) => item.category === EParaCategory.PROJECTS)
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      "/para/categories/projects",
+      {
+        params,
+      }
     );
+    return response.data.data!;
   },
 
   // Get areas
   getAreas: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/para/categories/areas", { params })
-          .then((res) => res.data.data),
-      mockParaItems.filter((item) => item.category === EParaCategory.AREAS)
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      "/para/categories/areas",
+      { params }
     );
+    return response.data.data!;
   },
 
   // Get resources
   getResources: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/para/categories/resources", {
-            params,
-          })
-          .then((res) => res.data.data),
-      mockParaItems.filter((item) => item.category === EParaCategory.RESOURCES)
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      "/para/categories/resources",
+      {
+        params,
+      }
     );
+    return response.data.data!;
   },
 
   // Get archive
   getArchive: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/para/categories/archive", { params })
-          .then((res) => res.data.data),
-      mockParaItems.filter((item) => item.category === EParaCategory.ARCHIVE)
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      "/para/categories/archive",
+      { params }
     );
+    return response.data.data!;
   },
 
   // ===== PARA ANALYTICS =====
@@ -253,13 +137,11 @@ export const paraApi = {
     status: EParaStatus,
     params?: IParaQueryParams
   ): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>(`/para/status/${status}`, { params })
-          .then((res) => res.data.data),
-      mockParaItems.filter((item) => item.status === status)
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      `/para/status/${status}`,
+      { params }
     );
+    return response.data.data!;
   },
 
   // Get items by priority
@@ -267,30 +149,26 @@ export const paraApi = {
     priority: EParaPriority,
     params?: IParaQueryParams
   ): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>(`/para/priority/${priority}`, {
-            params,
-          })
-          .then((res) => res.data.data),
-      mockParaItems.filter((item) => item.priority === priority)
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      `/para/priority/${priority}`,
+      {
+        params,
+      }
     );
+    return response.data.data!;
   },
 
   // Get reviews overdue
   getReviewsOverdue: async (
     params?: IParaQueryParams
   ): Promise<IParaItem[]> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .get<ApiResponse<IParaItem[]>>("/para/reviews/overdue", {
-            params,
-          })
-          .then((res) => res.data.data),
-      []
+    const response = await apiClient.get<ApiResponse<IParaItem[]>>(
+      "/para/reviews/overdue",
+      {
+        params,
+      }
     );
+    return response.data.data!;
   },
 
   // ===== PARA ACTIONS =====
@@ -299,38 +177,20 @@ export const paraApi = {
   moveToArchive: async (
     data: IMoveToArchiveRequest
   ): Promise<{ message: string; archivedCount: number }> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .post<ApiResponse<{ message: string; archivedCount: number }>>(
-            "/para/archive",
-            data
-          )
-          .then((res) => res.data.data),
-      {
-        message: "Items moved to archive successfully",
-        archivedCount: data.itemIds.length,
-      }
-    );
+    const response = await apiClient.post<
+      ApiResponse<{ message: string; archivedCount: number }>
+    >("/para/archive", data);
+    return response.data.data!;
   },
 
   // Restore items from archive
   restoreFromArchive: async (
     data: IRestoreFromArchiveRequest
   ): Promise<{ message: string; restoredCount: number }> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .post<ApiResponse<{ message: string; restoredCount: number }>>(
-            "/para/restore",
-            data
-          )
-          .then((res) => res.data.data),
-      {
-        message: "Items restored from archive successfully",
-        restoredCount: data.itemIds.length,
-      }
-    );
+    const response = await apiClient.post<
+      ApiResponse<{ message: string; restoredCount: number }>
+    >("/para/restore", data);
+    return response.data.data!;
   },
 
   // Categorize existing items
@@ -340,19 +200,10 @@ export const paraApi = {
     | { message: string; paraItemId: string }
     | { message: string; paraItem: IParaItem | IParaArea | IParaArchive }
   > => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .post<ApiResponse<{ message: string; paraItemId: string }>>(
-            "/para/categorize",
-            data
-          )
-          .then((res) => res.data.data),
-      {
-        message: "Item categorized successfully",
-        paraItemId: Date.now().toString(),
-      }
-    );
+    const response = await apiClient.post<
+      ApiResponse<{ message: string; paraItemId: string }>
+    >("/para/categorize", data);
+    return response.data.data!;
   },
 
   // Mark item as reviewed
@@ -360,18 +211,12 @@ export const paraApi = {
     id: string,
     notes?: string
   ): Promise<IParaItem | IParaArea | IParaArchive> => {
-    return apiCallWithFallback(
-      () =>
-        apiClient
-          .post<ApiResponse<IParaItem>>(`/para/${id}/review`, {
-            notes,
-          })
-          .then((res) => res.data.data),
+    const response = await apiClient.post<ApiResponse<IParaItem>>(
+      `/para/${id}/review`,
       {
-        ...mockParaItems.find((item) => item.id === id),
-        lastReviewedAt: new Date(),
-        updatedAt: new Date(),
+        notes,
       }
     );
+    return response.data.data!;
   },
 };

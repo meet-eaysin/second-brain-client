@@ -70,7 +70,7 @@ export const useHabitStreaks = () => {
 
 export const useFinanceSummary = (period = "month") => {
   return useQuery({
-    queryKey: DASHBOARD_KEYS.financeSummary(period),
+    queryKey: DASHBOARD_KEYS.financeSummary({ period }),
     queryFn: () => dashboardApi.getFinanceSummary(period),
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

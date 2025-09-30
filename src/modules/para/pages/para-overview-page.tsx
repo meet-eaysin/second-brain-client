@@ -139,20 +139,20 @@ export function PARAOverviewPage() {
 
   const paraAreas = [
     {
-      id: EParaCategory.PARA_PROJECTS,
+      id: EParaCategory.PROJECTS,
       title: "Projects",
       icon: Target,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       stats: {
         active:
-          paraStats?.byStatus[EParaStatus.ACTIVE]?.[EParaCategory.PARA_PROJECTS] ||
+          paraStats?.byStatus[EParaStatus.ACTIVE]?.[EParaCategory.PROJECTS] ||
           0,
         completed:
           paraStats?.byStatus[EParaStatus.COMPLETED]?.[
-            EParaCategory.PARA_PROJECTS
+            EParaCategory.PROJECTS
           ] || 0,
-        total: paraStats?.byCategory[EParaCategory.PARA_PROJECTS] || 0,
+        total: paraStats?.byCategory[EParaCategory.PROJECTS] || 0,
         completionRate: paraStats?.completionRates?.projects || 0,
       },
     },
@@ -197,8 +197,8 @@ export function PARAOverviewPage() {
   // Filter areas based on status if needed
   const filteredAreas = paraAreas.filter((area) => {
     if (statusFilter === "all") return true;
-    if (statusFilter === "active") return area.stats.active > 0;
-    if (statusFilter === "completed") return area.stats.completed > 0;
+    if (statusFilter === "active") return (area.stats.active || 0) > 0;
+    if (statusFilter === "completed") return (area.stats.completed || 0) > 0;
     return true;
   });
 
@@ -303,9 +303,9 @@ export function PARAOverviewPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {/* Progress Bar for completion */}
-                    {(area.id === EParaCategory.PARA_PROJECTS ||
+                    {(area.id === EParaCategory.PROJECTS ||
                       area.id === EParaCategory.AREAS) &&
-                      area.stats.completionRate > 0 && (
+                      (area.stats.completionRate || 0) > 0 && (
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">
@@ -324,7 +324,7 @@ export function PARAOverviewPage() {
 
                     {/* Detailed Stats */}
                     <div className="space-y-3">
-                      {area.id === EParaCategory.PARA_PROJECTS && (
+                      {area.id === EParaCategory.PROJECTS && (
                         <>
                           <div className="flex justify-between items-center">
                             <span className="text-sm text-muted-foreground">
@@ -360,12 +360,12 @@ export function PARAOverviewPage() {
                             </span>
                             <span
                               className={`font-semibold ${
-                                area.stats.maintenance > 0
+                                (area.stats.maintenance || 0) > 0
                                   ? "text-red-600"
                                   : "text-green-600"
                               }`}
                             >
-                              {area.stats.maintenance}
+                              {area.stats.maintenance || 0}
                             </span>
                           </div>
                         </>
