@@ -74,7 +74,7 @@ export const calendarApi = {
       API_ENDPOINTS.CALENDAR.EVENTS,
       { params: query }
     );
-    return response.data;
+    return response.data!;
   },
 
   createEvent: async (

@@ -1,5 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import {
@@ -14,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Eye, EyeOff, Download } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export const SecuritySettingsPage: React.FC = () => {
   const [showPassword, setShowPassword] = React.useState(false);
@@ -22,20 +21,7 @@ export const SecuritySettingsPage: React.FC = () => {
   return (
     <>
       <EnhancedHeader
-        contextActions={
-          <>
-            <Button size="sm" variant="outline" className="h-8 gap-2" asChild>
-              <Link to="/app/settings">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Settings
-              </Link>
-            </Button>
-            <Button size="sm" className="h-8 gap-2">
-              <Download className="h-4 w-4" />
-              Download Backup Codes
-            </Button>
-          </>
-        }
+      
       />
 
       <Main className="space-y-6">

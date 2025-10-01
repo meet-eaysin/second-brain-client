@@ -33,7 +33,7 @@ export const useEvents = (query: CalendarEventsQuery) => {
   return useQuery({
     queryKey: CALENDAR_KEYS.eventsList(query),
     queryFn: () => calendarApi.getEvents(query),
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 };
 

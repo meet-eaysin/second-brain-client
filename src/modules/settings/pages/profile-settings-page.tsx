@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Link } from "react-router-dom";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +25,7 @@ import {
   useUploadAvatar,
 } from "@/modules/users/services/profile-queries.ts";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Upload, Loader2 } from "lucide-react";
+import { Save, Upload, Loader2 } from "lucide-react";
 
 // Validation schema matching backend
 const profileSchema = z.object({
@@ -109,31 +108,7 @@ export const ProfileSettingsPage: React.FC = () => {
 
   return (
     <>
-      <EnhancedHeader
-        contextActions={
-          <>
-            <Button size="sm" variant="outline" className="h-8 gap-2" asChild>
-              <Link to="/app/settings">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Settings
-              </Link>
-            </Button>
-            <Button
-              size="sm"
-              className="h-8 gap-2"
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={isLoading || !form.formState.isDirty}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4" />
-              )}
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </>
-        }
-      />
+      <EnhancedHeader />
 
       <Main className="space-y-6">
         <div className="space-y-2">
@@ -278,6 +253,21 @@ export const ProfileSettingsPage: React.FC = () => {
                     <p className="text-xs text-muted-foreground">
                       Email cannot be changed. Contact support if needed.
                     </p>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-8 gap-2"
+                      disabled={isLoading || !form.formState.isDirty}
+                    >
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Save className="h-4 w-4" />
+                      )}
+                      {isLoading ? "Saving..." : "Save Changes"}
+                    </Button>
                   </div>
                 </form>
               </Form>

@@ -1,29 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download } from "lucide-react";
 import { BillingSettings } from "../components/billing-settings.tsx";
 
 export const BillingPage: React.FC = () => {
   return (
     <>
       <EnhancedHeader
-        contextActions={
-          <>
-            <Button size="sm" variant="outline" className="h-8 gap-2" asChild>
-              <Link to="/app/settings">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Settings
-              </Link>
-            </Button>
-            <Button size="sm" className="h-8 gap-2">
-              <Download className="h-4 w-4" />
-              Download Invoice
-            </Button>
-          </>
-        }
+
       />
 
       <Main className="space-y-6">

@@ -142,7 +142,7 @@ export default function ShadcnBigCalendarComponent({
     [date, selectedCalendars]
   );
 
-  const { data: eventsResponse } = useEvents(queryParams);
+  const { data: eventsResponse } = useEvents(queryParams);  
 
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();

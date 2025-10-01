@@ -1,11 +1,13 @@
-import React from 'react'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { SidebarTrigger } from '@/components/ui/sidebar'
+import type {HTMLAttributes, Ref} from "react";
+import {useEffect, useState} from "react";
 
-interface HeaderProps extends React.HTMLAttributes<HTMLElement> {
+interface HeaderProps extends HTMLAttributes<HTMLElement> {
+  className?: string
     fixed?: boolean
-    ref?: React.Ref<HTMLElement>
+    ref?: Ref<HTMLElement>
 }
 
 export const Header = ({
@@ -14,9 +16,9 @@ export const Header = ({
                            children,
                            ...props
                        }: HeaderProps) => {
-    const [offset, setOffset] = React.useState(0)
+    const [offset, setOffset] = useState(0)
 
-    React.useEffect(() => {
+    useEffect(() => {
         const onScroll = () => {
             setOffset(document.body.scrollTop || document.documentElement.scrollTop)
         }
