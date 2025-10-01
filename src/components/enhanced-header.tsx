@@ -30,6 +30,7 @@ export function EnhancedHeader({
     const titleMap: Record<string, string> = {
       dashboard: "Dashboard",
       users: "Users",
+      tasks: "Tasks",
       notifications: "Notifications",
       projects: "Projects",
       notes: "Notes",
@@ -42,6 +43,13 @@ export function EnhancedHeader({
       areas: "Areas",
       resources: "Resources",
       archive: "Archive",
+      profile: "Profile",
+      security: "Security",
+      appearance: "Appearance",
+      notification: "Notification",
+      workspace: "Workspace",
+      billing: "Billing",
+      'help-center': 'Help Center',
     };
 
     return titleMap[lastSegment] || "Second Brain";
@@ -50,13 +58,13 @@ export function EnhancedHeader({
   return (
     <Header className={cn("border-b px-4", className)}>
       {contextActions}
-      <div className="flex h-12 flex-1 items-center gap-3">
+      <div className="flex h-12 flex-1 items-center justify-between gap-3">
         <span className="text-xs font-medium text-muted-foreground">
           {getPageTitle()}
         </span>
 
         {showSearch && (
-          <div className="flex-1 max-w-sm mx-auto">
+          <div className="hidden md:block flex-1 max-w-sm mx-auto">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input

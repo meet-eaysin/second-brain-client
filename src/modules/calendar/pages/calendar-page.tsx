@@ -163,54 +163,13 @@ export default function CalendarPage() {
     toast.success("Calendar data exported successfully");
   };
 
-  const contextActions = (
-    <div className="flex items-center gap-3">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setActiveTab("connections")}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <ExternalLink className="h-4 w-4 mr-2" />
-        Connections
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setActiveTab("analytics")}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <BarChart3 className="h-4 w-4 mr-2" />
-        Analytics
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setActiveTab("settings")}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <Settings className="h-4 w-4 mr-2" />
-        Settings
-      </Button>
-      <Separator orientation="vertical" className="h-6" />
-      <Button
-        onClick={() => handleCreateEvent()}
-        size="sm"
-        className="bg-primary hover:bg-primary/90"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        New Event
-      </Button>
-    </div>
-  );
-
   if (calendarsLoading) {
     return <CalendarSkeleton />;
   }
 
   return (
     <>
-      <EnhancedHeader contextActions={contextActions} />
+      <EnhancedHeader />
 
       <Main className="space-y-8">
         <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
