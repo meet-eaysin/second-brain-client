@@ -155,8 +155,8 @@ export function CalendarList({
 
   return (
     <div className="bg-card rounded-lg border border-r-0 h-full">
-      <div className="p-2 md:p-4 border-b">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="p-3 md:p-4 border-b">
+        <div className="flex flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
               <CalendarIcon className="h-4 w-4 text-primary" />
@@ -199,7 +199,7 @@ export function CalendarList({
             {calendars.map((calendar) => (
               <div
                 key={calendar.id}
-                className="group relative p-3 rounded-lg border border-transparent hover:border-border hover:bg-muted/30 transition-all duration-200"
+                className="group relative rounded-lg border border-transparent hover:border-border hover:bg-muted/30 transition-all duration-200"
               >
                 <div className="flex items-start gap-3">
                   <Checkbox
@@ -216,7 +216,7 @@ export function CalendarList({
                   />
 
                   <div className="flex-1 min-w-0">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-1">
+                    <div className="flex flex-row sm:items-center gap-2 mb-1">
                       <span className="font-medium text-sm truncate">
                         {calendar.name}
                       </span>

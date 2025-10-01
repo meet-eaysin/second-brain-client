@@ -1,4 +1,4 @@
-import { useState, useMemo, type SyntheticEvent } from "react";
+import { useState, useMemo } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import type { SlotInfo, View } from "react-big-calendar";
 import withDragAndDrop, { type EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
@@ -163,7 +163,7 @@ export default function ShadcnBigCalendarComponent({
     setSelectedEvent(null);
   };
 
-  const handleSelectEvent = (event: CalendarEvent, _e: SyntheticEvent<HTMLElement>) => {
+  const handleSelectEvent = (event: CalendarEvent) => {
     setSelectedEvent(event);
     setSelectedSlot(null);
   };
