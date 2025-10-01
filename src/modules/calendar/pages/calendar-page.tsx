@@ -3,7 +3,6 @@ import { Main } from "@/layout/main";
 import { EnhancedHeader } from "@/components/enhanced-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -84,12 +83,6 @@ export default function CalendarPage() {
       );
     }
   }, [calendars]); // Remove selectedCalendars.length to prevent infinite loop
-
-  const handleCreateEvent = (start?: Date, end?: Date) => {
-    setEventStartTime(start);
-    setEventEndTime(end);
-    setShowCreateEvent(true);
-  };
 
   const handleEventSubmit = async (
     data: CreateEventRequest | UpdateEventRequest
@@ -197,7 +190,7 @@ export default function CalendarPage() {
           <Button
             onClick={() => setActiveTab("calendar")}
             variant={activeTab === "calendar" ? "default" : "outline"}
-            className="p-4 h-auto justify-start"
+            className="p-4 h-auto justify-start transition-none"
           >
             <div className="flex items-center gap-3">
               <CalendarIcon className="h-5 w-5" />
@@ -211,7 +204,7 @@ export default function CalendarPage() {
           <Button
             onClick={() => setActiveTab("connections")}
             variant={activeTab === "connections" ? "default" : "outline"}
-            className="p-4 h-auto justify-start"
+            className="p-4 h-auto justify-start transition-none"
           >
             <div className="flex items-center gap-3">
               <ExternalLink className="h-5 w-5" />
@@ -225,7 +218,7 @@ export default function CalendarPage() {
           <Button
             onClick={() => setActiveTab("analytics")}
             variant={activeTab === "analytics" ? "default" : "outline"}
-            className="p-4 h-auto justify-start"
+            className="p-4 h-auto justify-start transition-none"
           >
             <div className="flex items-center gap-3">
               <BarChart3 className="h-5 w-5" />
@@ -239,7 +232,7 @@ export default function CalendarPage() {
           <Button
             onClick={() => setActiveTab("settings")}
             variant={activeTab === "settings" ? "default" : "outline"}
-            className="p-4 h-auto justify-start"
+            className="p-4 h-auto justify-start transition-none"
           >
             <div className="flex items-center gap-3">
               <Settings className="h-5 w-5" />

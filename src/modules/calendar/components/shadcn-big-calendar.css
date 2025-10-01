@@ -673,43 +673,13 @@ button.rbc-input::-moz-focus-inner {
   justify-content: center;
 }
 
-/* Mobile responsive font sizes for calendar */
-@media (max-width: 768px) {
-  .rbc-calendar {
-    font-size: 12px;
-  }
-
-  .rbc-header {
-    font-size: 11px;
-    padding: 2px;
-  }
-
-  .rbc-time-gutter {
-    font-size: 10px;
-  }
-
-  .rbc-event {
-    font-size: 10px;
-    padding: 2px;
-  }
-
-  .rbc-toolbar {
-    font-size: 12px;
-  }
-
-  .rbc-toolbar button {
-    font-size: 12px;
-    padding: 6px 12px;
-  }
-}
-
 @media (max-width: 480px) {
   .rbc-calendar {
-    font-size: 11px;
+    font-size: 12px;
   }
 
   .rbc-header {
-    font-size: 10px;
+    font-size: 11.8px;
     padding: 1px;
   }
 
@@ -731,3 +701,4 @@ button.rbc-input::-moz-focus-inner {
     padding: 4px 8px;
   }
 }
+

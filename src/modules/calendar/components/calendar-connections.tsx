@@ -75,15 +75,15 @@ export function CalendarConnections() {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <ExternalLink className="h-5 w-5" />
-              External Calendar Connections
+              <span className="text-lg">External Calendars</span>
               <Badge variant="secondary" className="bg-blue-100 text-blue-800">
                 Upcoming
               </Badge>
             </CardTitle>
-            <Button disabled>
+            <Button disabled className="self-start sm:self-auto">
               <Plus className="h-4 w-4 mr-2" />
               Connect Calendar
             </Button>
@@ -116,7 +116,7 @@ export function CalendarConnections() {
                 return (
                   <div
                     key={connection.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    className="flex flex-col gap-3 p-4 border rounded-lg sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="flex items-center gap-3">
                       <div className="text-2xl">{providerInfo.icon}</div>
@@ -160,7 +160,7 @@ export function CalendarConnections() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button variant="outline" size="sm" disabled>
                         Test
                       </Button>
