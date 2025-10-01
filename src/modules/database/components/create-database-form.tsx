@@ -327,7 +327,7 @@ export function CreateDatabaseForm({
                             },
                             {
                               value: "CALENDAR",
-                              label: "CalendarTypes",
+                              label: "Calendar",
                               icon: <Calendar className="h-3 w-3" />,
                             },
                             {

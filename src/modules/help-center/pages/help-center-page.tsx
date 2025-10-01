@@ -89,7 +89,7 @@ export default function HelpCenterPage() {
     {
       question: "How do I set up calendar integrations?",
       answer:
-        "Go to CalendarTypes > Settings > Connections and select your calendar provider.",
+        "Go to Calendar > Settings > Connections and select your calendar provider.",
     },
     {
       question: "How do I create a task?",

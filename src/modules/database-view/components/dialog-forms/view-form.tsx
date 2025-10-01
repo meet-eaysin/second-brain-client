@@ -101,7 +101,7 @@ const viewTypes: {
   },
   {
     value: EViewType.CALENDAR,
-    label: "CalendarTypes",
+    label: "Calendar",
     icon: <Calendar className="h-4 w-4" />,
     description: "Date view",
     isAvailable: true,

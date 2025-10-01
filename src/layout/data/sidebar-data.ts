@@ -41,12 +41,12 @@ export const sidebarData = {
           icon: Calendar,
           tooltip: "Manage your events, meetings, and schedule",
         },
-        {
-          title: "Notifications",
-          url: "/app/notifications",
-          icon: Bell,
-          tooltip: "View and manage your notifications",
-        },
+        // {
+        //   title: "Notifications",
+        //   url: "/app/notifications",
+        //   icon: Bell,
+        //   tooltip: "View and manage your notifications",
+        // },
       ],
     },
     {

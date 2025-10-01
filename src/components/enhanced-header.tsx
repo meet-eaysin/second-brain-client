@@ -49,6 +49,7 @@ export function EnhancedHeader({
 
   return (
     <Header className={cn("border-b px-4", className)}>
+      {contextActions}
       <div className="flex h-12 flex-1 items-center gap-3">
         <span className="text-xs font-medium text-muted-foreground">
           {getPageTitle()}
@@ -73,7 +74,7 @@ export function EnhancedHeader({
         )}
 
         <div className="flex items-center gap-1">
-          {contextActions}
+          
           <NotificationBell />
           <ThemeSwitch />
           <ProfileDropdown />

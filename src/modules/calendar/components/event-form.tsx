@@ -58,7 +58,7 @@ export default function EventForm({
   onCancel,
   onDelete,
   submitLabel,
-}: EventFormProps) {
+}: EventFormProps): React.JSX.Element {
   const { data: calendarsResponse } = useCalendars();
   const calendars = calendarsResponse?.data || [];
   const { data: config } = useCalendarConfig();

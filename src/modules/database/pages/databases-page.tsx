@@ -25,6 +25,7 @@ import { columns } from "@/modules/database/components/database-columns";
 import { DatabaseToolbar } from "@/modules/database/components/database-toolbar";
 import { DatabaseTableSkeleton } from "@/modules/database/components/database-table-skeleton";
 import { toast } from "sonner";
+import { EnhancedHeader } from "@/components/enhanced-header";
 
 export function DatabasesPage() {
   const navigate = useNavigate();
@@ -119,7 +120,10 @@ export function DatabasesPage() {
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <>
+    <EnhancedHeader/>
+    <div className="container mx-auto py-5 px-4">
+      
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
         <p className="text-muted-foreground mt-2">
@@ -203,5 +207,6 @@ export function DatabasesPage() {
         database={editingDatabase}
       />
     </div>
+    </>
   );
 }

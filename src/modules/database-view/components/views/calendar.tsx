@@ -357,7 +357,7 @@ export const Calendar = ({ className = "" }: CalendarProps) => {
   if (dateProperties.length === 0 && (!records || records.length === 0)) {
     return (
       <div className={`flex items-center justify-center p-8 ${className}`}>
-        <NoDataMessage message="CalendarTypes view requires records with creation dates or DATE properties" />
+        <NoDataMessage message="Calendar view requires records with creation dates or DATE properties" />
       </div>
     );
   }
