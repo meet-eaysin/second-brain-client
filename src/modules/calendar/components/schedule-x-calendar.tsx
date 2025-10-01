@@ -269,6 +269,7 @@ export default function ShadcnBigCalendarComponent({
         onNavigate={handleNavigate}
         view={view}
         onView={handleViewChange}
+        views={[Views.MONTH, Views.WEEK, Views.DAY]}
         resizable
         draggableAccessor={() => true}
         resizableAccessor={() => true}
