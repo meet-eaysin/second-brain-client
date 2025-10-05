@@ -11,3 +11,6 @@ export { SearchBar } from "./components/search-bar";
 export { TableToolbar } from "./components/table-toolbar";
 export { TableHeader } from "./components/table-header.tsx";
 export { EditableCell } from "./components/editable-cell";
+
+// Export hooks
+export { useDebounce } from "./hooks/useDebounce";

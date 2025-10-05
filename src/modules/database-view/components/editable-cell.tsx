@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -55,6 +54,7 @@ import {
   getNumberValue,
   getStringValue,
 } from "@/utils/helpers.ts";
+import { Badge } from "@/components/ui/badge";
 
 interface EditableCellProps {
   record: TRecord;
@@ -73,11 +73,18 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
   } | null>(null);
 
   const currentSelectedValues = getMultiSelectValues(editValue);
+  const originalValueRef = useRef<TPropertyValue>(value);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const updateRecordMutation = useUpdateRecord();
 
   useEffect(() => {
-    setEditValue(value);
-  }, [value]);
+    if (!isEditing) {
+      originalValueRef.current = value;
+      setEditValue(value);
+    }
+  }, [value, isEditing]);
 
+  // Load glimpse data for URLs
   useEffect(() => {
     const urlValue = getStringValue(value);
     if (urlValue && urlValue.startsWith("http")) {
@@ -92,34 +99,101 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
     }
   }, [value]);
 
-  const updateRecordMutation = useUpdateRecord();
+  const handleSave = useCallback(
+    async (newValue: TPropertyValue) => {
+      // Prevent saving if value hasn't changed from original
+      if (
+        JSON.stringify(newValue) === JSON.stringify(originalValueRef.current)
+      ) {
+        if (!isTextInput(property.type)) {
+          setIsEditing(false);
+        }
+        return;
+      }
 
-  const handleSave = async (newValue: TPropertyValue) => {
-    if (!database?.id) return;
+      if (!database?.id) return;
 
-    try {
-      await updateRecordMutation.mutateAsync({
-        databaseId: database.id,
-        recordId: record.id,
-        payload: {
-          [property.id]: newValue,
-        },
-      });
-      setIsEditing(false);
-      toast.success("Cell updated successfully");
-    } catch {
-      toast.error("Failed to update cell");
-      setEditValue(value);
-    }
+      try {
+        await updateRecordMutation.mutateAsync({
+          databaseId: database.id,
+          recordId: record.id,
+          payload: {
+            [property.id]: newValue,
+          },
+        });
+        // Update the original value reference
+        originalValueRef.current = newValue;
+        if (!isTextInput(property.type)) {
+          setIsEditing(false);
+        }
+      } catch {
+        toast.error("Failed to update cell");
+        setEditValue(originalValueRef.current);
+      }
+    },
+    [database?.id, record.id, property.id, updateRecordMutation, property.type]
+  );
+
+  const debouncedSave = useCallback(
+    (newValue: TPropertyValue) => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+      debounceTimeoutRef.current = setTimeout(() => {
+        handleSave(newValue);
+      }, 500);
+    },
+    [handleSave]
+  );
+
+  const handleValueChange = useCallback(
+    (newValue: TPropertyValue) => {
+      setEditValue(newValue);
+      if (isTextInput(property.type)) {
+        debouncedSave(newValue);
+      } else {
+        handleSave(newValue);
+      }
+    },
+    [property.type, debouncedSave, handleSave]
+  );
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Helper to check if property type is text-based
+  const isTextInput = (type: EPropertyType) => {
+    return [
+      EPropertyType.EMAIL,
+      EPropertyType.URL,
+      EPropertyType.PHONE,
+      EPropertyType.NUMBER,
+      EPropertyType.TEXT,
+    ].includes(type);
   };
 
   const handleCancel = () => {
-    setEditValue(value);
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+    setEditValue(originalValueRef.current);
     setIsEditing(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && isTextInput(property.type)) {
+      // Clear any pending debounce and save immediately on Enter
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+        debounceTimeoutRef.current = null;
+      }
       handleSave(editValue);
     } else if (e.key === "Escape") {
       handleCancel();
@@ -132,15 +206,13 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
     if (!isEditing) {
       return (
         <div
-          className={`p-1 rounded min-h-[24px] flex items-center ${
-            isFrozen
-              ? "cursor-not-allowed opacity-60"
-              : property.type === EPropertyType.URL
-              ? "cursor-pointer transition-colors"
-              : "cursor-pointer hover:bg-muted/50 transition-colors"
-          }`}
+          className={cn(
+            "p-1 rounded min-h-[24px] flex items-center gap-2 relative",
+            isFrozen ? "cursor-not-allowed opacity-60" : "cursor-text"
+          )}
           onClick={() => {
             if (!isFrozen) {
+              originalValueRef.current = value;
               setIsEditing(true);
               setEditValue(value);
             }
@@ -170,7 +242,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
               handleSave(newValue);
             }}
           >
-            <SelectTrigger className="h-8">
+            <SelectTrigger className="h-8 border-0 bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-1 text-sm dark:bg-transparent max-w-[180px] dark:hover:bg-transparent focus-visible:bg-transparent">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -208,7 +280,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             onOpenChange={(open) => setIsEditing(open)}
             className="max-w-[180px] inline-block"
           >
-            <TagsTrigger className="h-6 px-2 py-1 text-xs">
+            <TagsTrigger className="h-8 px-2 text-xs dark:border-0 dark:bg-transparent dark:hover:bg-transparent">
               {currentSelectedValues.map((selectedId) => {
                 const option = property.config?.options?.find(
                   (opt) => opt.id === selectedId
@@ -305,10 +377,9 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                 : "tel"
             }
             value={getStringValue(editValue)}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={() => handleSave(editValue)}
+            onChange={(e) => handleValueChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1"
+            className="h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent text-sm dark:bg-transparent truncate max-w-[200px] focus-visible:ring-0"
             autoFocus
           />
         );
@@ -319,11 +390,10 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             type="number"
             value={getNumberValue(editValue)}
             onChange={(e) =>
-              setEditValue(e.target.value ? Number(e.target.value) : null)
+              handleValueChange(e.target.value ? Number(e.target.value) : null)
             }
-            onBlur={() => handleSave(editValue)}
             onKeyDown={handleKeyDown}
-            className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1"
+            className="h-auto min-h-[24px] border-0 shadow-none focus-visible:ring-0 bg-transparent px-1 text-sm font-medium dark:bg-transparent"
             autoFocus
           />
         );
@@ -332,10 +402,9 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         return (
           <Input
             value={getStringValue(editValue)}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={() => handleSave(editValue)}
+            onChange={(e) => handleValueChange(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="h-8 border-0 shadow-none focus:ring-1 focus:ring-primary/20 bg-transparent px-1 w-auto"
+            className="h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent dark:bg-transparent text-sm truncate max-w-[200px] focus-visible:ring-0"
             autoFocus
           />
         );
@@ -344,15 +413,25 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const renderDisplayValue = () => {
     if (value === null || value === undefined || value === "") {
-      return null;
+      return <span className="text-muted-foreground italic">Empty</span>;
     }
 
     switch (property.type) {
       case EPropertyType.CHECKBOX:
         return (
-          <Badge variant={value ? "default" : "secondary"} className="text-xs">
-            {value ? "Yes" : "No"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                "w-4 h-4 border rounded flex items-center justify-center",
+                value
+                  ? "bg-primary border-primary text-primary-foreground"
+                  : "border-muted-foreground"
+              )}
+            >
+              {value && <CheckIcon className="w-3 h-3" />}
+            </div>
+            <span className="text-sm">{value ? "Checked" : "Unchecked"}</span>
+          </div>
         );
 
       case EPropertyType.SELECT:
@@ -413,9 +492,10 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.DATE: {
         const displayDateValue = getDateValue(value);
-        if (!displayDateValue) return null;
+        if (!displayDateValue)
+          return <span className="text-muted-foreground italic">Empty</span>;
         return (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm">
             {format(displayDateValue, "MMM d, yyyy")}
           </span>
         );
@@ -432,27 +512,26 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             : null;
           if (start && end) {
             return (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-sm">
                 {start} - {end}
               </span>
             );
           } else if (start) {
-            return (
-              <span className="text-xs text-muted-foreground">{start}</span>
-            );
+            return <span className="text-sm">{start}</span>;
           } else if (end) {
-            return <span className="text-xs text-muted-foreground">{end}</span>;
+            return <span className="text-sm">{end}</span>;
           }
         }
-        return null;
+        return <span className="text-muted-foreground italic">Empty</span>;
       }
 
       case EPropertyType.CREATED_TIME:
       case EPropertyType.LAST_EDITED_TIME: {
         const displayDateValue = getDateValue(value);
-        if (!displayDateValue) return null;
+        if (!displayDateValue)
+          return <span className="text-muted-foreground italic">Empty</span>;
         return (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-sm">
             {format(displayDateValue, "MMM d, yyyy")}
           </span>
         );
@@ -461,9 +540,9 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
       case EPropertyType.EMAIL: {
         const emailValue = getStringValue(value);
         return (
-          <a href={`mailto:${emailValue}`} className="hover:underline">
+          <span className="text-sm text-blue-600 hover:underline cursor-pointer">
             {emailValue}
-          </a>
+          </span>
         );
       }
 
@@ -472,7 +551,9 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         return (
           <Glimpse>
             <GlimpseTrigger asChild>
-              <span className="hover:underline cursor-pointer">{urlValue}</span>
+              <span className="text-sm text-blue-600 hover:underline cursor-pointer">
+                {urlValue}
+              </span>
             </GlimpseTrigger>
             <GlimpseContent
               className="w-80 cursor-pointer"
@@ -508,22 +589,22 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
       case EPropertyType.PHONE: {
         const phoneValue = getStringValue(value);
         return (
-          <a href={`tel:${phoneValue}`} className="hover:underline">
+          <span className="text-sm text-blue-600 hover:underline cursor-pointer">
             {phoneValue}
-          </a>
+          </span>
         );
       }
 
       case EPropertyType.NUMBER:
         return (
-          <span className="text-xs font-medium">
+          <span className="text-sm font-medium">
             {typeof value === "number" ? value.toLocaleString() : String(value)}
           </span>
         );
 
       default:
         return (
-          <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+          <span className="text-sm truncate max-w-[200px]">
             {String(value)}
           </span>
         );

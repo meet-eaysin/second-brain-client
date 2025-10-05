@@ -408,32 +408,63 @@ export const useUpdateRecord = () => {
       databaseId: string;
       recordId: string;
       payload: Record<string, TPropertyValue>;
-    }
+    },
+    { previousRecords: ApiResponse<TRecord[]> | undefined }
   >({
     mutationFn: ({ databaseId, recordId, payload }) =>
       databaseApi.updateRecord(databaseId, recordId, payload),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey as string[];
-          return (
-            queryKey[0] === "databases" &&
-            queryKey[1] === "detail" &&
-            queryKey[2] === variables.databaseId &&
-            queryKey[3] === "records"
-          );
-        },
+    onMutate: async ({ databaseId, recordId, payload }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: DATABASE_KEYS.records(databaseId),
       });
+
+      // Snapshot the previous value
+      const previousRecords = queryClient.getQueryData<ApiResponse<TRecord[]>>(
+        DATABASE_KEYS.records(databaseId)
+      );
+
+      // Optimistically update the cache
+      queryClient.setQueryData<ApiResponse<TRecord[]>>(
+        DATABASE_KEYS.records(databaseId),
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((record: TRecord) =>
+              record.id === recordId
+                ? {
+                    ...record,
+                    properties: { ...record.properties, ...payload },
+                  }
+                : record
+            ),
+          };
+        }
+      );
+
+      // Return a context object with the snapshotted value
+      return { previousRecords };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousRecords) {
+        queryClient.setQueryData(
+          DATABASE_KEYS.records(variables.databaseId),
+          context.previousRecords
+        );
+      }
+      toast.error(err.response?.data?.message || "Failed to update record");
+    },
+    onSuccess: (_, variables) => {
+      // Invalidate to ensure server state is correct
       queryClient.invalidateQueries({
         queryKey: DATABASE_KEYS.record(
           variables.databaseId,
           variables.recordId
         ),
       });
-      toast.success("Record updated successfully");
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to update record");
+      // Note: We don't invalidate records here since optimistic update already updated it
     },
   });
 };
