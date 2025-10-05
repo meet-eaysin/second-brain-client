@@ -24,11 +24,11 @@ import {
   Copy,
   Trash2,
   ChartGanttIcon,
-  Lock, ChartAreaIcon,
+  ChartAreaIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteView, useDuplicateView } from "../services/database-queries";
-import {EViewType, type TView} from "@/modules/database-view/types";
+import { EViewType, type TView } from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
 
 const VIEW_TYPE_ICONS = {
@@ -40,7 +40,7 @@ const VIEW_TYPE_ICONS = {
   CALENDAR: Calendar,
   TIMELINE: Clock,
   GANTT: ChartGanttIcon,
-  CHART: ChartAreaIcon
+  CHART: ChartAreaIcon,
 } as const;
 
 export const ViewTabs = () => {
@@ -110,7 +110,8 @@ export const ViewTabs = () => {
             <div className="flex items-center justify-between py-2">
               <TabsList className="h-9">
                 {views?.map((view) => {
-                  const Icon = VIEW_TYPE_ICONS[view.type as EViewType] || EViewType.TABLE;
+                  const Icon =
+                    VIEW_TYPE_ICONS[view.type as EViewType] || EViewType.TABLE;
                   return (
                     <TabsTrigger
                       key={view.id}
@@ -133,16 +134,6 @@ export const ViewTabs = () => {
               </TabsList>
 
               <div className="flex items-center gap-2">
-                {database?.isFrozen && (
-                  <Badge
-                    variant="destructive"
-                    className="flex items-center gap-1"
-                  >
-                    <Lock className="h-3 w-3" />
-                    Frozen
-                  </Badge>
-                )}
-
                 {currentView && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -204,6 +195,7 @@ export const ViewTabs = () => {
                   onClick={() => onDialogOpen("create-view")}
                   size="sm"
                   variant="outline"
+                  className="dark:bg-transparent border-0"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>

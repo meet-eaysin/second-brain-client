@@ -41,6 +41,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
 const freezeFormSchema = z.object({
   reason: z.string().max(500, "Reason cannot exceed 500 characters").optional(),
@@ -107,8 +108,18 @@ export function DatabasePrimaryButtons() {
   if (database) {
     return (
       <div className="flex items-center gap-2">
+        {database?.isFrozen && (
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            Frozen
+          </Badge>
+        )}
+
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger
+            asChild
+            className="bg-transparent border-0 dark:bg-transparent"
+          >
             <Button variant="outline">
               <MoreHorizontal className="h-4 w-4" />
             </Button>

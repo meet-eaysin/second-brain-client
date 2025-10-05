@@ -24,17 +24,17 @@ export function DatabaseViewPage() {
 
   return (
     <div className="min-h-screen bg-background">
-        <EnhancedHeader
+      <EnhancedHeader
         contextActions={
           <>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate("/app/databases")}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/app/databases")}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
           </>
         }
       />
