@@ -309,7 +309,7 @@ export function SortManager() {
           </div>
         )}
 
-        <div className="flex flex-col w-full gap-1.5">
+        <div className="flex flex-col w-full gap-3">
           <Button
             onClick={addSort}
             variant="outline"
@@ -320,7 +320,7 @@ export function SortManager() {
             Add Sort
           </Button>
 
-          <div className="flex justify-end gap-1.5">
+          <div className="flex justify-end gap-3">
             <Button
               variant="outline"
               onClick={handleReset}

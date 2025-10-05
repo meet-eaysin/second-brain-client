@@ -343,7 +343,7 @@ export function FilterManager() {
           </p>
         )}
 
-        <div className="flex items-center gap-2 pt-1">
+        <div className="flex items-center gap-3 pt-1">
           <Button size="sm" onClick={addFilter} disabled={isFrozen}>
             <Plus className="mr-1 h-4 w-4" />
             Add filter
