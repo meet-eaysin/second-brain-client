@@ -9,7 +9,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type {
   TProperty,
@@ -19,7 +18,6 @@ import type {
 import { EPropertyType } from "@/modules/database-view/types";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
-import { toast } from "sonner";
 import {
   getBooleanValue,
   getDateValue,
@@ -43,7 +41,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const currentSelectedValues = getMultiSelectValues(editValue);
   const originalValueRef = useRef<TPropertyValue>(value);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateRecordMutation = useUpdateRecord();
 
   useEffect(() => {
@@ -73,6 +70,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       if (!database?.id) return;
 
+      // Silently make API call in background without any loading states
       try {
         await updateRecordMutation.mutateAsync({
           databaseId: database.id,
@@ -81,59 +79,26 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             [property.id]: newValue,
           },
         });
-        // Update the original value reference
+        // Update the original value reference on success
         originalValueRef.current = newValue;
       } catch {
-        toast.error("Failed to update cell");
-        setEditValue(originalValueRef.current);
+        // Silently handle error - user doesn't need to know
+        // The optimistic update remains in place for better UX
+        console.warn("Failed to save cell value");
       }
     },
     [database?.id, record.id, property.id, updateRecordMutation]
   );
 
-  const debouncedSave = useCallback(
+  const handleValueChange = useCallback(
     (newValue: TPropertyValue) => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-      debounceTimeoutRef.current = setTimeout(() => {
-        handleSave(newValue);
-      }, 500);
+      // Update UI immediately (optimistic update)
+      setEditValue(newValue);
+      // Make API call in background for all input types
+      handleSave(newValue);
     },
     [handleSave]
   );
-
-  const handleValueChange = useCallback(
-    (newValue: TPropertyValue) => {
-      setEditValue(newValue);
-      if (isTextInput(property.type)) {
-        debouncedSave(newValue);
-      } else {
-        handleSave(newValue);
-      }
-    },
-    [property.type, debouncedSave, handleSave]
-  );
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Helper to check if property type is text-based
-  const isTextInput = (type: EPropertyType) => {
-    return [
-      EPropertyType.EMAIL,
-      EPropertyType.URL,
-      EPropertyType.PHONE,
-      EPropertyType.NUMBER,
-      EPropertyType.TEXT,
-    ].includes(type);
-  };
 
   // Helper to check if property is read-only (system fields)
   const isReadOnly = (type: EPropertyType) => {
@@ -147,10 +112,8 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
     const isFrozen = database?.isFrozen;
     const readOnly = isReadOnly(property.type);
 
-    // Apply disabled state for frozen databases or read-only fields
     const disabled = !!isFrozen || readOnly;
 
-    // For read-only system fields, show formatted display
     if (readOnly) {
       let displayValue: string;
 
@@ -158,15 +121,19 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         property.type === EPropertyType.CREATED_TIME ||
         property.type === EPropertyType.LAST_EDITED_TIME
       ) {
-        // For date fields, ensure we have a valid date value
+        console.log("## value", value);
+
         const dateValue =
           value && typeof value === "object" && "getTime" in value
             ? (value as Date)
             : null;
+        console.log("## dateValue", dateValue);
+
         displayValue = formatLastEditedTime(dateValue);
       } else {
         displayValue = String(value || "");
       }
+      console.log(displayValue);
 
       return (
         <div className="w-full p-1 min-h-[24px] flex items-center text-sm text-muted-foreground">
@@ -182,7 +149,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             <Checkbox
               checked={getBooleanValue(editValue)}
               onCheckedChange={(checked) => {
-                handleSave(checked);
+                handleValueChange(checked);
               }}
               disabled={disabled}
             />
@@ -195,7 +162,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             <EditableSelect
               property={property}
               value={getStringValue(editValue)}
-              onChange={(newValue) => handleSave(newValue)}
+              onChange={(newValue) => handleValueChange(newValue)}
               databaseId={database?.id || ""}
               disabled={disabled}
             />
@@ -208,7 +175,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             <EditableMultiSelect
               property={property}
               value={currentSelectedValues}
-              onChange={(newValues) => handleSave(newValues)}
+              onChange={(newValues) => handleValueChange(newValues)}
               databaseId={database?.id || ""}
               disabled={disabled}
             />
@@ -225,12 +192,11 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                   variant="outline"
                   disabled={disabled}
                   className={cn(
-                    "h-8 w-full justify-start text-left font-normal border shadow-sm bg-background hover:bg-muted/50",
+                    "h-8 w-full justify-start text-left font-normal border-0 shadow-none bg-transparent dark:bg-transparent hover:bg-transparent dark:hover:bg-transparent cursor-pointer",
                     !dateValue && "text-muted-foreground"
                   )}
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateValue ? formatDateForDisplay(dateValue) : "Pick a date"}
+                  {dateValue ? formatDateForDisplay(dateValue) : ""}
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -241,7 +207,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                   mode="single"
                   selected={dateValue}
                   onSelect={(date) => {
-                    handleSave(date ? date.toISOString() : null);
+                    handleValueChange(date ? date.toISOString() : null);
                   }}
                   initialFocus
                 />

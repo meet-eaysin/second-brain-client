@@ -16,7 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { TProperty } from "@/modules/database-view/types";
+import type { TProperty, TPropertyOption } from "@/modules/database-view/types";
 import { useUpdateProperty } from "@/modules/database-view/services/database-queries";
 
 interface EditableMultiSelectProps {
@@ -63,6 +63,12 @@ export function EditableMultiSelect({
       (option) => option.label.toLowerCase() === searchValue.toLowerCase()
     );
 
+  const shouldShowNotOption =
+    searchValue.trim() &&
+    filteredOptions.some(
+      (option) => option.label.toLowerCase() === searchValue.toLowerCase()
+    );
+
   const handleCreateOption = async () => {
     if (!searchValue.trim()) return;
 
@@ -100,6 +106,41 @@ export function EditableMultiSelect({
     }
   };
 
+  const handleCreateNotOption = async (originalOption: TPropertyOption) => {
+    const notOption = {
+      value: `not-${originalOption.value}`,
+      label: `Not ${originalOption.label}`,
+      color: "#ef4444", // Red color for "not" options
+      description: `Negation of ${originalOption.label}`,
+    };
+
+    try {
+      await updatePropertyMutation.mutateAsync({
+        databaseId,
+        propertyId: property.id,
+        data: {
+          selectOptions: [
+            ...options,
+            {
+              id: `temp-${Date.now()}`,
+              label: notOption.label,
+              value: notOption.value,
+              color: notOption.color,
+              description: notOption.description,
+            },
+          ],
+        },
+      });
+
+      // After creating, select it
+      onChange([...value, notOption.value]);
+      setSearchValue("");
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to create not option:", error);
+    }
+  };
+
   const handleSelect = (optionId: string) => {
     const newValue = value.includes(optionId)
       ? value.filter((id) => id !== optionId)
@@ -119,7 +160,7 @@ export function EditableMultiSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-start h-auto min-h-[32px] border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 py-1 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors min-w-0",
+            "w-full justify-start h-auto min-h-[32px] border-0 shadow-none bg-background hover:bg-muted/50 focus:ring-0 focus:ring-ring focus:ring-offset-0 px-2 py-1 text-sm dark:bg-transparent dark:hover:bg-muted/50 transition-colors min-w-0",
             selectedOptions.length === 0 && "text-muted-foreground"
           )}
           disabled={disabled}
@@ -141,15 +182,20 @@ export function EditableMultiSelect({
                     {option.label}
                     <button
                       type="button"
-                      className="ml-1.5 h-3 w-3 rounded-full hover:bg-black/20 flex items-center justify-center p-0.5 transition-colors"
+                      className="ml-1.5 h-3 w-3 rounded-full hover:bg-black/20 flex items-center justify-center p-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-400"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        e.nativeEvent.stopImmediatePropagation();
                         handleRemove(option.id);
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                       }}
                       aria-label={`Remove ${option.label}`}
                     >
-                      <X className="h-2.5 w-2.5" />
+                      <X size={13} />
                     </button>
                   </Badge>
                 ))}
@@ -163,20 +209,24 @@ export function EditableMultiSelect({
                 )}
               </>
             ) : (
-              <span>Select options...</span>
+              <span></span>
             )}
           </div>
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto min-w-[280px] p-0 border shadow-lg" align="start" side="bottom">
+      <PopoverContent
+        className="w-auto min-w-[280px] p-0 border shadow-lg"
+        align="start"
+        side="bottom"
+      >
         <Command>
           <CommandInput
-             placeholder="Search or create options..."
-             value={searchValue}
-             onValueChange={setSearchValue}
-             className="border-b focus:ring-0"
-           />
+            placeholder="Search or create options..."
+            value={searchValue}
+            onValueChange={setSearchValue}
+            className="border-b focus:ring-0"
+          />
           <CommandList className="max-h-[200px]">
             <CommandEmpty>
               {shouldShowCreate ? (
@@ -187,6 +237,28 @@ export function EditableMultiSelect({
                   <Plus className="mr-2 h-4 w-4" />
                   <span className="font-medium">Create "{searchValue}"</span>
                 </CommandItem>
+              ) : shouldShowNotOption ? (
+                <div className="p-2">
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Create "not" option for existing values:
+                  </div>
+                  {filteredOptions.slice(0, 3).map((option) => (
+                    <CommandItem
+                      key={`not-${option.id}`}
+                      onSelect={() => handleCreateNotOption(option)}
+                      className="cursor-pointer py-2 pl-4"
+                    >
+                      <span className="text-red-600 font-medium">
+                        Not {option.label}
+                      </span>
+                    </CommandItem>
+                  ))}
+                  {filteredOptions.length > 3 && (
+                    <div className="text-xs text-muted-foreground pl-4 py-1">
+                      And {filteredOptions.length - 3} more...
+                    </div>
+                  )}
+                </div>
               ) : (
                 <div className="py-6 text-center text-sm text-muted-foreground">
                   No options found.

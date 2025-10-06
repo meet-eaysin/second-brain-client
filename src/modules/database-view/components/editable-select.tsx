@@ -14,7 +14,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { TProperty } from "@/modules/database-view/types";
+import type { TProperty, TPropertyOption } from "@/modules/database-view/types";
 import { useUpdateProperty } from "@/modules/database-view/services/database-queries";
 
 interface EditableSelectProps {
@@ -61,6 +61,12 @@ export function EditableSelect({
       (option) => option.label.toLowerCase() === searchValue.toLowerCase()
     );
 
+  const shouldShowNotOption =
+    searchValue.trim() &&
+    filteredOptions.some(
+      (option) => option.label.toLowerCase() === searchValue.toLowerCase()
+    );
+
   const handleCreateOption = async () => {
     if (!searchValue.trim()) return;
 
@@ -98,6 +104,41 @@ export function EditableSelect({
     }
   };
 
+  const handleCreateNotOption = async (originalOption: TPropertyOption) => {
+    const notOption = {
+      value: `not-${originalOption.value}`,
+      label: `Not ${originalOption.label}`,
+      color: "#ef4444", // Red color for "not" options
+      description: `Negation of ${originalOption.label}`,
+    };
+
+    try {
+      await updatePropertyMutation.mutateAsync({
+        databaseId,
+        propertyId: property.id,
+        data: {
+          selectOptions: [
+            ...options,
+            {
+              id: `temp-${Date.now()}`,
+              label: notOption.label,
+              value: notOption.value,
+              color: notOption.color,
+              description: notOption.description,
+            },
+          ],
+        },
+      });
+
+      // After creating, select it
+      onChange(notOption.value);
+      setSearchValue("");
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to create not option:", error);
+    }
+  };
+
   const handleSelect = (optionId: string) => {
     onChange(optionId);
     setOpen(false);
@@ -111,18 +152,17 @@ export function EditableSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-8 border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors min-w-0"
+          className="w-full justify-between h-8 border-0 bg-transparent shadow-none hover:bg-muted/50 focus:ring-0 focus:ring-ring focus:ring-offset-0 px-2 text-sm dark:bg-transparent dark:hover:bg-transparent transition-colors min-w-0"
           disabled={disabled}
         >
           {selectedOption ? (
             <div className="flex items-center space-x-2">
-              {selectedOption.color && (
-                <div
-                  className="w-3 h-3 rounded-full border border-gray-300"
-                  style={{ backgroundColor: selectedOption.color }}
-                />
-              )}
-              <span className="truncate">{selectedOption.label}</span>
+              <span
+                className="truncate"
+                style={{ color: selectedOption.color || "#000000" }}
+              >
+                {selectedOption.label}
+              </span>
             </div>
           ) : (
             <span className="text-muted-foreground">Select option...</span>
@@ -130,7 +170,10 @@ export function EditableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto min-w-[200px] p-0 border shadow-lg" align="start">
+      <PopoverContent
+        className="w-auto min-w-[200px] p-0 border shadow-lg"
+        align="start"
+      >
         <Command>
           <CommandInput
             placeholder="Search options..."
@@ -144,6 +187,28 @@ export function EditableSelect({
                   <Plus className="mr-2 h-4 w-4" />
                   Create "{searchValue}"
                 </CommandItem>
+              ) : shouldShowNotOption ? (
+                <div className="p-2">
+                  <div className="text-sm text-muted-foreground mb-2">
+                    Create "not" option for existing values:
+                  </div>
+                  {filteredOptions.slice(0, 3).map((option) => (
+                    <CommandItem
+                      key={`not-${option.id}`}
+                      onSelect={() => handleCreateNotOption(option)}
+                      className="cursor-pointer py-2 pl-4"
+                    >
+                      <span className="text-red-600 font-medium">
+                        Not {option.label}
+                      </span>
+                    </CommandItem>
+                  ))}
+                  {filteredOptions.length > 3 && (
+                    <div className="text-xs text-muted-foreground pl-4 py-1">
+                      And {filteredOptions.length - 3} more...
+                    </div>
+                  )}
+                </div>
               ) : (
                 "No options found."
               )}
