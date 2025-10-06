@@ -611,7 +611,7 @@ export function DataTable({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
+                              className="h-0 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
