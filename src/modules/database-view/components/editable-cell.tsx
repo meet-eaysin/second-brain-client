@@ -50,7 +50,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea when value changes
   useEffect(() => {
     if (textareaRef.current) {
       const textarea = textareaRef.current;
@@ -61,7 +60,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const handleSave = useCallback(
     async (newValue: TPropertyValue) => {
-      // Prevent saving if value hasn't changed from original
       if (
         JSON.stringify(newValue) === JSON.stringify(originalValueRef.current)
       ) {
@@ -70,7 +68,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       if (!database?.id) return;
 
-      // Silently make API call in background without any loading states
       try {
         await updateRecordMutation.mutateAsync({
           databaseId: database.id,
@@ -79,11 +76,8 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             [property.id]: newValue,
           },
         });
-        // Update the original value reference on success
         originalValueRef.current = newValue;
       } catch {
-        // Silently handle error - user doesn't need to know
-        // The optimistic update remains in place for better UX
         console.warn("Failed to save cell value");
       }
     },
@@ -92,15 +86,12 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const handleValueChange = useCallback(
     (newValue: TPropertyValue) => {
-      // Update UI immediately (optimistic update)
       setEditValue(newValue);
-      // Make API call in background for all input types
       handleSave(newValue);
     },
     [handleSave]
   );
 
-  // Helper to check if property is read-only (system fields)
   const isReadOnly = (type: EPropertyType) => {
     return [
       EPropertyType.CREATED_TIME,
@@ -121,19 +112,23 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         property.type === EPropertyType.CREATED_TIME ||
         property.type === EPropertyType.LAST_EDITED_TIME
       ) {
-        console.log("## value", value);
+        let dateValue: Date | null = null;
 
-        const dateValue =
-          value && typeof value === "object" && "getTime" in value
-            ? (value as Date)
-            : null;
-        console.log("## dateValue", dateValue);
+        if (value) {
+          if (typeof value === "object" && "getTime" in value) {
+            dateValue = value as Date;
+          } else if (typeof value === "string") {
+            const parsed = new Date(value);
+            if (!isNaN(parsed.getTime())) {
+              dateValue = parsed;
+            }
+          }
+        }
 
         displayValue = formatLastEditedTime(dateValue);
       } else {
         displayValue = String(value || "");
       }
-      console.log(displayValue);
 
       return (
         <div className="w-full p-1 min-h-[24px] flex items-center text-sm text-muted-foreground">
