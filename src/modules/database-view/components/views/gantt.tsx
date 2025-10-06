@@ -24,7 +24,8 @@ import {
 import { useDatabaseView } from "@/modules/database-view/context";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
 import { ConfirmDialog } from "@/components/confirm-dialog";
-import type {TPropertyValue, TRecord} from "@/modules/database-view/types";
+import { GanttSkeleton } from "../skeleton";
+import type { TPropertyValue, TRecord } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 import {
   useCreateRecord,
@@ -384,18 +385,7 @@ export function Gantt({ className = "" }: { className?: string }) {
 
   // Show loading state
   if (isPropertiesLoading || isRecordsLoading) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">
-            {isPropertiesLoading
-              ? "Loading properties..."
-              : "Loading records..."}
-          </p>
-        </div>
-      </div>
-    );
+    return <GanttSkeleton />;
   }
 
   // Show empty state if no records

@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import {Spinner} from "@/components/ui/kibo-ui/spinner";
+import { Spinner } from "@/components/ui/kibo-ui/spinner";
 
 export const HeaderSkeleton = () => (
   <div className="flex-shrink-0 mb-4 flex flex-wrap items-center justify-between space-y-2 gap-x-4">
@@ -120,9 +120,116 @@ export const ListSkeleton = () => (
   </div>
 );
 
+export const BoardSkeleton = () => (
+  <div className="space-y-4">
+    <div className="flex gap-4 overflow-x-auto pb-4 px-4">
+      {Array.from({ length: 3 }).map((_, groupIndex) => (
+        <div key={groupIndex} className="flex-shrink-0 w-80">
+          <div className="bg-muted/50 rounded-lg p-4">
+            {/* Group header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Skeleton className="w-3 h-3 rounded-full" />
+                <Skeleton className="h-5 w-20" />
+                <Skeleton className="h-5 w-8" />
+              </div>
+            </div>
+            {/* Cards */}
+            <div className="space-y-3">
+              {Array.from({ length: 4 }).map((_, cardIndex) => (
+                <div key={cardIndex} className="border rounded-lg p-4">
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-3/4" />
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-3 w-16" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-3 w-12" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+export const CalendarSkeleton = () => (
+  <div className="w-full h-full overflow-auto">
+    <div className="space-y-4">
+      {/* Calendar header skeleton */}
+      <div className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        <Skeleton className="h-8 w-48" />
+      </div>
+      {/* Calendar grid skeleton */}
+      <div className="grid grid-cols-7 gap-1 p-4">
+        {Array.from({ length: 35 }).map((_, i) => (
+          <div key={i} className="min-h-[120px] border rounded-lg p-2">
+            <Skeleton className="h-4 w-8 mb-2" />
+            <div className="space-y-1">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-3/4" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+export const GanttSkeleton = () => (
+  <div className="w-full h-full overflow-auto">
+    <div className="flex h-full">
+      {/* Sidebar skeleton */}
+      <div className="w-64 border-r bg-muted/20 p-4">
+        <div className="space-y-4">
+          {Array.from({ length: 4 }).map((_, groupIndex) => (
+            <div key={groupIndex} className="space-y-2">
+              <Skeleton className="h-5 w-32" />
+              <div className="space-y-1 pl-4">
+                {Array.from({ length: 3 }).map((_, itemIndex) => (
+                  <Skeleton key={itemIndex} className="h-4 w-full" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Timeline skeleton */}
+      <div className="flex-1 p-4">
+        <div className="space-y-4">
+          {/* Timeline header */}
+          <Skeleton className="h-8 w-full" />
+          {/* Timeline content */}
+          <div className="space-y-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 flex-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 export const DatabaseInitializationLoader = () => (
   <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
-    <Spinner/>
+    <Spinner />
     <div className="text-center space-y-2">
       <h3 className="text-lg font-medium">Initializing Database</h3>
       <p className="text-sm text-muted-foreground">

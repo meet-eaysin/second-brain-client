@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/kibo-ui/calendar";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
+import { CalendarSkeleton } from "../skeleton";
 import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
 import { EPropertyType } from "@/modules/database-view/types";
 
@@ -330,18 +331,7 @@ export const Calendar = ({ className = "" }: CalendarProps) => {
 
   // Show loading state
   if (isPropertiesLoading || isRecordsLoading) {
-    return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-sm text-muted-foreground">
-            {isPropertiesLoading
-              ? "Loading properties..."
-              : "Loading records..."}
-          </p>
-        </div>
-      </div>
-    );
+    return <CalendarSkeleton />;
   }
 
   // Show empty state if no records
@@ -447,4 +437,4 @@ export const Calendar = ({ className = "" }: CalendarProps) => {
       </CalendarProvider>
     </div>
   );
-}
+};
