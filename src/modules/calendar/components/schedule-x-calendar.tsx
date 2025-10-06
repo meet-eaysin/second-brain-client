@@ -1,13 +1,15 @@
 import { useState, useMemo } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import type { SlotInfo, View } from "react-big-calendar";
-import withDragAndDrop, { type EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
+import withDragAndDrop, {
+  type EventInteractionArgs,
+} from "react-big-calendar/lib/addons/dragAndDrop";
 import moment from "moment";
 import {
   useCreateEvent,
   useUpdateEvent,
   useDeleteEvent,
-  useEvents
+  useEvents,
 } from "@/modules/calendar/services/calendar-queries";
 import type {
   CreateEventRequest,
@@ -51,7 +53,6 @@ interface CalendarEvent {
     type?: string;
   };
 }
-
 
 const CustomEvent = ({ event }: { event: CalendarEvent }) => {
   const getEventTypeIcon = (type?: string) => {
@@ -131,7 +132,7 @@ export default function ShadcnBigCalendarComponent({
     [date, selectedCalendars]
   );
 
-  const { data: eventsResponse } = useEvents(queryParams);  
+  const { data: eventsResponse } = useEvents(queryParams);
 
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
@@ -246,7 +247,7 @@ export default function ShadcnBigCalendarComponent({
               {selectedEvent ? "Edit Event" : "Create Event"}
             </DialogTitle>
           </DialogHeader>
-          {(selectedSlot || selectedEvent || showCreateEvent) ? (
+          {selectedSlot || selectedEvent || showCreateEvent ? (
             <EventForm
               eventId={selectedEvent?.id}
               initialStart={selectedSlot?.start || selectedEvent?.start}
@@ -256,7 +257,9 @@ export default function ShadcnBigCalendarComponent({
               onCancel={handleDialogClose}
               onDelete={selectedEvent ? handleDeleteEvent : undefined}
             />
-          ) : <></>}
+          ) : (
+            <></>
+          )}
         </DialogContent>
       </Dialog>
 

@@ -98,7 +98,7 @@ export default function EventForm({
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
-                  <FormControl>
+                  <FormControl className="w-full">
                     <SelectTrigger>
                       <SelectValue placeholder="Select calendar" />
                     </SelectTrigger>
@@ -146,7 +146,7 @@ export default function EventForm({
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
-                  <FormControl>
+                  <FormControl className="w-full">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -174,7 +174,7 @@ export default function EventForm({
             control={form.control}
             name="isAllDay"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+              <FormItem className="flex flex-row items-center space-x-1 space-y-0">
                 <FormControl>
                   <Checkbox
                     checked={field.value}
@@ -214,7 +214,6 @@ export default function EventForm({
                             ) : (
                               <span>Pick date and time</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -285,7 +284,6 @@ export default function EventForm({
                             ) : (
                               <span>Pick date and time</span>
                             )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -424,7 +422,7 @@ export default function EventForm({
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
-                  <FormControl>
+                  <FormControl className="w-full">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -509,7 +507,7 @@ export default function EventForm({
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
-                        <FormControl>
+                        <FormControl className="w-full">
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -541,7 +539,7 @@ export default function EventForm({
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
-                        <FormControl>
+                        <FormControl className="w-full">
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -609,7 +607,7 @@ export default function EventForm({
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
-                            <FormControl>
+                            <FormControl className="w-full">
                               <SelectTrigger>
                                 <SelectValue />
                               </SelectTrigger>

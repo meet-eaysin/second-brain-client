@@ -7,7 +7,7 @@ import { ThemeSwitch } from "@/components/theme-switch";
 import { ProfileDropdown } from "@/components/profile-dropdown";
 import { NotificationBell } from "@/modules/notifications";
 import { Header } from "@/layout/header.tsx";
-import type {ReactNode} from "react";
+import type { ReactNode } from "react";
 
 interface EnhancedHeaderProps {
   className?: string;
@@ -16,10 +16,10 @@ interface EnhancedHeaderProps {
 }
 
 export function EnhancedHeader({
-                                 className,
-                                 showSearch = true,
-                                 contextActions,
-                               }: EnhancedHeaderProps) {
+  className,
+  showSearch = true,
+  contextActions,
+}: EnhancedHeaderProps) {
   const location = useLocation();
 
   const getPageTitle = () => {
@@ -49,7 +49,7 @@ export function EnhancedHeader({
       notification: "Notification",
       workspace: "Workspace",
       billing: "Billing",
-      'help-center': 'Help Center',
+      "help-center": "Help Center",
     };
 
     return titleMap[lastSegment] || "Second Brain";
@@ -82,7 +82,6 @@ export function EnhancedHeader({
         )}
 
         <div className="flex items-center gap-1">
-          
           <NotificationBell />
           <ThemeSwitch />
           <ProfileDropdown />

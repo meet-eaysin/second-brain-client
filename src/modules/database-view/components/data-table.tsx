@@ -596,7 +596,7 @@ export function DataTable({
                           width: cell.column.getSize(),
                           minWidth: cell.column.getSize(),
                         }}
-                        className="relative group/cell border-r border-border last:border-r-0 px-1 py-0 [&:has([role=checkbox])]:pr-0"
+                        className="relative group/cell border-r border-border last:border-r-0 px-3 py-0 [&:has([role=checkbox])]:pr-0"
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

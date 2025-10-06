@@ -201,7 +201,7 @@ export function DatabaseViewProvider({
       providedDatabaseId,
       databasesByType,
       moduleType,
-      currentWorkspace?._id,
+      isDatabasesByTypeLoading,
     ]);
 
     // Step 4: After initialization, get the database ID from the refetched data

@@ -1081,7 +1081,6 @@ export default function CalendarPage() {
           </div>
         )}
 
-        {/* Create Event Dialog */}
         <Dialog open={showCreateEvent} onOpenChange={setShowCreateEvent}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1096,7 +1095,6 @@ export default function CalendarPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Create/Edit Calendar Dialog */}
         <CalendarForm
           open={showCreateCalendar}
           onOpenChange={setShowCreateCalendar}

@@ -27,6 +27,7 @@ import {
   EEventType,
 } from "@/modules/calendar/types/calendar.types.ts";
 import type { IRecentlyVisitedItem } from "@/modules/home/types";
+import { useAuth } from "@/modules/auth";
 
 interface DisplayFeature {
   id: string;
@@ -42,6 +43,7 @@ interface DisplayFeature {
 
 export function HomePage() {
   const { currentWorkspace } = useWorkspace();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useDashboardOverview();
   const { data: todayEvents } = useTodayEvents();
@@ -141,31 +143,26 @@ export function HomePage() {
     }
   }, [todayEvents]);
 
-  // Handle moving/rescheduling events by dragging
   const handleMoveFeature = async (
     id: string,
     startAt: Date,
     endAt: Date | null
   ) => {
-    try {
-      if (!endAt || !id) return;
+    if (!endAt || !id) return;
 
-      const event = displayFeatures.find((f: DisplayFeature) => f.id === id);
-      if (!event) return;
+    const event = displayFeatures.find((f: DisplayFeature) => f.id === id);
+    if (!event) return;
 
-      // Validate dates
-      if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) return;
+    // Validate dates
+    if (isNaN(startAt.getTime()) || isNaN(endAt.getTime())) return;
 
-      await updateEventMutation({
-        eventId: id,
-        data: {
-          startTime: startAt,
-          endTime: endAt,
-        },
-      });
-    } catch {
-      // Error handling is done in the mutation hook
-    }
+    await updateEventMutation({
+      eventId: id,
+      data: {
+        startTime: startAt,
+        endTime: endAt,
+      },
+    });
   };
 
   // Motivational quotes based on time of day
@@ -393,7 +390,12 @@ export function HomePage() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold">{getGreeting()}!</h1>
+              <h1 className="text-3xl font-bold">
+                {getGreeting()}{" "}
+                <span className="capitalize">
+                  {user?.firstName || user?.username || ""}!
+                </span>
+              </h1>
               <p className="text-muted-foreground mt-1">
                 Welcome back
                 {currentWorkspace && (
@@ -424,70 +426,54 @@ export function HomePage() {
           </div>
           <Card>
             <CardContent className="p-4">
-              {displayFeatures.length > 0 ? (
-                <div className="h-64 overflow-hidden rounded border">
-                  <GanttProvider range="monthly" zoom={80}>
-                    <GanttSidebar>
-                      <GanttSidebarGroup name="Today's Events">
-                        {displayFeatures.map((feature: DisplayFeature) => (
-                          <GanttSidebarItem
-                            key={feature?.id}
-                            feature={feature || null}
-                            onSelectItem={(id) => {
-                              // Scroll to the feature in the timeline
-                              const ganttElement = document.querySelector(
-                                '[data-roadmap-ui="gantt-sidebar"]'
-                              )?.parentElement;
-                              if (ganttElement) {
-                                const featureElement =
-                                  ganttElement.querySelector(
-                                    `[data-feature-id="${id}"]`
-                                  );
-                                featureElement?.scrollIntoView({
-                                  behavior: "smooth",
-                                  block: "center",
-                                });
-                              }
-                            }}
-                          />
+              <div className="h-64 overflow-hidden rounded border">
+                <GanttProvider range="monthly" zoom={80}>
+                  <GanttSidebar>
+                    <GanttSidebarGroup name="Today's Events">
+                      {displayFeatures.map((feature: DisplayFeature) => (
+                        <GanttSidebarItem
+                          key={feature?.id}
+                          feature={feature || null}
+                          onSelectItem={(id) => {
+                            const ganttElement = document.querySelector(
+                              '[data-roadmap-ui="gantt-sidebar"]'
+                            )?.parentElement;
+                            if (ganttElement) {
+                              const featureElement = ganttElement.querySelector(
+                                `[data-feature-id="${id}"]`
+                              );
+                              featureElement?.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                            }
+                          }}
+                        />
+                      ))}
+                    </GanttSidebarGroup>
+                  </GanttSidebar>
+                  <GanttTimeline>
+                    <GanttHeader />
+                    <GanttFeatureList>
+                      <GanttFeatureListGroup>
+                        {displayFeatures?.map((feature: DisplayFeature) => (
+                          <div className="flex" key={feature?.id}>
+                            <GanttFeatureItem
+                              onMove={handleMoveFeature}
+                              {...feature}
+                            >
+                              <p className="flex-1 truncate text-xs">
+                                {feature.name}
+                              </p>
+                            </GanttFeatureItem>
+                          </div>
                         ))}
-                      </GanttSidebarGroup>
-                    </GanttSidebar>
-                    <GanttTimeline>
-                      <GanttHeader />
-                      <GanttFeatureList>
-                        <GanttFeatureListGroup>
-                          {displayFeatures?.map((feature: DisplayFeature) => (
-                            <div className="flex" key={feature?.id}>
-                              <GanttFeatureItem
-                                onMove={handleMoveFeature}
-                                {...feature}
-                              >
-                                <p className="flex-1 truncate text-xs">
-                                  {feature.name}
-                                </p>
-                              </GanttFeatureItem>
-                            </div>
-                          ))}
-                        </GanttFeatureListGroup>
-                      </GanttFeatureList>
-                      <GanttToday />
-                    </GanttTimeline>
-                  </GanttProvider>
-                </div>
-              ) : (
-                <div className="h-64 flex items-center justify-center border rounded">
-                  <div className="text-center">
-                    <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">
-                      No events scheduled for today
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Your calendar is free today
-                    </p>
-                  </div>
-                </div>
-              )}
+                      </GanttFeatureListGroup>
+                    </GanttFeatureList>
+                    <GanttToday />
+                  </GanttTimeline>
+                </GanttProvider>
+              </div>
               <div className="mt-4 pt-3 border-t">
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
