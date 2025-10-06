@@ -140,7 +140,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
     switch (property.type) {
       case EPropertyType.CHECKBOX:
         return (
-          <div className="flex items-center">
+          <div className="flex items-center px-5">
             <Checkbox
               checked={getBooleanValue(editValue)}
               onCheckedChange={(checked) => {

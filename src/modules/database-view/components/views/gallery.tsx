@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
 import { useUpdateRecord } from "@/modules/database-view/services/database-queries";
-import { NoDataMessage } from "@/components/no-data-message.tsx";
 import { EditableCell } from "@/modules/database-view/components/editable-cell";
 import { GallerySkeleton } from "../skeleton";
 import type { TRecord, TPropertyValue } from "@/modules/database-view/types";
@@ -172,7 +171,7 @@ export function Gallery({ className = "" }: { className?: string }) {
     const isExpanded = expandedCards.has(record.id);
     const displayedProperties = isExpanded
       ? visibleProperties
-      : visibleProperties.slice(0, 5);
+      : visibleProperties.slice(0, 4);
 
     return (
       <Draggable key={record.id} draggableId={record.id} index={index}>
@@ -180,20 +179,20 @@ export function Gallery({ className = "" }: { className?: string }) {
           <Card
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`mb-3 hover:shadow-md transition-all duration-200 group h-fit max-h-96 overflow-hidden ${
+            className={`group relative bg-card border rounded-xl shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer overflow-hidden ${
               snapshot.isDragging
-                ? "shadow-xl rotate-2 scale-105 bg-background border-primary"
-                : "hover:shadow-md"
+                ? "shadow-xl rotate-1 scale-[1.02] bg-card border-primary/60"
+                : "hover:border-primary/20"
             }`}
           >
-            <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
+            <CardHeader className="px-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div
                     {...provided.dragHandleProps}
-                    className={`cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-all duration-200 flex-shrink-0 ${
+                    className={`cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all duration-200 flex-shrink-0 ${
                       snapshot.isDragging
-                        ? "text-primary"
+                        ? "text-primary opacity-100"
                         : "opacity-0 group-hover:opacity-100"
                     }`}
                     onClick={(e) => e.stopPropagation()}
@@ -202,7 +201,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                   </div>
                   <div className="flex-1 min-w-0 overflow-hidden">
                     {titleProperty ? (
-                      <div className="text-sm font-medium line-clamp-2 break-words">
+                      <div className="text-base font-semibold text-foreground line-clamp-2 break-words leading-6">
                         <EditableCell
                           record={record}
                           property={titleProperty}
@@ -210,7 +209,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                         />
                       </div>
                     ) : (
-                      <CardTitle className="text-sm font-medium line-clamp-2 break-words">
+                      <CardTitle className="text-base font-semibold text-foreground line-clamp-2 break-words leading-6">
                         {title || "Untitled"}
                       </CardTitle>
                     )}
@@ -221,13 +220,13 @@ export function Gallery({ className = "" }: { className?: string }) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 flex-shrink-0"
+                      className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity duration-200"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <MoreHorizontal className="h-3 w-3" />
+                      <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
@@ -235,7 +234,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                       }}
                     >
                       <Edit className="h-4 w-4 mr-2" />
-                      Edit
+                      Edit Record
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={(e) => {
@@ -245,15 +244,15 @@ export function Gallery({ className = "" }: { className?: string }) {
                       className="text-destructive focus:text-destructive"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
+                      Delete Record
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </CardHeader>
             {visibleProperties.length > 0 && (
-              <CardContent className="pt-0 max-h-64 overflow-y-auto">
-                <div className="space-y-2">
+              <CardContent className="px-4 pb-4 pt-0">
+                <div className="space-y-3">
                   {displayedProperties.map((property) => {
                     // Handle system properties that are stored at record level
                     let value;
@@ -282,29 +281,31 @@ export function Gallery({ className = "" }: { className?: string }) {
                     return (
                       <div
                         key={property.id}
-                        className="flex items-start gap-2 min-h-[28px]"
+                        className="flex items-start gap-3 group/property"
                       >
-                        <span className="text-xs text-muted-foreground font-medium flex-shrink-0 leading-5">
-                          {property.name}:
+                        <span className="text-sm font-medium text-muted-foreground flex-shrink-0 leading-5 min-w-[90px]">
+                          {property.name}
                         </span>
                         <div className="flex-1 min-w-0 overflow-hidden">
-                          <EditableCell
-                            record={record}
-                            property={property}
-                            value={value}
-                          />
+                          <div className="text-sm text-foreground leading-5 group-hover/property:text-primary/90 transition-colors">
+                            <EditableCell
+                              record={record}
+                              property={property}
+                              value={value}
+                            />
+                          </div>
                         </div>
                       </div>
                     );
                   })}
-                  {visibleProperties.length > 5 && (
+                  {visibleProperties.length > 4 && (
                     <div
-                      className="text-xs text-muted-foreground text-center py-1 cursor-pointer hover:text-foreground transition-colors"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer pt-2 border-t border-muted/50"
                       onClick={() => toggleCardExpansion(record.id)}
                     >
                       {isExpanded
                         ? "Show less"
-                        : `+${visibleProperties.length - 5} more properties`}
+                        : `+${visibleProperties.length - 4} more properties`}
                     </div>
                   )}
                 </div>
@@ -319,31 +320,36 @@ export function Gallery({ className = "" }: { className?: string }) {
   if (isPropertiesLoading || isInitialLoading) return <GallerySkeleton />;
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-6 ${className}`}>
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-6 overflow-x-auto pb-4 px-1">
           {groups.map((group) => (
             <div key={group.id} className="flex-shrink-0 w-80">
-              <div className="bg-muted/50 rounded-lg p-4">
+              <div className="bg-card border rounded-xl shadow-sm overflow-hidden">
                 {/* Group Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between px-4 py-3 border-b bg-gradient-to-r from-muted/30 to-muted/10">
+                  <div className="flex items-center gap-3">
                     <div
-                      className="w-3 h-3 rounded-full"
+                      className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm"
                       style={{ backgroundColor: group.color }}
                     />
-                    <h3 className="font-medium">{group.name}</h3>
-                    <Badge variant="secondary" className="text-xs">
+                    <h3 className="font-semibold text-sm text-foreground">
+                      {group.name}
+                    </h3>
+                    <Badge
+                      variant="secondary"
+                      className="text-xs font-medium bg-muted/50"
+                    >
                       {groupedRecords[group.id]?.length || 0}
                     </Badge>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-6 w-6 p-0"
+                    className="h-7 w-7 p-0 hover:bg-muted/50 transition-colors"
                     onClick={onRecordCreate}
                   >
-                    <Plus className="h-3 w-3" />
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -353,22 +359,30 @@ export function Gallery({ className = "" }: { className?: string }) {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`space-y-2 min-h-[200px] transition-all duration-200 rounded-md ${
+                      className={`p-4 min-h-[200px] transition-all duration-200 ${
                         snapshot.isDraggingOver
-                          ? "bg-primary/10 border-2 border-dashed border-primary/30 scale-[1.02]"
-                          : "border-2 border-transparent"
+                          ? "bg-primary/5 border-2 border-dashed border-primary/20"
+                          : ""
                       }`}
                     >
-                      {groupedRecords[group.id]?.map((record, index) =>
-                        renderRecordCard(record, index)
-                      )}
+                      <div className="space-y-3">
+                        {groupedRecords[group.id]?.map((record, index) =>
+                          renderRecordCard(record, index)
+                        )}
 
-                      {groupedRecords[group.id]?.length === 0 && (
-                        <NoDataMessage
-                          message="No records in this group"
-                          compact
-                        />
-                      )}
+                        {groupedRecords[group.id]?.length === 0 && (
+                          <div className="flex items-center justify-center h-32 text-muted-foreground">
+                            <div className="text-center">
+                              <p className="text-sm font-medium">
+                                No records in this group
+                              </p>
+                              <p className="text-xs mt-1 opacity-75">
+                                Add a record to get started
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       {provided.placeholder}
                     </div>
                   )}
@@ -381,12 +395,12 @@ export function Gallery({ className = "" }: { className?: string }) {
 
       {/* Load More Button - Full Width like Notion */}
       {hasMoreRecords && (
-        <div className="border-t bg-muted/20 mt-4">
+        <div className="border-t bg-muted/20 mt-6">
           <Button
             onClick={onLoadMoreRecords}
             disabled={isLoadingMore}
             variant="ghost"
-            className="w-full h-12 rounded-none border-0 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className="w-full h-12 rounded-none border-0 gap-2 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
           >
             {isLoadingMore && <Loader2 className="h-4 w-4 animate-spin" />}
             {isLoadingMore ? "Loading..." : "Load More"}
