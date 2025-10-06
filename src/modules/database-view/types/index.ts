@@ -459,13 +459,6 @@ export type TUpdateView = {
   order?: number;
 };
 
-export type TSelectOption = {
-  id: string;
-  name: string;
-  color: string;
-  description?: string;
-};
-
 export type TCreateDatabase = {
   name: string;
   description?: string;
@@ -495,7 +488,7 @@ export type TCreateProperty = {
   type: EPropertyType;
   description?: string;
   required?: boolean;
-  selectOptions?: Omit<TSelectOption, "id">[];
+  selectOptions?: Omit<TPropertyOption, "id">[];
   relationConfig?: Record<string, unknown>;
   order?: number;
   viewId: string;
@@ -505,7 +498,7 @@ export type TUpdateProperty = {
   name?: string;
   description?: string;
   required?: boolean;
-  selectOptions?: TSelectOption[];
+  selectOptions?: TPropertyOption[];
 };
 
 export type TCreateViewInput = {

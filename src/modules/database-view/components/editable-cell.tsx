@@ -8,25 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { CalendarIcon, CheckIcon } from "lucide-react";
-import {
-  Tags,
-  TagsContent,
-  TagsEmpty,
-  TagsGroup,
-  TagsInput,
-  TagsItem,
-  TagsList,
-  TagsTrigger,
-  TagsValue,
-} from "@/components/ui/kibo-ui/tags";
 import {
   Glimpse,
   GlimpseContent,
@@ -55,6 +37,8 @@ import {
   getStringValue,
 } from "@/utils/helpers.ts";
 import { Badge } from "@/components/ui/badge";
+import { EditableSelect } from "./editable-select";
+import { EditableMultiSelect } from "./editable-multi-select";
 
 interface EditableCellProps {
   record: TRecord;
@@ -236,103 +220,25 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.SELECT:
         return (
-          <Select
+          <EditableSelect
+            property={property}
             value={getStringValue(editValue)}
-            onValueChange={(newValue) => {
-              handleSave(newValue);
-            }}
-          >
-            <SelectTrigger className="h-8 border-0 bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-1 text-sm dark:bg-transparent max-w-[180px] dark:hover:bg-transparent focus-visible:bg-transparent">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {property.config?.options?.map((option) => (
-                <SelectItem key={option.id} value={option.id}>
-                  <div className="flex items-center space-x-2">
-                    {option.color && (
-                      <div
-                        className="w-3 h-3 rounded-full border border-gray-300"
-                        style={{ backgroundColor: option.color }}
-                      />
-                    )}
-                    <span>{option.label}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(newValue) => handleSave(newValue)}
+            databaseId={database?.id || ""}
+            disabled={!!database?.isFrozen}
+          />
         );
 
-      case EPropertyType.MULTI_SELECT: {
-        const handleRemove = (value: string) => {
-          const newValues = currentSelectedValues.filter((id) => id !== value);
-          handleSave(newValues);
-        };
-        const handleSelect = (value: string) => {
-          const newValues = currentSelectedValues.includes(value)
-            ? currentSelectedValues.filter((id) => id !== value)
-            : [...currentSelectedValues, value];
-          handleSave(newValues);
-        };
+      case EPropertyType.MULTI_SELECT:
         return (
-          <Tags
-            open={isEditing}
-            onOpenChange={(open) => setIsEditing(open)}
-            className="max-w-[180px] inline-block"
-          >
-            <TagsTrigger className="h-8 px-2 text-xs dark:border-0 dark:bg-transparent dark:hover:bg-transparent">
-              {currentSelectedValues.map((selectedId) => {
-                const option = property.config?.options?.find(
-                  (opt) => opt.id === selectedId
-                );
-                return option ? (
-                  <TagsValue
-                    key={option.id}
-                    onRemove={() => handleRemove(option.id)}
-                    style={{
-                      backgroundColor: option.color + "20",
-                      color: option.color,
-                    }}
-                  >
-                    {option.label}
-                  </TagsValue>
-                ) : null;
-              })}
-            </TagsTrigger>
-            <TagsContent>
-              <TagsInput placeholder="Search options..." />
-              <TagsList className="max-h-[150px]">
-                <TagsEmpty />
-                <TagsGroup>
-                  {property.config?.options?.map((option) => (
-                    <TagsItem
-                      key={option.id}
-                      onSelect={() => handleSelect(option.id)}
-                      value={option.id}
-                    >
-                      <div className="flex items-center space-x-2">
-                        {option.color && (
-                          <div
-                            className="w-3 h-3 rounded-full border border-gray-300"
-                            style={{ backgroundColor: option.color }}
-                          />
-                        )}
-                        <span>{option.label}</span>
-                        {currentSelectedValues.includes(option.id) && (
-                          <CheckIcon
-                            className="text-muted-foreground"
-                            size={14}
-                          />
-                        )}
-                      </div>
-                    </TagsItem>
-                  ))}
-                </TagsGroup>
-              </TagsList>
-            </TagsContent>
-          </Tags>
+          <EditableMultiSelect
+            property={property}
+            value={currentSelectedValues}
+            onChange={(newValues) => handleSave(newValues)}
+            databaseId={database?.id || ""}
+            disabled={!!database?.isFrozen}
+          />
         );
-      }
 
       case EPropertyType.DATE: {
         const dateValue = getDateValue(editValue);

@@ -1,6 +1,6 @@
-import type { TSelectOption } from "@/modules/database-view/types";
+import type { TPropertyOption } from "@/modules/database-view/types";
 
-export type SelectOptionValue = string | TSelectOption;
+export type SelectOptionValue = string | TPropertyOption;
 
 export function normalizeSelectOption(option: unknown): SelectOptionValue {
   if (!option) return option as SelectOptionValue;
@@ -12,12 +12,13 @@ export function normalizeSelectOption(option: unknown): SelectOptionValue {
     if (obj.value && obj.label) {
       return {
         id: obj.value as string,
-        name: obj.label as string,
+        label: obj.label as string,
+        value: obj.value as string,
         color: (obj.color as string) || "#6b7280",
       };
     }
 
-    if (obj.id && obj.name) return obj as TSelectOption;
+    if (obj.id && obj.name) return obj as TPropertyOption;
 
     // If it has _id, convert it to id
     if (obj._id) {
@@ -28,15 +29,17 @@ export function normalizeSelectOption(option: unknown): SelectOptionValue {
       if (obj.label && !obj.name) {
         normalized.name = obj.label;
       }
-      return normalized as TSelectOption;
+      return normalized as TPropertyOption;
     }
 
     // Handle cases where we have id but label instead of name
     if (obj.id && obj.label && !obj.name) {
       return {
         ...obj,
-        name: obj.label,
-      } as TSelectOption;
+        id: obj.id as string,
+        label: obj?.label as string,
+        value: obj.id as string,
+      };
     }
   }
 
@@ -70,7 +73,7 @@ export function normalizeSelectValue(
 }
 
 export function getSelectOptionId(
-  option: TSelectOption | unknown
+  option: TPropertyOption | unknown
 ): string | undefined {
   if (!option) return undefined;
 
