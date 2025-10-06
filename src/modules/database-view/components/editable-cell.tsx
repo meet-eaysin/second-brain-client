@@ -492,6 +492,8 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.DATE: {
         const displayDateValue = getDateValue(value);
+        if (!displayDateValue) return "";
+
         return (
           <span className="text-sm">
             {format(displayDateValue, "MMM d, yyyy")}
@@ -526,6 +528,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
       case EPropertyType.CREATED_TIME:
       case EPropertyType.LAST_EDITED_TIME: {
         const displayDateValue = getDateValue(value);
+        if (!displayDateValue) return "";
         return (
           <span className="text-sm">
             {format(displayDateValue, "MMM d, yyyy")}
