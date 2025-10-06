@@ -83,7 +83,7 @@ export function EditableSelect({
               label: newOption.label,
               value: newOption.value,
               color: newOption.color || "#6b7280",
-              description: newOption.description
+              description: newOption.description,
             },
           ],
         },
@@ -111,7 +111,7 @@ export function EditableSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between h-8 border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors"
+          className="w-full justify-between h-8 border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors min-w-0"
           disabled={disabled}
         >
           {selectedOption ? (
@@ -130,7 +130,7 @@ export function EditableSelect({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0 border shadow-lg" align="start">
+      <PopoverContent className="w-auto min-w-[200px] p-0 border shadow-lg" align="start">
         <Command>
           <CommandInput
             placeholder="Search options..."

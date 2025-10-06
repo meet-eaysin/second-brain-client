@@ -12,6 +12,20 @@ import {
   type ColumnFiltersState,
 } from "@tanstack/react-table";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
+import {
   Table,
   TableBody,
   TableCell,
@@ -39,7 +53,7 @@ import {
   Copy,
 } from "lucide-react";
 import { useDatabaseView } from "@/modules/database-view/context";
-import type { TRecord } from "@/modules/database-view/types";
+import type { TRecord, TProperty } from "@/modules/database-view/types";
 import { NoDataMessage } from "@/components/no-data-message.tsx";
 import {
   useDeleteRecord,
@@ -79,6 +93,7 @@ export function DataTable({
 }: DocumentDataTableProps) {
   const {
     database,
+    properties,
     isPropertiesLoading,
     isRecordsLoading,
     onDialogOpen,
@@ -103,6 +118,18 @@ export function DataTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Database operation hooks
   const deleteRecordMutation = useDeleteRecord();
@@ -258,6 +285,57 @@ export function DataTable({
     }
   };
 
+  // Drag and drop handlers
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    if (activeId === overId) return;
+
+    // Check if we're dragging a column (property ID) or a row (record ID)
+    const isColumnDrag = properties.some(
+      (prop: TProperty) => prop.id === activeId
+    );
+
+    if (isColumnDrag) {
+      // Handle column reordering
+      const oldIndex = properties.findIndex(
+        (prop: TProperty) => prop.id === activeId
+      );
+      const newIndex = properties.findIndex(
+        (prop: TProperty) => prop.id === overId
+      );
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        // Here you would typically call an API to update the column order
+        // For now, we'll just reorder the local properties
+        const reorderedProperties = arrayMove(properties, oldIndex, newIndex);
+        console.log("Column reordered:", {
+          oldIndex,
+          newIndex,
+          reorderedProperties,
+        });
+        // You might want to emit this change to parent component
+      }
+    } else {
+      // Handle row reordering
+      const oldIndex = data.findIndex((item) => item.id === activeId);
+      const newIndex = data.findIndex((item) => item.id === overId);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        // Here you would typically call an API to update the row order
+        // For now, we'll just reorder the local data
+        const reorderedData = arrayMove(data, oldIndex, newIndex);
+        console.log("Row reordered:", { oldIndex, newIndex, reorderedData });
+        // You might want to emit this change to parent component
+      }
+    }
+  };
+
   return (
     <div className="space-y-4 relative">
       {/* Loading overlay */}
@@ -323,179 +401,295 @@ export function DataTable({
         )}
       </div>
 
-      <div className="rounded-md border overflow-x-auto">
-        <Table className="min-w-full">
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    style={{ width: header.getSize() }}
-                    className="relative"
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                    {header.column.getCanResize() && (
-                      <div
-                        onMouseDown={header.getResizeHandler()}
-                        onTouchStart={header.getResizeHandler()}
-                        className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-border opacity-0 hover:opacity-100"
-                      />
-                    )}
-                  </TableHead>
-                ))}
-                <TableHead className="w-12">
-                  <div className="flex items-center justify-center">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleAddProperty}
-                      className="h-8 w-8 p-0 hover:bg-muted/50"
-                      disabled={isFrozen}
-                      title={
-                        isFrozen
-                          ? "Cannot add properties to frozen database"
-                          : "Add property"
-                      }
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableHead>
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+      <div className="rounded-md border border-border overflow-x-auto bg-background">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
+        >
+          <Table className="w-full">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="group hover:bg-muted/50"
+                  key={headerGroup.id}
+                  className="border-b border-border hover:bg-muted/30"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell
-                      key={cell.id}
-                      style={{ width: cell.column.getSize() }}
-                      className="relative group/cell"
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      style={{
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                      }}
+                      className="relative bg-muted/20 border-r border-border last:border-r-0 h-8 px-3 py-2 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0"
                     >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize select-none touch-none bg-border opacity-0 hover:opacity-100"
+                        />
                       )}
-                    </TableCell>
+                    </TableHead>
                   ))}
-                  <TableCell className="w-12">
+                  <TableHead className="w-12">
                     <div className="flex items-center justify-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() =>
-                              handleRecordDuplicate(row.original.id)
-                            }
-                            disabled={
-                              duplicateRecordMutation.isPending || isFrozen
-                            }
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Duplicate
-                            {isFrozen && (
-                              <span className="ml-auto text-xs text-muted-foreground">
-                                (Frozen)
-                              </span>
-                            )}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleRecordDelete(row.original.id)}
-                            className="text-destructive focus:text-destructive"
-                            disabled={
-                              deleteRecordMutation.isPending || isFrozen
-                            }
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            Delete
-                            {isFrozen && (
-                              <span className="ml-auto text-xs text-muted-foreground">
-                                (Frozen)
-                              </span>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleAddProperty}
+                        className="h-8 w-8 p-0 hover:bg-muted/50"
+                        disabled={isFrozen}
+                        title={
+                          isFrozen
+                            ? "Cannot add properties to frozen database"
+                            : "Add property"
+                        }
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
                     </div>
+                  </TableHead>
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="group hover:bg-muted/50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        style={{
+                          width: cell.column.getSize(),
+                          minWidth: cell.column.getSize(),
+                        }}
+                        className="relative group/cell border-r border-border last:border-r-0 px-3 py-2 align-middle [&:has([role=checkbox])]:pr-0"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                    <TableCell className="w-12">
+                      <div className="flex items-center justify-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 hover:bg-muted/50"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleRecordDuplicate(row.original.id)
+                              }
+                              disabled={
+                                duplicateRecordMutation.isPending || isFrozen
+                              }
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Duplicate
+                              {isFrozen && (
+                                <span className="ml-auto text-xs text-muted-foreground">
+                                  (Frozen)
+                                </span>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleRecordDelete(row.original.id)
+                              }
+                              className="text-destructive focus:text-destructive"
+                              disabled={
+                                deleteRecordMutation.isPending || isFrozen
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                              {isFrozen && (
+                                <span className="ml-auto text-xs text-muted-foreground">
+                                  (Frozen)
+                                </span>
+                              )}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length + 1}
+                    className="h-24 text-center"
+                  >
+                    <NoDataMessage message="No results." compact />
                   </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
+              )}
+
+              <TableRow className="hover:bg-muted/50 border-t-2">
                 <TableCell
                   colSpan={columns.length + 1}
-                  className="h-24 text-center"
+                  className={`text-center py-2 text-muted-foreground ${
+                    isFrozen
+                      ? "cursor-not-allowed opacity-60"
+                      : "cursor-pointer hover:text-foreground"
+                  }`}
+                  onClick={isFrozen ? undefined : handleRecordCreate}
                 >
-                  <NoDataMessage message="No results." compact />
+                  <div className="flex items-center justify-start gap-2">
+                    <Plus className="h-4 w-4" />
+                    <span>New Record</span>
+                    {isFrozen && <span className="ml-2 text-xs">(Frozen)</span>}
+                  </div>
                 </TableCell>
               </TableRow>
-            )}
+            </TableBody>
 
-            <TableRow className="hover:bg-muted/50 border-t-2">
-              <TableCell
-                colSpan={columns.length + 1}
-                className={`text-center py-2 text-muted-foreground ${
-                  isFrozen
-                    ? "cursor-not-allowed opacity-60"
-                    : "cursor-pointer hover:text-foreground"
-                }`}
-                onClick={isFrozen ? undefined : handleRecordCreate}
-              >
-                <div className="flex items-center justify-start gap-2">
-                  <Plus className="h-4 w-4" />
-                  <span>New Record</span>
-                  {isFrozen && <span className="ml-2 text-xs">(Frozen)</span>}
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-
-          <tfoot>
-            <tr>
-              <td className="border-t p-1" style={{ width: 50 }}></td>
-              {table
-                .getHeaderGroups()[0]
-                ?.headers.filter((header) => header.id !== "select")
-                .map((header) => (
-                  <td
-                    key={header.id}
-                    style={{ width: header.getSize() }}
-                    className="border-t p-1 group"
-                  >
-                    <div className="relative">
-                      {columnStats[header.id] ? (
-                        <div className="flex items-center justify-between h-6 px-2 text-xs text-muted-foreground">
-                          <span>{columnStats[header.id]}</span>
+            <tfoot>
+              <tr>
+                <td className="border-t p-1" style={{ width: 50 }}></td>
+                {table
+                  .getHeaderGroups()[0]
+                  ?.headers.filter((header) => header.id !== "select")
+                  .map((header) => (
+                    <td
+                      key={header.id}
+                      style={{
+                        width: header.getSize(),
+                        minWidth: header.getSize(),
+                      }}
+                      className="border-t p-1 group"
+                    >
+                      <div className="relative">
+                        {columnStats[header.id] ? (
+                          <div className="flex items-center justify-between h-6 px-2 text-xs text-muted-foreground">
+                            <span>{columnStats[header.id]}</span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <ChevronDown className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent
+                                align="start"
+                                className="w-48"
+                              >
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(header.id, "count-all")
+                                  }
+                                >
+                                  Count all
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(
+                                      header.id,
+                                      "count-values"
+                                    )
+                                  }
+                                >
+                                  Count values
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(
+                                      header.id,
+                                      "count-unique"
+                                    )
+                                  }
+                                >
+                                  Count unique values
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(
+                                      header.id,
+                                      "count-empty"
+                                    )
+                                  }
+                                >
+                                  Count empty
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(
+                                      header.id,
+                                      "count-not-empty"
+                                    )
+                                  }
+                                >
+                                  Count not empty
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(
+                                      header.id,
+                                      "percent-empty"
+                                    )
+                                  }
+                                >
+                                  Percent empty
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleStatSelection(
+                                      header.id,
+                                      "percent-not-empty"
+                                    )
+                                  }
+                                >
+                                  Percent not empty
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    setColumnStats((prev) => ({
+                                      ...prev,
+                                      [header.id]: "",
+                                    }))
+                                  }
+                                  className="text-destructive"
+                                >
+                                  Clear
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ) : (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-6 w-full opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground hover:text-foreground"
                               >
-                                <ChevronDown className="h-3 w-3" />
+                                Count <ChevronDown className="h-3 w-3" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="start" className="w-48">
@@ -557,97 +751,17 @@ export function DataTable({
                               >
                                 Percent not empty
                               </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setColumnStats((prev) => ({
-                                    ...prev,
-                                    [header.id]: "",
-                                  }))
-                                }
-                                className="text-destructive"
-                              >
-                                Clear
-                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
-                        </div>
-                      ) : (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-full opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground hover:text-foreground"
-                            >
-                              Count <ChevronDown className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="start" className="w-48">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(header.id, "count-all")
-                              }
-                            >
-                              Count all
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(header.id, "count-values")
-                              }
-                            >
-                              Count values
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(header.id, "count-unique")
-                              }
-                            >
-                              Count unique values
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(header.id, "count-empty")
-                              }
-                            >
-                              Count empty
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(
-                                  header.id,
-                                  "count-not-empty"
-                                )
-                              }
-                            >
-                              Count not empty
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(header.id, "percent-empty")
-                              }
-                            >
-                              Percent empty
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleStatSelection(
-                                  header.id,
-                                  "percent-not-empty"
-                                )
-                              }
-                            >
-                              Percent not empty
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </div>
-                  </td>
-                ))}
-              <td className="border-t p-1 w-12"></td>
-            </tr>
-          </tfoot>
-        </Table>
+                        )}
+                      </div>
+                    </td>
+                  ))}
+                <td className="border-t p-1 w-12"></td>
+              </tr>
+            </tfoot>
+          </Table>
+        </DndContext>
       </div>
 
       {enablePagination && (

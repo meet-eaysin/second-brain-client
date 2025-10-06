@@ -267,7 +267,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
               value={getStringValue(editValue)}
               onChange={(e) => handleValueChange(e.target.value)}
               disabled={disabled}
-              className="h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent text-sm dark:bg-transparent focus-visible:ring-0"
+              className="h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent text-sm dark:bg-transparent focus-visible:ring-0 w-full"
               autoFocus
             />
           </div>
@@ -299,7 +299,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
               value={getStringValue(editValue)}
               onChange={(e) => handleValueChange(e.target.value)}
               disabled={disabled}
-              className="w-full h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent dark:bg-transparent text-sm resize-none overflow-hidden focus-visible:ring-0 leading-relaxed"
+              className="w-full h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent dark:bg-transparent text-sm resize-none overflow-hidden focus-visible:ring-0 leading-relaxed min-w-0"
               placeholder=""
               autoFocus
               rows={1}

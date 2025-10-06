@@ -321,6 +321,7 @@ export const generateDocumentColumns = (
                 ? "desc"
                 : null
             }
+            sortableId={property.id}
           />
         );
       },
@@ -360,7 +361,7 @@ export const generateDocumentColumns = (
       },
       enableSorting: true,
       enableHiding: true,
-      size: 200, // Default width for columns to prevent full width expansion
+      size: 150, // Reasonable default width that can expand based on content
       filterFn: (row, _id, value) => {
         const cellValue = row.original.properties[property.name];
 

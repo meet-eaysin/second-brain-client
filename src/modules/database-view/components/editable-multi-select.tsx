@@ -119,7 +119,7 @@ export function EditableMultiSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-start h-auto min-h-[32px] border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 py-1 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors",
+            "w-full justify-start h-auto min-h-[32px] border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 py-1 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors min-w-0",
             selectedOptions.length === 0 && "text-muted-foreground"
           )}
           disabled={disabled}
@@ -169,7 +169,7 @@ export function EditableMultiSelect({
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-0 border shadow-lg" align="start" side="bottom">
+      <PopoverContent className="w-auto min-w-[280px] p-0 border shadow-lg" align="start" side="bottom">
         <Command>
           <CommandInput
              placeholder="Search or create options..."
