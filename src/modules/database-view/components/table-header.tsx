@@ -11,7 +11,7 @@ import {
   Calendar,
   List,
   Tags,
-  GripVertical,
+  // GripVertical,
 } from "lucide-react";
 import { PropertyHeaderMenu } from "./property-header-menu";
 import { useSortable } from "@dnd-kit/sortable";
@@ -46,8 +46,8 @@ export function TableHeader({
     Type;
 
   const {
-    attributes,
-    listeners,
+    // attributes,
+    // listeners,
     setNodeRef,
     transform,
     transition,
@@ -76,7 +76,7 @@ export function TableHeader({
         className="flex items-center justify-between w-full min-w-0 group cursor-pointer hover:bg-muted/50 rounded px-3 py-2 transition-colors text-left"
       >
         <div className="flex items-center space-x-2 min-w-0 flex-1">
-          {sortableId && (
+          {/* {sortableId && (
             <div
               {...attributes}
               {...listeners}
@@ -84,7 +84,7 @@ export function TableHeader({
             >
               <GripVertical className="h-3 w-3 text-muted-foreground" />
             </div>
-          )}
+          )} */}
           <IconComponent className="h-3 w-3 text-muted-foreground flex-shrink-0" />
           <span className="font-medium text-sm truncate">{property.name}</span>
           {property.required && <span className="text-red-500 text-xs">*</span>}
