@@ -288,9 +288,13 @@ export function PropertyForm() {
         description: data.description,
         required: data.isRequired,
         isVisible: data.isVisible,
-        config: processedSelectOptions
-          ? { options: processedSelectOptions }
-          : undefined,
+        config: {
+          ...(processedSelectOptions && { options: processedSelectOptions }),
+          ...(property?.config?.format && { format: property.config.format }),
+          ...(property?.config?.precision !== undefined && {
+            precision: property.config.precision,
+          }),
+        },
         viewId: currentViewId || "",
       };
 
@@ -467,6 +471,110 @@ export function PropertyForm() {
     );
   };
 
+  const renderNumberOptionsEditor = () => {
+    if (selectedType !== "number") return null;
+
+    return (
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <label className="text-sm mb-5 font-medium">Number Format</label>
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              type="button"
+              variant={
+                property?.config?.format === "number" ? "default" : "outline"
+              }
+              size="sm"
+              onClick={() => {
+                if (property) {
+                  onPropertyChange({
+                    ...property,
+                    config: { ...property.config, format: "number" },
+                  });
+                }
+              }}
+              className="justify-start"
+            >
+              <Hash className="h-4 w-4 mr-2" />
+              Number
+            </Button>
+            <Button
+              type="button"
+              variant={
+                property?.config?.format === "currency" ? "default" : "outline"
+              }
+              size="sm"
+              onClick={() => {
+                if (property) {
+                  onPropertyChange({
+                    ...property,
+                    config: { ...property.config, format: "currency" },
+                  });
+                }
+              }}
+              className="justify-start"
+            >
+              <span className="mr-2">$</span>
+              Currency
+            </Button>
+            <Button
+              type="button"
+              variant={
+                property?.config?.format === "percentage"
+                  ? "default"
+                  : "outline"
+              }
+              size="sm"
+              onClick={() => {
+                if (property) {
+                  onPropertyChange({
+                    ...property,
+                    config: { ...property.config, format: "percentage" },
+                  });
+                }
+              }}
+              className="justify-start"
+            >
+              <span className="mr-2">%</span>
+              Percentage
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-sm font-medium">Decimal Places</label>
+          <div className="grid grid-cols-5 gap-2">
+            {[0, 1, 2, 3, 4].map((precision) => (
+              <Button
+                key={precision}
+                type="button"
+                variant={
+                  property?.config?.precision === precision
+                    ? "default"
+                    : "outline"
+                }
+                size="sm"
+                onClick={() => {
+                  if (property) {
+                    onPropertyChange({
+                      ...property,
+                      config: { ...property.config, precision },
+                    });
+                  }
+                }}
+              >
+                {precision}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Set the number of decimal places to display
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onDialogOpen(null);
@@ -608,6 +716,7 @@ export function PropertyForm() {
             />
 
             {renderSelectOptionsEditor()}
+            {renderNumberOptionsEditor()}
             <DialogFooter className="flex gap-3 pt-6 border-t px-1">
               <Button
                 type="button"

@@ -234,23 +234,85 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
           </div>
         );
 
-      case EPropertyType.NUMBER:
+      case EPropertyType.NUMBER: {
+        // Enhanced number input with validation and formatting
+        const numberValue = getNumberValue(editValue);
+        const stringValue = numberValue !== null ? String(numberValue) : "";
+
+        // Get number format options from property config
+        const numberFormat = property.config?.format || "number";
+        const precision = property.config?.precision || 0;
+
+        // Input validation function
+        const validateNumber = (inputValue: string): number | null => {
+          if (!inputValue.trim()) return null;
+
+          // Remove any non-numeric characters except decimal point and minus sign
+          const cleanValue = inputValue.replace(/[^\d.-]/g, "");
+
+          // Check for multiple decimal points or minus signs
+          const decimalCount = (cleanValue.match(/\./g) || []).length;
+          const minusCount = (cleanValue.match(/-/g) || []).length;
+
+          if (decimalCount > 1 || minusCount > 1) return numberValue || null;
+
+          const num = Number(cleanValue);
+
+          // Check if it's a valid number
+          if (isNaN(num)) return numberValue || null;
+
+          return num;
+        };
+
         return (
           <div className="w-full">
             <Input
-              type="number"
-              value={getNumberValue(editValue)}
-              onChange={(e) =>
-                handleValueChange(
-                  e.target.value ? Number(e.target.value) : null
-                )
-              }
+              type="text"
+              inputMode="decimal"
+              value={stringValue}
+              onChange={(e) => {
+                const validatedValue = validateNumber(e.target.value);
+                handleValueChange(validatedValue);
+              }}
+              onBlur={(e) => {
+                // Format the number on blur based on the format option
+                const inputValue = e.target.value;
+                if (inputValue.trim()) {
+                  const num = Number(inputValue);
+                  if (!isNaN(num)) {
+                    let formattedValue = num;
+
+                    // Apply precision formatting
+                    if (precision > 0) {
+                      formattedValue = Number(num.toFixed(precision));
+                    }
+
+                    handleValueChange(formattedValue);
+                  }
+                }
+              }}
               disabled={disabled}
-              className="h-auto min-h-[24px] border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm font-medium dark:bg-transparent"
+              className={cn(
+                "h-auto min-h-[24px] border-0 shadow-none focus-visible:ring-0 bg-transparent text-sm font-medium dark:bg-transparent",
+                numberFormat === "currency" &&
+                  "text-green-600 dark:text-green-400",
+                numberFormat === "percentage" &&
+                  "text-blue-600 dark:text-blue-400"
+              )}
+              placeholder={
+                numberFormat === "currency"
+                  ? "$0.00"
+                  : numberFormat === "percentage"
+                  ? "0%"
+                  : "0"
+              }
+              // Add step validation for decimal numbers
+              step={precision > 0 ? `0.${"0".repeat(precision - 1)}1` : "1"}
               autoFocus
             />
           </div>
         );
+      }
 
       default:
         return (
