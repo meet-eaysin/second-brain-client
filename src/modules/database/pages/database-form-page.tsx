@@ -42,7 +42,7 @@ export function DatabaseFormPage() {
 
   if (!isCreateMode && !isEditMode) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Invalid action</h1>
           <Button onClick={() => navigate("/app/databases")}>
@@ -104,7 +104,7 @@ export function DatabaseFormPage() {
       <div className="min-h-screen bg-background">
         {/* Header with back button */}
         <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-          <div className="container mx-auto px-4 py-3">
+          <div className="px-4 py-3">
             <Button
               variant="ghost"
               size="sm"
@@ -118,7 +118,7 @@ export function DatabaseFormPage() {
         </div>
 
         {/* Template Selection */}
-        <div className="container mx-auto px-4 py-8">
+        <div className="px-4 py-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-4">
               Create New Database
@@ -234,7 +234,7 @@ export function DatabaseFormPage() {
     <div className="min-h-screen bg-background">
       {/* Header with back button */}
       <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-3">
+        <div className="px-4 py-3">
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
@@ -264,7 +264,7 @@ export function DatabaseFormPage() {
       </div>
 
       {/* Database Form */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="px-4 py-8">
         <DatabaseViewProvider
           moduleType={EDatabaseType.CUSTOM}
           databaseId={undefined}

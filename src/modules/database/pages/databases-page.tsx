@@ -101,7 +101,7 @@ export function DatabasesPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
+      <div className="py-8 px-4">
         <div className="mb-8">
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-96" />
@@ -121,92 +121,91 @@ export function DatabasesPage() {
 
   return (
     <>
-    <EnhancedHeader/>
-    <div className="container mx-auto py-5 px-4">
-      
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
-        <p className="text-muted-foreground mt-2">
-          Create and manage your databases to organize any type of data.
-        </p>
-      </div>
-
-      {/* Table Toolbar */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">
-            {databases.length} database{databases.length !== 1 ? "s" : ""}
-          </span>
+      <EnhancedHeader />
+      <div className="py-5 px-4">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Databases</h1>
+          <p className="text-muted-foreground mt-2">
+            Create and manage your databases to organize any type of data.
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={handleCreateDatabase} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New Database
-          </Button>
-        </div>
-      </div>
 
-      {/* Databases Table */}
-      {databases.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 px-4">
-          <div className="text-center space-y-4 max-w-md">
-            <Database className="mx-auto h-12 w-12 text-muted-foreground" />
-            <div className="space-y-2">
-              <h3 className="text-lg font-medium">No databases yet</h3>
-              <p className="text-sm text-muted-foreground">
-                Create your first database to start organizing your data.
-              </p>
-            </div>
+        {/* Table Toolbar */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">
+              {databases.length} database{databases.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleCreateDatabase} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              New Database
+            </Button>
           </div>
         </div>
-      ) : (
-        <DataTable
-          data={databases}
-          columns={columns}
-          toolbar={DatabaseToolbar}
-          onRowClick={(database) => handleViewDatabase(database.id)}
-          meta={{
-            onView: handleViewDatabase,
-            onEdit: handleEditDatabase,
-            onDelete: handleDeleteDatabase,
-            onDuplicate: handleDuplicateDatabase,
+
+        {/* Databases Table */}
+        {databases.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="text-center space-y-4 max-w-md">
+              <Database className="mx-auto h-12 w-12 text-muted-foreground" />
+              <div className="space-y-2">
+                <h3 className="text-lg font-medium">No databases yet</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create your first database to start organizing your data.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <DataTable
+            data={databases}
+            columns={columns}
+            toolbar={DatabaseToolbar}
+            onRowClick={(database) => handleViewDatabase(database.id)}
+            meta={{
+              onView: handleViewDatabase,
+              onEdit: handleEditDatabase,
+              onDelete: handleDeleteDatabase,
+              onDuplicate: handleDuplicateDatabase,
+            }}
+          />
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Database</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{selectedDatabase?.name}"? This
+                action cannot be undone. The database will be moved to trash and
+                can be restored later.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete Database
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Create Database Dialog */}
+        <CreateDatabaseDialog
+          open={createDialogOpen}
+          onOpenChange={(open) => {
+            setCreateDialogOpen(open);
+            if (!open) setEditingDatabase(null);
           }}
+          database={editingDatabase}
         />
-      )}
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Database</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{selectedDatabase?.name}"? This
-              action cannot be undone. The database will be moved to trash and
-              can be restored later.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete Database
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Create Database Dialog */}
-      <CreateDatabaseDialog
-        open={createDialogOpen}
-        onOpenChange={(open) => {
-          setCreateDialogOpen(open);
-          if (!open) setEditingDatabase(null);
-        }}
-        database={editingDatabase}
-      />
-    </div>
+      </div>
     </>
   );
 }

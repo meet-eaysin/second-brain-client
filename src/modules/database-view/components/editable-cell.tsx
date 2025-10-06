@@ -413,7 +413,7 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
   const renderDisplayValue = () => {
     if (value === null || value === undefined || value === "") {
-      return <span className="text-muted-foreground italic">Empty</span>;
+      return "";
     }
 
     switch (property.type) {
@@ -492,8 +492,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       case EPropertyType.DATE: {
         const displayDateValue = getDateValue(value);
-        if (!displayDateValue)
-          return <span className="text-muted-foreground italic">Empty</span>;
         return (
           <span className="text-sm">
             {format(displayDateValue, "MMM d, yyyy")}
@@ -522,14 +520,12 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
             return <span className="text-sm">{end}</span>;
           }
         }
-        return <span className="text-muted-foreground italic">Empty</span>;
+        return "";
       }
 
       case EPropertyType.CREATED_TIME:
       case EPropertyType.LAST_EDITED_TIME: {
         const displayDateValue = getDateValue(value);
-        if (!displayDateValue)
-          return <span className="text-muted-foreground italic">Empty</span>;
         return (
           <span className="text-sm">
             {format(displayDateValue, "MMM d, yyyy")}

@@ -11,7 +11,7 @@ export function DatabaseViewPage() {
 
   if (!databaseId) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="py-8">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Database not found</h1>
           <Button onClick={() => navigate("/app/databases")}>
@@ -40,7 +40,7 @@ export function DatabaseViewPage() {
       />
 
       {/* Database View */}
-      <div className="container mx-auto px-4 py-6">
+      <div className="px-4 py-6">
         <DatabaseView
           moduleType={EDatabaseType.CUSTOM}
           databaseId={databaseId}

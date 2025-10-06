@@ -394,7 +394,7 @@ export function PropertyForm() {
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 rounded-full border-2 border-background shadow-sm"
+                          className="h-5 w-5 p-0 rounded-full border-2 border-background shadow-sm"
                           style={{ backgroundColor: option.color }}
                         >
                           <span className="sr-only">Change color</span>
