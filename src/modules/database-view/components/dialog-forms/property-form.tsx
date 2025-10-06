@@ -212,6 +212,10 @@ export function PropertyForm() {
   const [selectOptions, setSelectOptions] = useState<TPropertyOption[]>([]);
   const [newOptionName, setNewOptionName] = useState("");
   const [useAutoColors, setUseAutoColors] = useState(false);
+  const [numberFormat, setNumberFormat] = useState<
+    "number" | "currency" | "percentage"
+  >("number");
+  const [numberPrecision, setNumberPrecision] = useState<number>(0);
 
   const form = useForm<PropertyFormData>({
     resolver: zodResolver(propertyFormSchema),
@@ -223,6 +227,7 @@ export function PropertyForm() {
       isVisible: true,
       selectOptions: [],
     },
+    mode: "onChange",
   });
 
   useEffect(() => {
@@ -236,6 +241,8 @@ export function PropertyForm() {
         selectOptions: property.config?.options || [],
       });
       setSelectOptions(property.config?.options || []);
+      setNumberFormat(property.config?.format || "number");
+      setNumberPrecision(property.config?.precision || 0);
     } else if (mode === "create") {
       form.reset({
         name: "",
@@ -246,6 +253,8 @@ export function PropertyForm() {
         selectOptions: [],
       });
       setSelectOptions([]);
+      setNumberFormat("number");
+      setNumberPrecision(0);
     }
   }, [property, mode, form]);
 
@@ -256,6 +265,8 @@ export function PropertyForm() {
       setSelectOptions([]);
       setNewOptionName("");
       setUseAutoColors(false);
+      setNumberFormat("number");
+      setNumberPrecision(0);
 
       // Force close any open dropdowns/popovers by dispatching a global click
       // This ensures no lingering backdrops from nested dropdown menus
@@ -290,10 +301,8 @@ export function PropertyForm() {
         isVisible: data.isVisible,
         config: {
           ...(processedSelectOptions && { options: processedSelectOptions }),
-          ...(property?.config?.format && { format: property.config.format }),
-          ...(property?.config?.precision !== undefined && {
-            precision: property.config.precision,
-          }),
+          ...(numberFormat && { format: numberFormat }),
+          ...(numberPrecision !== undefined && { precision: numberPrecision }),
         },
         viewId: currentViewId || "",
       };
@@ -388,21 +397,18 @@ export function PropertyForm() {
             {selectOptions.map((option) => (
               <div
                 key={option.id}
-                className="flex items-center gap-3 px-3 py-1 rounded-lg border"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg border bg-card"
               >
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   {!useAutoColors ? (
-                    <DropdownMenu modal={false} onOpenChange={() => {}}>
+                    <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-5 w-5 p-0 rounded-full border-2 border-background shadow-sm"
+                          className="h-5 w-5 p-0 rounded-full border-2 border-background shadow-sm flex-shrink-0"
                           style={{ backgroundColor: option.color }}
-                        >
-                          <span className="sr-only">Change color</span>
-                        </Button>
+                          aria-label="Change color"
+                        />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="w-48">
                         <div className="p-2">
@@ -411,11 +417,9 @@ export function PropertyForm() {
                           </div>
                           <div className="grid grid-cols-5 gap-1 mb-2">
                             {OPTION_COLORS.map((color) => (
-                              <Button
+                              <button
                                 key={color}
                                 type="button"
-                                variant="ghost"
-                                size="sm"
                                 className="h-6 w-6 p-0 rounded-full border hover:scale-110 transition-transform"
                                 style={{ backgroundColor: color }}
                                 onClick={(e) => {
@@ -423,46 +427,60 @@ export function PropertyForm() {
                                   e.stopPropagation();
                                   updateOptionColor(option.id, color);
                                 }}
+                                aria-label={`Select color ${color}`}
                               >
                                 {option.color === color && (
                                   <Check className="h-3 w-3 text-white drop-shadow-sm" />
                                 )}
-                              </Button>
+                              </button>
                             ))}
                           </div>
-                          <Button
+                          <button
                             type="button"
-                            variant="outline"
-                            size="sm"
-                            className="w-full text-xs"
+                            className="w-full text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               updateOptionColor(option.id, getRandomColor());
                             }}
                           >
-                            <Shuffle className="h-3 w-3 mr-1" />
+                            <Shuffle className="h-3 w-3 mr-1 inline" />
                             Random Color
-                          </Button>
+                          </button>
                         </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center flex-shrink-0">
                       <Shuffle className="h-3 w-3 text-muted-foreground" />
                     </div>
                   )}
-                  <span className="text-sm font-medium">{option.label}</span>
+                  <span className="text-sm font-medium truncate">
+                    {option.label}
+                  </span>
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeSelectOption(option.id)}
-                  className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive rounded transition-colors flex-shrink-0"
+                      aria-label={`Remove ${option.label}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <div className="p-2">
+                      <button
+                        type="button"
+                        className="w-full text-left text-sm px-2 py-1 hover:bg-destructive/10 hover:text-destructive rounded transition-colors"
+                        onClick={() => removeSelectOption(option.id)}
+                      >
+                        Remove option
+                      </button>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
           </div>
@@ -474,98 +492,98 @@ export function PropertyForm() {
   const renderNumberOptionsEditor = () => {
     if (selectedType !== "number") return null;
 
+    const NUMBER_FORMATS = [
+      {
+        value: "number",
+        label: "Number",
+        icon: "#",
+      },
+      {
+        value: "currency",
+        label: "Currency",
+        icon: "$",
+      },
+      {
+        value: "percentage",
+        label: "Percentage",
+        icon: "%",
+      },
+    ];
+
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="space-y-3">
-          <label className="text-sm mb-5 font-medium">Number Format</label>
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              type="button"
-              variant={
-                property?.config?.format === "number" ? "default" : "outline"
-              }
-              size="sm"
-              onClick={() => {
-                if (property) {
-                  onPropertyChange({
-                    ...property,
-                    config: { ...property.config, format: "number" },
-                  });
-                }
-              }}
-              className="justify-start"
-            >
-              <Hash className="h-4 w-4 mr-2" />
-              Number
-            </Button>
-            <Button
-              type="button"
-              variant={
-                property?.config?.format === "currency" ? "default" : "outline"
-              }
-              size="sm"
-              onClick={() => {
-                if (property) {
-                  onPropertyChange({
-                    ...property,
-                    config: { ...property.config, format: "currency" },
-                  });
-                }
-              }}
-              className="justify-start"
-            >
-              <span className="mr-2">$</span>
-              Currency
-            </Button>
-            <Button
-              type="button"
-              variant={
-                property?.config?.format === "percentage"
-                  ? "default"
-                  : "outline"
-              }
-              size="sm"
-              onClick={() => {
-                if (property) {
-                  onPropertyChange({
-                    ...property,
-                    config: { ...property.config, format: "percentage" },
-                  });
-                }
-              }}
-              className="justify-start"
-            >
-              <span className="mr-2">%</span>
-              Percentage
-            </Button>
+          <label className="text-sm font-medium">Number Format</label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {NUMBER_FORMATS.map((format) => {
+              const isSelected = numberFormat === format.value;
+              return (
+                <div
+                  key={format.value}
+                  className={`relative cursor-pointer rounded-md border p-3 transition-all hover:border-primary/50
+                    ${
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-muted hover:bg-muted/50"
+                    }`}
+                  onClick={() =>
+                    setNumberFormat(
+                      format.value as "number" | "currency" | "percentage"
+                    )
+                  }
+                >
+                  <div className="flex items-center justify-center text-center space-y-2">
+                    <div
+                      className={`text-sm font-medium ${
+                        isSelected ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      <span className="text-sm font-medium text-center me-1">
+                        {format.icon}
+                      </span>{" "}
+                      {format.label}
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
         <div className="space-y-3">
           <label className="text-sm font-medium">Decimal Places</label>
           <div className="grid grid-cols-5 gap-2">
-            {[0, 1, 2, 3, 4].map((precision) => (
-              <Button
-                key={precision}
-                type="button"
-                variant={
-                  property?.config?.precision === precision
-                    ? "default"
-                    : "outline"
-                }
-                size="sm"
-                onClick={() => {
-                  if (property) {
-                    onPropertyChange({
-                      ...property,
-                      config: { ...property.config, precision },
-                    });
-                  }
-                }}
-              >
-                {precision}
-              </Button>
-            ))}
+            {[0, 1, 2, 3, 4].map((precision) => {
+              const isSelected = numberPrecision === precision;
+              return (
+                <div
+                  key={precision}
+                  className={`relative cursor-pointer rounded-md border p-1 transition-all hover:border-primary/50
+                    ${
+                      isSelected
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-muted hover:bg-muted/50"
+                    }`}
+                  onClick={() => setNumberPrecision(precision)}
+                >
+                  <div className="flex flex-col items-center text-center space-y-1">
+                    <div
+                      className={`text-lg font-bold ${
+                        isSelected ? "text-primary" : "text-foreground"
+                      }`}
+                    >
+                      {precision}
+                    </div>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </div>
+              );
+            })}
           </div>
           <p className="text-xs text-muted-foreground">
             Set the number of decimal places to display

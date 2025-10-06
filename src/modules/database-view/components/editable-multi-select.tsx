@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronsUpDown, Plus, X } from "lucide-react";
+import { Check, ChevronsUpDown, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -172,31 +172,26 @@ export function EditableMultiSelect({
                   <Badge
                     key={option.id}
                     variant="outline"
-                    className="text-xs border px-2 py-1 h-6 font-medium rounded-md shadow-sm"
+                    className="text-xs border px-2 py-1 h-6 font-medium rounded-md shadow-sm pr-1 cursor-pointer hover:bg-destructive/10 transition-colors group relative"
                     style={{
                       backgroundColor: option.color + "15",
                       color: option.color,
                       borderColor: option.color + "40",
                     }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      e.nativeEvent.stopImmediatePropagation();
+                      handleRemove(option.id);
+                    }}
                   >
-                    {option.label}
-                    <button
-                      type="button"
-                      className="ml-1.5 h-3 w-3 rounded-full hover:bg-black/20 flex items-center justify-center p-0.5 transition-colors focus:outline-none focus:ring-1 focus:ring-gray-400"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        e.nativeEvent.stopImmediatePropagation();
-                        handleRemove(option.id);
-                      }}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
+                    <span className="mr-1">{option.label}</span>
+                    <span
+                      className="ml-1 h-3 w-3 rounded-full hover:bg-black/20 flex items-center justify-center transition-colors focus:outline-none focus:ring-1 focus:ring-gray-400 text-xs leading-none font-bold"
                       aria-label={`Remove ${option.label}`}
                     >
-                      <X size={13} />
-                    </button>
+                      ×
+                    </span>
                   </Badge>
                 ))}
                 {selectedOptions.length > 3 && (

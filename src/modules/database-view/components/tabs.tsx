@@ -103,7 +103,7 @@ export const ViewTabs = () => {
       <div className="border-b">
         <div className="flex items-center justify-between">
           <Tabs
-            value={currentView?.id}
+            value={currentView?.id || ""}
             onValueChange={(viewId: string) => onViewChange(viewId)}
             className="flex-1"
           >

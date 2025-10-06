@@ -235,22 +235,17 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
         );
 
       case EPropertyType.NUMBER: {
-        // Enhanced number input with validation and formatting
         const numberValue = getNumberValue(editValue);
         const stringValue = numberValue !== null ? String(numberValue) : "";
 
-        // Get number format options from property config
         const numberFormat = property.config?.format || "number";
         const precision = property.config?.precision || 0;
 
-        // Input validation function
         const validateNumber = (inputValue: string): number | null => {
           if (!inputValue.trim()) return null;
 
-          // Remove any non-numeric characters except decimal point and minus sign
           const cleanValue = inputValue.replace(/[^\d.-]/g, "");
 
-          // Check for multiple decimal points or minus signs
           const decimalCount = (cleanValue.match(/\./g) || []).length;
           const minusCount = (cleanValue.match(/-/g) || []).length;
 
@@ -258,7 +253,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
           const num = Number(cleanValue);
 
-          // Check if it's a valid number
           if (isNaN(num)) return numberValue || null;
 
           return num;
@@ -275,14 +269,12 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                 handleValueChange(validatedValue);
               }}
               onBlur={(e) => {
-                // Format the number on blur based on the format option
                 const inputValue = e.target.value;
                 if (inputValue.trim()) {
                   const num = Number(inputValue);
                   if (!isNaN(num)) {
                     let formattedValue = num;
 
-                    // Apply precision formatting
                     if (precision > 0) {
                       formattedValue = Number(num.toFixed(precision));
                     }
@@ -306,7 +298,6 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
                   ? "0%"
                   : "0"
               }
-              // Add step validation for decimal numbers
               step={precision > 0 ? `0.${"0".repeat(precision - 1)}1` : "1"}
               autoFocus
             />

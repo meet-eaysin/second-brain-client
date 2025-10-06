@@ -179,7 +179,7 @@ export function Gallery({ className = "" }: { className?: string }) {
           <Card
             ref={provided.innerRef}
             {...provided.draggableProps}
-            className={`group relative bg-card border rounded-xl shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer overflow-hidden ${
+            className={`group relative bg-card border rounded-xl shadow-sm hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer overflow-hidden p-1 ${
               snapshot.isDragging
                 ? "shadow-xl rotate-1 scale-[1.02] bg-card border-primary/60"
                 : "hover:border-primary/20"
@@ -187,7 +187,7 @@ export function Gallery({ className = "" }: { className?: string }) {
           >
             <CardHeader className="px-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center flex-1 min-w-0">
                   <div
                     {...provided.dragHandleProps}
                     className={`cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-foreground transition-all duration-200 flex-shrink-0 ${
@@ -281,7 +281,7 @@ export function Gallery({ className = "" }: { className?: string }) {
                     return (
                       <div
                         key={property.id}
-                        className="flex items-start gap-3 group/property"
+                        className="flex items-center gap-3 group/property"
                       >
                         <span className="text-sm font-medium text-muted-foreground flex-shrink-0 leading-5 min-w-[90px]">
                           {property.name}
