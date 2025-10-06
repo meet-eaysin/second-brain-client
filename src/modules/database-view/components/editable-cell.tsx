@@ -293,13 +293,13 @@ export function EditableCell({ record, property, value }: EditableCellProps) {
 
       default:
         return (
-          <div className="w-full">
+          <div className="w-full flex items-start justify-start">
             <Textarea
               ref={textareaRef}
               value={getStringValue(editValue)}
               onChange={(e) => handleValueChange(e.target.value)}
               disabled={disabled}
-              className="w-full h-auto min-h-[24px] border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent dark:bg-transparent text-sm resize-none overflow-hidden focus-visible:ring-0 leading-relaxed min-w-0"
+              className="w-full h-auto min-h-full border-0 shadow-none focus:ring-0 focus:ring-offset-0 bg-transparent dark:bg-transparent text-sm resize-none overflow-hidden focus-visible:ring-0 leading-relaxed min-w-0"
               placeholder=""
               autoFocus
               rows={1}
