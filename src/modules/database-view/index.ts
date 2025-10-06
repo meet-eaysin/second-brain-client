@@ -14,3 +14,6 @@ export { EditableCell } from "./components/editable-cell";
 
 // Export hooks
 export { useDebounce } from "./hooks/useDebounce";
+
+// Export utilities
+export * from "./utils/select-option-utils";

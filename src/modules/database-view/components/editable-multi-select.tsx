@@ -119,7 +119,7 @@ export function EditableMultiSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-start h-auto min-h-[32px] border-0 bg-transparent shadow-none focus:ring-0 focus:ring-offset-0 px-2 py-1 text-sm dark:bg-transparent max-w-[200px] dark:hover:bg-transparent focus-visible:bg-transparent",
+            "w-full justify-start h-auto min-h-[32px] border shadow-sm bg-background hover:bg-muted/50 focus:ring-1 focus:ring-ring focus:ring-offset-0 px-2 py-1 text-sm dark:bg-background dark:hover:bg-muted/50 transition-colors",
             selectedOptions.length === 0 && "text-muted-foreground"
           )}
           disabled={disabled}
@@ -131,21 +131,26 @@ export function EditableMultiSelect({
                   <Badge
                     key={option.id}
                     variant="outline"
-                    className="text-xs border-0 px-2 py-1 h-6 font-medium rounded-md"
+                    className="text-xs border px-2 py-1 h-6 font-medium rounded-md shadow-sm"
                     style={{
                       backgroundColor: option.color + "15",
                       color: option.color,
-                      borderColor: option.color + "30",
+                      borderColor: option.color + "40",
                     }}
                   >
                     {option.label}
-                    <X
-                      className="ml-1.5 h-3 w-3 cursor-pointer hover:bg-black/10 rounded-sm p-0.5"
+                    <button
+                      type="button"
+                      className="ml-1.5 h-3 w-3 rounded-full hover:bg-black/20 flex items-center justify-center p-0.5 transition-colors"
                       onClick={(e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         handleRemove(option.id);
                       }}
-                    />
+                      aria-label={`Remove ${option.label}`}
+                    >
+                      <X className="h-2.5 w-2.5" />
+                    </button>
                   </Badge>
                 ))}
                 {selectedOptions.length > 3 && (
@@ -164,14 +169,14 @@ export function EditableMultiSelect({
           <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-0" align="start" side="bottom">
+      <PopoverContent className="w-[280px] p-0 border shadow-lg" align="start" side="bottom">
         <Command>
           <CommandInput
-            placeholder="Search or create options..."
-            value={searchValue}
-            onValueChange={setSearchValue}
-            className="border-0 focus:ring-0"
-          />
+             placeholder="Search or create options..."
+             value={searchValue}
+             onValueChange={setSearchValue}
+             className="border-b focus:ring-0"
+           />
           <CommandList className="max-h-[200px]">
             <CommandEmpty>
               {shouldShowCreate ? (
