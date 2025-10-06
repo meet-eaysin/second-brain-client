@@ -331,7 +331,7 @@ export default function EventForm({
               />
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="startTime"
@@ -495,7 +495,7 @@ export default function EventForm({
           </Button>
 
           {showAdvanced && (
-            <div className="space-y-4 p-4 border rounded-lg">
+            <div className="space-y-4 p-3 sm:p-4 border rounded-lg">
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -564,7 +564,7 @@ export default function EventForm({
 
               {/* Reminders */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <FormLabel className="flex items-center gap-2">
                     <Bell className="h-4 w-4" />
                     Reminders
@@ -574,6 +574,7 @@ export default function EventForm({
                     variant="outline"
                     size="sm"
                     onClick={addReminder}
+                    className="w-full sm:w-auto"
                   >
                     Add Reminder
                   </Button>
@@ -636,7 +637,7 @@ export default function EventForm({
 
               {/* Attendees */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <FormLabel className="flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Attendees
@@ -646,69 +647,89 @@ export default function EventForm({
                     variant="outline"
                     size="sm"
                     onClick={addAttendee}
+                    className="w-full sm:w-auto"
                   >
                     Add Attendee
                   </Button>
                 </div>
                 {form.watch("attendees")?.map((_, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <FormField
-                      control={form.control}
-                      name={`attendees.${index}.email`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input
-                              type="email"
-                              placeholder="email@example.com"
-                              {...field}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`attendees.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormControl>
-                            <Input placeholder="Name (optional)" {...field} />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`attendees.${index}.role`}
-                      render={({ field }) => (
-                        <FormItem className="w-32">
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
+                  <div
+                    key={index}
+                    className="space-y-3 p-2 sm:p-3 border rounded-lg"
+                  >
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <FormField
+                        control={form.control}
+                        name={`attendees.${index}.email`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
+                              <Input
+                                type="email"
+                                placeholder="email@example.com"
+                                className="w-full"
+                                {...field}
+                              />
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="required">Required</SelectItem>
-                              <SelectItem value="optional">Optional</SelectItem>
-                              <SelectItem value="resource">Resource</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormItem>
-                      )}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeAttendee(index)}
-                    >
-                      Remove
-                    </Button>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`attendees.${index}.name`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <FormControl>
+                              <Input
+                                placeholder="Name (optional)"
+                                className="w-full"
+                                {...field}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <FormField
+                        control={form.control}
+                        name={`attendees.${index}.role`}
+                        render={({ field }) => (
+                          <FormItem className="flex-1">
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Role" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="required">
+                                  Required
+                                </SelectItem>
+                                <SelectItem value="optional">
+                                  Optional
+                                </SelectItem>
+                                <SelectItem value="resource">
+                                  Resource
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeAttendee(index)}
+                        className="flex-shrink-0"
+                      >
+                        Remove
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -717,24 +738,32 @@ export default function EventForm({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-between gap-3">
-          <div>
+        <div className="flex flex-col sm:flex-row justify-between gap-3">
+          <div className="order-2 sm:order-1">
             {isEditing && onDelete && eventId && (
               <Button
                 type="button"
                 variant="destructive"
                 size="sm"
                 onClick={() => onDelete(eventId)}
+                className="w-full sm:w-auto"
               >
                 Delete Event
               </Button>
             )}
           </div>
-          <div className="flex gap-3">
-            <Button type="button" variant="outline" onClick={onCancel}>
+          <div className="flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button type="submit">{finalSubmitLabel}</Button>
+            <Button type="submit" className="w-full sm:w-auto">
+              {finalSubmitLabel}
+            </Button>
           </div>
         </div>
       </form>
