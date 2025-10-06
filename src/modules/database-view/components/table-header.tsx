@@ -73,7 +73,7 @@ export function TableHeader({
       <div
         ref={setNodeRef}
         style={style}
-        className="flex items-center justify-between w-full min-w-0 group cursor-pointer hover:bg-muted/50 rounded px-3 py-0 transition-colors text-left"
+        className="flex items-center justify-between w-full min-w-0 group cursor-pointer hover:bg-transparent rounded px-3 py-0 transition-colors text-left"
       >
         <div className="flex items-center space-x-2 min-w-0 flex-1">
           {/* {sortableId && (
