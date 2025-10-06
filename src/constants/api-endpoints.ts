@@ -197,6 +197,8 @@ export const API_ENDPOINTS = {
       `/databases/${databaseId}/properties/${propertyId}`,
     UPDATE: (databaseId: string, propertyId: string) =>
       `/databases/${databaseId}/properties/${propertyId}`,
+    UPDATE_WIDTH: (databaseId: string, propertyId: string) =>
+      `/databases/${databaseId}/properties/${propertyId}/width`,
     DELETE: (databaseId: string, propertyId: string) =>
       `/databases/${databaseId}/properties/${propertyId}`,
     REORDER: (databaseId: string) =>
@@ -256,6 +258,8 @@ export const API_ENDPOINTS = {
       `/databases/${databaseId}/views/${viewId}/filters`,
     UPDATE_SORTS: (databaseId: string, viewId: string) =>
       `/databases/${databaseId}/views/${viewId}/sorts`,
+    UPDATE_SCROLL_WIDTH: (databaseId: string, viewId: string) =>
+      `/databases/${databaseId}/views/${viewId}/scroll-width`,
   },
   RELATION: {
     GET_ALL: "/relations",

@@ -24,6 +24,7 @@ import {
   useDeleteRecord,
   useDuplicateRecord,
   useUpdateViewFilters,
+  useUpdateViewScrollWidth,
   useInitializeSpecificModules,
 } from "../services/database-queries";
 import { useQueryClient } from "@tanstack/react-query";
@@ -95,6 +96,7 @@ interface DatabaseViewContextValue {
   tempSorts: TSortConfig[];
   setTempSorts: (sorts: TSortConfig[]) => void;
   sorts: TSortConfig[];
+  scrollWidth: number;
 
   onDialogOpen: (dialog: DatabaseDialogType | null) => void;
   onViewChange: (viewId: string) => void;
@@ -104,6 +106,7 @@ interface DatabaseViewContextValue {
   onSearchQueryChange: (query: string) => void;
   onFiltersChange: (filters: TFilterCondition[]) => void;
   onSortsChange: (sorts: TSortConfig[]) => void;
+  onScrollWidthChange: (scrollWidth: number) => void;
 
   onBulkEdit: () => void;
   onBulkDelete: () => void;
@@ -145,6 +148,7 @@ export function DatabaseViewProvider({
   const [accumulatedRecords, setAccumulatedRecords] = useState<TRecord[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [sorts, setSorts] = useState<TSortConfig[]>([]);
+  const [scrollWidth, setScrollWidth] = useState<number>(0);
 
   const { currentWorkspace } = useAuthStore();
   const queryClient = useQueryClient();
@@ -153,6 +157,7 @@ export function DatabaseViewProvider({
   const deleteRecordMutation = useDeleteRecord();
   const duplicateRecordMutation = useDuplicateRecord();
   const updateViewFiltersMutation = useUpdateViewFilters();
+  const updateViewScrollWidthMutation = useUpdateViewScrollWidth();
   const initializeModulesMutation = useInitializeSpecificModules();
 
   // Custom hook for sophisticated database retrieval
@@ -275,6 +280,13 @@ export function DatabaseViewProvider({
     );
   }, [currentViewResponse?.data?.settings?.sorts]);
 
+  // Load saved scroll width from current view
+  useEffect(() => {
+    if (currentViewResponse?.data?.config?.scrollWidth !== undefined) {
+      setScrollWidth(currentViewResponse.data.config.scrollWidth);
+    }
+  }, [currentViewResponse?.data?.config?.scrollWidth]);
+
   const propertiesQueryParams: TPropertyQueryParams = {
     viewId: effectiveViewId,
     includeHidden: false,
@@ -387,6 +399,21 @@ export function DatabaseViewProvider({
   };
   const onSortsChange = (newSorts: TSortConfig[]) => setSorts(newSorts);
 
+  const onScrollWidthChange = async (newScrollWidth: number) => {
+    if (currentDatabaseId && currentViewId) {
+      try {
+        await updateViewScrollWidthMutation.mutateAsync({
+          databaseId: currentDatabaseId,
+          viewId: currentViewId,
+          scrollWidth: newScrollWidth,
+        });
+        setScrollWidth(newScrollWidth);
+      } catch (error) {
+        console.error("Failed to update scroll width:", error);
+      }
+    }
+  };
+
   const onBulkEdit = () => onDialogOpen("bulk-edit");
   const onBulkDelete = () => onDialogOpen("bulk-delete");
 
@@ -485,6 +512,7 @@ export function DatabaseViewProvider({
     tempSorts,
     setTempSorts: () => {},
     sorts,
+    scrollWidth,
 
     onDialogOpen,
     onViewChange,
@@ -494,6 +522,7 @@ export function DatabaseViewProvider({
     onSearchQueryChange,
     onFiltersChange,
     onSortsChange,
+    onScrollWidthChange,
 
     // CRUD operations
     onBulkEdit,

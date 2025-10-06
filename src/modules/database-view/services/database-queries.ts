@@ -246,6 +246,34 @@ export const useUpdateProperty = () => {
   });
 };
 
+export const useUpdatePropertyWidth = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    TProperty,
+    AxiosError<ApiError>,
+    { databaseId: string; propertyId: string; width: number }
+  >({
+    mutationFn: ({ databaseId, propertyId, width }) =>
+      databaseApi.updatePropertyWidth(databaseId, propertyId, width),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.properties(variables.databaseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.property(
+          variables.databaseId,
+          variables.propertyId
+        ),
+      });
+      // No toast for width updates as it's a silent operation
+    },
+    onError: (error) => {
+      console.error("Failed to update property width:", error);
+    },
+  });
+};
+
 export const useDeleteProperty = () => {
   const queryClient = useQueryClient();
 
@@ -565,6 +593,35 @@ export const useDuplicateRecord = () => {
       toast.error(
         error.response?.data?.message || "Failed to duplicate record"
       );
+    },
+  });
+};
+
+export const useUpdateViewScrollWidth = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<TView>,
+    AxiosError<ApiError>,
+    {
+      databaseId: string;
+      viewId: string;
+      scrollWidth: number;
+    }
+  >({
+    mutationFn: ({ databaseId, viewId, scrollWidth }) =>
+      databaseApi.updateViewScrollWidth(databaseId, viewId, scrollWidth),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.views(variables.databaseId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: DATABASE_KEYS.view(variables.databaseId, variables.viewId),
+      });
+      // No need to show toast for scroll width updates as it's a silent operation
+    },
+    onError: (error) => {
+      console.error("Failed to update view scroll width:", error);
     },
   });
 };

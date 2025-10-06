@@ -189,6 +189,7 @@ export type TProperty = TBaseEntity & {
   isVisible: boolean;
   required: boolean;
   order: number;
+  width?: number;
   description?: string;
 };
 
@@ -389,6 +390,7 @@ export type TViewConfig = {
   calendar?: TCalendarConfig;
   gallery?: TGalleryConfig;
   gantt?: TGanttConfig;
+  scrollWidth?: number;
 };
 
 export type TColumnConfig = {

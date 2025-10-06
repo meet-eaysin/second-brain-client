@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   type ColumnDef,
   flexRender,
@@ -59,6 +59,8 @@ import {
   useDeleteRecord,
   useBulkDeleteRecords,
   useDuplicateRecord,
+  useUpdateViewScrollWidth,
+  useUpdatePropertyWidth,
 } from "@/modules/database-view/services/database-queries";
 import { toast } from "sonner";
 
@@ -94,6 +96,7 @@ export function DataTable({
   const {
     database,
     properties,
+    currentView,
     isPropertiesLoading,
     isRecordsLoading,
     onDialogOpen,
@@ -103,6 +106,7 @@ export function DataTable({
     onRecordDuplicate: contextOnRecordDuplicate,
     onRecordCreate: contextOnRecordCreate,
     onAddProperty: contextOnAddProperty,
+    onScrollWidthChange,
   } = useDatabaseView();
 
   const isFrozen = database?.isFrozen;
@@ -118,6 +122,9 @@ export function DataTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnSizing, setColumnSizing] = useState<Record<string, number>>({});
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -135,6 +142,8 @@ export function DataTable({
   const deleteRecordMutation = useDeleteRecord();
   const bulkDeleteMutation = useBulkDeleteRecords();
   const duplicateRecordMutation = useDuplicateRecord();
+  const updateViewScrollWidthMutation = useUpdateViewScrollWidth();
+  const updatePropertyWidthMutation = useUpdatePropertyWidth();
 
   const table = useReactTable({
     data,
@@ -143,6 +152,7 @@ export function DataTable({
       rowSelection,
       sorting,
       columnFilters,
+      columnSizing,
       pagination: {
         pageIndex: 0,
         pageSize,
@@ -155,6 +165,7 @@ export function DataTable({
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnSizingChange: setColumnSizing,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -285,6 +296,103 @@ export function DataTable({
     }
   };
 
+  // Scroll width handler
+  const handleScrollWidthChange = async (scrollWidth: number) => {
+    if (!database?.id || !currentView?.id) return;
+
+    try {
+      await updateViewScrollWidthMutation.mutateAsync({
+        databaseId: database.id,
+        viewId: currentView.id,
+        scrollWidth,
+      });
+      onScrollWidthChange(scrollWidth);
+    } catch (error) {
+      console.error("Failed to update scroll width:", error);
+    }
+  };
+
+  // Property width handler
+  const handlePropertyWidthChange = async (
+    propertyId: string,
+    width: number
+  ) => {
+    if (!database?.id) return;
+
+    try {
+      await updatePropertyWidthMutation.mutateAsync({
+        databaseId: database.id,
+        propertyId,
+        width,
+      });
+    } catch (error) {
+      console.error("Failed to update property width:", error);
+    }
+  };
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (scrollContainerRef.current && currentView?.config?.scrollWidth) {
+      const container = scrollContainerRef.current;
+      const savedScrollWidth = currentView.config.scrollWidth;
+
+      // Set scroll width if it's greater than container width
+      if (savedScrollWidth > container.clientWidth) {
+        container.scrollLeft = savedScrollWidth - container.clientWidth;
+      }
+    }
+  }, [currentView?.config?.scrollWidth]);
+
+  // Load saved property widths and set initial column sizing
+  useEffect(() => {
+    if (properties.length > 0) {
+      const initialColumnSizing: Record<string, number> = {};
+
+      properties.forEach((property: TProperty) => {
+        if (property.width && property.width > 0) {
+          initialColumnSizing[property.id] = property.width;
+        }
+      });
+
+      if (Object.keys(initialColumnSizing).length > 0) {
+        setColumnSizing(initialColumnSizing);
+      }
+    }
+  }, [properties]);
+
+  // Debounced save property widths when column sizing changes
+  useEffect(() => {
+    if (Object.keys(columnSizing).length > 0) {
+      const timeoutMap = new Map<string, NodeJS.Timeout>();
+
+      Object.entries(columnSizing).forEach(([propertyId, width]) => {
+        const property = properties.find(
+          (prop: TProperty) => prop.id === propertyId
+        );
+        if (property && property.width !== width) {
+          // Clear any existing timeout for this property
+          const existingTimeout = timeoutMap.get(propertyId);
+          if (existingTimeout) {
+            clearTimeout(existingTimeout);
+          }
+
+          // Set new debounced timeout
+          const timeout = setTimeout(() => {
+            handlePropertyWidthChange(propertyId, width);
+            timeoutMap.delete(propertyId);
+          }, 500); // Wait 500ms after resize stops
+
+          timeoutMap.set(propertyId, timeout);
+        }
+      });
+
+      // Cleanup function to clear all timeouts
+      return () => {
+        timeoutMap.forEach((timeout) => clearTimeout(timeout));
+      };
+    }
+  }, [columnSizing, properties]);
+
   // Drag and drop handlers
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -401,7 +509,20 @@ export function DataTable({
         )}
       </div>
 
-      <div className="rounded-md border border-border overflow-x-auto bg-background">
+      <div
+        ref={scrollContainerRef}
+        className="rounded-md border border-border overflow-x-auto bg-background"
+        onScroll={(e) => {
+          const scrollWidth = e.currentTarget.scrollWidth;
+          const clientWidth = e.currentTarget.clientWidth;
+          const scrollLeft = e.currentTarget.scrollLeft;
+
+          // Only save scroll width if user has scrolled horizontally
+          if (scrollLeft > 0 && scrollWidth > clientWidth) {
+            handleScrollWidthChange(scrollWidth);
+          }
+        }}
+      >
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}

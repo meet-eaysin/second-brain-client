@@ -126,6 +126,18 @@ export const databaseApi = {
     return response.data;
   },
 
+  updatePropertyWidth: async (
+    databaseId: string,
+    propertyId: string,
+    width: number
+  ) => {
+    const response = await apiClient.patch(
+      API_ENDPOINTS.PROPERTY.UPDATE_WIDTH(databaseId, propertyId),
+      { width }
+    );
+    return response.data;
+  },
+
   reorderProperties: async (databaseId: string, data: TReorderProperties) => {
     await apiClient.put(API_ENDPOINTS.PROPERTY.REORDER(databaseId), data);
   },
@@ -408,6 +420,18 @@ export const databaseApi = {
     const response = await apiClient.patch(
       API_ENDPOINTS.VIEW.UPDATE_SORTS(databaseId, viewId),
       { sorts }
+    );
+    return response.data;
+  },
+
+  updateViewScrollWidth: async (
+    databaseId: string,
+    viewId: string,
+    scrollWidth: number
+  ) => {
+    const response = await apiClient.patch(
+      API_ENDPOINTS.VIEW.UPDATE_SCROLL_WIDTH(databaseId, viewId),
+      { scrollWidth }
     );
     return response.data;
   },
@@ -768,6 +792,7 @@ export const {
   getProperties,
   createProperty,
   updateProperty,
+  updatePropertyWidth,
   deleteProperty,
   reorderProperties,
   duplicateProperty,
@@ -794,6 +819,7 @@ export const {
   updateViewColumnFreeze,
   updateViewFilters,
   updateViewSorts,
+  updateViewScrollWidth,
   // Database-level filter and sort methods
   getDatabaseFilters,
   getDatabaseFilterById,
