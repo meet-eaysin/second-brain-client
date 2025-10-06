@@ -704,7 +704,7 @@ export type TDatabaseSchemaConfig = {
 };
 
 export type TPropertyQueryParams = {
-  viewId: string;
+  viewId?: string;
   includeHidden: boolean;
 };
 

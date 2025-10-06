@@ -1,5 +1,3 @@
-"use client";
-
 import { useMemo } from "react";
 import {
   GanttCreateMarkerTrigger,
@@ -188,14 +186,12 @@ export function Gantt({ className = "" }: { className?: string }) {
             }
           }
 
-          // Create status based on date source
           const status = {
             id: dateSource.id,
             name: dateSource.name,
-            color: dateProperties.length > 0 ? "#3B82F6" : "#10B981", // Different color for created date
+            color: dateProperties.length > 0 ? "#3B82F6" : "#10B981",
           };
 
-          // Create group based on grouping property or default
           const groupValue = groupingProperty
             ? record.properties?.[groupingProperty.name]
             : "ungrouped";

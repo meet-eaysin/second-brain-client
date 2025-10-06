@@ -295,7 +295,6 @@ export function DatabaseViewProvider({
     useProperties(currentDatabaseId || "", propertiesQueryParams);
 
   const allPropertiesQueryParams: TPropertyQueryParams = {
-    viewId: effectiveViewId,
     includeHidden: true,
   };
   const { data: allPropertiesResponse, isLoading: isAllPropertiesLoading } =
@@ -334,11 +333,9 @@ export function DatabaseViewProvider({
     });
   }, [currentDatabaseId, effectiveViewId, queryClient]);
 
-  // Update accumulated records when new data arrives
   useEffect(() => {
     if (recordsResponse?.data) {
       if (currentOffset === 0) {
-        // First load or reset
         setAccumulatedRecords(recordsResponse.data);
       } else {
         const recordsResponseData = recordsResponse?.data;
