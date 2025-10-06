@@ -64,7 +64,6 @@ export function Gantt({ className = "" }: { className?: string }) {
   const { mutateAsync: createRecordMutation } = useCreateRecord();
   const { mutateAsync: deleteRecordMutation } = useDeleteRecord();
 
-  // Find date properties for Gantt (DATE and DATE_RANGE)
   const dateProperties = useMemo(() => {
     return properties.filter(
       (p) =>
@@ -72,7 +71,6 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }, [properties]);
 
-  // Find grouping property (SELECT or STATUS)
   const groupingProperty = useMemo(() => {
     return (
       properties.find((p) => p.type === EPropertyType.SELECT) ||
@@ -80,7 +78,6 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }, [properties]);
 
-  // Find title property
   const titleProperty = useMemo(() => {
     return (
       properties.find((p) => p.type === EPropertyType.TEXT) ||
@@ -90,7 +87,6 @@ export function Gantt({ className = "" }: { className?: string }) {
     );
   }, [properties]);
 
-  // Transform records for Gantt format
   const ganttFeatures = useMemo(() => {
     if (!records || !Array.isArray(records)) {
       return [];
@@ -107,7 +103,6 @@ export function Gantt({ className = "" }: { className?: string }) {
     }> = [];
 
     records.forEach((record: TRecord) => {
-      // Use date properties if available, otherwise fall back to createdAt
       const dateSources =
         dateProperties.length > 0
           ? dateProperties
@@ -118,7 +113,6 @@ export function Gantt({ className = "" }: { className?: string }) {
         let endDate: Date | null = null;
 
         if (dateProperties.length > 0) {
-          // Use actual date property
           const dateValue = record.properties?.[dateSource.name];
 
           if (
@@ -126,7 +120,6 @@ export function Gantt({ className = "" }: { className?: string }) {
             dateValue &&
             typeof dateValue === "object"
           ) {
-            // Handle DATE_RANGE: { start: Date, end: Date }
             const range = dateValue as {
               start?: string | Date;
               end?: string | Date;
@@ -138,12 +131,10 @@ export function Gantt({ className = "" }: { className?: string }) {
             dateValue &&
             typeof dateValue === "string"
           ) {
-            // Handle DATE: single date string
             startDate = new Date(dateValue);
-            endDate = new Date(dateValue); // Single day event
+            endDate = new Date(dateValue);
           }
 
-          // If date value is empty/null, fall back to createdAt timestamp
           if (!startDate || !endDate) {
             const createdAt = record.createdAt || record.createdAt;
             if (createdAt) {
@@ -152,7 +143,6 @@ export function Gantt({ className = "" }: { className?: string }) {
             }
           }
         } else {
-          // Fall back to createdAt timestamp
           const createdAt = record.createdAt || record.createdBy;
           if (createdAt) {
             startDate = new Date(createdAt);
@@ -161,7 +151,6 @@ export function Gantt({ className = "" }: { className?: string }) {
         }
 
         if (startDate && endDate) {
-          // Use title property for name
           let name = "Untitled";
           if (titleProperty) {
             const titleValue = record.properties?.[titleProperty.name];
@@ -171,7 +160,6 @@ export function Gantt({ className = "" }: { className?: string }) {
               titleValue !== undefined &&
               titleValue !== ""
             ) {
-              // For select/multi-select, try to get the label
               if (
                 titleProperty.type === EPropertyType.SELECT ||
                 titleProperty.type === EPropertyType.MULTI_SELECT
@@ -184,7 +172,6 @@ export function Gantt({ className = "" }: { className?: string }) {
                 name = String(titleValue);
               }
             } else {
-              // Fallback: try other text properties or use record ID
               const fallbackProps = properties.filter(
                 (p) =>
                   p.type === EPropertyType.TEXT &&
@@ -196,8 +183,7 @@ export function Gantt({ className = "" }: { className?: string }) {
                 const fallbackValue = record.properties[fallbackProps[0].name];
                 name = String(fallbackValue);
               } else {
-                // Use short record ID as last resort
-                name = `Item ${record.id.slice(-4)}`;
+                name = `Untitled`;
               }
             }
           }
