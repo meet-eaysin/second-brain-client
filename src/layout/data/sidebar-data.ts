@@ -15,7 +15,6 @@ import {
   BarChart3,
   Calendar,
   Archive,
-  FolderOpen,
 } from "lucide-react";
 
 export const sidebarData = {
@@ -87,13 +86,13 @@ export const sidebarData = {
     {
       title: "PARA Method",
       items: [
-        {
-          title: "PARA Overview",
-          url: "/app/second-brain/para",
-          icon: FolderOpen,
-          tooltip:
-            "Overview of your PARA system (Projects, Areas, Resources, Archive)",
-        },
+        // {
+        //   title: "PARA Overview",
+        //   url: "/app/second-brain/para",
+        //   icon: FolderOpen,
+        //   tooltip:
+        //     "Overview of your PARA system (Projects, Areas, Resources, Archive)",
+        // },
         {
           title: "Projects",
           url: "/app/second-brain/para/projects",

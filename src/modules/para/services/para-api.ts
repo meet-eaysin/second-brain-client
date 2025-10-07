@@ -15,11 +15,7 @@ import {
 } from "@/modules/para/types/para.types";
 import { EParaStatus, EParaPriority } from "@/modules/para/types/para.types";
 
-// PARA API Service
 export const paraApi = {
-  // ===== PARA ITEM CRUD OPERATIONS =====
-
-  // Create a new PARA item
   createParaItem: async (
     data: ICreateParaItemRequest
   ): Promise<IParaItem | IParaArea | IParaArchive> => {
@@ -30,7 +26,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get PARA items with optional filtering
   getParaItems: async (
     params?: IParaQueryParams
   ): Promise<(IParaItem | IParaArea | IParaArchive)[]> => {
@@ -40,7 +35,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get a single PARA item by ID
   getParaItemById: async (
     id: string
   ): Promise<IParaItem | IParaArea | IParaArchive> => {
@@ -48,7 +42,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Update a PARA item
   updateParaItem: async (
     id: string,
     data: IUpdateParaItemRequest
@@ -60,12 +53,10 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Delete a PARA item
   deleteParaItem: async (id: string): Promise<void> => {
     await apiClient.delete(`/para/${id}`);
   },
 
-  // Get PARA statistics
   getParaStats: async (params?: IParaQueryParams): Promise<IParaStats> => {
     const response = await apiClient.get<ApiResponse<IParaStats>>(
       API_ENDPOINTS.PARA.STATS,
@@ -74,7 +65,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Search PARA items
   searchParaItems: async (
     query: string,
     params?: IParaQueryParams
@@ -88,9 +78,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // ===== PARA CATEGORIES =====
-
-  // Get projects
   getProjects: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
     const response = await apiClient.get<ApiResponse<IParaItem[]>>(
       "/para/categories/projects",
@@ -101,7 +88,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get areas
   getAreas: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
     const response = await apiClient.get<ApiResponse<IParaItem[]>>(
       "/para/categories/areas",
@@ -110,7 +96,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get resources
   getResources: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
     const response = await apiClient.get<ApiResponse<IParaItem[]>>(
       "/para/categories/resources",
@@ -121,7 +106,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get archive
   getArchive: async (params?: IParaQueryParams): Promise<IParaItem[]> => {
     const response = await apiClient.get<ApiResponse<IParaItem[]>>(
       "/para/categories/archive",
@@ -130,9 +114,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // ===== PARA ANALYTICS =====
-
-  // Get items by status
   getItemsByStatus: async (
     status: EParaStatus,
     params?: IParaQueryParams
@@ -144,7 +125,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get items by priority
   getItemsByPriority: async (
     priority: EParaPriority,
     params?: IParaQueryParams
@@ -158,7 +138,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Get reviews overdue
   getReviewsOverdue: async (
     params?: IParaQueryParams
   ): Promise<IParaItem[]> => {
@@ -171,9 +150,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // ===== PARA ACTIONS =====
-
-  // Move items to archive
   moveToArchive: async (
     data: IMoveToArchiveRequest
   ): Promise<{ message: string; archivedCount: number }> => {
@@ -183,7 +159,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Restore items from archive
   restoreFromArchive: async (
     data: IRestoreFromArchiveRequest
   ): Promise<{ message: string; restoredCount: number }> => {
@@ -193,7 +168,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Categorize existing items
   categorizeExistingItem: async (
     data: IParaCategorizeRequest
   ): Promise<
@@ -206,7 +180,6 @@ export const paraApi = {
     return response.data.data!;
   },
 
-  // Mark item as reviewed
   markReviewed: async (
     id: string,
     notes?: string
